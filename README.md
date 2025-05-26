@@ -19,15 +19,19 @@ pos-modern/
 │   ├── business_day/         # Gestão de dias de operação
 │   ├── cashier/              # Operações de caixa
 │   ├── core/                 # Componentes centrais e compartilhados
+│   │   └── messaging/        # Abstrações base para integrações de mensagens
 │   ├── customer/             # Gestão de clientes
 │   ├── delivery/             # Integração com plataformas de delivery
 │   ├── employee/             # Gestão de funcionários
 │   ├── fiscal/               # Módulos fiscais (SAT, NFC-e, CF-e, MFE)
+│   ├── instagram/            # Chatbot Instagram Direct
 │   ├── inventory/            # Gestão de estoque
 │   ├── kds/                  # Sistema de exibição para cozinha
 │   ├── kiosk/                # Totem de autoatendimento
+│   ├── marketing/            # Campanhas de marketing e Facebook Pixel
 │   ├── marketplace/          # Marketplace de integrações
 │   ├── menu/                 # Gestão de cardápio
+│   ├── messenger/            # Chatbot Facebook Messenger
 │   ├── mobile_waiter/        # Aplicativo móvel para garçons
 │   ├── order/                # Gestão de pedidos
 │   ├── payment/              # Processamento de pagamentos
@@ -43,12 +47,15 @@ pos-modern/
 │   ├── stock/                # Controle de estoque
 │   ├── supplier/             # Gestão de fornecedores
 │   ├── support/              # Sistema de suporte escalável
+│   ├── tests/                # Testes automatizados
+│   │   └── omnichannel_validator.py # Validador de integração omnichannel
 │   ├── waiter/               # Módulo de garçom
 │   ├── whatsapp/             # Chatbot WhatsApp com IA generativa
 │   │   ├── sqs/              # Integração SQS FIFO para comunicação event-based
 │   │   └── ...               # Outros componentes do chatbot
 │   └── main.py               # Ponto de entrada da aplicação
 ├── docs/                     # Documentação detalhada
+│   └── omnichannel_integration_documentation.md # Documentação da integração omnichannel
 ├── requirements.txt          # Dependências do projeto
 ├── Dockerfile                # Configuração para containerização
 ├── docker-compose.yml        # Configuração para ambiente de desenvolvimento
@@ -68,14 +75,15 @@ pos-modern/
 
 ### Integrações Estratégicas
 - **iFood**: Integração bidirecional completa com marketplace de delivery
-- **Chatbot WhatsApp**: Atendimento automatizado via WhatsApp (Twilio + Amazon Bedrock)
+- **Chatbot Omnichannel**: Atendimento automatizado via WhatsApp, Messenger e Instagram
 - **Pagamentos Online**: Integração com Asaas para PIX, crédito e débito
 - **Documentos Fiscais**: SAT, NFC-e, CF-e, MFE
 - **Contabilidade**: Exportação para sistemas contábeis
+- **Facebook Pixel**: Rastreamento de eventos para campanhas de marketing
 
 ### Recursos Avançados
 - **IA Preditiva**: Previsão de demanda e otimização operacional
-- **Campanhas Automáticas**: Marketing personalizado via WhatsApp/Telegram
+- **Campanhas Automáticas**: Marketing personalizado via canais de mensagens
 - **Dashboards Analíticos**: Visualizações personalizáveis para KPIs
 - **Marketplace de Integrações**: API pública para parceiros
 - **Suporte Escalável**: Sistema de tickets e base de conhecimento
@@ -195,10 +203,10 @@ npm run dev
 - Otimização de rotas de delivery
 - Otimização de distribuição de mesas
 - Retenção em totens de autoatendimento
-- Campanhas automáticas via WhatsApp
+- Campanhas automáticas via canais de mensagens
 
-### Chatbot WhatsApp (Implementação Completa)
-- **Integração com Twilio**: Processamento de mensagens e webhooks
+### Chatbot Omnichannel (Implementação Completa)
+- **Plataformas Suportadas**: WhatsApp, Facebook Messenger, Instagram Direct
 - **Arquitetura Event-Driven**: Comunicação via SQS FIFO para desacoplamento
 - **IA Generativa**: Integração com Amazon Bedrock (Claude) para respostas personalizadas
 - **Exibição e Navegação do Cardápio**: Menus interativos com botões e listas
@@ -209,6 +217,14 @@ npm run dev
 - **Reembolso Automático**: Para pedidos não confirmados ou cancelados
 - **Campanhas de Marketing**: Geração de mensagens personalizadas com IA
 - **Análise de Feedback**: Processamento de sentimento e tópicos com IA
+- **Identificação Unificada**: Reconhecimento do mesmo cliente em diferentes canais
+
+### Integração com Facebook Pixel
+- **Rastreamento de Eventos**: PageView, AddToCart, Purchase, Lead, etc.
+- **Otimização de Campanhas**: Dados para otimização de anúncios
+- **Eventos Personalizados**: Suporte a eventos customizados
+- **Conformidade com LGPD/GDPR**: Hash de dados sensíveis
+- **Integração com Chatbots**: Rastreamento de interações nos chatbots
 
 ### Integração com iFood (Implementação Completa)
 - **Autenticação OAuth2**: Gerenciamento de tokens com renovação automática
@@ -240,8 +256,8 @@ O POS Modern implementa uma arquitetura event-driven robusta para garantir escal
 - **Notification Service**: Serviço centralizado de notificações
 
 ### Fluxos de Eventos
-1. **Pedido via WhatsApp**:
-   - Cliente envia mensagem → Webhook Twilio → SQS → Processador de Mensagens → Confirmação → Notificação
+1. **Pedido via Canais de Mensagens**:
+   - Cliente envia mensagem → Webhook → SQS → Processador de Mensagens → Confirmação → Notificação
    
 2. **Pedido via iFood**:
    - iFood envia pedido → Webhook iFood → Validação → Processador de Pedidos → Confirmação → Notificação
@@ -263,6 +279,9 @@ O POS Modern implementa uma arquitetura event-driven robusta para garantir escal
 - [x] Campanhas de Marketing Automatizadas
 - [x] Integração com iFood (Completa)
 - [x] Chatbot WhatsApp via Twilio (Completo)
+- [x] Chatbot Facebook Messenger (Completo)
+- [x] Chatbot Instagram Direct (Completo)
+- [x] Facebook Pixel para Campanhas de Marketing
 - [x] IA Generativa (Amazon Bedrock/Claude)
 - [x] Pagamentos Online via Asaas
 - [x] Split de Pagamentos
@@ -333,25 +352,6 @@ curl -X POST "http://localhost:8080/api/v1/remote_orders/ifood/webhook" \
   }'
 ```
 
-### Confirmar Pedido iFood
-
-```bash
-curl -X POST "http://localhost:8080/api/v1/remote_orders/ifood/orders/{order_id}/confirm" \
-  -H "Authorization: Bearer {seu_token_aqui}" \
-  -H "Content-Type: application/json"
-```
-
-### Cancelar Pedido iFood
-
-```bash
-curl -X POST "http://localhost:8080/api/v1/remote_orders/ifood/orders/{order_id}/cancel" \
-  -H "Authorization: Bearer {seu_token_aqui}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "reason": "Restaurante sem ingredientes disponíveis"
-  }'
-```
-
 ### Enviar Mensagem via WhatsApp
 
 ```bash
@@ -367,57 +367,53 @@ curl -X POST "http://localhost:8080/api/v1/whatsapp/send" \
   }'
 ```
 
-### Enviar Mensagem Interativa via WhatsApp
+### Enviar Mensagem via Facebook Messenger
 
 ```bash
-curl -X POST "http://localhost:8080/api/v1/whatsapp/send" \
+curl -X POST "http://localhost:8080/api/v1/messenger/send" \
   -H "Authorization: Bearer {seu_token_aqui}" \
   -H "Content-Type: application/json" \
   -d '{
-    "to": "5511999998888",
+    "to": "1234567890",
     "message": {
-      "type": "interactive_buttons",
-      "body": "Seu pedido #123 está pronto. Como deseja receber?",
-      "options": [
-        {"id": "delivery", "title": "Delivery"},
-        {"id": "pickup", "title": "Retirar no local"}
-      ]
+      "type": "text",
+      "text": "Seu pedido #123 está pronto para retirada!"
     }
   }'
 ```
 
-### Enviar Campanha de Marketing via WhatsApp
+### Enviar Mensagem via Instagram Direct
 
 ```bash
-curl -X POST "http://localhost:8080/api/v1/whatsapp/campaign" \
+curl -X POST "http://localhost:8080/api/v1/instagram/send" \
   -H "Authorization: Bearer {seu_token_aqui}" \
   -H "Content-Type: application/json" \
   -d '{
-    "customer_data": {
-      "name": "Maria Silva",
-      "phone": "5511999998888",
-      "favorite_items": ["X-Burger", "Batata Frita"],
-      "days_inactive": 30,
-      "last_order_date": "2025-04-26"
+    "to": "1234567890",
+    "message": {
+      "type": "text",
+      "text": "Seu pedido #123 está pronto para retirada!"
+    }
+  }'
+```
+
+### Rastrear Evento com Facebook Pixel
+
+```bash
+curl -X POST "http://localhost:8080/api/v1/marketing/pixel/track" \
+  -H "Authorization: Bearer {seu_token_aqui}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_name": "Purchase",
+    "user_data": {
+      "em": "cliente@exemplo.com",
+      "ph": "5511999998888"
     },
-    "campaign_type": "reactivation",
-    "restaurant_data": {
-      "name": "Burger Place"
+    "custom_data": {
+      "currency": "BRL",
+      "value": 31.80,
+      "order_id": "123"
     }
-  }'
-```
-
-### Processar Pagamento PIX via Asaas
-
-```bash
-curl -X POST "http://localhost:8080/api/v1/payment/pix" \
-  -H "Authorization: Bearer {seu_token_aqui}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "customer_id": "cus_123456",
-    "value": 31.80,
-    "description": "Pedido #123",
-    "external_reference": "order_123"
   }'
 ```
 
@@ -445,6 +441,42 @@ ASAAS_API_URL=https://api.asaas.com/v3
 
 # Amazon Bedrock
 BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
+```
+
+### Configuração do Chatbot Facebook Messenger
+
+Configure as seguintes variáveis de ambiente para habilitar o chatbot Messenger:
+
+```
+# Facebook Messenger
+MESSENGER_PAGE_ID=seu_page_id
+MESSENGER_APP_ID=seu_app_id
+MESSENGER_APP_SECRET=seu_app_secret
+MESSENGER_ACCESS_TOKEN=seu_access_token
+MESSENGER_VERIFY_TOKEN=seu_verify_token
+MESSENGER_SQS_QUEUE_URL=url_da_fila_sqs
+```
+
+### Configuração do Chatbot Instagram Direct
+
+Configure as seguintes variáveis de ambiente para habilitar o chatbot Instagram:
+
+```
+# Instagram Direct
+INSTAGRAM_ACCESS_TOKEN=seu_access_token
+INSTAGRAM_APP_SECRET=seu_app_secret
+INSTAGRAM_VERIFY_TOKEN=seu_verify_token
+INSTAGRAM_SQS_QUEUE_URL=url_da_fila_sqs
+```
+
+### Configuração do Facebook Pixel
+
+Configure as seguintes variáveis de ambiente para habilitar o Facebook Pixel:
+
+```
+# Facebook Pixel
+FACEBOOK_PIXEL_ID=seu_pixel_id
+FACEBOOK_ACCESS_TOKEN=seu_access_token
 ```
 
 ### Configuração da Integração iFood
@@ -475,6 +507,9 @@ pytest src/tests/integration/
 
 # Testes de ponta a ponta
 pytest src/tests/e2e/
+
+# Validação da integração omnichannel
+python -m src.tests.omnichannel_validator
 ```
 
 ## Arquitetura Multi-Tenant e Serverless
@@ -489,25 +524,12 @@ O POS Modern foi projetado com arquitetura multi-tenant para suportar múltiplos
 - **Cognito**: Autenticação e autorização
 - **SQS/SNS**: Filas e notificações para arquitetura event-driven
 - **CloudWatch**: Monitoramento e logs
-- **Bedrock**: IA generativa para chatbot WhatsApp
+- **Bedrock**: IA generativa para chatbots e campanhas
 
-## Licenciamento
+## Licença
 
-O sistema suporta licenciamento modular, permitindo que restaurantes optem por funcionalidades específicas conforme suas necessidades. O controle de licenças é gerenciado pelo backoffice administrativo.
+Este projeto é licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes.
 
-## Suporte e Documentação
+## Contato
 
-- Documentação detalhada disponível em `/docs`
-- Sistema de tickets integrado para suporte
-- Base de conhecimento com artigos e tutoriais
-- Chatbot de suporte para resolução de problemas comuns
-
-## Contribuição
-
-Contribuições são bem-vindas! Por favor, leia o guia de contribuição em `CONTRIBUTING.md` antes de enviar pull requests.
-
-## Notas de Desenvolvimento
-
-Este sistema foi desenvolvido seguindo as melhores práticas de arquitetura de software, segurança e experiência do usuário. A arquitetura modular e event-driven permite fácil extensão e manutenção, enquanto as integrações estratégicas garantem um ecossistema completo para gestão de restaurantes.
-
-A implementação completa do chatbot WhatsApp e da integração com iFood representa um avanço significativo na capacidade do sistema de gerenciar pedidos remotos de forma eficiente e automatizada, com suporte a fluxos complexos de confirmação, notificação e reembolso.
+Para mais informações, entre em contato pelo email: contato@posmodern.com.br
