@@ -1,0 +1,114 @@
+.kds-metrics {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.date-range-select {
+  min-width: 150px;
+}
+
+.custom-date-range {
+  flex-wrap: wrap;
+}
+
+.metric-summary-item {
+  text-align: center;
+  padding: 1rem 0.5rem;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #0d6efd;
+  margin-bottom: 0.5rem;
+}
+
+.metric-label {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.station-name {
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.metric-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  color: white;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.prep-time-bars {
+  margin-top: 1rem;
+}
+
+.prep-time-bar-item {
+  margin-bottom: 0.75rem;
+}
+
+.peak-hours-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 200px;
+  padding: 1rem 0;
+}
+
+.peak-hour-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 60px;
+}
+
+.peak-hour-label {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.peak-hour-value {
+  width: 40px;
+  background-color: #0d6efd;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 30px;
+}
+
+.peak-hour-count {
+  color: white;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+  .metric-circle {
+    width: 80px;
+    height: 80px;
+    font-size: 1.2rem;
+  }
+  
+  .metric-value {
+    font-size: 1.5rem;
+  }
+  
+  .peak-hour-bar {
+    width: 40px;
+  }
+  
+  .peak-hour-value {
+    width: 30px;
+  }
+}

@@ -1,0 +1,73 @@
+/* BrandSelector.css - Styles for brand selection component */
+
+.brand-selector {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.brand-selector label {
+  margin-right: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.brand-selector select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: white;
+  font-size: 1rem;
+  min-width: 200px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+
+.brand-selector select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.brand-selector.loading,
+.brand-selector.error,
+.brand-selector.empty {
+  color: var(--text-color);
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.brand-selector.error {
+  color: var(--danger-color);
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 991px) {
+  .brand-selector select {
+    min-width: 180px;
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  .brand-selector {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .brand-selector label {
+    margin-bottom: 5px;
+    margin-right: 0;
+  }
+  
+  .brand-selector select {
+    width: 100%;
+    min-width: unset;
+    padding: 10px 12px; /* Larger touch target */
+  }
+}

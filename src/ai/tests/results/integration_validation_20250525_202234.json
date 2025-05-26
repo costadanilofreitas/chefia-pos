@@ -1,0 +1,283 @@
+{
+  "timestamp": "2025-05-25T20:22:34.415224",
+  "restaurant_id": "test-restaurant-1",
+  "validations": {
+    "forecast_integration": {
+      "success": true,
+      "tests": [
+        {
+          "name": "Obter previs\u00e3o de demanda",
+          "status": "success",
+          "details": {
+            "forecast_id": "forecast-test-restaurant-1-79c844c5",
+            "points_count": 104,
+            "start_date": "2025-05-25T20:22:34.415252",
+            "end_date": "2025-06-01T20:22:34.415252"
+          }
+        },
+        {
+          "name": "Gerar recomenda\u00e7\u00f5es de escala",
+          "status": "success",
+          "details": {
+            "recommendations_count": 200,
+            "first_recommendation": {
+              "recommendation_id": "staff-rec-test-restaurant-1-87acee9f",
+              "restaurant_id": "test-restaurant-1",
+              "created_at": "2025-05-25 20:22:34.418764",
+              "date": "2025-05-25 00:00:00",
+              "time_window": "8h-11h (morning)",
+              "role": "waiter",
+              "recommended_staff_count": 3,
+              "current_staff_count": null,
+              "expected_customer_volume": 30,
+              "confidence": 0.85,
+              "reason": "Previs\u00e3o de 30 clientes no per\u00edodo, com capacidade ajustada de 12.0 clientes por waiter",
+              "forecast_id": "forecast-test-restaurant-1-1b31cfac"
+            }
+          }
+        },
+        {
+          "name": "Gerar todas as recomenda\u00e7\u00f5es",
+          "status": "success",
+          "details": {
+            "recommendations_types": [
+              "staffing",
+              "delivery",
+              "tables",
+              "kiosk",
+              "whatsapp"
+            ],
+            "metrics": {
+              "total_recommendations": 271,
+              "potential_savings": 0.0,
+              "potential_revenue_increase": 24555.19,
+              "potential_efficiency_increase": 84.1,
+              "staffing_metrics": {
+                "recommendations_count": 200,
+                "potential_savings": 0.0
+              },
+              "delivery_metrics": {
+                "recommendations_count": 32,
+                "potential_efficiency_increase": 84.1
+              },
+              "tables_metrics": {
+                "recommendations_count": 32,
+                "potential_revenue_increase": 21096.0
+              },
+              "kiosk_metrics": {
+                "recommendations_count": 3,
+                "potential_revenue_increase": 360.0
+              },
+              "whatsapp_metrics": {
+                "recommendations_count": 4,
+                "potential_revenue_increase": 3099.1875
+              }
+            }
+          }
+        }
+      ],
+      "errors": []
+    },
+    "external_data_integration": {
+      "success": true,
+      "tests": [
+        {
+          "name": "Obter dados clim\u00e1ticos",
+          "status": "success",
+          "details": {
+            "data_points": 168,
+            "first_point": {
+              "dt": 1748145600,
+              "main": {
+                "temp": 11.762233129554586,
+                "feels_like": 9.84370873176832,
+                "temp_min": 10.083116171405381,
+                "temp_max": 13.731112226794954,
+                "pressure": 1011.9629400038441,
+                "humidity": 87.47866807054608
+              },
+              "weather": [
+                {
+                  "id": 500,
+                  "main": "Rain",
+                  "description": "chuva leve",
+                  "icon": "10d"
+                }
+              ],
+              "clouds": {
+                "all": 62.66539696279538
+              },
+              "wind": {
+                "speed": 20.733555933344977,
+                "deg": 225.56559432717282
+              },
+              "visibility": 5000,
+              "pop": 0.7,
+              "rain": {
+                "3h": 11.295368160814586
+              },
+              "sys": {
+                "pod": "n"
+              },
+              "dt_txt": "2025-05-25 00:00:00"
+            }
+          }
+        },
+        {
+          "name": "Obter dados de eventos",
+          "status": "success",
+          "details": {
+            "events_count": 25,
+            "first_event": {
+              "id": "event-0",
+              "name": {
+                "text": "Festival Conference 0",
+                "html": "Mega Conference 0"
+              },
+              "description": {
+                "text": "Um evento de conference pr\u00f3ximo ao restaurante",
+                "html": "<p>Um evento de conference pr\u00f3ximo ao restaurante</p>"
+              },
+              "url": "https://example.com/events/0",
+              "start": {
+                "timezone": "America/Sao_Paulo",
+                "local": "2025-06-20T20:00:00",
+                "utc": "2025-06-20T17:00:00Z"
+              },
+              "end": {
+                "timezone": "America/Sao_Paulo",
+                "local": "2025-06-20T23:00:00",
+                "utc": "2025-06-20T20:00:00Z"
+              },
+              "organization_id": "org-9594",
+              "created": "2025-02-27T20:22:34Z",
+              "changed": "2025-05-17T20:22:34Z",
+              "capacity": 632,
+              "capacity_is_custom": false,
+              "status": "live",
+              "currency": "BRL",
+              "listed": true,
+              "shareable": true,
+              "online_event": false,
+              "tx_time_limit": 480,
+              "hide_start_date": false,
+              "hide_end_date": false,
+              "locale": "pt_BR",
+              "is_locked": false,
+              "privacy_setting": "unlocked",
+              "is_series": false,
+              "is_series_parent": false,
+              "is_reserved_seating": false,
+              "show_pick_a_seat": false,
+              "show_seatmap_thumbnail": false,
+              "show_colors_in_seatmap_thumbnail": false,
+              "source": "create_web",
+              "is_free": true,
+              "version": "3.0.0",
+              "logo_id": null,
+              "venue": {
+                "id": "venue-3298",
+                "name": "Local 0",
+                "capacity": 632,
+                "address": {
+                  "street": "Rua Exemplo, 602",
+                  "city": "S\u00e3o Paulo",
+                  "region": "SP",
+                  "postal_code": "07003-770",
+                  "country": "BR"
+                },
+                "latitude": -23.548698565968582,
+                "longitude": -46.58557933377076
+              },
+              "category_id": "category-3620",
+              "subcategory_id": null,
+              "format_id": null,
+              "category": {
+                "name": "Conference"
+              },
+              "distance": 5.300766793050863
+            }
+          }
+        },
+        {
+          "name": "Obter dados de feriados",
+          "status": "success",
+          "details": {
+            "holidays_count": 14,
+            "first_holiday": {
+              "date": "2025-01-01 00:00:00",
+              "name": "Confraterniza\u00e7\u00e3o Universal",
+              "is_national": true,
+              "is_regional": false,
+              "region": null,
+              "impact_level": 5
+            }
+          }
+        },
+        {
+          "name": "Enriquecer previs\u00e3o com dados externos",
+          "status": "success",
+          "details": {
+            "forecast_id": "forecast-test-restaurant-1-9ef47a4f",
+            "metadata": {
+              "weather_data_count": 120,
+              "events_data_count": 7,
+              "enrichment_timestamp": "2025-05-25 20:22:34.451897"
+            }
+          }
+        }
+      ],
+      "errors": []
+    },
+    "end_to_end_flow": {
+      "success": true,
+      "tests": [
+        {
+          "name": "Fluxo completo de previs\u00e3o e otimiza\u00e7\u00e3o",
+          "status": "success",
+          "details": {
+            "weather_data_points": 168,
+            "events_count": 22,
+            "holidays_count": 14,
+            "forecast_points": 104,
+            "recommendations_types": [
+              "staffing",
+              "delivery",
+              "tables",
+              "kiosk",
+              "whatsapp"
+            ],
+            "metrics": {
+              "total_recommendations": 271,
+              "potential_savings": 0.0,
+              "potential_revenue_increase": 24348.19,
+              "potential_efficiency_increase": 85.0,
+              "staffing_metrics": {
+                "recommendations_count": 200,
+                "potential_savings": 0.0
+              },
+              "delivery_metrics": {
+                "recommendations_count": 32,
+                "potential_efficiency_increase": 85.00000000000001
+              },
+              "tables_metrics": {
+                "recommendations_count": 32,
+                "potential_revenue_increase": 20889.0
+              },
+              "kiosk_metrics": {
+                "recommendations_count": 3,
+                "potential_revenue_increase": 360.0
+              },
+              "whatsapp_metrics": {
+                "recommendations_count": 4,
+                "potential_revenue_increase": 3099.1875
+              }
+            }
+          }
+        }
+      ],
+      "errors": []
+    }
+  },
+  "overall_success": true
+}

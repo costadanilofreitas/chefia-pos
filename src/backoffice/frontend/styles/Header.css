@@ -1,0 +1,216 @@
+/* Header.css - Styles for main header */
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: var(--header-height);
+  padding: 0 20px;
+  background-color: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--box-shadow);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.menu-toggle {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  margin-right: 15px;
+  cursor: pointer;
+  color: var(--text-color);
+  display: none; /* Hidden by default, shown on mobile */
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.notifications {
+  margin-right: 20px;
+  position: relative;
+}
+
+.notification-button {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-color);
+  position: relative;
+  padding: 8px;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: var(--danger-color);
+  color: white;
+  font-size: 0.7rem;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-dropdown {
+  position: relative;
+}
+
+.user-dropdown-button {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.user-name {
+  margin-right: 5px;
+  color: var(--text-color);
+}
+
+.dropdown-arrow {
+  font-size: 0.7rem;
+  color: var(--text-color);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  min-width: 180px;
+  z-index: 1000;
+  display: none;
+}
+
+.user-dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 15px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+.dropdown-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 5px 0;
+}
+
+.logout {
+  color: var(--danger-color);
+}
+
+/* Desktop styles */
+@media (min-width: 992px) {
+  .menu-toggle {
+    display: none;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 991px) {
+  .menu-toggle {
+    display: block;
+  }
+  
+  .header-left h1 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  .main-header {
+    padding: 0 15px;
+  }
+  
+  .menu-toggle {
+    display: block;
+    margin-right: 10px;
+  }
+  
+  .header-left h1 {
+    font-size: 1.2rem;
+  }
+  
+  .user-name {
+    display: none;
+  }
+  
+  .dropdown-arrow {
+    display: none;
+  }
+  
+  .notification-button {
+    padding: 5px;
+  }
+  
+  .user-dropdown-button {
+    padding: 5px;
+  }
+  
+  .dropdown-menu {
+    right: -10px;
+  }
+}
+
+/* Small mobile styles */
+@media (max-width: 576px) {
+  .main-header {
+    padding: 0 10px;
+  }
+  
+  .header-left h1 {
+    font-size: 1.1rem;
+  }
+  
+  .notifications {
+    margin-right: 10px;
+  }
+}

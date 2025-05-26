@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no" />
+  <meta name="theme-color" content="#2196F3" />
+  <meta name="description" content="Terminal POS para Garçons" />
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <title>Terminal POS</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #f5f5f5;
+      overscroll-behavior: none;
+    }
+    
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Estilos para tela de carregamento */
+    .loading-screen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+      background-color: #2196F3;
+      color: white;
+    }
+    
+    .loading-logo {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    
+    .loading-spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 4px solid white;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Estilos para tela offline */
+    .offline-screen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+      background-color: #f5f5f5;
+      color: #333;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .offline-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #F44336;
+    }
+    
+    .offline-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .offline-message {
+      font-size: 16px;
+      margin-bottom: 20px;
+      color: #666;
+    }
+    
+    .offline-button {
+      padding: 10px 20px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <noscript>
+    Você precisa habilitar JavaScript para executar este aplicativo.
+  </noscript>
+  <div id="root">
+    <!-- Tela de carregamento inicial -->
+    <div class="loading-screen">
+      <div class="loading-logo">Terminal POS</div>
+      <div class="loading-spinner"></div>
+    </div>
+  </div>
+  
+  <!-- Página offline para service worker -->
+  <script type="text/html" id="offline-template">
+    <div class="offline-screen">
+      <div class="offline-icon">⚠️</div>
+      <div class="offline-title">Você está offline</div>
+      <div class="offline-message">
+        Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.
+      </div>
+      <button class="offline-button" onclick="window.location.reload()">
+        Tentar novamente
+      </button>
+    </div>
+  </script>
+  
+  <script>
+    // Verificar se o navegador suporta service worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/serviceWorker.js')
+          .then(registration => {
+            console.log('Service Worker registrado com sucesso:', registration.scope);
+          })
+          .catch(error => {
+            console.log('Falha ao registrar Service Worker:', error);
+          });
+      });
+    }
+    
+    // Criar página offline
+    const offlineTemplate = document.getElementById('offline-template');
+    if (offlineTemplate) {
+      const offlinePage = new Blob(
+        [offlineTemplate.innerHTML],
+        { type: 'text/html' }
+      );
+      
+      // Armazenar no cache
+      if ('caches' in window) {
+        caches.open('terminal-cache-v1').then(cache => {
+          cache.put('/offline.html', new Response(offlinePage));
+        });
+      }
+    }
+  </script>
+</body>
+</html>

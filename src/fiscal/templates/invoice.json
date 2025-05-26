@@ -1,0 +1,95 @@
+{
+  "name": "invoice",
+  "description": "Template para impressão de nota fiscal",
+  "version": "1.0",
+  "sections": [
+    {
+      "type": "header",
+      "content": [
+        { "text": "{{company.name}}", "style": "bold,center,double-width" },
+        { "text": "CNPJ: {{company.cnpj}}", "style": "center" },
+        { "text": "{{company.address}}", "style": "center" },
+        { "text": "{{company.city}} - {{company.state}}", "style": "center" },
+        { "text": "IE: {{company.ie}}", "style": "center" },
+        { "text": "", "style": "normal" },
+        { "text": "DOCUMENTO AUXILIAR DA", "style": "bold,center" },
+        { "text": "NOTA FISCAL DE CONSUMIDOR ELETRÔNICA", "style": "bold,center" },
+        { "text": "{{#if is_homologation}}EMITIDO EM AMBIENTE DE HOMOLOGAÇÃO{{/if}}", "style": "bold,center" },
+        { "text": "SEM VALOR FISCAL", "style": "bold,center" },
+        { "text": "", "style": "normal" },
+        { "text": "EXTRATO Nº {{order.number}}", "style": "bold,center" },
+        { "text": "EMISSÃO: {{order.date}}", "style": "center" },
+        { "text": "", "style": "normal" },
+        { "line": "dashed" }
+      ]
+    },
+    {
+      "type": "customer",
+      "content": [
+        { "text": "CONSUMIDOR", "style": "bold" },
+        { "text": "{{#if customer.document}}CPF/CNPJ: {{customer.document}}{{else}}CONSUMIDOR NÃO IDENTIFICADO{{/if}}", "style": "normal" },
+        { "text": "{{#if customer.name}}NOME: {{customer.name}}{{/if}}", "style": "normal" },
+        { "text": "", "style": "normal" },
+        { "line": "dashed" }
+      ]
+    },
+    {
+      "type": "items",
+      "header": [
+        { "text": "ITEM CÓDIGO DESCRIÇÃO", "style": "bold" },
+        { "text": "QTD UN VL UNIT VL TOTAL", "style": "bold" }
+      ],
+      "item_format": [
+        { "text": "{{seq}} {{code}} {{name}}", "style": "normal" },
+        { "text": "{{quantity}} UN x {{unit_price}} = {{total_price}}", "style": "normal" }
+      ],
+      "footer": [
+        { "line": "dashed" }
+      ]
+    },
+    {
+      "type": "totals",
+      "content": [
+        { "text": "SUBTOTAL: {{order.subtotal}}", "style": "normal" },
+        { "text": "DESCONTOS: {{order.discount}}", "style": "normal" },
+        { "text": "TOTAL: {{order.total}}", "style": "bold" },
+        { "text": "", "style": "normal" },
+        { "text": "FORMA DE PAGAMENTO: {{order.payment_method}}", "style": "normal" },
+        { "text": "", "style": "normal" },
+        { "line": "dashed" }
+      ]
+    },
+    {
+      "type": "taxes",
+      "content": [
+        { "text": "TRIBUTOS TOTAIS (Lei Federal 12.741/2012)", "style": "bold,center" },
+        { "text": "Valor aprox. impostos: R$ {{tax_totals.total}} ({{tax_percentage}}%)", "style": "normal" },
+        { "text": "ICMS: R$ {{tax_totals.icms}} | PIS: R$ {{tax_totals.pis}}", "style": "normal" },
+        { "text": "COFINS: R$ {{tax_totals.cofins}} | ISS: R$ {{tax_totals.iss}}", "style": "normal" },
+        { "text": "", "style": "normal" },
+        { "line": "dashed" }
+      ]
+    },
+    {
+      "type": "sat",
+      "content": [
+        { "text": "SAT Nº {{sat.sat_number}}", "style": "normal" },
+        { "text": "{{sat.emission_date}}", "style": "normal" },
+        { "text": "CHAVE DE ACESSO", "style": "bold" },
+        { "text": "{{sat.access_key}}", "style": "normal" },
+        { "qrcode": "{{sat.qr_code}}", "size": "medium", "style": "center" },
+        { "text": "", "style": "normal" },
+        { "line": "dashed" }
+      ]
+    },
+    {
+      "type": "footer",
+      "content": [
+        { "text": "OBRIGADO PELA PREFERÊNCIA!", "style": "bold,center" },
+        { "text": "Impresso em: {{print_date}}", "style": "normal,center" },
+        { "text": "", "style": "normal" },
+        { "cut": true }
+      ]
+    }
+  ]
+}

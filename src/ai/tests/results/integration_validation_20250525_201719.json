@@ -1,0 +1,215 @@
+{
+  "timestamp": "2025-05-25T20:17:19.135100",
+  "restaurant_id": "test-restaurant-1",
+  "validations": {
+    "forecast_integration": {
+      "success": false,
+      "tests": [
+        {
+          "name": "Obter previs\u00e3o de demanda",
+          "status": "success",
+          "details": {
+            "forecast_id": "forecast-test-restaurant-1-1921127c",
+            "points_count": 104,
+            "start_date": "2025-05-25T20:17:19.135133",
+            "end_date": "2025-06-01T20:17:19.135133"
+          }
+        },
+        {
+          "name": "Gerar recomenda\u00e7\u00f5es de escala",
+          "status": "success",
+          "details": {
+            "recommendations_count": 192,
+            "first_recommendation": {
+              "recommendation_id": "staff-rec-test-restaurant-1-f954c175",
+              "restaurant_id": "test-restaurant-1",
+              "created_at": "2025-05-25 20:17:19.139175",
+              "date": "2025-05-25 20:17:19.135133",
+              "shift": "morning",
+              "role": "waiter",
+              "recommended_staff_count": 4,
+              "current_staff_count": 6,
+              "confidence": 0.85,
+              "reason": "Recomendamos reduzir em 2 o n\u00famero de gar\u00e7ons no turno da manh\u00e3 devido \u00e0 demanda esperada de 45.1 clientes/pedidos por hora.",
+              "forecast_id": "forecast-test-restaurant-1-e469e687"
+            }
+          }
+        },
+        {
+          "name": "Gerar todas as recomenda\u00e7\u00f5es",
+          "status": "failed",
+          "error": ""
+        }
+      ],
+      "errors": [
+        {
+          "test": "Gerar todas as recomenda\u00e7\u00f5es",
+          "error": ""
+        }
+      ]
+    },
+    "external_data_integration": {
+      "success": false,
+      "tests": [
+        {
+          "name": "Obter dados clim\u00e1ticos",
+          "status": "success",
+          "details": {
+            "data_points": 168,
+            "first_point": {
+              "dt": 1748145600,
+              "main": {
+                "temp": 20.674806270852756,
+                "feels_like": 19.28813092774408,
+                "temp_min": 19.59793808007191,
+                "temp_max": 21.65910326238322,
+                "pressure": 1000.0911209062355,
+                "humidity": 73.94149588010598
+              },
+              "weather": [
+                {
+                  "id": 800,
+                  "main": "Clear",
+                  "description": "c\u00e9u limpo",
+                  "icon": "01d"
+                }
+              ],
+              "clouds": {
+                "all": 6.660572702429043
+              },
+              "wind": {
+                "speed": 21.874948931686163,
+                "deg": 252.04132514461625
+              },
+              "visibility": 10000,
+              "pop": 0,
+              "rain": {
+                "3h": 0
+              },
+              "sys": {
+                "pod": "n"
+              },
+              "dt_txt": "2025-05-25 00:00:00"
+            }
+          }
+        },
+        {
+          "name": "Obter dados de eventos",
+          "status": "success",
+          "details": {
+            "events_count": 10,
+            "first_event": {
+              "id": "event-0",
+              "name": {
+                "text": "Mega Conference 0",
+                "html": "Mega Conference 0"
+              },
+              "description": {
+                "text": "Um evento de conference pr\u00f3ximo ao restaurante",
+                "html": "<p>Um evento de conference pr\u00f3ximo ao restaurante</p>"
+              },
+              "url": "https://example.com/events/0",
+              "start": {
+                "timezone": "America/Sao_Paulo",
+                "local": "2025-06-16T18:00:00",
+                "utc": "2025-06-16T15:00:00Z"
+              },
+              "end": {
+                "timezone": "America/Sao_Paulo",
+                "local": "2025-06-16T23:00:00",
+                "utc": "2025-06-16T20:00:00Z"
+              },
+              "organization_id": "org-6809",
+              "created": "2025-04-20T20:17:19Z",
+              "changed": "2025-05-13T20:17:19Z",
+              "capacity": 1774,
+              "capacity_is_custom": false,
+              "status": "live",
+              "currency": "BRL",
+              "listed": true,
+              "shareable": true,
+              "online_event": false,
+              "tx_time_limit": 480,
+              "hide_start_date": false,
+              "hide_end_date": false,
+              "locale": "pt_BR",
+              "is_locked": false,
+              "privacy_setting": "unlocked",
+              "is_series": false,
+              "is_series_parent": false,
+              "is_reserved_seating": false,
+              "show_pick_a_seat": false,
+              "show_seatmap_thumbnail": false,
+              "show_colors_in_seatmap_thumbnail": false,
+              "source": "create_web",
+              "is_free": false,
+              "version": "3.0.0",
+              "logo_id": null,
+              "venue": {
+                "id": "venue-7567",
+                "name": "Local 0",
+                "capacity": 1774,
+                "address": {
+                  "street": "Rua Exemplo, 211",
+                  "city": "S\u00e3o Paulo",
+                  "region": "SP",
+                  "postal_code": "08147-124",
+                  "country": "BR"
+                },
+                "latitude": -23.53811231754495,
+                "longitude": -46.58967557246502
+              },
+              "category_id": "category-7315",
+              "subcategory_id": null,
+              "format_id": null,
+              "category": {
+                "name": "Conference"
+              },
+              "distance": 5.0337555871430295
+            }
+          }
+        },
+        {
+          "name": "Obter dados de feriados",
+          "status": "failed",
+          "error": "'dict' object has no attribute 'dict'"
+        },
+        {
+          "name": "Enriquecer previs\u00e3o com dados externos",
+          "status": "success",
+          "details": {
+            "forecast_id": "forecast-test-restaurant-1-5689ed96",
+            "metadata": {
+              "weather_data_count": 120,
+              "events_data_count": 12,
+              "enrichment_timestamp": "2025-05-25 20:17:19.174437"
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "test": "Obter dados de feriados",
+          "error": "'dict' object has no attribute 'dict'"
+        }
+      ]
+    },
+    "end_to_end_flow": {
+      "success": false,
+      "tests": [
+        {
+          "name": "Fluxo completo de previs\u00e3o e otimiza\u00e7\u00e3o",
+          "status": "failed",
+          "error": ""
+        }
+      ],
+      "errors": [
+        {
+          "test": "Fluxo completo de previs\u00e3o e otimiza\u00e7\u00e3o",
+          "error": ""
+        }
+      ]
+    }
+  },
+  "overall_success": false
+}

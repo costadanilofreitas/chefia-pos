@@ -1,0 +1,71 @@
+.kds-dashboard {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.station-nav .nav-link {
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  margin-right: 0.5rem;
+  font-weight: 500;
+}
+
+.station-nav .nav-link.active {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.highlight-control {
+  display: flex;
+  align-items: center;
+}
+
+.empty-state {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  color: #28a745;
+  margin-bottom: 1rem;
+}
+
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}
+
+/* Animação para destacar novos pedidos */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kds-order-card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+  .station-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  
+  .station-nav .nav-link {
+    white-space: nowrap;
+  }
+  
+  .highlight-control {
+    margin-top: 1rem;
+  }
+}

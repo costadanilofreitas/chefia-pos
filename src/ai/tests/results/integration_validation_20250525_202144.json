@@ -1,0 +1,209 @@
+{
+  "timestamp": "2025-05-25T20:21:44.198447",
+  "restaurant_id": "test-restaurant-1",
+  "validations": {
+    "forecast_integration": {
+      "success": false,
+      "tests": [
+        {
+          "name": "Obter previs\u00e3o de demanda",
+          "status": "success",
+          "details": {
+            "forecast_id": "forecast-test-restaurant-1-379fcd65",
+            "points_count": 104,
+            "start_date": "2025-05-25T20:21:44.198475",
+            "end_date": "2025-06-01T20:21:44.198475"
+          }
+        },
+        {
+          "name": "Gerar recomenda\u00e7\u00f5es de escala",
+          "status": "failed",
+          "error": ""
+        },
+        {
+          "name": "Gerar todas as recomenda\u00e7\u00f5es",
+          "status": "failed",
+          "error": ""
+        }
+      ],
+      "errors": [
+        {
+          "test": "Gerar recomenda\u00e7\u00f5es de escala",
+          "error": ""
+        },
+        {
+          "test": "Gerar todas as recomenda\u00e7\u00f5es",
+          "error": ""
+        }
+      ]
+    },
+    "external_data_integration": {
+      "success": true,
+      "tests": [
+        {
+          "name": "Obter dados clim\u00e1ticos",
+          "status": "success",
+          "details": {
+            "data_points": 168,
+            "first_point": {
+              "dt": 1748145600,
+              "main": {
+                "temp": 19.785779644463844,
+                "feels_like": 19.75857589514755,
+                "temp_min": 17.97458430884247,
+                "temp_max": 20.111149194462236,
+                "pressure": 1016.7660691161019,
+                "humidity": 39.59436739865778
+              },
+              "weather": [
+                {
+                  "id": 800,
+                  "main": "Clear",
+                  "description": "c\u00e9u limpo",
+                  "icon": "01d"
+                }
+              ],
+              "clouds": {
+                "all": 3.962252095207277
+              },
+              "wind": {
+                "speed": 23.29407499557498,
+                "deg": 302.1931589148062
+              },
+              "visibility": 10000,
+              "pop": 0,
+              "rain": {
+                "3h": 0
+              },
+              "sys": {
+                "pod": "n"
+              },
+              "dt_txt": "2025-05-25 00:00:00"
+            }
+          }
+        },
+        {
+          "name": "Obter dados de eventos",
+          "status": "success",
+          "details": {
+            "events_count": 12,
+            "first_event": {
+              "id": "event-0",
+              "name": {
+                "text": "Super Sports 0",
+                "html": "Grande Sports 0"
+              },
+              "description": {
+                "text": "Um evento de sports pr\u00f3ximo ao restaurante",
+                "html": "<p>Um evento de sports pr\u00f3ximo ao restaurante</p>"
+              },
+              "url": "https://example.com/events/0",
+              "start": {
+                "timezone": "America/Sao_Paulo",
+                "local": "2025-06-13T21:00:00",
+                "utc": "2025-06-13T18:00:00Z"
+              },
+              "end": {
+                "timezone": "America/Sao_Paulo",
+                "local": "2025-06-14T02:00:00",
+                "utc": "2025-06-13T23:00:00Z"
+              },
+              "organization_id": "org-4151",
+              "created": "2025-03-18T20:21:44Z",
+              "changed": "2025-05-23T20:21:44Z",
+              "capacity": 24081,
+              "capacity_is_custom": false,
+              "status": "live",
+              "currency": "BRL",
+              "listed": true,
+              "shareable": true,
+              "online_event": false,
+              "tx_time_limit": 480,
+              "hide_start_date": false,
+              "hide_end_date": false,
+              "locale": "pt_BR",
+              "is_locked": false,
+              "privacy_setting": "unlocked",
+              "is_series": false,
+              "is_series_parent": false,
+              "is_reserved_seating": false,
+              "show_pick_a_seat": false,
+              "show_seatmap_thumbnail": false,
+              "show_colors_in_seatmap_thumbnail": false,
+              "source": "create_web",
+              "is_free": true,
+              "version": "3.0.0",
+              "logo_id": null,
+              "venue": {
+                "id": "venue-9433",
+                "name": "Local 0",
+                "capacity": 24081,
+                "address": {
+                  "street": "Rua Exemplo, 677",
+                  "city": "S\u00e3o Paulo",
+                  "region": "SP",
+                  "postal_code": "05129-564",
+                  "country": "BR"
+                },
+                "latitude": -23.527274533486104,
+                "longitude": -46.633980168554054
+              },
+              "category_id": "category-2828",
+              "subcategory_id": null,
+              "format_id": null,
+              "category": {
+                "name": "Sports"
+              },
+              "distance": 2.5791320534670703
+            }
+          }
+        },
+        {
+          "name": "Obter dados de feriados",
+          "status": "success",
+          "details": {
+            "holidays_count": 14,
+            "first_holiday": {
+              "date": "2025-01-01 00:00:00",
+              "name": "Confraterniza\u00e7\u00e3o Universal",
+              "is_national": true,
+              "is_regional": false,
+              "region": null,
+              "impact_level": 5
+            }
+          }
+        },
+        {
+          "name": "Enriquecer previs\u00e3o com dados externos",
+          "status": "success",
+          "details": {
+            "forecast_id": "forecast-test-restaurant-1-d93b4553",
+            "metadata": {
+              "weather_data_count": 120,
+              "events_data_count": 7,
+              "enrichment_timestamp": "2025-05-25 20:21:44.210472"
+            }
+          }
+        }
+      ],
+      "errors": []
+    },
+    "end_to_end_flow": {
+      "success": false,
+      "tests": [
+        {
+          "name": "Fluxo completo de previs\u00e3o e otimiza\u00e7\u00e3o",
+          "status": "failed",
+          "error": ""
+        }
+      ],
+      "errors": [
+        {
+          "test": "Fluxo completo de previs\u00e3o e otimiza\u00e7\u00e3o",
+          "error": ""
+        }
+      ]
+    }
+  },
+  "overall_success": false
+}

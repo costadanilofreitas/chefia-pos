@@ -1,0 +1,117 @@
+/* Layout.css - Styles for main layout structure */
+
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  width: 100%;
+  transition: margin-left 0.3s ease;
+}
+
+.content-area {
+  padding: 20px;
+  flex-grow: 1;
+  background-color: #f5f7fa;
+  min-height: calc(100vh - var(--header-height) - 60px); /* Header height + selectors height */
+}
+
+.selectors-container {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 20px;
+  background-color: #fff;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Desktop styles */
+@media (min-width: 992px) {
+  .layout-container {
+    flex-direction: row;
+  }
+  
+  .sidebar-open .main-content {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+  }
+  
+  .sidebar-closed .main-content {
+    margin-left: var(--sidebar-collapsed-width);
+    width: calc(100% - var(--sidebar-collapsed-width));
+  }
+  
+  .selectors-container {
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 991px) {
+  .layout-container {
+    flex-direction: row;
+  }
+  
+  .sidebar-open .main-content {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+  }
+  
+  .sidebar-closed .main-content {
+    margin-left: var(--sidebar-collapsed-width);
+    width: calc(100% - var(--sidebar-collapsed-width));
+  }
+  
+  .selectors-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  .layout-container {
+    flex-direction: column;
+  }
+  
+  .sidebar-open .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .sidebar-closed .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .content-area {
+    padding: 15px;
+  }
+  
+  .selectors-container {
+    padding: 10px 15px;
+    gap: 10px;
+  }
+}
+
+/* Small mobile styles */
+@media (max-width: 576px) {
+  .content-area {
+    padding: 10px;
+  }
+  
+  .selectors-container {
+    padding: 8px 10px;
+  }
+}

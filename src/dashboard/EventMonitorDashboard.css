@@ -1,0 +1,266 @@
+.event-monitor {
+  font-family: 'Roboto', sans-serif;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+.monitor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e4e8;
+}
+
+.monitor-header h1 {
+  font-size: 24px;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.live-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.live-button {
+  background-color: #f5f5f5;
+  color: #757575;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.live-button.active {
+  background-color: #f44336;
+  color: white;
+}
+
+.monitor-content {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+}
+
+.sidebar {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.stats-panel h2 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+.stats-panel h3 {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin: 20px 0 10px 0;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.stat-label {
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.stat-value {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.stat-bars {
+  margin-bottom: 20px;
+}
+
+.stat-bar-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.stat-bar-label {
+  width: 100px;
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.stat-bar-container {
+  flex-grow: 1;
+  height: 8px;
+  background-color: #ecf0f1;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0 10px;
+}
+
+.stat-bar {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.stat-bar-value {
+  width: 30px;
+  font-size: 12px;
+  color: #7f8c8d;
+  text-align: right;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.filters {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+}
+
+.filter-group label {
+  margin-right: 8px;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.filter-group select, .filter-group input {
+  padding: 8px 12px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.filter-group.search {
+  flex-grow: 1;
+}
+
+.filter-group.search input {
+  width: 100%;
+}
+
+.events-table-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  overflow: auto;
+  flex-grow: 1;
+}
+
+.events-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.events-table th {
+  text-align: left;
+  padding: 12px 15px;
+  border-bottom: 2px solid #eee;
+  color: #7f8c8d;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.events-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.event-row {
+  transition: background-color 0.2s;
+}
+
+.event-row:hover {
+  background-color: #f5f7fa;
+}
+
+.event-row.error {
+  background-color: #ffebee;
+}
+
+.event-row.warning {
+  background-color: #fff8e1;
+}
+
+.module-badge, .type-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.event-data {
+  font-family: monospace;
+  font-size: 12px;
+  background-color: #f5f7fa;
+  padding: 8px;
+  border-radius: 4px;
+  max-width: 300px;
+  max-height: 100px;
+  overflow: auto;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.no-events {
+  text-align: center;
+  padding: 30px;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+@media (max-width: 1024px) {
+  .monitor-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar {
+    order: 2;
+  }
+  
+  .main-content {
+    order: 1;
+  }
+  
+  .filters {
+    flex-wrap: wrap;
+  }
+  
+  .filter-group {
+    flex-basis: 100%;
+    margin-bottom: 10px;
+  }
+}

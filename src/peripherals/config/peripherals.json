@@ -1,0 +1,40 @@
+{
+  "peripherals": {
+    "default_printer": {
+      "type": "printer",
+      "brand": "epson",
+      "model": "TM-T20X",
+      "connection_type": "usb",
+      "port": "auto",
+      "options": {
+        "paper_width": 80,
+        "dpi": 180,
+        "cash_drawer_enabled": true
+      }
+    },
+    "kitchen_printer": {
+      "type": "printer",
+      "brand": "epson",
+      "model": "TM-T88VI",
+      "connection_type": "network",
+      "address": "192.168.1.100",
+      "port": "9100",
+      "options": {
+        "paper_width": 80,
+        "dpi": 180,
+        "cash_drawer_enabled": false
+      }
+    },
+    "simulated_printer": {
+      "type": "printer",
+      "brand": "simulated",
+      "model": "Simulated Printer",
+      "connection_type": "direct",
+      "options": {
+        "paper_width": 80,
+        "output_dir": "/tmp/simulated_printer",
+        "cash_drawer_enabled": true
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "name": "receipt_order",
+  "version": "1.0",
+  "sections": [
+    {
+      "type": "header",
+      "content": [
+        {"type": "text", "value": "{{terminal.name}}", "align": "center", "style": "bold"},
+        {"type": "text", "value": "{{terminal.address}}", "align": "center"},
+        {"type": "line", "style": "double"}
+      ]
+    },
+    {
+      "type": "body",
+      "content": [
+        {"type": "text", "value": "PEDIDO #{{order.id}}", "align": "center", "style": "bold"},
+        {"type": "text", "value": "Data: {{order.created_at|date}}", "align": "left"},
+        {"type": "text", "value": "Hora: {{order.created_at|time}}", "align": "left"},
+        {"type": "text", "value": "Atendente: {{order.user_id}}", "align": "left"},
+        {"type": "line", "style": "single"},
+        {"type": "text", "value": "ITENS", "align": "center", "style": "bold"},
+        {"type": "text", "value": "--------------------------------", "align": "center"}
+      ]
+    },
+    {
+      "type": "items",
+      "content": [
+        {"type": "text", "value": "{{item.quantity}}x {{item.name}}", "align": "left", "style": "bold"},
+        {"type": "text", "value": "  R$ {{item.price|number:2}} cada", "align": "left"},
+        {"type": "text", "value": "  Subtotal: R$ {{item.total|number:2}}", "align": "right"}
+      ]
+    },
+    {
+      "type": "summary",
+      "content": [
+        {"type": "line", "style": "single"},
+        {"type": "text", "value": "Subtotal: R$ {{order.subtotal|number:2}}", "align": "right"},
+        {"type": "text", "value": "Desconto: R$ {{order.discount|number:2}}", "align": "right"},
+        {"type": "text", "value": "Taxa de serviço: R$ {{order.service_fee|number:2}}", "align": "right"},
+        {"type": "text", "value": "TOTAL: R$ {{order.total|number:2}}", "align": "right", "style": "bold"},
+        {"type": "line", "style": "double"}
+      ]
+    },
+    {
+      "type": "footer",
+      "content": [
+        {"type": "text", "value": "Obrigado pela preferência!", "align": "center"},
+        {"type": "text", "value": "www.exemplo.com.br", "align": "center"},
+        {"type": "qrcode", "value": "{{order.id}}", "size": 6, "align": "center"}
+      ]
+    }
+  ]
+}

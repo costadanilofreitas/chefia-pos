@@ -1,0 +1,136 @@
+/* Login.css - Styles for login page */
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 20px;
+}
+
+.login-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  padding: 30px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-header h1 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.login-header h2 {
+  margin: 5px 0 0;
+  color: var(--text-color);
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+
+.login-form {
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.login-button:hover {
+  background-color: #1976D2;
+}
+
+.login-button:disabled {
+  background-color: #90CAF9;
+  cursor: not-allowed;
+}
+
+.login-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #757575;
+}
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  .login-container {
+    padding: 15px;
+    background-color: white; /* Full white background on mobile */
+  }
+  
+  .login-card {
+    box-shadow: none;
+    padding: 20px 15px;
+  }
+  
+  .login-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .login-header h2 {
+    font-size: 1.1rem;
+  }
+  
+  .form-group input {
+    padding: 14px; /* Larger touch target on mobile */
+  }
+  
+  .login-button {
+    padding: 14px; /* Larger touch target on mobile */
+  }
+}
+
+/* Small mobile styles */
+@media (max-width: 320px) {
+  .login-header h1 {
+    font-size: 1.6rem;
+  }
+  
+  .login-header h2 {
+    font-size: 1rem;
+  }
+}

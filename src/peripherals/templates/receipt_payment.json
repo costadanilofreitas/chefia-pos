@@ -1,0 +1,36 @@
+{
+  "name": "receipt_payment",
+  "version": "1.0",
+  "sections": [
+    {
+      "type": "header",
+      "content": [
+        {"type": "text", "value": "{{terminal.name}}", "align": "center", "style": "bold"},
+        {"type": "text", "value": "{{terminal.address}}", "align": "center"},
+        {"type": "line", "style": "double"}
+      ]
+    },
+    {
+      "type": "body",
+      "content": [
+        {"type": "text", "value": "COMPROVANTE DE PAGAMENTO", "align": "center", "style": "bold"},
+        {"type": "text", "value": "Data: {{payment.created_at|date}}", "align": "left"},
+        {"type": "text", "value": "Hora: {{payment.created_at|time}}", "align": "left"},
+        {"type": "text", "value": "Operador: {{session.user_id}}", "align": "left"},
+        {"type": "line", "style": "single"},
+        {"type": "text", "value": "Pedido: {{payment.order_id}}", "align": "left"},
+        {"type": "text", "value": "Valor: R$ {{payment.amount|number:2}}", "align": "left"},
+        {"type": "text", "value": "Forma de Pagamento: {{payment.method}}", "align": "left"},
+        {"type": "line", "style": "single"}
+      ]
+    },
+    {
+      "type": "footer",
+      "content": [
+        {"type": "text", "value": "Obrigado pela preferência!", "align": "center"},
+        {"type": "text", "value": "www.exemplo.com.br", "align": "center"},
+        {"type": "barcode", "value": "{{payment.id}}", "barcode_type": "CODE128", "align": "center"}
+      ]
+    }
+  ]
+}

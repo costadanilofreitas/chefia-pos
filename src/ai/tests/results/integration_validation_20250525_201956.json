@@ -1,0 +1,204 @@
+{
+  "timestamp": "2025-05-25T20:19:56.755110",
+  "restaurant_id": "test-restaurant-1",
+  "validations": {
+    "forecast_integration": {
+      "success": false,
+      "tests": [
+        {
+          "name": "Obter previs\u00e3o de demanda",
+          "status": "success",
+          "details": {
+            "forecast_id": "forecast-test-restaurant-1-d2872536",
+            "points_count": 104,
+            "start_date": "2025-05-25T20:19:56.755140",
+            "end_date": "2025-06-01T20:19:56.755140"
+          }
+        },
+        {
+          "name": "Gerar recomenda\u00e7\u00f5es de escala",
+          "status": "failed",
+          "error": ""
+        },
+        {
+          "name": "Gerar todas as recomenda\u00e7\u00f5es",
+          "status": "failed",
+          "error": ""
+        }
+      ],
+      "errors": [
+        {
+          "test": "Gerar recomenda\u00e7\u00f5es de escala",
+          "error": ""
+        },
+        {
+          "test": "Gerar todas as recomenda\u00e7\u00f5es",
+          "error": ""
+        }
+      ]
+    },
+    "external_data_integration": {
+      "success": false,
+      "tests": [
+        {
+          "name": "Obter dados clim\u00e1ticos",
+          "status": "success",
+          "details": {
+            "data_points": 168,
+            "first_point": {
+              "dt": 1748145600,
+              "main": {
+                "temp": 14.50376977947632,
+                "feels_like": 14.482551176589935,
+                "temp_min": 13.866139905180706,
+                "temp_max": 16.09509647852298,
+                "pressure": 1017.038092648709,
+                "humidity": 44.87508387316803
+              },
+              "weather": [
+                {
+                  "id": 500,
+                  "main": "Rain",
+                  "description": "chuva leve",
+                  "icon": "10d"
+                }
+              ],
+              "clouds": {
+                "all": 82.58480176038523
+              },
+              "wind": {
+                "speed": 14.692912986864071,
+                "deg": 64.05106400660324
+              },
+              "visibility": 5000,
+              "pop": 0.7,
+              "rain": {
+                "3h": 11.76823323908122
+              },
+              "sys": {
+                "pod": "n"
+              },
+              "dt_txt": "2025-05-25 00:00:00"
+            }
+          }
+        },
+        {
+          "name": "Obter dados de eventos",
+          "status": "success",
+          "details": {
+            "events_count": 18,
+            "first_event": {
+              "id": "event-0",
+              "name": {
+                "text": "Show de Theater 0",
+                "html": "Super Theater 0"
+              },
+              "description": {
+                "text": "Um evento de theater pr\u00f3ximo ao restaurante",
+                "html": "<p>Um evento de theater pr\u00f3ximo ao restaurante</p>"
+              },
+              "url": "https://example.com/events/0",
+              "start": {
+                "timezone": "America/Sao_Paulo",
+                "local": "2025-06-19T17:00:00",
+                "utc": "2025-06-19T14:00:00Z"
+              },
+              "end": {
+                "timezone": "America/Sao_Paulo",
+                "local": "2025-06-19T21:00:00",
+                "utc": "2025-06-19T18:00:00Z"
+              },
+              "organization_id": "org-8406",
+              "created": "2025-04-24T20:19:56Z",
+              "changed": "2025-05-08T20:19:56Z",
+              "capacity": 496,
+              "capacity_is_custom": false,
+              "status": "live",
+              "currency": "BRL",
+              "listed": true,
+              "shareable": true,
+              "online_event": false,
+              "tx_time_limit": 480,
+              "hide_start_date": false,
+              "hide_end_date": false,
+              "locale": "pt_BR",
+              "is_locked": false,
+              "privacy_setting": "unlocked",
+              "is_series": false,
+              "is_series_parent": false,
+              "is_reserved_seating": false,
+              "show_pick_a_seat": false,
+              "show_seatmap_thumbnail": false,
+              "show_colors_in_seatmap_thumbnail": false,
+              "source": "create_web",
+              "is_free": false,
+              "version": "3.0.0",
+              "logo_id": null,
+              "venue": {
+                "id": "venue-3541",
+                "name": "Local 0",
+                "capacity": 496,
+                "address": {
+                  "street": "Rua Exemplo, 882",
+                  "city": "S\u00e3o Paulo",
+                  "region": "SP",
+                  "postal_code": "07344-407",
+                  "country": "BR"
+                },
+                "latitude": -23.509094921514325,
+                "longitude": -46.61603132913586
+              },
+              "category_id": "category-3422",
+              "subcategory_id": null,
+              "format_id": null,
+              "category": {
+                "name": "Theater"
+              },
+              "distance": 4.9796677406272885
+            }
+          }
+        },
+        {
+          "name": "Obter dados de feriados",
+          "status": "failed",
+          "error": "'dict' object has no attribute 'dict'"
+        },
+        {
+          "name": "Enriquecer previs\u00e3o com dados externos",
+          "status": "success",
+          "details": {
+            "forecast_id": "forecast-test-restaurant-1-306c017f",
+            "metadata": {
+              "weather_data_count": 120,
+              "events_data_count": 15,
+              "enrichment_timestamp": "2025-05-25 20:19:56.768836"
+            }
+          }
+        }
+      ],
+      "errors": [
+        {
+          "test": "Obter dados de feriados",
+          "error": "'dict' object has no attribute 'dict'"
+        }
+      ]
+    },
+    "end_to_end_flow": {
+      "success": false,
+      "tests": [
+        {
+          "name": "Fluxo completo de previs\u00e3o e otimiza\u00e7\u00e3o",
+          "status": "failed",
+          "error": ""
+        }
+      ],
+      "errors": [
+        {
+          "test": "Fluxo completo de previs\u00e3o e otimiza\u00e7\u00e3o",
+          "error": ""
+        }
+      ]
+    }
+  },
+  "overall_success": false
+}
