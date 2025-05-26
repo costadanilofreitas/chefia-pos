@@ -1,45 +1,88 @@
-# POS Moderno - Sistema de Autenticação e RBAC
+# POS Modern - Sistema Completo de Gestão para Restaurantes
 
-Este projeto implementa o sistema de autenticação e controle de acesso baseado em papéis (RBAC) para o POS Moderno, um sistema de ponto de venda para restaurantes.
+O POS Modern é uma solução completa e modular para gestão de restaurantes, oferecendo desde o ponto de venda até integrações avançadas com plataformas de delivery, pagamentos online e análises preditivas com IA.
 
-## Estrutura do Projeto
+## Arquitetura do Sistema
+
+O POS Modern foi desenvolvido com uma arquitetura modular e escalável:
 
 ```
 pos-modern/
-├── src/
-│   ├── api/
-│   │   └── main.py           # Aplicação FastAPI principal
-│   ├── auth/
-│   │   ├── models.py         # Modelos de dados para autenticação
-│   │   ├── router.py         # Endpoints de autenticação
-│   │   └── security.py       # Lógica de segurança e RBAC
-│   ├── tests/
-│   │   └── test_auth.py      # Testes unitários e de integração
-│   ├── core/                 # (Futuro) Lógica de negócio principal
-│   └── utils/                # (Futuro) Utilitários compartilhados
+├── src/                      # Código-fonte do sistema
+│   ├── accounts/             # Gestão de contas e usuários
+│   ├── ai/                   # Módulos de inteligência artificial
+│   ├── api/                  # API principal e gateway
+│   ├── auth/                 # Autenticação e controle de acesso (RBAC)
+│   ├── backoffice/           # Interface administrativa
+│   ├── business_day/         # Gestão de dias de operação
+│   ├── cashier/              # Operações de caixa
+│   ├── core/                 # Componentes centrais e compartilhados
+│   ├── customer/             # Gestão de clientes
+│   ├── delivery/             # Integração com plataformas de delivery
+│   ├── employee/             # Gestão de funcionários
+│   ├── fiscal/               # Módulos fiscais (SAT, NFC-e, CF-e, MFE)
+│   ├── inventory/            # Gestão de estoque
+│   ├── kds/                  # Sistema de exibição para cozinha
+│   ├── kiosk/                # Totem de autoatendimento
+│   ├── marketplace/          # Marketplace de integrações
+│   ├── menu/                 # Gestão de cardápio
+│   ├── mobile_waiter/        # Aplicativo móvel para garçons
+│   ├── order/                # Gestão de pedidos
+│   ├── payment/              # Processamento de pagamentos
+│   ├── peripherals/          # Integração com periféricos
+│   ├── pos/                  # Terminal de ponto de venda
+│   ├── postsale/             # Módulo de pós-venda e feedback
+│   ├── product/              # Gestão de produtos
+│   ├── remote_orders/        # Pedidos remotos (delivery, takeout)
+│   ├── sat/                  # Integração com SAT
+│   ├── stock/                # Controle de estoque
+│   ├── supplier/             # Gestão de fornecedores
+│   ├── waiter/               # Módulo de garçom
+│   └── main.py               # Ponto de entrada da aplicação
+├── docs/                     # Documentação detalhada
 ├── requirements.txt          # Dependências do projeto
 ├── Dockerfile                # Configuração para containerização
 ├── docker-compose.yml        # Configuração para ambiente de desenvolvimento
 └── README.md                 # Documentação do projeto
 ```
 
-## Funcionalidades Implementadas
+## Funcionalidades Principais
 
-- **Autenticação JWT**: Sistema completo de autenticação usando tokens JWT
-- **Controle de Acesso (RBAC)**: Controle granular baseado em papéis e permissões
-- **Documentação Automática**: Swagger/OpenAPI integrado
-- **Testes Automatizados**: Testes unitários e de integração para fluxos de autenticação
+### Módulos Operacionais
+- **Ponto de Venda (POS)**: Interface intuitiva para registro de vendas
+- **Frente de Caixa**: Abertura/fechamento, gestão de caixa, relatórios
+- **Cardápio Digital**: Cardápio online acessível via QR Code
+- **Gestão de Mesas**: Layout visual e controle de ocupação
+- **Gestão de Pedidos**: Registro, acompanhamento e entrega
+- **Controle de Estoque**: Gestão de inventário e alertas
+- **KDS (Kitchen Display System)**: Visualização de pedidos na cozinha
 
-## Papéis e Permissões
+### Integrações Estratégicas
+- **iFood**: Integração bidirecional com marketplace de delivery
+- **Chatbot WhatsApp**: Atendimento automatizado via WhatsApp (Twilio + Amazon Bedrock)
+- **Pagamentos Online**: Integração com Asaas para PIX, crédito e débito
+- **Documentos Fiscais**: SAT, NFC-e, CF-e, MFE
+- **Contabilidade**: Exportação para sistemas contábeis
 
-O sistema implementa os seguintes papéis:
+### Recursos Avançados
+- **IA Preditiva**: Previsão de demanda e otimização operacional
+- **Campanhas Automáticas**: Marketing personalizado via WhatsApp/Telegram
+- **Dashboards Analíticos**: Visualizações personalizáveis para KPIs
+- **Marketplace de Integrações**: API pública para parceiros
+- **Suporte Escalável**: Sistema de tickets e base de conhecimento
 
-- **Gerente**: Acesso completo ao sistema
-- **Caixa**: Operações de venda e caixa
-- **Garçom**: Registro e consulta de pedidos
-- **Cozinheiro**: Visualização e atualização de pedidos na cozinha
+## Requisitos do Sistema
 
-Cada papel possui um conjunto específico de permissões que determinam quais operações o usuário pode realizar.
+### Requisitos de Hardware
+- **Servidor**: 2+ núcleos, 4GB+ RAM
+- **Clientes**: Tablets, computadores, smartphones ou quiosques
+- **Periféricos**: Impressoras térmicas, gavetas de dinheiro, leitores de código de barras (opcionais)
+
+### Requisitos de Software
+- **Sistema Operacional**: Linux, Windows ou macOS
+- **Docker**: 20.10.0+
+- **Docker Compose**: 2.0.0+
+- **Navegador**: Chrome 90+, Firefox 90+, Edge 90+, Safari 14+
 
 ## Como Executar
 
@@ -47,54 +90,148 @@ Cada papel possui um conjunto específico de permissões que determinam quais op
 
 1. Certifique-se de ter Docker e Docker Compose instalados
 2. Clone o repositório
-3. Execute o comando:
+3. Configure as variáveis de ambiente:
+
+```bash
+cp .env.example .env
+# Edite o arquivo .env com suas configurações
+```
+
+4. Execute o sistema:
 
 ```bash
 docker-compose up
 ```
 
-4. Acesse a API em http://localhost:8000
-5. Acesse a documentação Swagger em http://localhost:8000/api/docs
+5. Acesse a interface web em http://localhost:8080
+6. Acesse o backoffice em http://localhost:8080/backoffice
+7. Acesse a documentação da API em http://localhost:8080/api/docs
 
 ### Sem Docker
 
-1. Certifique-se de ter Python 3.11+ instalado
+1. Certifique-se de ter Python 3.11+ e Node.js 18+ instalados
 2. Clone o repositório
-3. Crie um ambiente virtual:
+3. Configure o ambiente Python:
 
 ```bash
 python -m venv venv
 source venv/bin/activate  # No Windows: venv\Scripts\activate
-```
-
-4. Instale as dependências:
-
-```bash
 pip install -r requirements.txt
 ```
 
-5. Execute a aplicação:
+4. Configure o ambiente Node.js:
 
 ```bash
-cd pos-modern
-uvicorn src.api.main:app --reload
+cd frontend
+npm install
 ```
 
-6. Acesse a API em http://localhost:8000
-7. Acesse a documentação Swagger em http://localhost:8000/api/docs
-
-## Como Testar
-
-Execute os testes automatizados com:
+5. Configure as variáveis de ambiente:
 
 ```bash
-pytest src/tests/
+cp .env.example .env
+# Edite o arquivo .env com suas configurações
 ```
+
+6. Execute o backend:
+
+```bash
+cd backend
+uvicorn src.main:app --reload
+```
+
+7. Execute o frontend:
+
+```bash
+cd frontend
+npm run dev
+```
+
+8. Acesse a interface web em http://localhost:3000
+9. Acesse o backoffice em http://localhost:3000/backoffice
+10. Acesse a documentação da API em http://localhost:8000/api/docs
+
+## Módulos e Integrações
+
+### Módulo de Cardápio Online (QR Code)
+- Cardápio digital acessível via QR Code
+- Personalização visual por restaurante
+- Filtros por categoria, preço e tipo de item
+- Indicadores de itens populares
+- Modo escuro/claro
+- Informações nutricionais e alérgenos (opcional)
+- Pedidos diretos pelo cardápio
+
+### Módulo Fiscal
+- Integração com SAT
+- Suporte a NFC-e
+- Suporte a CF-e
+- Suporte a MFE
+- Integração com sistemas contábeis
+- Conformidade com legislações estaduais
+
+### Marketplace de Integrações
+- API pública REST
+- Modelo de aprovação de parceiros
+- Integrações prioritárias:
+  - Delivery (iFood, Rappi, etc.)
+  - Pagamentos (Asaas, PagSeguro, etc.)
+  - CRM (RD Station, Hubspot, etc.)
+- Webhooks para notificações em tempo real
+- Documentação completa da API
+
+### Módulo de IA e Análise Preditiva
+- Previsão de demanda automática
+- Otimização de escala de funcionários
+- Otimização de rotas de delivery
+- Otimização de distribuição de mesas
+- Retenção em totens de autoatendimento
+- Campanhas automáticas via WhatsApp
+
+### Chatbot WhatsApp
+- Integração com Twilio
+- IA Generativa com Amazon Bedrock (Claude)
+- Exibição e navegação do cardápio
+- Registro de pedidos
+- Pagamentos via Asaas
+- Confirmação de pedidos configurável
+- Notificações de status
+- Reembolso automático
+
+### Pagamentos Online
+- Integração com Asaas
+- Suporte a PIX
+- Suporte a cartões de crédito e débito
+- Split de pagamentos
+- Pagamentos parciais por assento
+- Estornos automáticos
+
+## Checklist de Integrações Implementadas
+
+- [x] Autenticação e RBAC
+- [x] Cardápio Online via QR Code
+- [x] Terminal Móvel para Garçons
+- [x] SAT Fiscal
+- [x] NFC-e, CF-e, MFE
+- [x] Marketplace de Integrações
+- [x] API Pública REST
+- [x] Previsão de Demanda com IA
+- [x] Otimização Operacional
+- [x] Campanhas de Marketing Automatizadas
+- [x] Integração com iFood
+- [x] Chatbot WhatsApp via Twilio
+- [x] IA Generativa (Amazon Bedrock/Claude)
+- [x] Pagamentos Online via Asaas
+- [x] Split de Pagamentos
+- [x] Feedback Pós-Venda
+- [x] Dashboards Analíticos
+- [x] Sistema de Suporte Escalável
 
 ## Usuários de Teste
 
 Para facilitar os testes, o sistema vem pré-configurado com os seguintes usuários:
 
+- **Administrador**: username: `admin`, senha: `admin123`
 - **Gerente**: username: `gerente`, senha: `senha123`
 - **Caixa**: username: `caixa`, senha: `senha123`
 - **Garçom**: username: `garcom`, senha: `senha123`
@@ -105,25 +242,110 @@ Para facilitar os testes, o sistema vem pré-configurado com os seguintes usuár
 ### Autenticação
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/auth/token" \
+curl -X POST "http://localhost:8080/api/v1/auth/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=gerente&password=senha123"
 ```
 
-### Acessar Endpoint Protegido
+### Obter Cardápio
 
 ```bash
-curl -X GET "http://localhost:8000/api/v1/protected" \
+curl -X GET "http://localhost:8080/api/v1/menu/restaurant/123" \
   -H "Authorization: Bearer {seu_token_aqui}"
 ```
 
-## Próximos Passos
+### Criar Pedido
 
-- Implementação do módulo de frente de caixa
-- Implementação do módulo de estoque
-- Implementação do módulo de pedidos
-- Integração com sistemas externos (iFood, SAT, SiTef)
+```bash
+curl -X POST "http://localhost:8080/api/v1/orders" \
+  -H "Authorization: Bearer {seu_token_aqui}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "restaurant_id": "123",
+    "table_id": "45",
+    "items": [
+      {"product_id": "789", "quantity": 2, "notes": "Sem cebola"},
+      {"product_id": "456", "quantity": 1}
+    ]
+  }'
+```
+
+### Integração com iFood
+
+```bash
+curl -X POST "http://localhost:8080/api/v1/delivery/ifood/webhook" \
+  -H "X-API-Key: {sua_chave_api}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event": "ORDER_PLACED",
+    "order": {
+      "id": "ifood-123456",
+      "restaurant": "123",
+      "customer": {"name": "João Silva", "phone": "11999998888"},
+      "items": [
+        {"name": "X-Burger", "quantity": 2, "price": 15.90}
+      ],
+      "total": 31.80
+    }
+  }'
+```
+
+### Enviar Mensagem via WhatsApp
+
+```bash
+curl -X POST "http://localhost:8080/api/v1/whatsapp/send" \
+  -H "Authorization: Bearer {seu_token_aqui}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to": "5511999998888",
+    "message": "Seu pedido #123 está pronto para retirada!"
+  }'
+```
+
+## Como Testar
+
+Execute os testes automatizados com:
+
+```bash
+# Testes unitários
+pytest src/tests/unit/
+
+# Testes de integração
+pytest src/tests/integration/
+
+# Testes de ponta a ponta
+pytest src/tests/e2e/
+```
+
+## Arquitetura Multi-Tenant e Serverless
+
+O POS Modern foi projetado com arquitetura multi-tenant para suportar múltiplos restaurantes em uma única instância, e pode ser implantado em infraestrutura serverless na AWS para alta escalabilidade e baixo custo.
+
+### Componentes AWS
+- **Lambda**: Funções serverless para processamento
+- **API Gateway**: Gerenciamento de APIs
+- **DynamoDB**: Armazenamento de dados
+- **S3**: Armazenamento de arquivos estáticos
+- **Cognito**: Autenticação e autorização
+- **SQS/SNS**: Filas e notificações
+- **CloudWatch**: Monitoramento e logs
+- **Bedrock**: IA generativa para chatbot
+
+## Licenciamento
+
+O sistema suporta licenciamento modular, permitindo que restaurantes optem por funcionalidades específicas conforme suas necessidades. O controle de licenças é gerenciado pelo backoffice administrativo.
+
+## Suporte e Documentação
+
+- Documentação detalhada disponível em `/docs`
+- Sistema de tickets integrado para suporte
+- Base de conhecimento com artigos e tutoriais
+- Chatbot de suporte para resolução de problemas comuns
+
+## Contribuição
+
+Contribuições são bem-vindas! Por favor, leia o guia de contribuição em `CONTRIBUTING.md` antes de enviar pull requests.
 
 ## Notas de Desenvolvimento
 
-Este módulo foi desenvolvido seguindo as melhores práticas de segurança e modularidade, visando um sistema leve e rápido para execução local. A arquitetura foi projetada para ser facilmente extensível e manutenível.
+Este sistema foi desenvolvido seguindo as melhores práticas de arquitetura de software, segurança e experiência do usuário. A arquitetura modular permite fácil extensão e manutenção, enquanto as integrações estratégicas garantem um ecossistema completo para gestão de restaurantes.
