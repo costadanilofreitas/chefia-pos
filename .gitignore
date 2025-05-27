@@ -6,6 +6,10 @@ yarn-debug.log
 .pnpm-debug.log
 .npm
 
+# __pycache__/
+*.pyc
+*.pyo
+
 # Build files
 dist/
 build/
