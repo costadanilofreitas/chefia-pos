@@ -1,37 +1,69 @@
 import React from 'react';
-import { AppRegistry } from 'react-native';
-import { Provider as PaperProvider } from 'react-native-paper';
-import { Provider as StoreProvider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
-
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { Provider as ReduxProvider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './src/store';
-import AppNavigator from './src/navigation/AppNavigator';
-import { theme } from './src/theme';
-import { SyncProvider } from './src/contexts/SyncContext';
-import { ConfigProvider } from './src/contexts/ConfigContext';
+import LoginScreen from './src/screens/LoginScreen';
+import HomeScreen from './src/screens/HomeScreen';
+import TableScreen from './src/screens/TableScreen';
+import OrderScreen from './src/screens/OrderScreen';
+import PaymentScreen from './src/screens/PaymentScreen';
+import { RootStackParamList } from './src/types';
 
-const App = () => {
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const App: React.FC = () => {
   return (
-    <StoreProvider store={store}>
+    <ReduxProvider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <PaperProvider theme={theme}>
-          <SafeAreaProvider>
-            <NavigationContainer>
-              <ConfigProvider>
-                <SyncProvider>
-                  <AppNavigator />
-                </SyncProvider>
-              </ConfigProvider>
-            </NavigationContainer>
-          </SafeAreaProvider>
+        <PaperProvider>
+          <NavigationContainer>
+            <Stack.Navigator 
+              initialRouteName="Login"
+              screenOptions={{
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: '#FF5722',
+                },
+                headerTintColor: '#fff',
+                headerTitleStyle: {
+                  fontWeight: 'bold',
+                },
+              }}
+            >
+              <Stack.Screen 
+                name="Login" 
+                component={LoginScreen} 
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen 
+                name="Home" 
+                component={HomeScreen} 
+                options={{ title: 'Mesas' }}
+              />
+              <Stack.Screen 
+                name="Table" 
+                component={TableScreen} 
+                options={({ route }) => ({ title: `Mesa ${route.params.tableNumber}` })}
+              />
+              <Stack.Screen 
+                name="Order" 
+                component={OrderScreen} 
+                options={{ title: 'Pedido' }}
+              />
+              <Stack.Screen 
+                name="Payment" 
+                component={PaymentScreen} 
+                options={{ title: 'Pagamento' }}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
         </PaperProvider>
       </PersistGate>
-    </StoreProvider>
+    </ReduxProvider>
   );
 };
-
-AppRegistry.registerComponent('MobileWaiter', () => App);
 
 export default App;
