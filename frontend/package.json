@@ -1,0 +1,32 @@
+{
+  "name": "pos-modern-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "common",
+    "apps/*",
+    "e2e"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "dev": "npm run dev --workspace=apps/pos",
+    "dev:kds": "npm run dev --workspace=apps/kds",
+    "dev:kiosk": "npm run dev --workspace=apps/kiosk",
+    "dev:waiter": "npm run dev --workspace=apps/waiter",
+    "dev:backoffice": "npm run dev --workspace=apps/backoffice",
+    "dev:menu": "npm run dev --workspace=apps/menu",
+    "dev:mobile_waiter": "npm run dev --workspace=apps/mobile_waiter",
+    "dev:supplier": "npm run dev --workspace=apps/supplier",
+    "e2e": "npm run test --workspace=e2e"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  }
+}

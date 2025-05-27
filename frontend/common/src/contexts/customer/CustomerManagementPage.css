@@ -1,0 +1,141 @@
+/* /home/ubuntu/pos-modern/src/customer/ui/CustomerManagementPage.css */
+
+.customer-management-page {
+    padding: 20px;
+    font-family: sans-serif;
+}
+
+.customer-actions {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-form {
+    display: flex;
+    gap: 5px;
+}
+
+.search-form input {
+    padding: 8px;
+    min-width: 250px;
+}
+
+.customer-actions button {
+    padding: 8px 15px;
+    cursor: pointer;
+}
+
+.customer-actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.customer-layout {
+    display: flex;
+    gap: 20px;
+}
+
+.customer-list-panel {
+    flex: 3; /* Give more space to the list */
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 5px;
+    max-height: 70vh; /* Limit height and allow scrolling */
+    overflow-y: auto;
+}
+
+.customer-details-panel {
+    flex: 2;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 5px;
+    max-height: 70vh; /* Limit height and allow scrolling */
+    overflow-y: auto;
+}
+
+.customer-list-panel table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.customer-list-panel th,
+.customer-list-panel td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.customer-list-panel th {
+    background-color: #f2f2f2;
+}
+
+.customer-list-panel tbody tr {
+    cursor: pointer;
+}
+
+.customer-list-panel tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.customer-details-content h4 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.detail-section {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px dashed #eee;
+}
+
+.detail-section h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.detail-section ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 5px;
+}
+
+.detail-section li {
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.error-message {
+    color: red;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+/* Basic Modal Styling (reuse from stock or use a library) */
+.modal {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 30px;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    min-width: 300px;
+}
+
+.modal h4 {
+    margin-top: 0;
+}
+
+.modal button {
+    margin-top: 15px;
+    margin-right: 10px;
+}
+
