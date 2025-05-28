@@ -9,10 +9,13 @@ yarn-debug.log
 .npm
 
 # __pycache__/
-
+*.pyc
+*.pyo
 
 # Build files
 dist/
+**/dist/
+**/dist/*
 build/
 out/
 .next/
