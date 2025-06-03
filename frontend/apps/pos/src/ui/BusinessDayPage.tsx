@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -23,7 +23,6 @@ import {
   LockOpen as OpenIcon,
   Lock as CloseIcon,
   Receipt as ReceiptIcon,
-  Person as PersonIcon,
   Store as StoreIcon
 } from '@mui/icons-material';
 import { useAuth } from '@common/contexts/auth/hooks/useAuth';
