@@ -12,6 +12,9 @@
     "skipLibCheck": true,
     "strict": true,
     "baseUrl": ".",
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
     "paths": {
       "@/*": ["./src/*"],
       "@common/*": ["./src/*"]

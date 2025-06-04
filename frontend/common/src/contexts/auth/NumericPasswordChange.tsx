@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Box, TextField, Button, Typography, Paper, 
+  Box, Button, Typography, Paper, 
   Container, CircularProgress, Alert, Snackbar,
-  Dialog, DialogTitle, DialogContent, DialogActions
+  Dialog, DialogTitle, DialogContent
 } from '@mui/material';
-import { LockOutlined, VpnKey } from '@mui/icons-material';
+import { VpnKey } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import NumericKeypad from './NumericKeypad';
 
@@ -34,150 +34,201 @@ const PasswordChangeIcon = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(2)
 }));
 
+// Define types for props
+interface NumericPasswordChangeProps {
+  operatorId: string;
+  onSuccess: () => void;
+  onCancel?: () => void;
+  required?: boolean;
+}
+
+// Define types for state variables
+interface NumericPasswordChangeState {
+  step: 'current' | 'new' | 'confirm';
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+  isKeypadOpen: boolean;
+  keypadMode: 'current' | 'new' | 'confirm' | '';
+  isLoading: boolean;
+  error: string | null;
+  successMessage: string | null;
+}
+
 /**
  * Componente para alteração de senha numérica
- * 
- * @param {Object} props - Propriedades do componente
- * @param {string} props.operatorId - ID do operador
- * @param {function} props.onSuccess - Callback chamado quando a alteração for bem-sucedida
- * @param {function} props.onCancel - Callback chamado quando o usuário cancelar
- * @param {boolean} props.required - Se a alteração de senha é obrigatória
  */
-const NumericPasswordChange = ({
+const NumericPasswordChange: React.FC<NumericPasswordChangeProps> = ({
   operatorId,
   onSuccess,
   onCancel,
   required = false
 }) => {
   // Estados para controle do formulário
-  const [step, setStep] = useState('current'); // 'current', 'new', 'confirm'
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isKeypadOpen, setIsKeypadOpen] = useState(false);
-  const [keypadMode, setKeypadMode] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
-  
+  const [state, setState] = useState<NumericPasswordChangeState>({
+    step: 'current',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+    isKeypadOpen: false,
+    keypadMode: '',
+    isLoading: false,
+    error: null,
+    successMessage: null,
+  });
+
   // Efeito para abrir automaticamente o teclado para senha atual
   useEffect(() => {
     if (required) {
       handleOpenKeypad('current');
     }
   }, [required]);
-  
+
   // Manipulador para abrir o teclado numérico
-  const handleOpenKeypad = (mode) => {
-    setError(null);
-    setKeypadMode(mode);
-    setIsKeypadOpen(true);
+  const handleOpenKeypad = (mode: 'current' | 'new' | 'confirm') => {
+    setState((prevState) => ({
+      ...prevState,
+      error: null,
+      keypadMode: mode,
+      isKeypadOpen: true,
+    }));
   };
-  
+
   // Manipulador para fechar o teclado numérico
   const handleCloseKeypad = () => {
-    setIsKeypadOpen(false);
+    setState((prevState) => ({
+      ...prevState,
+      isKeypadOpen: false,
+    }));
   };
-  
+
   // Manipulador para processar a senha completa
-  const handlePasswordComplete = (password) => {
-    if (keypadMode === 'current') {
-      setCurrentPassword(password);
-      setIsKeypadOpen(false);
-      // Avançar para próxima etapa após um breve delay
+  const handlePasswordComplete = (password: string) => {
+    if (state.keypadMode === 'current') {
+      setState((prevState) => ({
+        ...prevState,
+        currentPassword: password,
+        isKeypadOpen: false,
+      }));
       setTimeout(() => {
-        setStep('new');
+        setState((prevState) => ({
+          ...prevState,
+          step: 'new',
+        }));
         handleOpenKeypad('new');
       }, 300);
-    } else if (keypadMode === 'new') {
-      setNewPassword(password);
-      setIsKeypadOpen(false);
-      // Avançar para próxima etapa após um breve delay
+    } else if (state.keypadMode === 'new') {
+      setState((prevState) => ({
+        ...prevState,
+        newPassword: password,
+        isKeypadOpen: false,
+      }));
       setTimeout(() => {
-        setStep('confirm');
+        setState((prevState) => ({
+          ...prevState,
+          step: 'confirm',
+        }));
         handleOpenKeypad('confirm');
       }, 300);
-    } else if (keypadMode === 'confirm') {
-      setConfirmPassword(password);
-      setIsKeypadOpen(false);
-      // Verificar se as senhas coincidem
-      if (password !== newPassword) {
-        setError('As senhas não coincidem');
-        // Voltar para etapa de nova senha
+    } else if (state.keypadMode === 'confirm') {
+      setState((prevState) => ({
+        ...prevState,
+        confirmPassword: password,
+        isKeypadOpen: false,
+      }));
+      if (password !== state.newPassword) {
+        setState((prevState) => ({
+          ...prevState,
+          error: 'As senhas não coincidem',
+        }));
         setTimeout(() => {
-          setStep('new');
+          setState((prevState) => ({
+            ...prevState,
+            step: 'new',
+          }));
           handleOpenKeypad('new');
         }, 1000);
         return;
       }
-      
-      // Enviar solicitação de alteração de senha
       handleSubmitPasswordChange();
     }
   };
-  
+
   // Manipulador para enviar solicitação de alteração de senha
   const handleSubmitPasswordChange = async () => {
-    setIsLoading(true);
-    setError(null);
-    
+    setState((prevState) => ({
+      ...prevState,
+      isLoading: true,
+      error: null,
+    }));
+
     try {
-      // Em produção, substituir por chamada real à API
       const response = await fetch(`/api/auth/credentials/${operatorId}/password`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          current_password: currentPassword,
-          new_password: newPassword
-        })
+          current_password: state.currentPassword,
+          new_password: state.newPassword,
+        }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.detail || 'Erro ao alterar senha');
       }
-      
-      setSuccessMessage('Senha alterada com sucesso!');
-      
-      // Chamar callback de sucesso após um breve delay
+
+      setState((prevState) => ({
+        ...prevState,
+        successMessage: 'Senha alterada com sucesso!',
+      }));
+
       setTimeout(() => {
-        if (onSuccess) {
-          onSuccess();
-        }
+        onSuccess();
       }, 1500);
-    } catch (error) {
-      setError(error.message || 'Erro ao alterar senha');
-      
-      // Se o erro for na senha atual, voltar para a primeira etapa
+    } catch (error: any) {
+      setState((prevState) => ({
+        ...prevState,
+        error: error.message || 'Erro ao alterar senha',
+      }));
+
       if (error.message.includes('atual')) {
-        setStep('current');
+        setState((prevState) => ({
+          ...prevState,
+          step: 'current',
+        }));
         setTimeout(() => {
           handleOpenKeypad('current');
         }, 1000);
       }
     } finally {
-      setIsLoading(false);
+      setState((prevState) => ({
+        ...prevState,
+        isLoading: false,
+      }));
     }
   };
-  
+
   // Manipulador para cancelar alteração de senha
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
     }
   };
-  
+
   // Manipulador para fechar mensagem de sucesso
   const handleCloseSuccessMessage = () => {
-    setSuccessMessage(null);
+    setState((prevState) => ({
+      ...prevState,
+      successMessage: null,
+    }));
   };
-  
+
   // Determinar título do teclado com base no modo
-  const getKeypadTitle = () => {
-    switch (keypadMode) {
+  const getKeypadTitle = (): string => {
+    switch (state.keypadMode) {
       case 'current':
         return 'Digite sua senha atual';
       case 'new':
@@ -188,49 +239,46 @@ const NumericPasswordChange = ({
         return 'Digite sua senha';
     }
   };
-  
+
   // Renderizar conteúdo com base na etapa atual
-  const renderStepContent = () => {
-    return (
-      <Box sx={{ width: '100%', mt: 2 }}>
-        <Typography variant="body1" gutterBottom>
-          {step === 'current' && 'Por favor, digite sua senha atual para continuar.'}
-          {step === 'new' && 'Agora, digite sua nova senha de 6 dígitos.'}
-          {step === 'confirm' && 'Por favor, confirme sua nova senha.'}
-        </Typography>
-        
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
-        )}
-        
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-          {!required && (
-            <Button
-              variant="outlined"
-              onClick={handleCancel}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-          )}
-          
+  const renderStepContent = () => (
+    <Box sx={{ width: '100%', mt: 2 }}>
+      <Typography variant="body1" gutterBottom>
+        {state.step === 'current' && 'Por favor, digite sua senha atual para continuar.'}
+        {state.step === 'new' && 'Agora, digite sua nova senha de 6 dígitos.'}
+        {state.step === 'confirm' && 'Por favor, confirme sua nova senha.'}
+      </Typography>
+
+      {state.error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {state.error}
+        </Alert>
+      )}
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        {!required && (
           <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleOpenKeypad(step)}
-            disabled={isLoading}
-            sx={{ ml: !required ? 1 : 0 }}
+            variant="outlined"
+            onClick={handleCancel}
+            disabled={state.isLoading}
           >
-            {isLoading ? <CircularProgress size={24} /> : 'Continuar'}
+            Cancelar
           </Button>
-        </Box>
+        )}
+
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => handleOpenKeypad(state.step)}
+          disabled={state.isLoading}
+          sx={{ ml: !required ? 1 : 0 }}
+        >
+          {state.isLoading ? <CircularProgress size={24} /> : 'Continuar'}
+        </Button>
       </Box>
-    );
-  };
-  
-  // Se a alteração é obrigatória, renderizar como diálogo
+    </Box>
+  );
+
   if (required) {
     return (
       <>
@@ -239,36 +287,36 @@ const NumericPasswordChange = ({
           maxWidth="xs"
           fullWidth
           disableEscapeKeyDown
-          disableBackdropClick
+          onClose={(reason) => {
+            if (reason !== "backdropClick") return;
+          }}
         >
           <DialogTitle sx={{ textAlign: 'center' }}>
             <VpnKey sx={{ mr: 1, verticalAlign: 'middle' }} />
             Alteração de Senha Obrigatória
           </DialogTitle>
-          
+
           <DialogContent>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Sua senha expirou ou é temporária. Por favor, defina uma nova senha para continuar.
             </Typography>
-            
+
             {renderStepContent()}
           </DialogContent>
         </Dialog>
-        
-        {/* Teclado numérico em diálogo */}
+
         <NumericKeypad
-          open={isKeypadOpen}
+          open={state.isKeypadOpen}
           onClose={required ? undefined : handleCloseKeypad}
           onComplete={handlePasswordComplete}
           title={getKeypadTitle()}
-          loading={isLoading}
-          error={error}
+          loading={state.isLoading}
+          error={state.error}
           dialog={true}
         />
-        
-        {/* Mensagem de sucesso */}
+
         <Snackbar
-          open={!!successMessage}
+          open={!!state.successMessage}
           autoHideDuration={3000}
           onClose={handleCloseSuccessMessage}
         >
@@ -277,42 +325,39 @@ const NumericPasswordChange = ({
             severity="success"
             sx={{ width: '100%' }}
           >
-            {successMessage}
+            {state.successMessage}
           </Alert>
         </Snackbar>
       </>
     );
   }
-  
-  // Renderização normal (não obrigatória)
+
   return (
     <PasswordChangeContainer maxWidth="sm">
       <PasswordChangePaper elevation={3}>
         <PasswordChangeIcon>
           <VpnKey fontSize="large" />
         </PasswordChangeIcon>
-        
+
         <Typography component="h1" variant="h5" gutterBottom>
           Alterar Senha
         </Typography>
-        
+
         {renderStepContent()}
       </PasswordChangePaper>
-      
-      {/* Teclado numérico em diálogo */}
+
       <NumericKeypad
-        open={isKeypadOpen}
+        open={state.isKeypadOpen}
         onClose={handleCloseKeypad}
         onComplete={handlePasswordComplete}
         title={getKeypadTitle()}
-        loading={isLoading}
-        error={error}
+        loading={state.isLoading}
+        error={state.error}
         dialog={true}
       />
-      
-      {/* Mensagem de sucesso */}
+
       <Snackbar
-        open={!!successMessage}
+        open={!!state.successMessage}
         autoHideDuration={3000}
         onClose={handleCloseSuccessMessage}
       >
@@ -321,7 +366,7 @@ const NumericPasswordChange = ({
           severity="success"
           sx={{ width: '100%' }}
         >
-          {successMessage}
+          {state.successMessage}
         </Alert>
       </Snackbar>
     </PasswordChangeContainer>

@@ -1,110 +1,110 @@
 import { useState, useCallback } from 'react';
 
 /**
- * Hook para fazer chamadas de API
+ * Tipos para opções da API
+ */
+type ApiOptions = {
+  headers?: Record<string, string>;
+};
+
+/**
+ * Tipos para resposta da API
+ */
+type ApiResponse<T = any> = {
+  success: boolean;
+  data: T;
+};
+
+/**
+ * Hook para fazer chamadas de API reais usando fetch
  * @param baseUrl URL base da API
- * @param options Opções adicionais
+ * @param options Opções adicionais, como headers
  * @returns Objeto com métodos para interagir com a API
  */
-export const useApi = (baseUrl: string = '', options: any = {}) => {
+export const useApi = (baseUrl: string = '', options: ApiOptions = {}) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<any>(null);
 
-  // Método para fazer requisições GET
-  const get = useCallback(async (endpoint: string, params: Record<string, any> = {}) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Construir query string
-      const queryString = Object.keys(params).length 
-        ? '?' + new URLSearchParams(params).toString() 
-        : '';
-      
-      // Implementação simulada - em produção, isso seria uma chamada fetch real
-      console.log(`Simulando GET para: ${baseUrl}${endpoint}${queryString}`);
-      
-      // Simular resposta
-      const mockResponse = { success: true, data: { message: 'Dados simulados' } };
-      
-      setData(mockResponse);
-      setLoading(false);
-      return mockResponse;
-    } catch (err) {
-      setError(err as Error);
-      setLoading(false);
-      throw err;
-    }
-  }, [baseUrl]);
+  const makeRequest = useCallback(
+    async <T>(
+      method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+      endpoint: string,
+      body?: any,
+      params: Record<string, any> = {}
+    ): Promise<ApiResponse<T>> => {
+      setLoading(true);
+      setError(null);
 
-  // Método para fazer requisições POST
-  const post = useCallback(async (endpoint: string, body: any = {}) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Implementação simulada - em produção, isso seria uma chamada fetch real
-      console.log(`Simulando POST para: ${baseUrl}${endpoint}`);
-      console.log('Corpo da requisição:', body);
-      
-      // Simular resposta
-      const mockResponse = { success: true, data: { id: 123, ...body } };
-      
-      setData(mockResponse);
-      setLoading(false);
-      return mockResponse;
-    } catch (err) {
-      setError(err as Error);
-      setLoading(false);
-      throw err;
-    }
-  }, [baseUrl]);
+      try {
+        const queryString =
+          method === 'GET' && Object.keys(params).length
+            ? '?' + new URLSearchParams(params).toString()
+            : '';
 
-  // Método para fazer requisições PUT
-  const put = useCallback(async (endpoint: string, body: any = {}) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Implementação simulada - em produção, isso seria uma chamada fetch real
-      console.log(`Simulando PUT para: ${baseUrl}${endpoint}`);
-      console.log('Corpo da requisição:', body);
-      
-      // Simular resposta
-      const mockResponse = { success: true, data: { updated: true, ...body } };
-      
-      setData(mockResponse);
-      setLoading(false);
-      return mockResponse;
-    } catch (err) {
-      setError(err as Error);
-      setLoading(false);
-      throw err;
-    }
-  }, [baseUrl]);
+        const url = `${baseUrl}${endpoint}${queryString}`;
+        const fetchOptions: RequestInit = {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+          },
+          body: method !== 'GET' && body ? JSON.stringify(body) : undefined,
+        };
 
-  // Método para fazer requisições DELETE
-  const del = useCallback(async (endpoint: string) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Implementação simulada - em produção, isso seria uma chamada fetch real
-      console.log(`Simulando DELETE para: ${baseUrl}${endpoint}`);
-      
-      // Simular resposta
-      const mockResponse = { success: true, data: { deleted: true } };
-      
-      setData(mockResponse);
-      setLoading(false);
-      return mockResponse;
-    } catch (err) {
-      setError(err as Error);
-      setLoading(false);
-      throw err;
-    }
-  }, [baseUrl]);
+        const response = await fetch(url, fetchOptions);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `Erro ${response.status}: ${response.statusText} - ${errorText}`
+          );
+        }
+
+        const responseData = await response.json();
+        const finalResponse: ApiResponse<T> = {
+          success: true,
+          data: responseData,
+        };
+
+        setData(finalResponse);
+        return finalResponse;
+      } catch (err) {
+        setError(err as Error);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [baseUrl, options.headers]
+  );
+
+  // Método para requisição GET
+  const get = useCallback(
+    <T = any>(endpoint: string, params: Record<string, any> = {}) =>
+      makeRequest<T>('GET', endpoint, null, params),
+    [makeRequest]
+  );
+
+  // Método para requisição POST
+  const post = useCallback(
+    <T = any>(endpoint: string, body: any = {}) =>
+      makeRequest<T>('POST', endpoint, body),
+    [makeRequest]
+  );
+
+  // Método para requisição PUT
+  const put = useCallback(
+    <T = any>(endpoint: string, body: any = {}) =>
+      makeRequest<T>('PUT', endpoint, body),
+    [makeRequest]
+  );
+
+  // Método para requisição DELETE
+  const del = useCallback(
+    <T = any>(endpoint: string) => makeRequest<T>('DELETE', endpoint),
+    [makeRequest]
+  );
 
   return {
     loading,
@@ -113,6 +113,6 @@ export const useApi = (baseUrl: string = '', options: any = {}) => {
     get,
     post,
     put,
-    delete: del
+    delete: del,
   };
 };

@@ -1,155 +1,137 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from 'react';
+import { useApi } from './useApi';
 
-// Criando o contexto de dia de operação
-const BusinessDayContext = createContext(null);
+type BusinessDay = {
+  id: string;
+  opened_at: string;
+  closed_at: string | null;
+  status: 'open' | 'closed';
+  opening_notes?: string;
+  closing_notes?: string;
+  terminal_id?: string;
+  store_id?: string;
+  total_orders?: number;
+  total_sales?: number;
+};
 
-// Provider para o contexto de dia de operação
-export const BusinessDayProvider = ({ children }) => {
-  const [currentBusinessDay, setCurrentBusinessDay] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+type OpenBusinessDayData = {
+  notes?: string;
+  terminal_id?: string;
+  store_id?: string;
+};
 
-  // Efeito para carregar o dia de operação atual ao iniciar
-  useEffect(() => {
-    const loadCurrentBusinessDay = async () => {
-      try {
-        setLoading(true);
-        // Em um cenário real, isso faria uma chamada à API para obter o dia de operação atual
-        // Simulando uma chamada de API com timeout
-        setTimeout(() => {
-          const storedBusinessDay = localStorage.getItem('currentBusinessDay');
-          
-          if (storedBusinessDay) {
-            setCurrentBusinessDay(JSON.parse(storedBusinessDay));
-          }
-          setLoading(false);
-        }, 500);
-      } catch (err) {
-        setError(err.message);
-        console.error('Erro ao carregar dia de operação:', err);
-        setLoading(false);
-      }
-    };
+type CloseBusinessDayData = {
+  notes?: string;
+};
 
-    loadCurrentBusinessDay();
+type BusinessDayContextType = {
+  currentBusinessDay: BusinessDay | null;
+  loading: boolean;
+  error: string | null;
+  openBusinessDay: (data: OpenBusinessDayData) => Promise<BusinessDay>;
+  closeBusinessDay: (data: CloseBusinessDayData) => Promise<BusinessDay>;
+  getCurrentBusinessDay: () => Promise<BusinessDay | null>;
+  resetBusinessDay: () => void;
+};
+
+const BusinessDayContext = createContext<BusinessDayContextType | null>(null);
+
+type BusinessDayProviderProps = {
+  children: ReactNode;
+};
+
+export const BusinessDayProvider = ({ children }: BusinessDayProviderProps) => {
+  const { get, post } = useApi();
+  const [currentBusinessDay, setCurrentBusinessDay] = useState<BusinessDay | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const getCurrentBusinessDay = useCallback(async (): Promise<BusinessDay | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await get<BusinessDay | null>('/api/business-day/current');
+      setCurrentBusinessDay(data);
+      return data;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+      console.error('Erro ao obter dia de operação:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [get]);
+
+  const openBusinessDay = useCallback(async (data: OpenBusinessDayData): Promise<BusinessDay> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data: businessDay } = await post<BusinessDay>('/api/business-day/open', data);
+      setCurrentBusinessDay(businessDay);
+      return businessDay;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+      console.error('Erro ao abrir dia de operação:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [post]);
+
+  const closeBusinessDay = useCallback(async (data: CloseBusinessDayData): Promise<BusinessDay> => {
+    if (!currentBusinessDay) {
+      throw new Error('Não há dia de operação aberto para fechar');
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const payload = { ...data, id: currentBusinessDay.id };
+      const { data: closedDay } = await post<BusinessDay>('/api/business-day/close', payload);
+      setCurrentBusinessDay(closedDay);
+      return closedDay;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+      console.error('Erro ao fechar dia de operação:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [currentBusinessDay, post]);
+
+  const resetBusinessDay = useCallback(() => {
+    setCurrentBusinessDay(null);
+    setError(null);
   }, []);
 
-  // Função para abrir um novo dia de operação
-  const openBusinessDay = async (businessDayData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Em um cenário real, isso faria uma chamada à API para abrir um novo dia de operação
-      // Simulando uma chamada de API com timeout
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const newBusinessDay = {
-            id: Date.now().toString(),
-            opened_at: new Date().toISOString(),
-            closed_at: null,
-            status: 'open',
-            opening_notes: businessDayData.notes || '',
-            terminal_id: businessDayData.terminal_id || 'POS-001'
-          };
-          
-          // Armazenar dia de operação na sessão
-          localStorage.setItem('currentBusinessDay', JSON.stringify(newBusinessDay));
-          setCurrentBusinessDay(newBusinessDay);
-          setLoading(false);
-          resolve(newBusinessDay);
-        }, 500);
-      });
-    } catch (err) {
-      setError(err.message);
-      console.error('Erro ao abrir dia de operação:', err);
-      setLoading(false);
-      throw err;
-    }
-  };
+  useEffect(() => {
+    getCurrentBusinessDay();
+  }, [getCurrentBusinessDay]);
 
-  // Função para fechar o dia de operação atual
-  const closeBusinessDay = async (closingData) => {
-    try {
-      if (!currentBusinessDay) {
-        throw new Error('Não há um dia de operação aberto para fechar');
-      }
-      
-      setLoading(true);
-      setError(null);
-      
-      // Em um cenário real, isso faria uma chamada à API para fechar o dia de operação
-      // Simulando uma chamada de API com timeout
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const closedBusinessDay = {
-            ...currentBusinessDay,
-            closed_at: new Date().toISOString(),
-            status: 'closed',
-            closing_notes: closingData.notes || ''
-          };
-          
-          // Atualizar dia de operação na sessão
-          localStorage.setItem('currentBusinessDay', JSON.stringify(closedBusinessDay));
-          setCurrentBusinessDay(closedBusinessDay);
-          setLoading(false);
-          resolve(closedBusinessDay);
-        }, 500);
-      });
-    } catch (err) {
-      setError(err.message);
-      console.error('Erro ao fechar dia de operação:', err);
-      setLoading(false);
-      throw err;
-    }
-  };
-
-  // Função para obter o dia de operação atual
-  const getCurrentBusinessDay = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Em um cenário real, isso faria uma chamada à API para obter o dia de operação atual
-      // Simulando uma chamada de API com timeout
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const storedBusinessDay = localStorage.getItem('currentBusinessDay');
-          
-          if (storedBusinessDay) {
-            const businessDay = JSON.parse(storedBusinessDay);
-            setCurrentBusinessDay(businessDay);
-            resolve(businessDay);
-          } else {
-            setCurrentBusinessDay(null);
-            resolve(null);
-          }
-          setLoading(false);
-        }, 300);
-      });
-    } catch (err) {
-      setError(err.message);
-      console.error('Erro ao obter dia de operação:', err);
-      setLoading(false);
-      throw err;
-    }
-  };
-
-  // Valor do contexto
-  const value = {
+  const value: BusinessDayContextType = {
     currentBusinessDay,
     loading,
     error,
     openBusinessDay,
     closeBusinessDay,
-    getCurrentBusinessDay
+    getCurrentBusinessDay,
+    resetBusinessDay,
   };
 
   return <BusinessDayContext.Provider value={value}>{children}</BusinessDayContext.Provider>;
 };
 
-// Hook personalizado para usar o contexto de dia de operação
-export const useBusinessDay = () => {
+export const useBusinessDay = (): BusinessDayContextType => {
   const context = useContext(BusinessDayContext);
   if (!context) {
     throw new Error('useBusinessDay deve ser usado dentro de um BusinessDayProvider');

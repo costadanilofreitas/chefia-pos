@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Box, 
-  Button, 
-  Container, 
-  Typography, 
-  TextField, 
-  Paper, 
+import {
+  Box,
+  Button,
+  Container,
+  Typography,
+  TextField,
+  Paper,
   Grid,
   Dialog,
   DialogTitle,
@@ -15,22 +15,23 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-  Divider
+  Divider,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { 
+import {
   Today as TodayIcon,
   LockOpen as OpenIcon,
   Lock as CloseIcon,
   Receipt as ReceiptIcon,
-  Store as StoreIcon
+  Store as StoreIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@common/contexts/auth/hooks/useAuth';
 import { useBusinessDay } from '@common/contexts/core/hooks/useBusinessDay';
 import { formatCurrency, formatDate } from '@common/utils/formatters';
+import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
 import PrinterService from '../services/PrinterService';
 
-// Estilos personalizados inspirados no sistema de exemplo, mas com identidade própria
+// Styled components
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
   borderRadius: '12px',
@@ -54,154 +55,141 @@ const ActionButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const OpenDayButton = styled(ActionButton)(({ theme }) => ({
-  backgroundColor: theme.palette.success.main,
-  color: theme.palette.common.white,
-  '&:hover': {
-    backgroundColor: theme.palette.success.dark,
-    transform: 'translateY(-2px)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-  },
-}));
-
-const CloseDayButton = styled(ActionButton)(({ theme }) => ({
-  backgroundColor: theme.palette.error.main,
-  color: theme.palette.common.white,
-  '&:hover': {
-    backgroundColor: theme.palette.error.dark,
-    transform: 'translateY(-2px)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-  },
-}));
-
-const BusinessDayPage = () => {
+const BusinessDayPage: FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { 
-    openBusinessDay, 
-    closeBusinessDay, 
+  const {
+    openBusinessDay,
+    closeBusinessDay,
     getCurrentBusinessDay,
-    businessDayStatus,
-    isLoading 
+    currentBusinessDay,
+    loading,
   } = useBusinessDay();
-  
-  const [openDialogVisible, setOpenDialogVisible] = useState(false);
-  const [closeDialogVisible, setCloseDialogVisible] = useState(false);
-  const [notes, setNotes] = useState('');
-  const [alertInfo, setAlertInfo] = useState({ open: false, message: '', severity: 'info' });
-  const [hasOpenCashiers, setHasOpenCashiers] = useState(false);
-  
+  const { getOpenCashiers } = useCashier();
+
+  const [openDialogVisible, setOpenDialogVisible] = useState<boolean>(false);
+  const [closeDialogVisible, setCloseDialogVisible] = useState<boolean>(false);
+  const [notes, setNotes] = useState<string>('');
+  const [alertInfo, setAlertInfo] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'error' | 'info' | 'success' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info',
+  });
+  const [hasOpenCashiers, setHasOpenCashiers] = useState<boolean>(false);
+
   useEffect(() => {
-    // Verificar status do dia de operação ao carregar a página
-    const checkBusinessDayStatus = async () => {
-      await getCurrentBusinessDay();
-      
-      // Em produção, verificaria se há caixas abertos
-      // Simulação: assume que não há caixas abertos
-      setHasOpenCashiers(false);
+    const fetchData = async () => {
+      try {
+        await getCurrentBusinessDay();
+        const openCashiers = await getOpenCashiers();
+        setHasOpenCashiers(openCashiers.length > 0);
+      } catch (error) {
+        console.error('Erro ao buscar status do dia de operação ou caixas:', error);
+      }
     };
-    
-    checkBusinessDayStatus();
-  }, [getCurrentBusinessDay]);
-  
+
+    fetchData();
+  }, [getCurrentBusinessDay, getOpenCashiers]);
+
   const handleOpenBusinessDay = async () => {
     try {
       await openBusinessDay({
-        store_id: 'STORE-001', // Em produção, seria obtido da configuração
-        notes: notes
-      });
-      
-      // Imprimir comprovante de abertura do dia
-      await PrinterService.printBusinessDayOpeningReceipt({
-        business_day_id: businessDayStatus.id,
         store_id: 'STORE-001',
-        user_name: user.name,
-        date: new Date(),
-        notes: notes
+        notes,
       });
-      
+
+      if (!currentBusinessDay) return;
+
+      await PrinterService.printBusinessDayOpeningReceipt({
+        business_day_id: currentBusinessDay.id,
+        store_id: 'STORE-001',
+        user_name: user?.name || 'Desconhecido',
+        date: new Date(),
+        notes,
+      });
+
       setOpenDialogVisible(false);
       setAlertInfo({
         open: true,
         message: 'Dia de operação aberto com sucesso!',
-        severity: 'success'
+        severity: 'success',
       });
-      
-      // Redirecionar para a tela de abertura de caixa
+
       setTimeout(() => {
         navigate('/pos/cashier');
       }, 1500);
-      
-    } catch (error) {
+    } catch (error: any) {
       setAlertInfo({
         open: true,
-        message: `Erro ao abrir dia de operação: ${error.message}`,
-        severity: 'error'
+        message: `Erro ao abrir dia de operação: ${error?.message || 'Erro desconhecido'}`,
+        severity: 'error',
       });
     }
   };
-  
+
   const handleCloseBusinessDay = async () => {
     if (hasOpenCashiers) {
       setAlertInfo({
         open: true,
         message: 'Existem caixas abertos. Feche todos os caixas antes de encerrar o dia.',
-        severity: 'error'
+        severity: 'error',
       });
       return;
     }
-    
+
     try {
+      if (!currentBusinessDay) return;
+
       await closeBusinessDay({
-        business_day_id: businessDayStatus.id,
-        notes: notes
+        notes,
       });
-      
-      // Imprimir comprovante de fechamento do dia
+
       await PrinterService.printBusinessDayClosingReceipt({
-        business_day_id: businessDayStatus.id,
+        business_day_id: currentBusinessDay.id,
         store_id: 'STORE-001',
-        user_name: user.name,
-        opened_at: new Date(businessDayStatus.opened_at),
+        user_name: user?.name || 'Desconhecido',
+        opened_at: new Date(currentBusinessDay.opened_at),
         closed_at: new Date(),
-        total_sales: businessDayStatus.total_sales,
-        total_orders: businessDayStatus.total_orders,
-        notes: notes
+        total_sales: currentBusinessDay.total_sales || 0,
+        total_orders: currentBusinessDay.total_orders || 0,
+        notes,
       });
-      
+
       setCloseDialogVisible(false);
       setAlertInfo({
         open: true,
         message: 'Dia de operação fechado com sucesso!',
-        severity: 'success'
+        severity: 'success',
       });
-      
-      // Redirecionar para a tela de login
+
       setTimeout(() => {
         navigate('/login');
       }, 1500);
-      
-    } catch (error) {
+    } catch (error: any) {
       setAlertInfo({
         open: true,
-        message: `Erro ao fechar dia de operação: ${error.message}`,
-        severity: 'error'
+        message: `Erro ao fechar dia de operação: ${error?.message || 'Erro desconhecido'}`,
+        severity: 'error',
       });
     }
   };
-  
+
   const handleCloseAlert = () => {
     setAlertInfo({ ...alertInfo, open: false });
   };
-  
-  if (isLoading) {
+
+  if (loading) {
     return (
       <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
       </Container>
     );
   }
-  
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <StyledPaper>
@@ -213,9 +201,8 @@ const BusinessDayPage = () => {
             Loja: STORE-001 | Gerente: {user?.name || 'Não identificado'}
           </Typography>
         </Box>
-        
         <Grid container spacing={4} justifyContent="center">
-          {!businessDayStatus || businessDayStatus.status !== 'open' ? (
+          {!currentBusinessDay || currentBusinessDay.status !== 'open' ? (
             <Grid item xs={12} md={6}>
               <StyledPaper elevation={3} sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <Box sx={{ textAlign: 'center', mb: 3 }}>
@@ -227,14 +214,14 @@ const BusinessDayPage = () => {
                     Inicie um novo dia de operação para permitir a abertura de caixas e realização de vendas.
                   </Typography>
                 </Box>
-                <OpenDayButton
+                <ActionButton
                   variant="contained"
                   startIcon={<TodayIcon />}
                   onClick={() => setOpenDialogVisible(true)}
                   fullWidth
                 >
                   Abrir Dia
-                </OpenDayButton>
+                </ActionButton>
               </StyledPaper>
             </Grid>
           ) : (
@@ -256,7 +243,7 @@ const BusinessDayPage = () => {
                         Abertura:
                       </Typography>
                       <Typography variant="body1" fontWeight="bold">
-                        {formatDate(businessDayStatus.opened_at)}
+                        {formatDate(currentBusinessDay.opened_at)}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -264,7 +251,7 @@ const BusinessDayPage = () => {
                         Total de Vendas:
                       </Typography>
                       <Typography variant="body1" fontWeight="bold">
-                        {formatCurrency(businessDayStatus.total_sales || 0)}
+                        {formatCurrency(currentBusinessDay.total_sales || 0)}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -272,7 +259,7 @@ const BusinessDayPage = () => {
                         Total de Pedidos:
                       </Typography>
                       <Typography variant="body1">
-                        {businessDayStatus.total_orders || 0}
+                        {currentBusinessDay.total_orders || 0}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -285,7 +272,7 @@ const BusinessDayPage = () => {
                     </Grid>
                   </Grid>
                 </Box>
-                <CloseDayButton
+                <ActionButton
                   variant="contained"
                   startIcon={<CloseIcon />}
                   onClick={() => setCloseDialogVisible(true)}
@@ -293,7 +280,7 @@ const BusinessDayPage = () => {
                   fullWidth
                 >
                   Fechar Dia
-                </CloseDayButton>
+                </ActionButton>
                 {hasOpenCashiers && (
                   <Typography variant="caption" color="error" sx={{ mt: 2, display: 'block', textAlign: 'center' }}>
                     É necessário fechar todos os caixas antes de encerrar o dia.
@@ -302,7 +289,6 @@ const BusinessDayPage = () => {
               </StyledPaper>
             </Grid>
           )}
-          
           <Grid item xs={12} md={6}>
             <StyledPaper elevation={3} sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <Box sx={{ textAlign: 'center', mb: 3 }}>
@@ -333,12 +319,12 @@ const BusinessDayPage = () => {
                     <Typography variant="body2" color="text.secondary">
                       Status do Dia:
                     </Typography>
-                    <Typography 
-                      variant="body1" 
+                    <Typography
+                      variant="body1"
                       fontWeight="bold"
-                      color={businessDayStatus?.status === 'open' ? 'success.main' : 'text.primary'}
+                      color={currentBusinessDay?.status === 'open' ? 'success.main' : 'text.primary'}
                     >
-                      {businessDayStatus?.status === 'open' ? 'Aberto' : 'Fechado'}
+                      {currentBusinessDay?.status === 'open' ? 'Aberto' : 'Fechado'}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -356,7 +342,7 @@ const BusinessDayPage = () => {
                     Relatórios
                   </ActionButton>
                 </Grid>
-                {businessDayStatus?.status === 'open' && (
+                {currentBusinessDay?.status === 'open' && (
                   <Grid item xs={12}>
                     <ActionButton
                       variant="contained"
@@ -373,14 +359,8 @@ const BusinessDayPage = () => {
           </Grid>
         </Grid>
       </StyledPaper>
-      
-      {/* Diálogo de Abertura do Dia */}
-      <Dialog 
-        open={openDialogVisible} 
-        onClose={() => setOpenDialogVisible(false)}
-        maxWidth="sm"
-        fullWidth
-      >
+      {/* Diálogos e Snackbar */}
+      <Dialog open={openDialogVisible} onClose={() => setOpenDialogVisible(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Abertura do Dia de Operação</DialogTitle>
         <DialogContent>
           <Box sx={{ p: 2 }}>
@@ -405,33 +385,25 @@ const BusinessDayPage = () => {
                   <Typography variant="body2" color="text.secondary">
                     Loja:
                   </Typography>
-                  <Typography variant="body1">
-                    STORE-001
-                  </Typography>
+                  <Typography variant="body1">STORE-001</Typography>
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">
                     Gerente:
                   </Typography>
-                  <Typography variant="body1">
-                    {user?.name || 'Não identificado'}
-                  </Typography>
+                  <Typography variant="body1">{user?.name || 'Não identificado'}</Typography>
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">
                     Data:
                   </Typography>
-                  <Typography variant="body1">
-                    {new Date().toLocaleDateString()}
-                  </Typography>
+                  <Typography variant="body1">{new Date().toLocaleDateString()}</Typography>
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">
                     Hora:
                   </Typography>
-                  <Typography variant="body1">
-                    {new Date().toLocaleTimeString()}
-                  </Typography>
+                  <Typography variant="body1">{new Date().toLocaleTimeString()}</Typography>
                 </Grid>
               </Grid>
             </Box>
@@ -441,23 +413,12 @@ const BusinessDayPage = () => {
           <Button onClick={() => setOpenDialogVisible(false)} color="inherit">
             Cancelar
           </Button>
-          <Button 
-            onClick={handleOpenBusinessDay} 
-            variant="contained" 
-            color="primary"
-          >
+          <Button onClick={handleOpenBusinessDay} variant="contained" color="primary">
             Confirmar Abertura
           </Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Diálogo de Fechamento do Dia */}
-      <Dialog 
-        open={closeDialogVisible} 
-        onClose={() => setCloseDialogVisible(false)}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={closeDialogVisible} onClose={() => setCloseDialogVisible(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Fechamento do Dia de Operação</DialogTitle>
         <DialogContent>
           <Box sx={{ p: 2 }}>
@@ -482,24 +443,20 @@ const BusinessDayPage = () => {
                   <Typography variant="body2" color="text.secondary">
                     Abertura:
                   </Typography>
-                  <Typography variant="body1">
-                    {formatDate(businessDayStatus.opened_at)}
-                  </Typography>
+                  <Typography variant="body1">{formatDate(currentBusinessDay?.opened_at)}</Typography>
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">
                     Fechamento:
                   </Typography>
-                  <Typography variant="body1">
-                    {formatDate(new Date())}
-                  </Typography>
+                  <Typography variant="body1">{formatDate(new Date())}</Typography>
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">
                     Total de Vendas:
                   </Typography>
                   <Typography variant="body1" fontWeight="bold">
-                    {formatCurrency(businessDayStatus.total_sales || 0)}
+                    {formatCurrency(currentBusinessDay?.total_sales || 0)}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -507,7 +464,7 @@ const BusinessDayPage = () => {
                     Total de Pedidos:
                   </Typography>
                   <Typography variant="body1" fontWeight="bold">
-                    {businessDayStatus.total_orders || 0}
+                    {currentBusinessDay?.total_orders || 0}
                   </Typography>
                 </Grid>
               </Grid>
@@ -518,24 +475,18 @@ const BusinessDayPage = () => {
           <Button onClick={() => setCloseDialogVisible(false)} color="inherit">
             Cancelar
           </Button>
-          <Button 
-            onClick={handleCloseBusinessDay} 
-            variant="contained" 
-            color="error"
-            disabled={hasOpenCashiers}
-          >
+          <Button onClick={handleCloseBusinessDay} variant="contained" color="error" disabled={hasOpenCashiers}>
             Confirmar Fechamento
           </Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Snackbar para alertas */}
       <Snackbar
         open={alertInfo.open}
-        autoHideDuration={6000}
+        autoHideDuration={4000}
         onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseAlert} severity={alertInfo.severity}>
+        <Alert onClose={handleCloseAlert} severity={alertInfo.severity} sx={{ width: '100%' }}>
           {alertInfo.message}
         </Alert>
       </Snackbar>

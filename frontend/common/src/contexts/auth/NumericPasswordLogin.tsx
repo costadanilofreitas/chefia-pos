@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Box, TextField, Button, Typography, Paper, 
   Container, CircularProgress, Alert, Snackbar
@@ -41,16 +41,24 @@ const LoginIcon = styled(Box)(({ theme }) => ({
  * @param {function} props.onLogin - Callback chamado quando o login for bem-sucedido
  * @param {function} props.onError - Callback chamado quando ocorrer um erro
  */
-const NumericPasswordLogin = ({
+
+// Define types for props
+interface NumericPasswordLoginProps {
+  onLogin?: (data: any, requirePasswordChange: boolean) => void;
+  onError?: (error: Error) => void;
+}
+
+// Define types for state variables
+const NumericPasswordLogin: React.FC<NumericPasswordLoginProps> = ({
   onLogin,
   onError
 }) => {
   // Estados para controle do formulário
-  const [operatorId, setOperatorId] = useState('');
-  const [isKeypadOpen, setIsKeypadOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
+  const [operatorId, setOperatorId] = useState<string>('');
+  const [isKeypadOpen, setIsKeypadOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   // Manipulador para abrir o teclado numérico
   const handleOpenKeypad = () => {
@@ -69,13 +77,18 @@ const NumericPasswordLogin = ({
   };
   
   // Manipulador para processar a senha completa
-  const handlePasswordComplete = async (password) => {
+  interface LoginResponse {
+    detail?: string;
+    require_password_change: boolean;
+  }
+
+  const handlePasswordComplete = async (password: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Em produção, substituir por chamada real à API
-      const response = await fetch('/api/auth/login', {
+      // chamada real à API
+      const response: Response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -86,7 +99,7 @@ const NumericPasswordLogin = ({
         })
       });
       
-      const data = await response.json();
+      const data: LoginResponse = await response.json();
       
       if (!response.ok) {
         throw new Error(data.detail || 'Erro ao fazer login');
@@ -113,10 +126,11 @@ const NumericPasswordLogin = ({
       
       // Fechar teclado numérico
       setIsKeypadOpen(false);
-    } catch (error) {
-      setError(error.message || 'Erro ao fazer login');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login';
+      setError(errorMessage);
       if (onError) {
-        onError(error);
+        onError(error instanceof Error ? error : new Error(errorMessage));
       }
     } finally {
       setIsLoading(false);

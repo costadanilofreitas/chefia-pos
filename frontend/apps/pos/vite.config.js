@@ -8,10 +8,17 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@common': path.resolve(__dirname, '../../common/src')
-    }
+      '@common': path.resolve(__dirname, '../../common/src'),
+    },
   },
   server: {
-    port: 3000
-  }
+    port: 3000,
+  },
+  test: {    globals: true,
+    environment: 'jsdom',
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@common': path.resolve(__dirname, '../../common/src'),
+    },
+  },
 });

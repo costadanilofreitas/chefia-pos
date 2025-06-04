@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Box, Grid, Button, Typography, Paper, 
+  Box, Button, Typography, Paper, 
   Dialog, DialogTitle, DialogContent, DialogActions,
-  CircularProgress, Fade, Alert
+  CircularProgress, Alert
 } from '@mui/material';
 import { Backspace, LockOpen } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
@@ -31,7 +31,13 @@ const KeypadButton = styled(Button)(({ theme }) => ({
   }
 }));
 
-const PasswordDot = styled(Box)(({ theme, filled }) => ({
+// Define types for PasswordDot styled component
+interface PasswordDotProps {
+  filled: boolean;
+}
+
+// Update styled component with props type
+const PasswordDot = styled(Box)<PasswordDotProps>(({ theme, filled }) => ({
   width: '16px',
   height: '16px',
   borderRadius: '50%',
@@ -54,7 +60,21 @@ const PasswordDot = styled(Box)(({ theme, filled }) => ({
  * @param {string} props.error - Mensagem de erro
  * @param {boolean} props.dialog - Se deve ser renderizado como diálogo
  */
-const NumericKeypad = ({
+
+// Define types for props
+interface NumericKeypadProps {
+  length?: number;
+  onComplete?: (password: string) => void;
+  open?: boolean;
+  onClose?: () => void;
+  title?: string;
+  loading?: boolean;
+  error?: string | null;
+  dialog?: boolean;
+}
+
+// Update component with props type
+const NumericKeypad: React.FC<NumericKeypadProps> = ({
   length = 6,
   onComplete,
   open = true,
@@ -97,7 +117,7 @@ const NumericKeypad = ({
   }, [error]);
   
   // Manipulador para adicionar dígito
-  const handleAddDigit = (digit) => {
+  const handleAddDigit = (digit: string) => {
     if (password.length < length && !loading) {
       setPassword(prev => prev + digit);
     }

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Box, 
-  Button, 
-  Container, 
-  Typography, 
-  TextField, 
-  Paper, 
+import {
+  Box,
+  Button,
+  Container,
+  Typography,
+  TextField,
+  Paper,
   Grid,
   Dialog,
   DialogTitle,
@@ -14,24 +14,24 @@ import {
   DialogActions,
   CircularProgress,
   Snackbar,
-  Alert
+  Alert,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { 
+import {
   MonetizationOn as MoneyIcon,
   LockOpen as OpenIcon,
   Lock as CloseIcon,
   Receipt as ReceiptIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@common/contexts/auth/hooks/useAuth';
 import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
 import { useBusinessDay } from '@common/contexts/core/hooks/useBusinessDay';
 import { formatCurrency } from '@common/utils/formatters';
-import CashierKeypad from '../components/CashierKeypad';
+import CashierKeypad from '@common/components/CashierKeypad';
 import PrinterService from '../services/PrinterService';
 
-// Estilos personalizados inspirados no sistema de exemplo, mas com identidade própria
+// Styled components
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
   borderRadius: '12px',
@@ -75,161 +75,158 @@ const CloseCashierButton = styled(ActionButton)(({ theme }) => ({
   },
 }));
 
-const CashierOpeningClosingPage = () => {
+const CashierOpeningClosingPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { 
-    openCashier, 
-    closeCashier, 
+  const {
+    openCashier,
+    closeCashier,
     getCurrentCashier,
     cashierStatus,
-    isLoading 
+    isLoading,
   } = useCashier();
   const { currentBusinessDay } = useBusinessDay();
-  
-  const [openingAmount, setOpeningAmount] = useState('');
-  const [closingAmount, setClosingAmount] = useState('');
-  const [openDialogVisible, setOpenDialogVisible] = useState(false);
-  const [closeDialogVisible, setCloseDialogVisible] = useState(false);
-  const [notes, setNotes] = useState('');
-  const [alertInfo, setAlertInfo] = useState({ open: false, message: '', severity: 'info' });
-  
+
+  const [openingAmount, setOpeningAmount] = useState<string | null>(null);
+  const [closingAmount, setClosingAmount] = useState<string | null>(null);
+  const [openDialogVisible, setOpenDialogVisible] = useState<boolean>(false);
+  const [closeDialogVisible, setCloseDialogVisible] = useState<boolean>(false);
+  const [notes, setNotes] = useState<string>('');
+  const [alertInfo, setAlertInfo] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'info' | 'success' | 'warning' | 'error';
+  }>({ open: false, message: '', severity: 'info' });
+
   useEffect(() => {
-    // Verificar status do caixa ao carregar a página
     const checkCashierStatus = async () => {
       await getCurrentCashier();
     };
-    
+
     checkCashierStatus();
   }, [getCurrentCashier]);
-  
+
   const handleOpenCashier = async () => {
-    if (!openingAmount || parseFloat(openingAmount) < 0) {
+    if (!openingAmount || parseFloat(openingAmount) <= 0) {
       setAlertInfo({
         open: true,
         message: 'Por favor, informe um valor válido para abertura do caixa.',
-        severity: 'error'
+        severity: 'error',
       });
       return;
     }
-    
+
     if (!currentBusinessDay || !currentBusinessDay.id) {
       setAlertInfo({
         open: true,
         message: 'Não há um dia de operação aberto. Por favor, abra o dia primeiro.',
-        severity: 'error'
+        severity: 'error',
       });
       return;
     }
-    
+
     try {
       await openCashier({
-        terminal_id: 'POS-001', // Em produção, seria obtido da configuração
+        terminal_id: 'POS-001',
         business_day_id: currentBusinessDay.id,
         opening_balance: parseFloat(openingAmount),
-        notes: notes
+        notes,
       });
-      
-      // Imprimir comprovante de abertura
+
       await PrinterService.printOpeningReceipt({
-        cashier_id: cashierStatus.id,
+        cashier_id: cashierStatus?.id,
         terminal_id: 'POS-001',
-        user_name: user.name,
+        user_name: user?.name ?? '',
         opening_balance: parseFloat(openingAmount),
         date: new Date(),
-        notes: notes
+        notes,
       });
-      
+
       setOpenDialogVisible(false);
       setAlertInfo({
         open: true,
         message: 'Caixa aberto com sucesso!',
-        severity: 'success'
+        severity: 'success',
       });
-      
-      // Redirecionar para a tela principal do POS
+
       setTimeout(() => {
         navigate('/pos/main');
       }, 1500);
-      
-    } catch (error) {
+    } catch (error: any) {
       setAlertInfo({
         open: true,
         message: `Erro ao abrir caixa: ${error.message}`,
-        severity: 'error'
+        severity: 'error',
       });
     }
   };
-  
+
   const handleCloseCashier = async () => {
     if (!closingAmount || parseFloat(closingAmount) < 0) {
       setAlertInfo({
         open: true,
         message: 'Por favor, informe um valor válido para fechamento do caixa.',
-        severity: 'error'
+        severity: 'error',
       });
       return;
     }
-    
+
     try {
       await closeCashier({
-        cashier_id: cashierStatus.id,
+        id: cashierStatus?.id || '',
         closing_balance: parseFloat(closingAmount),
-        notes: notes
+        notes,
       });
-      
-      // Imprimir comprovante de fechamento
+
       await PrinterService.printClosingReceipt({
-        cashier_id: cashierStatus.id,
+        cashier_id: cashierStatus?.id,
         terminal_id: 'POS-001',
-        user_name: user.name,
-        opening_balance: cashierStatus.opening_balance,
+        user_name: user?.name ?? '',
+        opening_balance: cashierStatus?.opening_balance,
         closing_balance: parseFloat(closingAmount),
-        expected_balance: cashierStatus.expected_balance,
-        difference: parseFloat(closingAmount) - cashierStatus.expected_balance,
-        cash_sales: cashierStatus.cash_sales,
-        card_sales: cashierStatus.card_sales,
-        pix_sales: cashierStatus.pix_sales,
-        other_sales: cashierStatus.other_sales,
-        cash_in: cashierStatus.cash_in,
-        cash_out: cashierStatus.cash_out,
+        expected_balance: cashierStatus?.expected_balance,
+        difference: parseFloat(closingAmount) - (cashierStatus?.expected_balance ?? 0),
+        cash_sales: cashierStatus?.cash_sales,
+        card_sales: cashierStatus?.card_sales,
+        pix_sales: cashierStatus?.pix_sales,
+        other_sales: cashierStatus?.other_sales,
+        cash_in: cashierStatus?.cash_in,
+        cash_out: cashierStatus?.cash_out,
         date: new Date(),
-        notes: notes
+        notes,
       });
-      
+
       setCloseDialogVisible(false);
       setAlertInfo({
         open: true,
         message: 'Caixa fechado com sucesso!',
-        severity: 'success'
+        severity: 'success',
       });
-      
-      // Redirecionar para a tela de login
+
       setTimeout(() => {
         navigate('/login');
       }, 1500);
-      
-    } catch (error) {
+    } catch (error: any) {
       setAlertInfo({
         open: true,
         message: `Erro ao fechar caixa: ${error.message}`,
-        severity: 'error'
+        severity: 'error',
       });
     }
   };
-  
-  const handleKeypadInput = (value, isOpeningDialog) => {
+
+  const handleKeypadInput = (value: string, isOpeningDialog: boolean) => {
     if (isOpeningDialog) {
       setOpeningAmount(value);
     } else {
       setClosingAmount(value);
     }
   };
-  
+
   const handleCloseAlert = () => {
     setAlertInfo({ ...alertInfo, open: false });
   };
-  
+
   if (isLoading) {
     return (
       <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -237,7 +234,7 @@ const CashierOpeningClosingPage = () => {
       </Container>
     );
   }
-  
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <StyledPaper>
@@ -423,8 +420,8 @@ const CashierOpeningClosingPage = () => {
                 sx={{ mb: 2 }}
               />
               <CashierKeypad 
-                onInput={(value) => handleKeypadInput(value, true)} 
-                initialValue={openingAmount}
+                onInput={(value: string) => handleKeypadInput(value, true)} 
+                initialValue={openingAmount ?? ''}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -492,8 +489,8 @@ const CashierOpeningClosingPage = () => {
                 sx={{ mb: 2 }}
               />
               <CashierKeypad 
-                onInput={(value) => handleKeypadInput(value, false)} 
-                initialValue={closingAmount}
+                onInput={(value: string) => handleKeypadInput(value, false)} 
+                initialValue={closingAmount ?? ''}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -540,7 +537,7 @@ const CashierOpeningClosingPage = () => {
                       color={
                         !closingAmount ? 'text.primary' :
                         parseFloat(closingAmount) === cashierStatus?.expected_balance ? 'success.main' :
-                        parseFloat(closingAmount) > cashierStatus?.expected_balance ? 'primary.main' : 'error.main'
+                        parseFloat(closingAmount) > cashierStatus?.expected_balance! ? 'primary.main' : 'error.main'
                       }
                     >
                       {!closingAmount ? 'R$ 0,00' : 

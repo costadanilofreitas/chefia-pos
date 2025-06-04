@@ -30,9 +30,9 @@
     "noPropertyAccessFromIndexSignature": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
-      "@/*": ["./src/*"],
+      "@/*": ["src/*"],
       "@common/*": ["../../common/src/*"]
     }
   },
