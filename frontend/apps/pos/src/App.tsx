@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'rea
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, CircularProgress, Box } from '@mui/material';
 import ErrorBoundary from './components/ErrorBoundary';
+import { OrderProvider } from '@common/contexts/order/hooks/useOrder';
+import { ProductProvider } from '@common/contexts/product/hooks/useProduct';
 
 // Lazy load components for better performance
 const POSMainPage = lazy(() => import('./ui/POSMainPage'));
@@ -125,116 +127,120 @@ function App() {
       <CssBaseline />
       <ErrorBoundary>
         <Router>
-          <Suspense fallback={<LoadingFallback message="Inicializando sistema POS..." />}>
-            <Routes>
-              {/* Root redirect */}
-              <Route path="/" element={<TerminalRedirect />} />
-              
-              {/* POS Routes with terminal ID */}
-              <Route path="/pos/:terminalId" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
-                    <POSMainPage />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              {/* Order management */}
-              <Route path="/pos/:terminalId/order" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando pedidos..." />}>
-                    <POSOrderPage />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              <Route path="/pos/:terminalId/payment" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando pagamento..." />}>
-                    <POSPaymentPage />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              {/* Management routes */}
-              <Route path="/pos/:terminalId/manager" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando painel gerencial..." />}>
-                    <ManagerScreen />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              <Route path="/pos/:terminalId/business-day" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando dia operacional..." />}>
-                    <BusinessDayPage />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              <Route path="/pos/:terminalId/cash-withdrawal" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando sangria..." />}>
-                    <CashWithdrawalPage />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              <Route path="/pos/:terminalId/cashier" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando caixa..." />}>
-                    <CashierOpeningClosingPage />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              {/* Restaurant management */}
-              <Route path="/pos/:terminalId/tables" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando layout das mesas..." />}>
-                    <TableLayoutScreen />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              <Route path="/pos/:terminalId/delivery" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando delivery..." />}>
-                    <DeliveryScreen />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              <Route path="/pos/:terminalId/waiter/table/:tableId" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando interface do garçom..." />}>
-                    <WaiterScreen />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              {/* Customer & Fiscal */}
-              <Route path="/pos/:terminalId/loyalty" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando fidelidade..." />}>
-                    <LoyaltyScreen />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              <Route path="/pos/:terminalId/fiscal" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<LoadingFallback message="Carregando módulo fiscal..." />}>
-                    <FiscalScreen />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              
-              {/* Fallback route */}
-              <Route path="*" element={<Navigate to="/pos/1" replace />} />
-            </Routes>
-          </Suspense>
+          <ProductProvider>
+            <OrderProvider>
+              <Suspense fallback={<LoadingFallback message="Inicializando sistema POS..." />}>
+                <Routes>
+                  {/* Root redirect */}
+                  <Route path="/" element={<TerminalRedirect />} />
+                  
+                  {/* POS Routes with terminal ID */}
+                  <Route path="/pos/:terminalId" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
+                        <POSMainPage />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  {/* Order management */}
+                  <Route path="/pos/:terminalId/order" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando pedidos..." />}>
+                        <POSOrderPage />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  <Route path="/pos/:terminalId/payment" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando pagamento..." />}>
+                        <POSPaymentPage />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  {/* Management routes */}
+                  <Route path="/pos/:terminalId/manager" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando painel gerencial..." />}>
+                        <ManagerScreen />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  <Route path="/pos/:terminalId/business-day" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando dia operacional..." />}>
+                        <BusinessDayPage />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  <Route path="/pos/:terminalId/cash-withdrawal" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando sangria..." />}>
+                        <CashWithdrawalPage />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  <Route path="/pos/:terminalId/cashier" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando caixa..." />}>
+                        <CashierOpeningClosingPage />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  {/* Restaurant management */}
+                  <Route path="/pos/:terminalId/tables" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando layout das mesas..." />}>
+                        <TableLayoutScreen />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  <Route path="/pos/:terminalId/delivery" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando delivery..." />}>
+                        <DeliveryScreen />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  <Route path="/pos/:terminalId/waiter/table/:tableId" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando interface do garçom..." />}>
+                        <WaiterScreen />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  {/* Customer & Fiscal */}
+                  <Route path="/pos/:terminalId/loyalty" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando fidelidade..." />}>
+                        <LoyaltyScreen />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  <Route path="/pos/:terminalId/fiscal" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando módulo fiscal..." />}>
+                        <FiscalScreen />
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  {/* Fallback route */}
+                  <Route path="*" element={<Navigate to="/pos/1" replace />} />
+                </Routes>
+              </Suspense>
+            </OrderProvider>
+          </ProductProvider>
         </Router>
       </ErrorBoundary>
     </ThemeProvider>
