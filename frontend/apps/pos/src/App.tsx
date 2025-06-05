@@ -1,238 +1,245 @@
-// src/App.tsx
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { useTerminalConfig } from './hooks/useTerminalConfig';
-import { useAuth } from './hooks/mocks/useAuth';
+import { CssBaseline, CircularProgress, Box } from '@mui/material';
+import ErrorBoundary from './components/ErrorBoundary';
 
-// Componentes
-import BusinessDayPage from './ui/BusinessDayPage';
-import CashierOpeningClosingPage from './ui/CashierOpeningClosingPage';
-import CashWithdrawalPage from './ui/CashWithdrawalPage';
-import POSMainPage from './ui/POSMainPage';
-import POSOrderPage from './ui/POSOrderPage';
-import POSPaymentPage from './ui/POSPaymentPage';
-import ManagerScreen from './ui/ManagerScreen';
-import TableLayoutScreen from './ui/TableLayoutScreen';
-import DeliveryScreen from './ui/DeliveryScreen';
-import WaiterScreen from './ui/WaiterScreen';
+// Lazy load components for better performance
+const POSMainPage = lazy(() => import('./ui/POSMainPage'));
+const POSOrderPage = lazy(() => import('./ui/POSOrderPage'));
+const POSPaymentPage = lazy(() => import('./ui/POSPaymentPage'));
+const ManagerScreen = lazy(() => import('./ui/ManagerScreen'));
+const BusinessDayPage = lazy(() => import('./ui/BusinessDayPage'));
+const CashWithdrawalPage = lazy(() => import('./ui/CashWithdrawalPage'));
+const CashierOpeningClosingPage = lazy(() => import('./ui/CashierOpeningClosingPage'));
+const TableLayoutScreen = lazy(() => import('./ui/TableLayoutScreen'));
+const DeliveryScreen = lazy(() => import('./ui/DeliveryScreen'));
+const WaiterScreen = lazy(() => import('./ui/WaiterScreen'));
+const LoyaltyScreen = lazy(() => import('./ui/LoyaltyScreen'));
+const FiscalScreen = lazy(() => import('./ui/FiscalScreen'));
 
-// Componente de Loading
-import { Box, CircularProgress, Typography } from '@mui/material';
+// Loading component
+const LoadingFallback: React.FC<{ message?: string }> = ({ message = 'Carregando...' }) => (
+  <Box
+    display="flex"
+    flexDirection="column"
+    alignItems="center"
+    justifyContent="center"
+    minHeight="100vh"
+    gap={2}
+  >
+    <CircularProgress size={40} />
+    <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+      {message}
+    </Box>
+  </Box>
+);
 
+// Theme configuration
 const theme = createTheme({
   palette: {
+    mode: 'light',
     primary: {
-      main: '#1976d2',
+      main: '#2196f3',
+      light: '#64b5f6',
+      dark: '#1976d2',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#ff9800',
+      light: '#ffb74d',
+      dark: '#f57c00',
+    },
+    background: {
+      default: '#f5f5f5',
+      paper: '#ffffff',
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontSize: '2.5rem',
+      fontWeight: 500,
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 500,
+    },
+    h3: {
+      fontSize: '1.75rem',
+      fontWeight: 500,
+    },
+    h4: {
+      fontSize: '1.5rem',
+      fontWeight: 500,
+    },
+    h5: {
+      fontSize: '1.25rem',
+      fontWeight: 500,
+    },
+    h6: {
+      fontSize: '1rem',
+      fontWeight: 500,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        },
+      },
     },
   },
 });
 
-const LoadingScreen = () => (
-  <Box
-    display="flex"
-    flexDirection="column"
-    alignItems="center"
-    justifyContent="center"
-    minHeight="100vh"
-    gap={2}
-  >
-    <CircularProgress size={60} />
-    <Typography variant="h6">Carregando configurações...</Typography>
-  </Box>
-);
-
-const LoginScreen = () => (
-  <Box
-    display="flex"
-    flexDirection="column"
-    alignItems="center"
-    justifyContent="center"
-    minHeight="100vh"
-    gap={2}
-  >
-    <Typography variant="h4">ChefIA POS</Typography>
-    <Typography variant="body1">Sistema de Ponto de Venda</Typography>
-    <Typography variant="body2" color="text.secondary">
-      Faça login para continuar
-    </Typography>
-  </Box>
-);
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return <LoadingScreen />;
-  }
-  
-  if (!user) {
-    return <LoginScreen />;
-  }
-  
+// Protected Route component with lazy loading
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Add authentication logic here if needed
   return <>{children}</>;
 };
 
-const App = () => {
-  const { config, loading: configLoading, error } = useTerminalConfig();
-  
-  if (configLoading) {
-    return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <LoadingScreen />
-      </ThemeProvider>
-    );
-  }
-  
-  if (error || !config) {
-    return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          minHeight="100vh"
-          gap={2}
-        >
-          <Typography variant="h5" color="error">
-            Erro de Configuração
-          </Typography>
-          <Typography variant="body1">
-            {error || 'Falha ao carregar configurações do terminal'}
-          </Typography>
-        </Box>
-      </ThemeProvider>
-    );
-  }
-  
+// Terminal redirect component
+const TerminalRedirect: React.FC = () => {
+  return <Navigate to="/pos/1" replace />;
+};
+
+function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Routes>
-          {/* Rota raiz redireciona para pos/1 por padrão */}
-          <Route path="/" element={<Navigate to="/pos/1" replace />} />
-          
-          {/* Rotas protegidas */}
-          <Route 
-            path="/pos/:terminalId/manager" 
-            element={
-              <ProtectedRoute>
-                <ManagerScreen />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/pos/:terminalId/tables" 
-            element={
-              <ProtectedRoute>
-                <TableLayoutScreen />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/pos/:terminalId/delivery" 
-            element={
-              <ProtectedRoute>
-                <DeliveryScreen />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/pos/:terminalId/waiter/table/:tableId" 
-            element={
-              <ProtectedRoute>
-                <WaiterScreen />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/business-day" 
-            element={
-              <ProtectedRoute>
-                <BusinessDayPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/cashier" 
-            element={
-              <ProtectedRoute>
-                <CashierOpeningClosingPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/cashier/withdrawal" 
-            element={
-              <ProtectedRoute>
-                <CashWithdrawalPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/pos/:terminalId" 
-            element={
-              <ProtectedRoute>
-                <POSMainPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/pos/:terminalId/order" 
-            element={
-              <ProtectedRoute>
-                <POSOrderPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/pos/:terminalId/payment" 
-            element={
-              <ProtectedRoute>
-                <POSPaymentPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Rota 404 */}
-          <Route 
-            path="*" 
-            element={
-              <Box
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                justifyContent="center"
-                minHeight="100vh"
-                gap={2}
-              >
-                <Typography variant="h4">404</Typography>
-                <Typography variant="body1">Página não encontrada</Typography>
-              </Box>
-            } 
-          />
-        </Routes>
-      </Router>
+      <ErrorBoundary>
+        <Router>
+          <Suspense fallback={<LoadingFallback message="Inicializando sistema POS..." />}>
+            <Routes>
+              {/* Root redirect */}
+              <Route path="/" element={<TerminalRedirect />} />
+              
+              {/* POS Routes with terminal ID */}
+              <Route path="/pos/:terminalId" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
+                    <POSMainPage />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              {/* Order management */}
+              <Route path="/pos/:terminalId/order" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando pedidos..." />}>
+                    <POSOrderPage />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              <Route path="/pos/:terminalId/payment" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando pagamento..." />}>
+                    <POSPaymentPage />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              {/* Management routes */}
+              <Route path="/pos/:terminalId/manager" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando painel gerencial..." />}>
+                    <ManagerScreen />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              <Route path="/pos/:terminalId/business-day" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando dia operacional..." />}>
+                    <BusinessDayPage />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              <Route path="/pos/:terminalId/cash-withdrawal" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando sangria..." />}>
+                    <CashWithdrawalPage />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              <Route path="/pos/:terminalId/cashier" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando caixa..." />}>
+                    <CashierOpeningClosingPage />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              {/* Restaurant management */}
+              <Route path="/pos/:terminalId/tables" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando layout das mesas..." />}>
+                    <TableLayoutScreen />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              <Route path="/pos/:terminalId/delivery" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando delivery..." />}>
+                    <DeliveryScreen />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              <Route path="/pos/:terminalId/waiter/table/:tableId" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando interface do garçom..." />}>
+                    <WaiterScreen />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              {/* Customer & Fiscal */}
+              <Route path="/pos/:terminalId/loyalty" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando fidelidade..." />}>
+                    <LoyaltyScreen />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              <Route path="/pos/:terminalId/fiscal" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<LoadingFallback message="Carregando módulo fiscal..." />}>
+                    <FiscalScreen />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              
+              {/* Fallback route */}
+              <Route path="*" element={<Navigate to="/pos/1" replace />} />
+            </Routes>
+          </Suspense>
+        </Router>
+      </ErrorBoundary>
     </ThemeProvider>
   );
-};
+}
 
 export default App;
 

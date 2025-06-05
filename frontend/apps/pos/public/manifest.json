@@ -1,0 +1,138 @@
+{
+  "name": "POS Modern - Sistema de Ponto de Venda",
+  "short_name": "POS Modern",
+  "description": "Sistema completo de ponto de venda para restaurantes",
+  "start_url": "/pos/1",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2196f3",
+  "orientation": "any",
+  "scope": "/",
+  "lang": "pt-BR",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "POS Modern - Tela Principal"
+    },
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "POS Modern - Mobile"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Terminal 1",
+      "short_name": "Terminal 1",
+      "description": "Acessar Terminal 1",
+      "url": "/pos/1",
+      "icons": [
+        {
+          "src": "/favicon.ico",
+          "sizes": "64x64"
+        }
+      ]
+    },
+    {
+      "name": "Terminal 2",
+      "short_name": "Terminal 2", 
+      "description": "Acessar Terminal 2",
+      "url": "/pos/2",
+      "icons": [
+        {
+          "src": "/favicon.ico",
+          "sizes": "64x64"
+        }
+      ]
+    },
+    {
+      "name": "Gerência",
+      "short_name": "Manager",
+      "description": "Painel Gerencial",
+      "url": "/pos/1/manager",
+      "icons": [
+        {
+          "src": "/favicon.ico",
+          "sizes": "64x64"
+        }
+      ]
+    },
+    {
+      "name": "Mesas",
+      "short_name": "Tables",
+      "description": "Layout das Mesas",
+      "url": "/pos/1/tables",
+      "icons": [
+        {
+          "src": "/favicon.ico",
+          "sizes": "64x64"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "pos",
+      "url": "/pos/%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/pos/1/import",
+      "accept": {
+        "application/json": [".json"],
+        "text/csv": [".csv"]
+      }
+    }
+  ],
+  "share_target": {
+    "action": "/pos/1/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": ["application/json", "text/csv"]
+        }
+      ]
+    }
+  }
+}
+
