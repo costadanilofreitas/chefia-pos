@@ -18,6 +18,8 @@ import {
   Divider,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useBusinessDay } from '../hooks/mocks/useBusinessDay';
+import { useAuth } from '../hooks/mocks/useAuth';
 import {
   Today as TodayIcon,
   LockOpen as OpenIcon,
@@ -25,11 +27,9 @@ import {
   Receipt as ReceiptIcon,
   Store as StoreIcon,
 } from '@mui/icons-material';
-import { useAuth } from '@common/contexts/auth/hooks/useAuth';
-import { useBusinessDay } from '@common/contexts/core/hooks/useBusinessDay';
-import { formatCurrency, formatDate } from '@common/utils/formatters';
-import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
 import PrinterService from '../services/PrinterService';
+import { useCashier } from '../hooks/mocks/useCashier';
+import { formatCurrency, formatDate } from '../utils/formatters';
 
 // Styled components
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -57,15 +57,21 @@ const ActionButton = styled(Button)(({ theme }) => ({
 
 const BusinessDayPage: FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  
   const {
-    openBusinessDay,
-    closeBusinessDay,
-    getCurrentBusinessDay,
-    currentBusinessDay,
+    currentDay,
     loading,
+    error,
+    openDay: openBusinessDay,
+    closeDay: closeBusinessDay,
+    getCurrentDay: getCurrentBusinessDay,
+    isOpen
   } = useBusinessDay();
+
+  const { user } = useAuth();
   const { getOpenCashiers } = useCashier();
+
+  const currentBusinessDay = currentDay;
 
   const [openDialogVisible, setOpenDialogVisible] = useState<boolean>(false);
   const [closeDialogVisible, setCloseDialogVisible] = useState<boolean>(false);

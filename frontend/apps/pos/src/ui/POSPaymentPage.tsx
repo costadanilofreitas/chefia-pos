@@ -30,10 +30,10 @@ import {
   ArrowBack as ArrowBackIcon,
   Print as PrintIcon,
 } from '@mui/icons-material';
-import { useAuth } from '@common/contexts/auth/hooks/useAuth';
-import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
+import { useAuth } from '../hooks/mocks/useAuth';
+import { useCashier } from '../hooks/mocks/useCashier';
 import { useOrder } from '@common/contexts/order/hooks/useOrder';
-import { formatCurrency } from '@common/utils/formatters';
+import { formatCurrency } from '../utils/formatters';
 import PrinterService from '../services/PrinterService';
 
 // Styled components

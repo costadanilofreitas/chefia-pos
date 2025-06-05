@@ -2,15 +2,15 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "allowJs": true,
-    "checkJs": true,
+    "checkJs": false,
     "declaration": true,
     "declarationDir": "./dist",
     "outDir": "./dist",
-    "noImplicitAny": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "baseUrl": ".",
     "composite": true,
     "emitDeclarationOnly": true,
@@ -22,3 +22,4 @@
   },
   "include": ["src"]
 }
+

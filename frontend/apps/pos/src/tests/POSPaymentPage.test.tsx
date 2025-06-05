@@ -1,17 +1,17 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
-import { useAuth } from '@common/contexts/auth/hooks/useAuth';
-import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
-import { useOrder } from '@common/contexts/order/hooks/useOrder';
+import { useAuth } from '../hooks/mocks/useAuth';
+import { useCashier } from '../hooks/mocks/useCashier';
+import { useOrder } from '../hooks/mocks/useOrder';
 import POSPaymentPage from '../ui/POSPaymentPage';
 import PrinterService from '../services/PrinterService';
 
 // Mocking hooks and services
-jest.mock('@common/contexts/auth/hooks/useAuth');
-jest.mock('@common/contexts/cashier/hooks/useCashier');
-jest.mock('@common/contexts/order/hooks/useOrder');
-jest.mock('../../services/PrinterService');
+jest.mock('../hooks/mocks/useAuth');
+jest.mock('../hooks/mocks/useCashier');
+jest.mock('../hooks/mocks/useOrder');
+jest.mock('../services/PrinterService');
 
 describe('POSPaymentPage', () => {
   beforeEach(() => {

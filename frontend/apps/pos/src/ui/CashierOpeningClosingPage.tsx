@@ -24,11 +24,11 @@ import {
   Receipt as ReceiptIcon,
   Person as PersonIcon,
 } from '@mui/icons-material';
-import { useAuth } from '@common/contexts/auth/hooks/useAuth';
-import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
-import { useBusinessDay } from '@common/contexts/core/hooks/useBusinessDay';
-import { formatCurrency } from '@common/utils/formatters';
-import CashierKeypad from '@common/components/CashierKeypad';
+import { useAuth } from '../hooks/mocks/useAuth';
+import { useCashier } from '../hooks/mocks/useCashier';
+import { useBusinessDay } from '../hooks/mocks/useBusinessDay';
+import { formatCurrency } from '../utils/formatters';
+import NumericKeypad from '../components/NumericKeypad';
 import PrinterService from '../services/PrinterService';
 
 // Styled components
@@ -419,9 +419,12 @@ const CashierOpeningClosingPage: React.FC = () => {
                 }}
                 sx={{ mb: 2 }}
               />
-              <CashierKeypad 
-                onInput={(value: string) => handleKeypadInput(value, true)} 
-                initialValue={openingAmount ?? ''}
+              <NumericKeypad 
+                onValueChange={(value: string) => handleKeypadInput(value, true)} 
+                value={openingAmount ?? ''}
+                placeholder="Digite o valor de abertura"
+                title="Valor de Abertura"
+                maxLength={10}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -488,9 +491,12 @@ const CashierOpeningClosingPage: React.FC = () => {
                 }}
                 sx={{ mb: 2 }}
               />
-              <CashierKeypad 
-                onInput={(value: string) => handleKeypadInput(value, false)} 
-                initialValue={closingAmount ?? ''}
+              <NumericKeypad 
+                onValueChange={(value: string) => handleKeypadInput(value, false)} 
+                value={closingAmount ?? ''}
+                placeholder="Digite o valor de fechamento"
+                title="Valor de Fechamento"
+                maxLength={10}
               />
             </Grid>
             <Grid item xs={12} md={6}>

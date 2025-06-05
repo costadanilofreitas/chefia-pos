@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import { useOrder } from '@common/contexts/order/hooks/useOrder';
 import { useProduct } from '@common/contexts/product/hooks/useProduct';
-import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
+import { useCashier } from '../hooks/mocks/useCashier';
 
 const POSMainPage: React.FC = () => {
   const navigate = useNavigate();

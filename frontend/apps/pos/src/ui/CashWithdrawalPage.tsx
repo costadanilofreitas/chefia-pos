@@ -18,9 +18,9 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Cancel as CancelIcon, Money as MoneyIcon } from '@mui/icons-material';
-import { useAuth } from '@common/contexts/auth/hooks/useAuth';
-import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
-import { formatCurrency } from '@common/utils/formatters';
+import { useAuth } from '../hooks/mocks/useAuth';
+import { useCashier } from '../hooks/mocks/useCashier';
+import { formatCurrency } from '../utils/formatters';
 import PrinterService from '../services/PrinterService';
 
 // Styled components

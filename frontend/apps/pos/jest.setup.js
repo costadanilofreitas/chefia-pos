@@ -1,5 +1,5 @@
 // Import testing-library
-import '@testing-library/jest-dom';
+require('@testing-library/jest-dom');
 
 // Mock global objects
 global.matchMedia = global.matchMedia || function() {
