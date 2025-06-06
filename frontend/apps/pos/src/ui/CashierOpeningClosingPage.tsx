@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -15,6 +15,9 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  Card,
+  CardContent,
+  Divider,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -23,6 +26,7 @@ import {
   Lock as CloseIcon,
   Receipt as ReceiptIcon,
   Person as PersonIcon,
+  Login as LoginIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/mocks/useAuth';
 import { useCashier } from '../hooks/mocks/useCashier';
@@ -75,9 +79,20 @@ const CloseCashierButton = styled(ActionButton)(({ theme }) => ({
   },
 }));
 
+const LoginButton = styled(ActionButton)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.common.white,
+  '&:hover': {
+    backgroundColor: theme.palette.primary.dark,
+    transform: 'translateY(-2px)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  },
+}));
+
 const CashierOpeningClosingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { terminalId } = useParams<{ terminalId: string }>();
+  const { user, isAuthenticated, login } = useAuth();
   const {
     openCashier,
     closeCashier,
@@ -87,11 +102,14 @@ const CashierOpeningClosingPage: React.FC = () => {
   } = useCashier();
   const { currentBusinessDay } = useBusinessDay();
 
-  const [openingAmount, setOpeningAmount] = useState<string | null>(null);
-  const [closingAmount, setClosingAmount] = useState<string | null>(null);
+  const [openingAmount, setOpeningAmount] = useState<string>('100.00');
+  const [closingAmount, setClosingAmount] = useState<string>('');
   const [openDialogVisible, setOpenDialogVisible] = useState<boolean>(false);
   const [closeDialogVisible, setCloseDialogVisible] = useState<boolean>(false);
+  const [loginDialogVisible, setLoginDialogVisible] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>('');
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [loginError, setLoginError] = useState('');
   const [alertInfo, setAlertInfo] = useState<{
     open: boolean;
     message: string;
@@ -106,6 +124,27 @@ const CashierOpeningClosingPage: React.FC = () => {
     checkCashierStatus();
   }, [getCurrentCashier]);
 
+  const handleLogin = async () => {
+    if (!loginForm.username || !loginForm.password) {
+      setLoginError('Por favor, preencha todos os campos');
+      return;
+    }
+
+    try {
+      await login(loginForm.username, loginForm.password);
+      setLoginDialogVisible(false);
+      setLoginForm({ username: '', password: '' });
+      setLoginError('');
+      setAlertInfo({
+        open: true,
+        message: 'Login realizado com sucesso!',
+        severity: 'success',
+      });
+    } catch (error) {
+      setLoginError('Credenciais inválidas');
+    }
+  };
+
   const handleOpenCashier = async () => {
     if (!openingAmount || parseFloat(openingAmount) <= 0) {
       setAlertInfo({
@@ -116,26 +155,17 @@ const CashierOpeningClosingPage: React.FC = () => {
       return;
     }
 
-    if (!currentBusinessDay || !currentBusinessDay.id) {
-      setAlertInfo({
-        open: true,
-        message: 'Não há um dia de operação aberto. Por favor, abra o dia primeiro.',
-        severity: 'error',
-      });
-      return;
-    }
-
     try {
       await openCashier({
-        terminal_id: 'POS-001',
-        business_day_id: currentBusinessDay.id,
+        terminal_id: `POS-${terminalId}`,
+        business_day_id: currentBusinessDay?.id || 'default',
         opening_balance: parseFloat(openingAmount),
         notes,
       });
 
       await PrinterService.printOpeningReceipt({
         cashier_id: cashierStatus?.id,
-        terminal_id: 'POS-001',
+        terminal_id: `POS-${terminalId}`,
         user_name: user?.name ?? '',
         opening_balance: parseFloat(openingAmount),
         date: new Date(),
@@ -149,8 +179,9 @@ const CashierOpeningClosingPage: React.FC = () => {
         severity: 'success',
       });
 
+      // Redirecionar para a tela principal após abrir o caixa
       setTimeout(() => {
-        navigate('/pos/main');
+        navigate(`/pos/${terminalId}/main`);
       }, 1500);
     } catch (error: any) {
       setAlertInfo({
@@ -180,7 +211,7 @@ const CashierOpeningClosingPage: React.FC = () => {
 
       await PrinterService.printClosingReceipt({
         cashier_id: cashierStatus?.id,
-        terminal_id: 'POS-001',
+        terminal_id: `POS-${terminalId}`,
         user_name: user?.name ?? '',
         opening_balance: cashierStatus?.opening_balance,
         closing_balance: parseFloat(closingAmount),
@@ -202,10 +233,6 @@ const CashierOpeningClosingPage: React.FC = () => {
         message: 'Caixa fechado com sucesso!',
         severity: 'success',
       });
-
-      setTimeout(() => {
-        navigate('/login');
-      }, 1500);
     } catch (error: any) {
       setAlertInfo({
         open: true,
@@ -235,6 +262,99 @@ const CashierOpeningClosingPage: React.FC = () => {
     );
   }
 
+  // Se não está autenticado, mostrar opção de login
+  if (!isAuthenticated) {
+    return (
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <StyledPaper>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#333' }}>
+              Sistema POS - Terminal {terminalId}
+            </Typography>
+            <Typography variant="subtitle1" color="text.secondary">
+              Faça login para acessar o sistema
+            </Typography>
+          </Box>
+          
+          <Grid container spacing={4} justifyContent="center">
+            <Grid item xs={12} md={6}>
+              <Card elevation={3}>
+                <CardContent sx={{ p: 4, textAlign: 'center' }}>
+                  <LoginIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
+                  <Typography variant="h5" component="h2" gutterBottom>
+                    Acesso ao Sistema
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary" paragraph>
+                    Entre com suas credenciais para acessar o sistema POS
+                  </Typography>
+                  <LoginButton
+                    variant="contained"
+                    startIcon={<LoginIcon />}
+                    onClick={() => setLoginDialogVisible(true)}
+                    fullWidth
+                    sx={{ mt: 2 }}
+                  >
+                    Fazer Login
+                  </LoginButton>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </StyledPaper>
+
+        {/* Dialog de Login */}
+        <Dialog 
+          open={loginDialogVisible} 
+          onClose={() => setLoginDialogVisible(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Login no Sistema</DialogTitle>
+          <DialogContent>
+            {loginError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {loginError}
+              </Alert>
+            )}
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Usuário"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={loginForm.username}
+              onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              label="Senha"
+              type="password"
+              fullWidth
+              variant="outlined"
+              value={loginForm.password}
+              onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleLogin();
+                }
+              }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setLoginDialogVisible(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleLogin} variant="contained">
+              Entrar
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <StyledPaper>
@@ -243,7 +363,7 @@ const CashierOpeningClosingPage: React.FC = () => {
             Gerenciamento de Caixa
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">
-            Terminal: POS-001 | Operador: {user?.name || 'Não identificado'}
+            Terminal: {terminalId} | Operador: {user?.name || 'Não identificado'}
           </Typography>
           {currentBusinessDay && (
             <Typography variant="subtitle1" color="text.secondary">
@@ -251,12 +371,35 @@ const CashierOpeningClosingPage: React.FC = () => {
             </Typography>
           )}
         </Box>
+
+        {/* Status do Caixa */}
+        <Box sx={{ mb: 4 }}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Status do Caixa
+              </Typography>
+              <Typography 
+                variant="h4" 
+                color={cashierStatus?.status === 'open' ? 'success.main' : 'text.secondary'}
+                sx={{ fontWeight: 'bold', mb: 2 }}
+              >
+                {cashierStatus?.status === 'open' ? '🟢 ABERTO' : '🔴 FECHADO'}
+              </Typography>
+              {cashierStatus?.status === 'open' && (
+                <Typography variant="body2" color="text.secondary">
+                  Aberto em: {new Date(cashierStatus.opened_at).toLocaleString()}
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
         
         <Grid container spacing={4} justifyContent="center">
           {!cashierStatus || cashierStatus.status !== 'open' ? (
             <Grid item xs={12} md={6}>
-              <StyledPaper elevation={3} sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <Box sx={{ textAlign: 'center', mb: 3 }}>
+              <Card elevation={3}>
+                <CardContent sx={{ p: 3, textAlign: 'center' }}>
                   <OpenIcon sx={{ fontSize: 60, color: 'success.main', mb: 2 }} />
                   <Typography variant="h5" component="h2" gutterBottom>
                     Abrir Caixa
@@ -264,37 +407,35 @@ const CashierOpeningClosingPage: React.FC = () => {
                   <Typography variant="body1" color="text.secondary" paragraph>
                     Inicie um novo turno de operação abrindo o caixa com o valor inicial.
                   </Typography>
-                </Box>
-                <OpenCashierButton
-                  variant="contained"
-                  startIcon={<MoneyIcon />}
-                  onClick={() => setOpenDialogVisible(true)}
-                  disabled={!currentBusinessDay || !currentBusinessDay.id}
-                  fullWidth
-                >
-                  Abrir Caixa
-                </OpenCashierButton>
-                {(!currentBusinessDay || !currentBusinessDay.id) && (
-                  <Typography variant="caption" color="error" sx={{ mt: 2, display: 'block', textAlign: 'center' }}>
-                    É necessário abrir o dia de operação primeiro.
-                  </Typography>
-                )}
-              </StyledPaper>
+                  <OpenCashierButton
+                    variant="contained"
+                    startIcon={<MoneyIcon />}
+                    onClick={() => setOpenDialogVisible(true)}
+                    fullWidth
+                    sx={{ mt: 2 }}
+                  >
+                    Abrir Caixa
+                  </OpenCashierButton>
+                </CardContent>
+              </Card>
             </Grid>
           ) : (
             <Grid item xs={12} md={6}>
-              <StyledPaper elevation={3} sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <Box sx={{ textAlign: 'center', mb: 3 }}>
-                  <CloseIcon sx={{ fontSize: 60, color: 'error.main', mb: 2 }} />
-                  <Typography variant="h5" component="h2" gutterBottom>
-                    Fechar Caixa
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary" paragraph>
-                    Finalize o turno de operação fechando o caixa e contabilizando os valores.
-                  </Typography>
-                </Box>
-                <Box sx={{ mb: 3 }}>
-                  <Grid container spacing={2}>
+              <Card elevation={3}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ textAlign: 'center', mb: 3 }}>
+                    <CloseIcon sx={{ fontSize: 60, color: 'error.main', mb: 2 }} />
+                    <Typography variant="h5" component="h2" gutterBottom>
+                      Fechar Caixa
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" paragraph>
+                      Finalize o turno de operação fechando o caixa e contabilizando os valores.
+                    </Typography>
+                  </Box>
+                  
+                  <Divider sx={{ my: 2 }} />
+                  
+                  <Grid container spacing={2} sx={{ mb: 3 }}>
                     <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
                         Saldo Inicial:
@@ -328,29 +469,31 @@ const CashierOpeningClosingPage: React.FC = () => {
                       </Typography>
                     </Grid>
                   </Grid>
-                </Box>
-                <CloseCashierButton
-                  variant="contained"
-                  startIcon={<CloseIcon />}
-                  onClick={() => setCloseDialogVisible(true)}
-                  fullWidth
-                >
-                  Fechar Caixa
-                </CloseCashierButton>
-              </StyledPaper>
+                  
+                  <CloseCashierButton
+                    variant="contained"
+                    startIcon={<CloseIcon />}
+                    onClick={() => setCloseDialogVisible(true)}
+                    fullWidth
+                  >
+                    Fechar Caixa
+                  </CloseCashierButton>
+                </CardContent>
+              </Card>
             </Grid>
           )}
           
           <Grid item xs={12} md={6}>
-            <StyledPaper elevation={3} sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <Box sx={{ textAlign: 'center', mb: 3 }}>
-                <PersonIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-                <Typography variant="h5" component="h2" gutterBottom>
-                  Informações do Operador
-                </Typography>
-              </Box>
-              <Box sx={{ mb: 3 }}>
-                <Grid container spacing={2}>
+            <Card elevation={3}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ textAlign: 'center', mb: 3 }}>
+                  <PersonIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
+                  <Typography variant="h5" component="h2" gutterBottom>
+                    Informações do Operador
+                  </Typography>
+                </Box>
+                
+                <Grid container spacing={2} sx={{ mb: 3 }}>
                   <Grid item xs={6}>
                     <Typography variant="body2" color="text.secondary">
                       Nome:
@@ -369,28 +512,25 @@ const CashierOpeningClosingPage: React.FC = () => {
                   </Grid>
                   <Grid item xs={12}>
                     <Typography variant="body2" color="text.secondary">
-                      Status do Caixa:
+                      Terminal:
                     </Typography>
-                    <Typography 
-                      variant="body1" 
-                      fontWeight="bold"
-                      color={cashierStatus?.status === 'open' ? 'success.main' : 'text.primary'}
-                    >
-                      {cashierStatus?.status === 'open' ? 'Aberto' : 'Fechado'}
+                    <Typography variant="body1" fontWeight="bold">
+                      POS-{terminalId}
                     </Typography>
                   </Grid>
                 </Grid>
-              </Box>
-              <ActionButton
-                variant="outlined"
-                color="primary"
-                startIcon={<ReceiptIcon />}
-                onClick={() => navigate('/pos/reports')}
-                fullWidth
-              >
-                Relatórios
-              </ActionButton>
-            </StyledPaper>
+                
+                <ActionButton
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<ReceiptIcon />}
+                  onClick={() => navigate(`/pos/${terminalId}/manager`)}
+                  fullWidth
+                >
+                  Relatórios
+                </ActionButton>
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
       </StyledPaper>
@@ -399,36 +539,51 @@ const CashierOpeningClosingPage: React.FC = () => {
       <Dialog 
         open={openDialogVisible} 
         onClose={() => setOpenDialogVisible(false)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: { minHeight: '70vh' }
+        }}
       >
-        <DialogTitle>Abertura de Caixa</DialogTitle>
+        <DialogTitle>
+          <Typography variant="h5">Abertura de Caixa</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Terminal {terminalId} - {user?.name}
+          </Typography>
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" gutterBottom>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
                 Valor Inicial em Caixa:
               </Typography>
               <TextField
                 fullWidth
                 variant="outlined"
-                value={openingAmount}
+                value={`R$ ${openingAmount}`}
                 InputProps={{
                   readOnly: true,
-                  startAdornment: <Typography variant="body1">R$</Typography>
                 }}
-                sx={{ mb: 2 }}
+                sx={{ mb: 3 }}
               />
-              <NumericKeypad 
-                onValueChange={(value: string) => handleKeypadInput(value, true)} 
-                value={openingAmount ?? ''}
-                placeholder="Digite o valor de abertura"
-                title="Valor de Abertura"
-                maxLength={10}
-              />
+              <Box sx={{ 
+                border: '1px solid #e0e0e0', 
+                borderRadius: 2, 
+                p: 2,
+                maxHeight: '400px',
+                overflow: 'auto'
+              }}>
+                <NumericKeypad 
+                  onValueChange={(value: string) => handleKeypadInput(value, true)} 
+                  value={openingAmount}
+                  placeholder="Digite o valor de abertura"
+                  title="Valor de Abertura"
+                  maxLength={10}
+                />
+              </Box>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" gutterBottom>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
                 Observações:
               </Typography>
               <TextField
@@ -439,68 +594,138 @@ const CashierOpeningClosingPage: React.FC = () => {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Observações sobre a abertura do caixa..."
+                sx={{ mb: 3 }}
               />
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle1" gutterBottom>
+              <Box>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
                   Informações:
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Terminal: POS-001
+                  Terminal: POS-{terminalId}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Operador: {user?.name || 'Não identificado'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Data/Hora: {new Date().toLocaleString()}
                 </Typography>
               </Box>
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialogVisible(false)}>Cancelar</Button>
+        <DialogActions sx={{ p: 3 }}>
           <Button 
-            onClick={handleOpenCashier} 
-            variant="contained" 
+            onClick={() => setOpenDialogVisible(false)}
+            color="inherit"
+            size="large"
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleOpenCashier}
+            variant="contained"
             color="success"
+            size="large"
             disabled={!openingAmount || parseFloat(openingAmount) <= 0}
           >
             Confirmar Abertura
           </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* Diálogo de Fechamento de Caixa */}
       <Dialog 
         open={closeDialogVisible} 
         onClose={() => setCloseDialogVisible(false)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: { minHeight: '70vh' }
+        }}
       >
-        <DialogTitle>Fechamento de Caixa</DialogTitle>
+        <DialogTitle>
+          <Typography variant="h5">Fechamento de Caixa</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Terminal {terminalId} - {user?.name}
+          </Typography>
+        </DialogTitle>
         <DialogContent>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" gutterBottom>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
                 Valor Final em Caixa:
               </Typography>
               <TextField
                 fullWidth
                 variant="outlined"
-                value={closingAmount}
+                value={`R$ ${closingAmount}`}
                 InputProps={{
                   readOnly: true,
-                  startAdornment: <Typography variant="body1">R$</Typography>
                 }}
-                sx={{ mb: 2 }}
+                sx={{ mb: 3 }}
               />
-              <NumericKeypad 
-                onValueChange={(value: string) => handleKeypadInput(value, false)} 
-                value={closingAmount ?? ''}
-                placeholder="Digite o valor de fechamento"
-                title="Valor de Fechamento"
-                maxLength={10}
-              />
+              <Box sx={{ 
+                border: '1px solid #e0e0e0', 
+                borderRadius: 2, 
+                p: 2,
+                maxHeight: '400px',
+                overflow: 'auto'
+              }}>
+                <NumericKeypad 
+                  onValueChange={(value: string) => handleKeypadInput(value, false)} 
+                  value={closingAmount}
+                  placeholder="Digite o valor de fechamento"
+                  title="Valor de Fechamento"
+                  maxLength={10}
+                />
+              </Box>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" gutterBottom>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                Resumo do Caixa:
+              </Typography>
+              <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                <Grid container spacing={1}>
+                  <Grid item xs={6}>
+                    <Typography variant="body2">Saldo Inicial:</Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="body2" fontWeight="bold">
+                      {formatCurrency(cashierStatus?.opening_balance || 0)}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="body2">Saldo Esperado:</Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="body2" fontWeight="bold">
+                      {formatCurrency(cashierStatus?.expected_balance || 0)}
+                    </Typography>
+                  </Grid>
+                  {closingAmount && (
+                    <>
+                      <Grid item xs={6}>
+                        <Typography variant="body2">Diferença:</Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography 
+                          variant="body2" 
+                          fontWeight="bold"
+                          color={
+                            parseFloat(closingAmount) - (cashierStatus?.expected_balance || 0) >= 0 
+                              ? 'success.main' 
+                              : 'error.main'
+                          }
+                        >
+                          {formatCurrency(parseFloat(closingAmount) - (cashierStatus?.expected_balance || 0))}
+                        </Typography>
+                      </Grid>
+                    </>
+                  )}
+                </Grid>
+              </Box>
+              
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
                 Observações:
               </Typography>
               <TextField
@@ -512,69 +737,37 @@ const CashierOpeningClosingPage: React.FC = () => {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Observações sobre o fechamento do caixa..."
               />
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Resumo:
-                </Typography>
-                <Grid container spacing={1}>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="text.secondary">
-                      Saldo Esperado:
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {cashierStatus && formatCurrency(cashierStatus.expected_balance)}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="text.secondary">
-                      Saldo Informado:
-                    </Typography>
-                    <Typography variant="body1" fontWeight="bold">
-                      {closingAmount ? formatCurrency(parseFloat(closingAmount)) : 'R$ 0,00'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant="body2" color="text.secondary">
-                      Diferença:
-                    </Typography>
-                    <Typography 
-                      variant="body1" 
-                      fontWeight="bold"
-                      color={
-                        !closingAmount ? 'text.primary' :
-                        parseFloat(closingAmount) === cashierStatus?.expected_balance ? 'success.main' :
-                        parseFloat(closingAmount) > cashierStatus?.expected_balance! ? 'primary.main' : 'error.main'
-                      }
-                    >
-                      {!closingAmount ? 'R$ 0,00' : 
-                        formatCurrency(parseFloat(closingAmount) - (cashierStatus?.expected_balance || 0))}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Box>
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCloseDialogVisible(false)}>Cancelar</Button>
+        <DialogActions sx={{ p: 3 }}>
           <Button 
-            onClick={handleCloseCashier} 
-            variant="contained" 
+            onClick={() => setCloseDialogVisible(false)}
+            color="inherit"
+            size="large"
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleCloseCashier}
+            variant="contained"
             color="error"
+            size="large"
             disabled={!closingAmount || parseFloat(closingAmount) < 0}
           >
             Confirmar Fechamento
           </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* Snackbar para alertas */}
       <Snackbar
         open={alertInfo.open}
         autoHideDuration={6000}
         onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert onClose={handleCloseAlert} severity={alertInfo.severity}>
+        <Alert onClose={handleCloseAlert} severity={alertInfo.severity} sx={{ width: '100%' }}>
           {alertInfo.message}
         </Alert>
       </Snackbar>
@@ -583,3 +776,4 @@ const CashierOpeningClosingPage: React.FC = () => {
 };
 
 export default CashierOpeningClosingPage;
+

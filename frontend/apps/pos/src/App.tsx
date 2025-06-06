@@ -1,10 +1,14 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, CircularProgress, Box } from '@mui/material';
 import ErrorBoundary from './components/ErrorBoundary';
+import AuthGuard from './components/AuthGuard';
+import TerminalValidator from './components/TerminalValidator';
+import POSLayout from './components/POSLayout';
 import { OrderProvider } from '@common/contexts/order/hooks/useOrder';
 import { ProductProvider } from '@common/contexts/product/hooks/useProduct';
+import { UserRole } from './hooks/mocks/useAuth';
 
 // Lazy load components for better performance
 const POSMainPage = lazy(() => import('./ui/POSMainPage'));
@@ -110,16 +114,21 @@ const theme = createTheme({
   },
 });
 
-// Protected Route component with lazy loading
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Add authentication logic here if needed
-  return <>{children}</>;
-};
-
-// Terminal redirect component
-const TerminalRedirect: React.FC = () => {
-  return <Navigate to="/pos/1" replace />;
-};
+// Route wrapper with layout
+const LayoutRoute: React.FC<{ 
+  children: React.ReactNode; 
+  title?: string;
+  requireAuth?: boolean;
+  requiredRole?: UserRole;
+}> = ({ children, title, requireAuth = true, requiredRole }) => (
+  <TerminalValidator>
+    <AuthGuard requiredRole={requiredRole} allowGuestAccess={!requireAuth}>
+      <POSLayout title={title}>
+        {children}
+      </POSLayout>
+    </AuthGuard>
+  </TerminalValidator>
+);
 
 function App() {
   return (
@@ -131,14 +140,37 @@ function App() {
             <OrderProvider>
               <Suspense fallback={<LoadingFallback message="Inicializando sistema POS..." />}>
                 <Routes>
-                  {/* Root redirect */}
-                  <Route path="/" element={<TerminalRedirect />} />
+                  {/* Root redirects */}
+                  <Route path="/" element={<Navigate to="/pos/1" replace />} />
+                  <Route path="/pos" element={<Navigate to="/pos/1" replace />} />
                   
-                  {/* POS Routes with terminal ID */}
+                  {/* Main POS Route - redirects based on auth */}
                   <Route path="/pos/:terminalId" element={
+                    <TerminalValidator>
+                      <AuthGuard allowGuestAccess={true}>
+                        <Navigate to="cashier" replace />
+                      </AuthGuard>
+                    </TerminalValidator>
+                  } />
+                  
+                  {/* Cashier - Entry point for unauthenticated users */}
+                  <Route path="/pos/:terminalId/cashier" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando caixa..." />}>
+                        <LayoutRoute requireAuth={false} title="Caixa">
+                          <CashierOpeningClosingPage />
+                        </LayoutRoute>
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  {/* Main POS Interface - Requires authentication */}
+                  <Route path="/pos/:terminalId/main" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
-                        <POSMainPage />
+                        <LayoutRoute title="POS Principal">
+                          <POSMainPage />
+                        </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
@@ -147,7 +179,9 @@ function App() {
                   <Route path="/pos/:terminalId/order" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando pedidos..." />}>
-                        <POSOrderPage />
+                        <LayoutRoute title="Pedidos">
+                          <POSOrderPage />
+                        </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
@@ -155,7 +189,9 @@ function App() {
                   <Route path="/pos/:terminalId/payment" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando pagamento..." />}>
-                        <POSPaymentPage />
+                        <LayoutRoute title="Pagamento">
+                          <POSPaymentPage />
+                        </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
@@ -164,7 +200,9 @@ function App() {
                   <Route path="/pos/:terminalId/manager" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando painel gerencial..." />}>
-                        <ManagerScreen />
+                        <LayoutRoute requiredRole={UserRole.MANAGER} title="Gestão Gerencial">
+                          <ManagerScreen />
+                        </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
@@ -172,7 +210,9 @@ function App() {
                   <Route path="/pos/:terminalId/business-day" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando dia operacional..." />}>
-                        <BusinessDayPage />
+                        <LayoutRoute title="Dia Operacional">
+                          <BusinessDayPage />
+                        </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
@@ -180,15 +220,9 @@ function App() {
                   <Route path="/pos/:terminalId/cash-withdrawal" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando sangria..." />}>
-                        <CashWithdrawalPage />
-                      </Suspense>
-                    </ErrorBoundary>
-                  } />
-                  
-                  <Route path="/pos/:terminalId/cashier" element={
-                    <ErrorBoundary>
-                      <Suspense fallback={<LoadingFallback message="Carregando caixa..." />}>
-                        <CashierOpeningClosingPage />
+                        <LayoutRoute title="Sangria">
+                          <CashWithdrawalPage />
+                        </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
@@ -197,7 +231,9 @@ function App() {
                   <Route path="/pos/:terminalId/tables" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando layout das mesas..." />}>
-                        <TableLayoutScreen />
+                        <LayoutRoute title="Layout das Mesas">
+                          <TableLayoutScreen />
+                        </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
@@ -205,7 +241,9 @@ function App() {
                   <Route path="/pos/:terminalId/delivery" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando delivery..." />}>
-                        <DeliveryScreen />
+                        <LayoutRoute title="Delivery">
+                          <DeliveryScreen />
+                        </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
@@ -213,7 +251,9 @@ function App() {
                   <Route path="/pos/:terminalId/waiter/table/:tableId" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando interface do garçom..." />}>
-                        <WaiterScreen />
+                        <LayoutRoute requiredRole={UserRole.WAITER} title="Interface do Garçom">
+                          <WaiterScreen />
+                        </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
@@ -222,7 +262,9 @@ function App() {
                   <Route path="/pos/:terminalId/loyalty" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando fidelidade..." />}>
-                        <LoyaltyScreen />
+                        <LayoutRoute title="Sistema de Fidelidade">
+                          <LoyaltyScreen />
+                        </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
@@ -230,10 +272,17 @@ function App() {
                   <Route path="/pos/:terminalId/fiscal" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando módulo fiscal..." />}>
-                        <FiscalScreen />
+                        <LayoutRoute title="Módulo Fiscal">
+                          <FiscalScreen />
+                        </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
+                  
+                  {/* Legacy routes - redirect to new structure */}
+                  <Route path="/reports" element={<Navigate to="/pos/1/manager" replace />} />
+                  <Route path="/cash-withdrawal" element={<Navigate to="/pos/1/cash-withdrawal" replace />} />
+                  <Route path="/fiscal" element={<Navigate to="/pos/1/fiscal" replace />} />
                   
                   {/* Fallback route */}
                   <Route path="*" element={<Navigate to="/pos/1" replace />} />

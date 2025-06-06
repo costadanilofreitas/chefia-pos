@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import {
   Box,
@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Chip,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -29,12 +30,11 @@ import {
   Smartphone as PixIcon,
   ArrowBack as ArrowBackIcon,
   Print as PrintIcon,
+  CheckCircle as CheckIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/mocks/useAuth';
 import { useCashier } from '../hooks/mocks/useCashier';
-import { useOrder } from '@common/contexts/order/hooks/useOrder';
 import { formatCurrency } from '../utils/formatters';
-import PrinterService from '../services/PrinterService';
 
 // Styled components
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -48,67 +48,106 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   flexDirection: 'column',
 }));
 
+interface OrderItem {
+  id: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
+
+interface Order {
+  id: string;
+  items: OrderItem[];
+  total: number;
+  status: string;
+  payment_status?: string;
+  payment_method?: string;
+}
+
 const POSPaymentPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { orderId } = useParams<{ orderId: string }>();
+  const { terminalId } = useParams<{ terminalId: string }>();
   const { user } = useAuth();
   const { cashierStatus } = useCashier();
-  const { getOrderById, updateOrder, processPayment, loading } = useOrder();
 
-  const params = new URLSearchParams(location.search);
-  const posId = params.get('pos') || '1';
-
-  const [order, setOrder] = useState<any | null>(null);
+  // Estados estáveis
+  const [order, setOrder] = useState<Order | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string>('cash');
   const [paymentAmount, setPaymentAmount] = useState<string>('');
   const [changeAmount, setChangeAmount] = useState<number>(0);
-  const [alertInfo, setAlertInfo] = useState<{ open: boolean; message: string; severity: 'info' | 'error' | 'success' }>({
+  const [loading, setLoading] = useState(false);
+  const [paymentComplete, setPaymentComplete] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState<boolean>(false);
+  const [alertInfo, setAlertInfo] = useState<{ 
+    open: boolean; 
+    message: string; 
+    severity: 'info' | 'error' | 'success' | 'warning';
+  }>({
     open: false,
     message: '',
     severity: 'info',
   });
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState<boolean>(false);
-  // Removed unused paymentComplete state
 
+  // Carregar pedido do state ou criar mock
   useEffect(() => {
-    const loadOrder = async () => {
-      try {
-        const orderData = await getOrderById(orderId!);
-        setOrder(orderData);
-        setPaymentAmount(orderData.total.toFixed(2));
-      } catch (error: any) {
-        setAlertInfo({
-          open: true,
-          message: `Erro ao carregar pedido: ${error.message}`,
-          severity: 'error',
-        });
-      }
-    };
-
-    if (orderId) {
-      loadOrder();
+    const orderFromState = location.state?.order;
+    
+    if (orderFromState) {
+      setOrder(orderFromState);
+      setPaymentAmount(orderFromState.total.toFixed(2));
+    } else {
+      // Mock order para demonstração
+      const mockOrder: Order = {
+        id: `ORDER-${Date.now()}`,
+        items: [
+          {
+            id: '1',
+            product_name: 'Hambúrguer Clássico',
+            quantity: 2,
+            unit_price: 25.90,
+            total_price: 51.80
+          },
+          {
+            id: '2',
+            product_name: 'Refrigerante Lata',
+            quantity: 2,
+            unit_price: 5.50,
+            total_price: 11.00
+          }
+        ],
+        total: 62.80,
+        status: 'pending'
+      };
+      setOrder(mockOrder);
+      setPaymentAmount(mockOrder.total.toFixed(2));
     }
-  }, [orderId, getOrderById]);
+  }, [location.state]);
 
-  useEffect(() => {
+  // Calcular troco de forma estável
+  const calculatedChange = useMemo(() => {
     if (order && paymentMethod === 'cash' && paymentAmount) {
       const change = parseFloat(paymentAmount) - order.total;
-      setChangeAmount(change > 0 ? change : 0);
-    } else {
-      setChangeAmount(0);
+      return change > 0 ? change : 0;
     }
+    return 0;
   }, [paymentAmount, order, paymentMethod]);
 
-  const handlePaymentAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    setChangeAmount(calculatedChange);
+  }, [calculatedChange]);
+
+  // Funções estáveis com useCallback
+  const handlePaymentAmountChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9.]/g, '');
     const parts = value.split('.');
     if (parts.length > 2) return;
     if (parts.length === 2 && parts[1] && parts[1].length > 2) return;
     setPaymentAmount(value);
-  };
+  }, []);
 
-  const handleProcessPayment = async () => {
+  const handleProcessPayment = useCallback(async () => {
     if (!order) return;
 
     if (paymentMethod === 'cash' && (!paymentAmount || parseFloat(paymentAmount) < order.total)) {
@@ -120,38 +159,57 @@ const POSPaymentPage: React.FC = () => {
       return;
     }
 
+    setLoading(true);
     try {
+      // Simular processamento do pagamento
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       const paymentData = {
         order_id: order.id,
-        cashier_id: cashierStatus?.id,
-        terminal_id: `POS-${posId}`,
-        operator_id: user?.id,
+        cashier_id: cashierStatus?.id || 'CASHIER-1',
+        terminal_id: `POS-${terminalId}`,
+        operator_id: user?.id || 'USER-1',
         amount: order.total,
         payment_method: paymentMethod,
         status: 'completed',
-        details: paymentMethod === 'cash' ? { amount_received: parseFloat(paymentAmount), change: changeAmount } : {},
+        details: paymentMethod === 'cash' ? { 
+          amount_received: parseFloat(paymentAmount), 
+          change: changeAmount 
+        } : {},
       };
 
-      await processPayment(paymentData);
-      await updateOrder(order.id, { ...order, status: 'completed', payment_status: 'paid', payment_method: paymentMethod });
+      // Atualizar order com dados do pagamento
+      const updatedOrder = {
+        ...order,
+        status: 'completed',
+        payment_status: 'paid',
+        payment_method: paymentMethod
+      };
+      setOrder(updatedOrder);
 
-      // Removed setPaymentComplete as paymentComplete state is no longer used
+      setPaymentComplete(true);
       setPaymentDialogOpen(false);
       setAlertInfo({
         open: true,
         message: 'Pagamento realizado com sucesso!',
         severity: 'success',
       });
+
+      // Simular impressão do recibo
+      console.log('Imprimindo recibo...', paymentData);
+
     } catch (error: any) {
       setAlertInfo({
         open: true,
         message: `Erro ao processar pagamento: ${error.message}`,
         severity: 'error',
       });
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [order, paymentMethod, paymentAmount, changeAmount, cashierStatus?.id, terminalId, user?.id]);
 
-  const handleReprintReceipt = async () => {
+  const handleReprintReceipt = useCallback(async () => {
     if (!order) {
       setAlertInfo({
         open: true,
@@ -160,20 +218,12 @@ const POSPaymentPage: React.FC = () => {
       });
       return;
     }
-  
+
+    setLoading(true);
     try {
-      await PrinterService.printReceipt({
-        order_id: order.id,
-        cashier_id: cashierStatus?.id || 'Unknown',
-        terminal_id: `POS-${posId}`,
-        operator_name: user?.name || 'Desconhecido',
-        items: order.items,
-        total: order.total,
-        payment_method: paymentMethod,
-        change: changeAmount,
-        date: new Date(),
-      });
-  
+      // Simular reimpressão
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       setAlertInfo({
         open: true,
         message: 'Recibo reimpresso com sucesso!',
@@ -185,18 +235,24 @@ const POSPaymentPage: React.FC = () => {
         message: `Erro ao reimprimir recibo: ${error.message}`,
         severity: 'error',
       });
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [order]);
 
-  const handleFinish = () => {
-    navigate(`/pos?pos=${posId}`);
-  };
+  const handleFinish = useCallback(() => {
+    navigate(`/pos/${terminalId}/main`);
+  }, [navigate, terminalId]);
 
-  const handleCloseAlert = () => {
-    setAlertInfo({ ...alertInfo, open: false });
-  };
+  const handleNewOrder = useCallback(() => {
+    navigate(`/pos/${terminalId}/order`);
+  }, [navigate, terminalId]);
 
-  if (loading || !order) {
+  const handleCloseAlert = useCallback(() => {
+    setAlertInfo(prev => ({ ...prev, open: false }));
+  }, []);
+
+  if (!order) {
     return (
       <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
@@ -214,141 +270,228 @@ const POSPaymentPage: React.FC = () => {
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#333' }}>
             Pagamento
           </Typography>
+          {paymentComplete && (
+            <Chip 
+              icon={<CheckIcon />} 
+              label="Pago" 
+              color="success" 
+              sx={{ ml: 2 }}
+            />
+          )}
         </Box>
         <Box>
           <Typography variant="subtitle1" color="text.secondary">
-            Terminal POS #{posId} | Operador: {user?.name || 'Não identificado'}
+            Terminal {terminalId} | Operador: {user?.name || 'Não identificado'}
           </Typography>
         </Box>
       </Box>
 
       <Grid container spacing={3}>
+        {/* Resumo do Pedido */}
         <Grid item xs={12} md={5}>
           <StyledPaper>
             <Typography variant="h5" component="h2" gutterBottom>
-              Resumo do Pedido #{order.id}
+              Resumo do Pedido #{order.id.split('-').pop()}
             </Typography>
             <List>
-              {order.items.map((item: any) => (
-                <ListItem key={item.id}>
+              {order.items.map((item) => (
+                <ListItem key={item.id} sx={{ px: 0 }}>
                   <ListItemText
                     primary={`${item.quantity}x ${item.product_name}`}
-                    secondary={formatCurrency(item.total_price)}
+                    secondary={`${formatCurrency(item.unit_price)} cada`}
                   />
+                  <Typography variant="body2" fontWeight="medium">
+                    {formatCurrency(item.total_price)}
+                  </Typography>
                 </ListItem>
               ))}
             </List>
             <Divider sx={{ my: 2 }} />
-            <Typography variant="h6" align="right">
-              Total: {formatCurrency(order.total)}
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="h6">Total:</Typography>
+              <Typography variant="h5" color="primary.main" fontWeight="bold">
+                {formatCurrency(order.total)}
+              </Typography>
+            </Box>
           </StyledPaper>
         </Grid>
 
+        {/* Forma de Pagamento */}
         <Grid item xs={12} md={7}>
           <StyledPaper>
             <Typography variant="h5" component="h2" gutterBottom>
               Forma de Pagamento
             </Typography>
-            <Box sx={{ mb: 3 }}>
-              <Button
-                variant={paymentMethod === 'cash' ? 'contained' : 'outlined'}
-                startIcon={<CashIcon />}
-                onClick={() => setPaymentMethod('cash')}
-                sx={{ mr: 2 }}
-              >
-                Dinheiro
-              </Button>
-              <Button
-                variant={paymentMethod === 'card' ? 'contained' : 'outlined'}
-                startIcon={<CardIcon />}
-                onClick={() => setPaymentMethod('card')}
-                sx={{ mr: 2 }}
-              >
-                Cartão
-              </Button>
-              <Button
-                variant={paymentMethod === 'pix' ? 'contained' : 'outlined'}
-                startIcon={<PixIcon />}
-                onClick={() => setPaymentMethod('pix')}
-              >
-                PIX
-              </Button>
-            </Box>
+            
+            {!paymentComplete && (
+              <>
+                <Box sx={{ mb: 3 }}>
+                  <Button
+                    variant={paymentMethod === 'cash' ? 'contained' : 'outlined'}
+                    startIcon={<CashIcon />}
+                    onClick={() => setPaymentMethod('cash')}
+                    sx={{ mr: 2, mb: 1 }}
+                    size="large"
+                  >
+                    Dinheiro
+                  </Button>
+                  <Button
+                    variant={paymentMethod === 'card' ? 'contained' : 'outlined'}
+                    startIcon={<CardIcon />}
+                    onClick={() => setPaymentMethod('card')}
+                    sx={{ mr: 2, mb: 1 }}
+                    size="large"
+                  >
+                    Cartão
+                  </Button>
+                  <Button
+                    variant={paymentMethod === 'pix' ? 'contained' : 'outlined'}
+                    startIcon={<PixIcon />}
+                    onClick={() => setPaymentMethod('pix')}
+                    sx={{ mb: 1 }}
+                    size="large"
+                  >
+                    PIX
+                  </Button>
+                </Box>
 
-            {paymentMethod === 'cash' && (
-              <Box>
-                <Typography variant="subtitle1" gutterBottom>
-                  Valor Recebido:
-                </Typography>
-                <TextField
+                {paymentMethod === 'cash' && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      Valor Recebido:
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      value={paymentAmount}
+                      onChange={handlePaymentAmountChange}
+                      placeholder="0.00"
+                      InputProps={{
+                        startAdornment: <Typography variant="body1" sx={{ mr: 1 }}>R$</Typography>,
+                      }}
+                      sx={{ mb: 2 }}
+                    />
+                    <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                      <Typography variant="h6" color="primary.main">
+                        Troco: {formatCurrency(changeAmount)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+
+                {paymentMethod === 'card' && (
+                  <Box sx={{ mb: 3, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
+                    <Typography variant="body1" color="info.contrastText">
+                      💳 Insira ou aproxime o cartão na máquina
+                    </Typography>
+                  </Box>
+                )}
+
+                {paymentMethod === 'pix' && (
+                  <Box sx={{ mb: 3, p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
+                    <Typography variant="body1" color="success.contrastText">
+                      📱 QR Code será gerado para pagamento PIX
+                    </Typography>
+                  </Box>
+                )}
+
+                <Button
+                  variant="contained"
+                  color="primary"
                   fullWidth
-                  variant="outlined"
-                  value={paymentAmount}
-                  onChange={handlePaymentAmountChange}
-                  placeholder="0.00"
-                  InputProps={{
-                    startAdornment: <Typography variant="body1" sx={{ mr: 1 }}>R$</Typography>,
-                  }}
-                />
-                <Typography variant="subtitle1" sx={{ mt: 2 }}>
-                  Troco: {formatCurrency(changeAmount)}
-                </Typography>
-              </Box>
+                  size="large"
+                  startIcon={<PaymentIcon />}
+                  onClick={() => setPaymentDialogOpen(true)}
+                  disabled={loading}
+                >
+                  {loading ? <CircularProgress size={24} /> : 'Confirmar Pagamento'}
+                </Button>
+              </>
             )}
 
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              size="large"
-              startIcon={<PaymentIcon />}
-              onClick={() => setPaymentDialogOpen(true)}
-              sx={{ mt: 3 }}
-            >
-              Confirmar Pagamento
-            </Button>
-
-            <Button
-              variant="outlined"
-              color="primary"
-              fullWidth
-              size="large"
-              startIcon={<PrintIcon />}
-              onClick={handleReprintReceipt}
-              sx={{ mt: 2 }}
-            >
-              Reimprimir Recibo
-            </Button>
+            {paymentComplete && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <CheckIcon sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />
+                <Typography variant="h5" color="success.main" gutterBottom>
+                  Pagamento Realizado!
+                </Typography>
+                <Typography variant="body1" color="text.secondary" paragraph>
+                  Método: {paymentMethod === 'cash' ? 'Dinheiro' : paymentMethod === 'card' ? 'Cartão' : 'PIX'}
+                </Typography>
+                {paymentMethod === 'cash' && changeAmount > 0 && (
+                  <Typography variant="h6" color="primary.main" gutterBottom>
+                    Troco: {formatCurrency(changeAmount)}
+                  </Typography>
+                )}
+                
+                <Box sx={{ mt: 3 }}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    onClick={handleNewOrder}
+                    sx={{ mr: 2, mb: 1 }}
+                  >
+                    Novo Pedido
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    size="large"
+                    startIcon={<PrintIcon />}
+                    onClick={handleReprintReceipt}
+                    sx={{ mb: 1 }}
+                    disabled={loading}
+                  >
+                    {loading ? <CircularProgress size={20} /> : 'Reimprimir'}
+                  </Button>
+                </Box>
+              </Box>
+            )}
           </StyledPaper>
         </Grid>
       </Grid>
 
+      {/* Dialog de Confirmação */}
       <Dialog open={paymentDialogOpen} onClose={() => setPaymentDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Confirmar Pagamento</DialogTitle>
         <DialogContent>
           <Typography variant="body1" paragraph>
-            Você está prestes a finalizar o pagamento do pedido #{order.id} no valor de <strong>{formatCurrency(order.total)}</strong>.
+            Você está prestes a finalizar o pagamento do pedido #{order.id.split('-').pop()} no valor de <strong>{formatCurrency(order.total)}</strong>.
           </Typography>
-          <Typography variant="body1">
-            Forma de pagamento: <strong>{paymentMethod === 'cash' ? 'Dinheiro' : paymentMethod === 'card' ? 'Cartão' : 'PIX'}</strong>
+          <Typography variant="body1" paragraph>
+            Forma de pagamento: <strong>
+              {paymentMethod === 'cash' ? 'Dinheiro' : 
+               paymentMethod === 'card' ? 'Cartão' : 'PIX'}
+            </strong>
           </Typography>
+          {paymentMethod === 'cash' && changeAmount > 0 && (
+            <Typography variant="body1" color="primary.main">
+              Troco a ser dado: <strong>{formatCurrency(changeAmount)}</strong>
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setPaymentDialogOpen(false)} color="inherit">
             Cancelar
           </Button>
-          <Button onClick={handleProcessPayment} variant="contained" color="primary">
-            Confirmar
+          <Button 
+            onClick={handleProcessPayment} 
+            variant="contained" 
+            color="primary"
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={20} /> : 'Confirmar'}
           </Button>
         </DialogActions>
       </Dialog>
 
+      {/* Snackbar para notificações */}
       <Snackbar
         open={alertInfo.open}
         autoHideDuration={6000}
         onClose={handleCloseAlert}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert onClose={handleCloseAlert} severity={alertInfo.severity} sx={{ width: '100%' }}>
           {alertInfo.message}
@@ -359,3 +502,4 @@ const POSPaymentPage: React.FC = () => {
 };
 
 export default POSPaymentPage;
+

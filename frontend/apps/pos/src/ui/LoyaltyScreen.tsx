@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -32,7 +32,13 @@ import {
   LinearProgress,
   Fab,
   InputAdornment,
-  Alert
+  Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Snackbar,
+  CircularProgress
 } from '@mui/material';
 import {
   Add,
@@ -50,8 +56,11 @@ import {
   LocationOn,
   AttachMoney,
   History,
-  Campaign
+  Campaign,
+  Save,
+  Cancel
 } from '@mui/icons-material';
+import { formatCurrency } from '../utils/formatters';
 
 interface Customer {
   id: string;
@@ -105,10 +114,17 @@ const LoyaltyScreen: React.FC = () => {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
   const [couponDialogOpen, setCouponDialogOpen] = useState(false);
   const [pointsDialogOpen, setPointsDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error' | 'warning' | 'info'
+  });
 
   // Form states
   const [customerForm, setCustomerForm] = useState({
@@ -142,9 +158,12 @@ const LoyaltyScreen: React.FC = () => {
     loadLoyaltyData();
   }, []);
 
-  const loadLoyaltyData = async () => {
+  const loadLoyaltyData = useCallback(async () => {
     setLoading(true);
     try {
+      // Simular delay de carregamento
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Mock data para demonstração
       const mockCustomers: Customer[] = [
         {
@@ -281,9 +300,18 @@ const LoyaltyScreen: React.FC = () => {
       setCoupons(mockCoupons);
     } catch (error) {
       console.error('Erro ao carregar dados de fidelidade:', error);
+      showSnackbar('Erro ao carregar dados de fidelidade', 'error');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const showSnackbar = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   const getTierColor = (tier: Customer['tier']) => {
@@ -319,85 +347,190 @@ const LoyaltyScreen: React.FC = () => {
     customer.phone.includes(searchTerm)
   );
 
-  const handleCustomerSave = () => {
-    if (!customerForm.name || !customerForm.email || !customerForm.phone) {
-      return;
-    }
-
-    const newCustomer: Customer = {
-      id: Date.now().toString(),
-      ...customerForm,
-      totalPoints: 0,
-      usedPoints: 0,
-      totalSpent: 0,
-      visitCount: 0,
-      lastVisit: new Date().toISOString().split('T')[0],
-      registrationDate: new Date().toISOString().split('T')[0],
-      tier: 'bronze'
-    };
-
-    setCustomers(prev => [...prev, newCustomer]);
-    setCustomerForm({ name: '', email: '', phone: '', birthDate: '', address: '' });
-    setCustomerDialogOpen(false);
-  };
-
-  const handleCouponSave = () => {
-    if (!couponForm.code || !couponForm.description || couponForm.value <= 0) {
-      return;
-    }
-
-    const newCoupon: Coupon = {
-      id: Date.now().toString(),
-      ...couponForm,
-      usedCount: 0,
-      isActive: true
-    };
-
-    setCoupons(prev => [...prev, newCoupon]);
-    setCouponForm({
-      code: '',
-      type: 'percentage',
-      value: 0,
-      description: '',
-      minPurchase: 0,
-      maxDiscount: 0,
-      validFrom: '',
-      validUntil: '',
-      usageLimit: 1,
-      applicableProducts: []
+  const handleCustomerEdit = (customer: Customer) => {
+    setEditingCustomer(customer);
+    setCustomerForm({
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      birthDate: customer.birthDate || '',
+      address: customer.address || ''
     });
-    setCouponDialogOpen(false);
+    setCustomerDialogOpen(true);
   };
 
-  const handlePointsAdjustment = () => {
-    if (!selectedCustomer || pointsForm.points === 0) {
+  const handleCustomerSave = async () => {
+    if (!customerForm.name || !customerForm.email || !customerForm.phone) {
+      showSnackbar('Preencha todos os campos obrigatórios', 'error');
       return;
     }
 
-    const transaction: LoyaltyTransaction = {
-      id: Date.now().toString(),
-      customerId: selectedCustomer.id,
-      type: pointsForm.type,
-      points: pointsForm.type === 'earn' ? pointsForm.points : -pointsForm.points,
-      description: pointsForm.description || (pointsForm.type === 'earn' ? 'Pontos adicionados' : 'Pontos removidos'),
-      date: new Date().toISOString().split('T')[0]
-    };
+    setLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-    setTransactions(prev => [...prev, transaction]);
-    
-    setCustomers(prev => prev.map(customer => 
-      customer.id === selectedCustomer.id
-        ? {
-            ...customer,
-            totalPoints: pointsForm.type === 'earn' 
-              ? customer.totalPoints + pointsForm.points
-              : customer.totalPoints - pointsForm.points
-          }
-        : customer
-    ));
+      if (editingCustomer) {
+        // Editar cliente existente
+        setCustomers(prev => prev.map(customer =>
+          customer.id === editingCustomer.id
+            ? { ...customer, ...customerForm }
+            : customer
+        ));
+        showSnackbar('Cliente atualizado com sucesso!', 'success');
+      } else {
+        // Criar novo cliente
+        const newCustomer: Customer = {
+          id: Date.now().toString(),
+          ...customerForm,
+          totalPoints: 0,
+          usedPoints: 0,
+          totalSpent: 0,
+          visitCount: 0,
+          lastVisit: new Date().toISOString().split('T')[0],
+          registrationDate: new Date().toISOString().split('T')[0],
+          tier: 'bronze'
+        };
+        setCustomers(prev => [...prev, newCustomer]);
+        showSnackbar('Cliente cadastrado com sucesso!', 'success');
+      }
 
-    setPointsForm({ points: 0, description: '', type: 'earn' });
-    setPointsDialogOpen(false);
+      setCustomerForm({ name: '', email: '', phone: '', birthDate: '', address: '' });
+      setEditingCustomer(null);
+      setCustomerDialogOpen(false);
+    } catch (error) {
+      showSnackbar('Erro ao salvar cliente', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCouponEdit = (coupon: Coupon) => {
+    setEditingCoupon(coupon);
+    setCouponForm({
+      code: coupon.code,
+      type: coupon.type,
+      value: coupon.value,
+      description: coupon.description,
+      minPurchase: coupon.minPurchase || 0,
+      maxDiscount: coupon.maxDiscount || 0,
+      validFrom: coupon.validFrom,
+      validUntil: coupon.validUntil,
+      usageLimit: coupon.usageLimit,
+      applicableProducts: coupon.applicableProducts || []
+    });
+    setCouponDialogOpen(true);
+  };
+
+  const handleCouponSave = async () => {
+    if (!couponForm.code || !couponForm.description || couponForm.value <= 0) {
+      showSnackbar('Preencha todos os campos obrigatórios', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      if (editingCoupon) {
+        // Editar cupom existente
+        setCoupons(prev => prev.map(coupon =>
+          coupon.id === editingCoupon.id
+            ? { ...coupon, ...couponForm }
+            : coupon
+        ));
+        showSnackbar('Cupom atualizado com sucesso!', 'success');
+      } else {
+        // Criar novo cupom
+        const newCoupon: Coupon = {
+          id: Date.now().toString(),
+          ...couponForm,
+          usedCount: 0,
+          isActive: true
+        };
+        setCoupons(prev => [...prev, newCoupon]);
+        showSnackbar('Cupom criado com sucesso!', 'success');
+      }
+
+      setCouponForm({
+        code: '',
+        type: 'percentage',
+        value: 0,
+        description: '',
+        minPurchase: 0,
+        maxDiscount: 0,
+        validFrom: '',
+        validUntil: '',
+        usageLimit: 1,
+        applicableProducts: []
+      });
+      setEditingCoupon(null);
+      setCouponDialogOpen(false);
+    } catch (error) {
+      showSnackbar('Erro ao salvar cupom', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCouponToggle = async (couponId: string) => {
+    setLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setCoupons(prev => prev.map(coupon =>
+        coupon.id === couponId
+          ? { ...coupon, isActive: !coupon.isActive }
+          : coupon
+      ));
+      
+      showSnackbar('Status do cupom atualizado!', 'success');
+    } catch (error) {
+      showSnackbar('Erro ao atualizar cupom', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePointsAdjustment = async () => {
+    if (!selectedCustomer || pointsForm.points === 0) {
+      showSnackbar('Informe a quantidade de pontos', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const transaction: LoyaltyTransaction = {
+        id: Date.now().toString(),
+        customerId: selectedCustomer.id,
+        type: pointsForm.type,
+        points: pointsForm.type === 'earn' ? pointsForm.points : -pointsForm.points,
+        description: pointsForm.description || (pointsForm.type === 'earn' ? 'Pontos adicionados' : 'Pontos removidos'),
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      setTransactions(prev => [...prev, transaction]);
+      
+      setCustomers(prev => prev.map(customer => 
+        customer.id === selectedCustomer.id
+          ? {
+              ...customer,
+              totalPoints: pointsForm.type === 'earn' 
+                ? customer.totalPoints + pointsForm.points
+                : Math.max(0, customer.totalPoints - pointsForm.points)
+            }
+          : customer
+      ));
+
+      showSnackbar(`Pontos ${pointsForm.type === 'earn' ? 'adicionados' : 'removidos'} com sucesso!`, 'success');
+      setPointsForm({ points: 0, description: '', type: 'earn' });
+      setPointsDialogOpen(false);
+    } catch (error) {
+      showSnackbar('Erro ao ajustar pontos', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderCustomersTab = () => (
@@ -419,7 +552,11 @@ const LoyaltyScreen: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => setCustomerDialogOpen(true)}
+          onClick={() => {
+            setEditingCustomer(null);
+            setCustomerForm({ name: '', email: '', phone: '', birthDate: '', address: '' });
+            setCustomerDialogOpen(true);
+          }}
         >
           Novo Cliente
         </Button>
@@ -469,7 +606,7 @@ const LoyaltyScreen: React.FC = () => {
                   <Grid item xs={6}>
                     <Typography variant="body2" color="textSecondary">Gasto Total</Typography>
                     <Typography variant="h6">
-                      R$ {customer.totalSpent.toFixed(2)}
+                      {formatCurrency(customer.totalSpent)}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -484,7 +621,10 @@ const LoyaltyScreen: React.FC = () => {
                   >
                     Ajustar Pontos
                   </Button>
-                  <IconButton size="small">
+                  <IconButton 
+                    size="small"
+                    onClick={() => handleCustomerEdit(customer)}
+                  >
                     <Edit />
                   </IconButton>
                 </Box>
@@ -503,7 +643,22 @@ const LoyaltyScreen: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => setCouponDialogOpen(true)}
+          onClick={() => {
+            setEditingCoupon(null);
+            setCouponForm({
+              code: '',
+              type: 'percentage',
+              value: 0,
+              description: '',
+              minPurchase: 0,
+              maxDiscount: 0,
+              validFrom: '',
+              validUntil: '',
+              usageLimit: 1,
+              applicableProducts: []
+            });
+            setCouponDialogOpen(true);
+          }}
         >
           Novo Cupom
         </Button>
@@ -546,7 +701,7 @@ const LoyaltyScreen: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   {coupon.type === 'percentage' ? `${coupon.value}%` :
-                   coupon.type === 'fixed' ? `R$ ${coupon.value}` :
+                   coupon.type === 'fixed' ? formatCurrency(coupon.value) :
                    `${coupon.value} pts`}
                 </TableCell>
                 <TableCell>{coupon.description}</TableCell>
@@ -575,12 +730,19 @@ const LoyaltyScreen: React.FC = () => {
                   />
                 </TableCell>
                 <TableCell>
-                  <IconButton size="small">
+                  <IconButton 
+                    size="small"
+                    onClick={() => handleCouponEdit(coupon)}
+                  >
                     <Edit />
                   </IconButton>
-                  <IconButton size="small">
-                    <Delete />
-                  </IconButton>
+                  <Button
+                    size="small"
+                    onClick={() => handleCouponToggle(coupon.id)}
+                    color={coupon.isActive ? 'error' : 'success'}
+                  >
+                    {coupon.isActive ? 'Desativar' : 'Ativar'}
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -590,173 +752,64 @@ const LoyaltyScreen: React.FC = () => {
     </Box>
   );
 
-  const renderAnalyticsTab = () => {
-    const totalCustomers = customers.length;
-    const totalPoints = customers.reduce((sum, c) => sum + c.totalPoints, 0);
-    const totalSpent = customers.reduce((sum, c) => sum + c.totalSpent, 0);
-    const avgSpentPerCustomer = totalSpent / totalCustomers;
-
-    const tierDistribution = customers.reduce((acc, customer) => {
-      acc[customer.tier] = (acc[customer.tier] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return (
-      <Box>
-        <Typography variant="h6" mb={3}>Analytics de Fidelidade</Typography>
-        
-        <Grid container spacing={3} mb={4}>
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center">
-                  <Person sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Total de Clientes
-                    </Typography>
-                    <Typography variant="h4">
-                      {totalCustomers}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center">
-                  <Star sx={{ fontSize: 40, color: 'warning.main', mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Pontos Ativos
-                    </Typography>
-                    <Typography variant="h4">
-                      {totalPoints.toLocaleString()}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center">
-                  <AttachMoney sx={{ fontSize: 40, color: 'success.main', mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Faturamento Total
-                    </Typography>
-                    <Typography variant="h4">
-                      R$ {totalSpent.toFixed(0)}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Box display="flex" alignItems="center">
-                  <TrendingUp sx={{ fontSize: 40, color: 'info.main', mr: 2 }} />
-                  <Box>
-                    <Typography color="textSecondary" gutterBottom>
-                      Ticket Médio
-                    </Typography>
-                    <Typography variant="h4">
-                      R$ {avgSpentPerCustomer.toFixed(0)}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" mb={2}>Distribuição por Tier</Typography>
-                {Object.entries(tierDistribution).map(([tier, count]) => (
-                  <Box key={tier} mb={1}>
-                    <Box display="flex" justifyContent="space-between" mb={0.5}>
-                      <Typography variant="body2">
-                        {getTierLabel(tier as Customer['tier'])}
-                      </Typography>
-                      <Typography variant="body2">
-                        {count} ({((count / totalCustomers) * 100).toFixed(1)}%)
-                      </Typography>
-                    </Box>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={(count / totalCustomers) * 100}
-                      sx={{ 
-                        height: 8, 
-                        borderRadius: 4,
-                        backgroundColor: 'grey.200',
-                        '& .MuiLinearProgress-bar': {
-                          backgroundColor: getTierColor(tier as Customer['tier'])
-                        }
-                      }}
+  const renderTransactionsTab = () => (
+    <Box>
+      <Typography variant="h6" mb={3}>Histórico de Transações</Typography>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Data</TableCell>
+              <TableCell>Cliente</TableCell>
+              <TableCell>Tipo</TableCell>
+              <TableCell>Pontos</TableCell>
+              <TableCell>Descrição</TableCell>
+              <TableCell>Pedido</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {transactions.map((transaction) => {
+              const customer = customers.find(c => c.id === transaction.customerId);
+              return (
+                <TableRow key={transaction.id}>
+                  <TableCell>
+                    {new Date(transaction.date).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>{customer?.name || 'Cliente não encontrado'}</TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={transaction.type === 'earn' ? 'Ganho' : 'Resgate'}
+                      color={transaction.type === 'earn' ? 'success' : 'warning'}
+                      size="small"
                     />
-                  </Box>
-                ))}
-              </CardContent>
-            </Card>
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" mb={2}>Transações Recentes</Typography>
-                <List>
-                  {transactions.slice(0, 5).map((transaction) => {
-                    const customer = customers.find(c => c.id === transaction.customerId);
-                    return (
-                      <ListItem key={transaction.id}>
-                        <ListItemAvatar>
-                          <Avatar sx={{ 
-                            bgcolor: transaction.type === 'earn' ? 'success.main' : 'warning.main' 
-                          }}>
-                            {transaction.type === 'earn' ? '+' : '-'}
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={customer?.name}
-                          secondary={`${transaction.description} - ${new Date(transaction.date).toLocaleDateString()}`}
-                        />
-                        <ListItemSecondaryAction>
-                          <Typography 
-                            variant="body2" 
-                            color={transaction.type === 'earn' ? 'success.main' : 'warning.main'}
-                            fontWeight="bold"
-                          >
-                            {transaction.type === 'earn' ? '+' : ''}{transaction.points} pts
-                          </Typography>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                    );
-                  })}
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Box>
-    );
-  };
+                  </TableCell>
+                  <TableCell>
+                    <Typography 
+                      color={transaction.type === 'earn' ? 'success.main' : 'warning.main'}
+                      fontWeight="bold"
+                    >
+                      {transaction.type === 'earn' ? '+' : ''}{transaction.points}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>{transaction.description}</TableCell>
+                  <TableCell>
+                    {transaction.orderId && (
+                      <Chip label={`#${transaction.orderId}`} size="small" variant="outlined" />
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
 
-  if (loading) {
+  if (loading && customers.length === 0) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-        <Typography>Carregando sistema de fidelidade...</Typography>
+        <CircularProgress />
       </Box>
     );
   }
@@ -770,259 +823,370 @@ const LoyaltyScreen: React.FC = () => {
         </Typography>
         <Button
           variant="outlined"
-          onClick={() => navigate(`/pos/${terminalId}`)}
+          onClick={() => navigate(`/pos/${terminalId}/main`)}
         >
           Voltar ao POS
         </Button>
       </Box>
 
+      {/* Estatísticas */}
+      <Grid container spacing={3} mb={3}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center">
+                <Person sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Total de Clientes
+                  </Typography>
+                  <Typography variant="h5">
+                    {customers.length}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center">
+                <Star sx={{ fontSize: 40, color: 'warning.main', mr: 2 }} />
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Pontos Ativos
+                  </Typography>
+                  <Typography variant="h5">
+                    {customers.reduce((sum, c) => sum + (c.totalPoints - c.usedPoints), 0)}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center">
+                <LocalOffer sx={{ fontSize: 40, color: 'success.main', mr: 2 }} />
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Cupons Ativos
+                  </Typography>
+                  <Typography variant="h5">
+                    {coupons.filter(c => c.isActive).length}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center">
+                <AttachMoney sx={{ fontSize: 40, color: 'info.main', mr: 2 }} />
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Faturamento Total
+                  </Typography>
+                  <Typography variant="h5">
+                    {formatCurrency(customers.reduce((sum, c) => sum + c.totalSpent, 0))}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
       {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)}>
-          <Tab label="Clientes" icon={<Person />} />
-          <Tab label="Cupons" icon={<LocalOffer />} />
-          <Tab label="Analytics" icon={<TrendingUp />} />
+      <Paper sx={{ width: '100%' }}>
+        <Tabs value={currentTab} onChange={(e, newValue) => setCurrentTab(newValue)}>
+          <Tab label="Clientes" />
+          <Tab label="Cupons" />
+          <Tab label="Transações" />
         </Tabs>
-      </Box>
+        
+        <Box sx={{ p: 3 }}>
+          {currentTab === 0 && renderCustomersTab()}
+          {currentTab === 1 && renderCouponsTab()}
+          {currentTab === 2 && renderTransactionsTab()}
+        </Box>
+      </Paper>
 
-      {/* Tab Content */}
-      {currentTab === 0 && renderCustomersTab()}
-      {currentTab === 1 && renderCouponsTab()}
-      {currentTab === 2 && renderAnalyticsTab()}
-
-      {/* Customer Dialog */}
+      {/* Dialog de Cliente */}
       <Dialog open={customerDialogOpen} onClose={() => setCustomerDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Novo Cliente</DialogTitle>
+        <DialogTitle>
+          {editingCustomer ? 'Editar Cliente' : 'Novo Cliente'}
+        </DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Nome Completo"
-            fullWidth
-            variant="outlined"
-            value={customerForm.name}
-            onChange={(e) => setCustomerForm(prev => ({ ...prev, name: e.target.value }))}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Email"
-            type="email"
-            fullWidth
-            variant="outlined"
-            value={customerForm.email}
-            onChange={(e) => setCustomerForm(prev => ({ ...prev, email: e.target.value }))}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Telefone"
-            fullWidth
-            variant="outlined"
-            value={customerForm.phone}
-            onChange={(e) => setCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Data de Nascimento"
-            type="date"
-            fullWidth
-            variant="outlined"
-            InputLabelProps={{ shrink: true }}
-            value={customerForm.birthDate}
-            onChange={(e) => setCustomerForm(prev => ({ ...prev, birthDate: e.target.value }))}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Endereço"
-            fullWidth
-            variant="outlined"
-            multiline
-            rows={2}
-            value={customerForm.address}
-            onChange={(e) => setCustomerForm(prev => ({ ...prev, address: e.target.value }))}
-          />
+          <Box sx={{ pt: 1 }}>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Nome *"
+              fullWidth
+              variant="outlined"
+              value={customerForm.name}
+              onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              label="Email *"
+              type="email"
+              fullWidth
+              variant="outlined"
+              value={customerForm.email}
+              onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              label="Telefone *"
+              fullWidth
+              variant="outlined"
+              value={customerForm.phone}
+              onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              label="Data de Nascimento"
+              type="date"
+              fullWidth
+              variant="outlined"
+              value={customerForm.birthDate}
+              onChange={(e) => setCustomerForm({ ...customerForm, birthDate: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              label="Endereço"
+              fullWidth
+              variant="outlined"
+              multiline
+              rows={2}
+              value={customerForm.address}
+              onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })}
+            />
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCustomerDialogOpen(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleCustomerSave} variant="contained">
-            Salvar
+          <Button onClick={() => setCustomerDialogOpen(false)}>Cancelar</Button>
+          <Button 
+            onClick={handleCustomerSave} 
+            variant="contained"
+            disabled={loading || !customerForm.name || !customerForm.email || !customerForm.phone}
+          >
+            {loading ? <CircularProgress size={20} /> : 'Salvar'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Coupon Dialog */}
+      {/* Dialog de Cupom */}
       <Dialog open={couponDialogOpen} onClose={() => setCouponDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Novo Cupom de Desconto</DialogTitle>
+        <DialogTitle>
+          {editingCoupon ? 'Editar Cupom' : 'Novo Cupom'}
+        </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                autoFocus
-                margin="dense"
-                label="Código do Cupom"
-                fullWidth
-                variant="outlined"
-                value={couponForm.code}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-              />
+          <Box sx={{ pt: 1 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label="Código *"
+                  fullWidth
+                  variant="outlined"
+                  value={couponForm.code}
+                  onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth margin="dense">
+                  <InputLabel>Tipo *</InputLabel>
+                  <Select
+                    value={couponForm.type}
+                    label="Tipo *"
+                    onChange={(e) => setCouponForm({ ...couponForm, type: e.target.value as any })}
+                  >
+                    <MenuItem value="percentage">Percentual</MenuItem>
+                    <MenuItem value="fixed">Valor Fixo</MenuItem>
+                    <MenuItem value="points">Pontos</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  margin="dense"
+                  label="Valor *"
+                  type="number"
+                  fullWidth
+                  variant="outlined"
+                  value={couponForm.value}
+                  onChange={(e) => setCouponForm({ ...couponForm, value: Number(e.target.value) })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  margin="dense"
+                  label="Limite de Uso"
+                  type="number"
+                  fullWidth
+                  variant="outlined"
+                  value={couponForm.usageLimit}
+                  onChange={(e) => setCouponForm({ ...couponForm, usageLimit: Number(e.target.value) })}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  margin="dense"
+                  label="Descrição *"
+                  fullWidth
+                  variant="outlined"
+                  value={couponForm.description}
+                  onChange={(e) => setCouponForm({ ...couponForm, description: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  margin="dense"
+                  label="Válido de"
+                  type="date"
+                  fullWidth
+                  variant="outlined"
+                  value={couponForm.validFrom}
+                  onChange={(e) => setCouponForm({ ...couponForm, validFrom: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  margin="dense"
+                  label="Válido até"
+                  type="date"
+                  fullWidth
+                  variant="outlined"
+                  value={couponForm.validUntil}
+                  onChange={(e) => setCouponForm({ ...couponForm, validUntil: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              {couponForm.type !== 'points' && (
+                <>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      margin="dense"
+                      label="Compra Mínima"
+                      type="number"
+                      fullWidth
+                      variant="outlined"
+                      value={couponForm.minPurchase}
+                      onChange={(e) => setCouponForm({ ...couponForm, minPurchase: Number(e.target.value) })}
+                    />
+                  </Grid>
+                  {couponForm.type === 'percentage' && (
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        margin="dense"
+                        label="Desconto Máximo"
+                        type="number"
+                        fullWidth
+                        variant="outlined"
+                        value={couponForm.maxDiscount}
+                        onChange={(e) => setCouponForm({ ...couponForm, maxDiscount: Number(e.target.value) })}
+                      />
+                    </Grid>
+                  )}
+                </>
+              )}
             </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                margin="dense"
-                label="Tipo"
-                select
-                fullWidth
-                variant="outlined"
-                value={couponForm.type}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, type: e.target.value as any }))}
-                SelectProps={{ native: true }}
-              >
-                <option value="percentage">Percentual</option>
-                <option value="fixed">Valor Fixo</option>
-                <option value="points">Pontos</option>
-              </TextField>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                margin="dense"
-                label="Descrição"
-                fullWidth
-                variant="outlined"
-                value={couponForm.description}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, description: e.target.value }))}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                margin="dense"
-                label={couponForm.type === 'percentage' ? 'Percentual (%)' : 
-                       couponForm.type === 'fixed' ? 'Valor (R$)' : 'Pontos'}
-                type="number"
-                fullWidth
-                variant="outlined"
-                value={couponForm.value}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, value: Number(e.target.value) }))}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                margin="dense"
-                label="Compra Mínima (R$)"
-                type="number"
-                fullWidth
-                variant="outlined"
-                value={couponForm.minPurchase}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, minPurchase: Number(e.target.value) }))}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <TextField
-                margin="dense"
-                label="Limite de Uso"
-                type="number"
-                fullWidth
-                variant="outlined"
-                value={couponForm.usageLimit}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, usageLimit: Number(e.target.value) }))}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                margin="dense"
-                label="Válido de"
-                type="date"
-                fullWidth
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                value={couponForm.validFrom}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, validFrom: e.target.value }))}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                margin="dense"
-                label="Válido até"
-                type="date"
-                fullWidth
-                variant="outlined"
-                InputLabelProps={{ shrink: true }}
-                value={couponForm.validUntil}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, validUntil: e.target.value }))}
-              />
-            </Grid>
-          </Grid>
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCouponDialogOpen(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleCouponSave} variant="contained">
-            Criar Cupom
+          <Button onClick={() => setCouponDialogOpen(false)}>Cancelar</Button>
+          <Button 
+            onClick={handleCouponSave} 
+            variant="contained"
+            disabled={loading || !couponForm.code || !couponForm.description || couponForm.value <= 0}
+          >
+            {loading ? <CircularProgress size={20} /> : 'Salvar'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Points Adjustment Dialog */}
+      {/* Dialog de Ajuste de Pontos */}
       <Dialog open={pointsDialogOpen} onClose={() => setPointsDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
           Ajustar Pontos - {selectedCustomer?.name}
         </DialogTitle>
         <DialogContent>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Pontos atuais: {selectedCustomer ? selectedCustomer.totalPoints - selectedCustomer.usedPoints : 0}
-          </Alert>
-          
-          <TextField
-            margin="dense"
-            label="Tipo"
-            select
-            fullWidth
-            variant="outlined"
-            value={pointsForm.type}
-            onChange={(e) => setPointsForm(prev => ({ ...prev, type: e.target.value as any }))}
-            SelectProps={{ native: true }}
-            sx={{ mb: 2 }}
-          >
-            <option value="earn">Adicionar Pontos</option>
-            <option value="redeem">Remover Pontos</option>
-          </TextField>
-          
-          <TextField
-            margin="dense"
-            label="Quantidade de Pontos"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={pointsForm.points}
-            onChange={(e) => setPointsForm(prev => ({ ...prev, points: Number(e.target.value) }))}
-            sx={{ mb: 2 }}
-          />
-          
-          <TextField
-            margin="dense"
-            label="Descrição"
-            fullWidth
-            variant="outlined"
-            multiline
-            rows={2}
-            value={pointsForm.description}
-            onChange={(e) => setPointsForm(prev => ({ ...prev, description: e.target.value }))}
-          />
+          <Box sx={{ pt: 1 }}>
+            <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
+              <InputLabel>Tipo</InputLabel>
+              <Select
+                value={pointsForm.type}
+                label="Tipo"
+                onChange={(e) => setPointsForm({ ...pointsForm, type: e.target.value as any })}
+              >
+                <MenuItem value="earn">Adicionar Pontos</MenuItem>
+                <MenuItem value="redeem">Remover Pontos</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              margin="dense"
+              label="Quantidade de Pontos"
+              type="number"
+              fullWidth
+              variant="outlined"
+              value={pointsForm.points}
+              onChange={(e) => setPointsForm({ ...pointsForm, points: Number(e.target.value) })}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              label="Descrição"
+              fullWidth
+              variant="outlined"
+              multiline
+              rows={2}
+              value={pointsForm.description}
+              onChange={(e) => setPointsForm({ ...pointsForm, description: e.target.value })}
+            />
+            {selectedCustomer && (
+              <Alert severity="info" sx={{ mt: 2 }}>
+                Pontos atuais: {selectedCustomer.totalPoints - selectedCustomer.usedPoints}
+              </Alert>
+            )}
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPointsDialogOpen(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handlePointsAdjustment} variant="contained">
-            Aplicar
+          <Button onClick={() => setPointsDialogOpen(false)}>Cancelar</Button>
+          <Button 
+            onClick={handlePointsAdjustment} 
+            variant="contained"
+            disabled={loading || pointsForm.points <= 0}
+          >
+            {loading ? <CircularProgress size={20} /> : 'Confirmar'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar para notificações */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

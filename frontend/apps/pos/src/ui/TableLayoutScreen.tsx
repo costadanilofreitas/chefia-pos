@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -15,7 +15,18 @@ import {
   DialogActions,
   Paper,
   Tooltip,
-  Fab
+  Fab,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Divider,
+  Alert
 } from '@mui/material';
 import {
   TableRestaurant,
@@ -24,8 +35,16 @@ import {
   Kitchen,
   DeliveryDining,
   Chair,
-  Restaurant
+  Restaurant,
+  Add as AddIcon,
+  Edit as EditIcon,
+  ShoppingCart as OrderIcon,
+  Payment as PaymentIcon,
+  Close as CloseIcon,
+  PersonAdd as PersonAddIcon,
+  Receipt as ReceiptIcon
 } from '@mui/icons-material';
+import { formatCurrency } from '../utils/formatters';
 
 interface Table {
   id: string;
@@ -37,11 +56,31 @@ interface Table {
   orderValue?: number;
   startTime?: string;
   position: {
-    x: number; // posição X no salão (em pixels)
-    y: number; // posição Y no salão (em pixels)
+    x: number;
+    y: number;
   };
   shape: 'round' | 'square' | 'rectangle';
   area: 'main' | 'terrace' | 'vip' | 'bar';
+  orders?: Order[];
+}
+
+interface Order {
+  id: string;
+  tableId: string;
+  seatNumber: number;
+  customerName?: string;
+  items: OrderItem[];
+  total: number;
+  status: 'pending' | 'preparing' | 'ready' | 'served';
+  createdAt: string;
+}
+
+interface OrderItem {
+  id: string;
+  productName: string;
+  quantity: number;
+  price: number;
+  notes?: string;
 }
 
 const TableLayoutScreen: React.FC = () => {
@@ -51,7 +90,13 @@ const TableLayoutScreen: React.FC = () => {
   const [tables, setTables] = useState<Table[]>([]);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [newOrder, setNewOrder] = useState({
+    seatNumber: 1,
+    customerName: '',
+    items: [] as OrderItem[]
+  });
 
   // Dimensões do salão (em pixels)
   const SALON_WIDTH = 800;
@@ -61,10 +106,10 @@ const TableLayoutScreen: React.FC = () => {
     loadTables();
   }, []);
 
-  const loadTables = async () => {
+  const loadTables = useCallback(async () => {
     setLoading(true);
     try {
-      // Layout realista de um restaurante
+      // Layout realista de um restaurante com pedidos por cadeira
       const mockTables: Table[] = [
         // Área Principal - Centro
         {
@@ -78,7 +123,48 @@ const TableLayoutScreen: React.FC = () => {
           startTime: '19:30',
           position: { x: 150, y: 150 },
           shape: 'round',
-          area: 'main'
+          area: 'main',
+          orders: [
+            {
+              id: 'order-1-1',
+              tableId: '1',
+              seatNumber: 1,
+              customerName: 'Ana',
+              items: [
+                { id: '1', productName: 'Hambúrguer Clássico', quantity: 1, price: 25.90 },
+                { id: '2', productName: 'Refrigerante', quantity: 1, price: 5.50 }
+              ],
+              total: 31.40,
+              status: 'served',
+              createdAt: '19:35'
+            },
+            {
+              id: 'order-1-2',
+              tableId: '1',
+              seatNumber: 2,
+              customerName: 'Carlos',
+              items: [
+                { id: '3', productName: 'Pizza Margherita', quantity: 1, price: 35.00 },
+                { id: '4', productName: 'Suco Natural', quantity: 1, price: 8.00 }
+              ],
+              total: 43.00,
+              status: 'preparing',
+              createdAt: '19:40'
+            },
+            {
+              id: 'order-1-3',
+              tableId: '1',
+              seatNumber: 3,
+              customerName: 'Maria',
+              items: [
+                { id: '5', productName: 'Salada Caesar', quantity: 1, price: 18.50 },
+                { id: '6', productName: 'Água', quantity: 1, price: 3.00 }
+              ],
+              total: 21.50,
+              status: 'ready',
+              createdAt: '19:45'
+            }
+          ]
         },
         {
           id: '2',
@@ -87,7 +173,8 @@ const TableLayoutScreen: React.FC = () => {
           status: 'available',
           position: { x: 300, y: 150 },
           shape: 'square',
-          area: 'main'
+          area: 'main',
+          orders: []
         },
         {
           id: '3',
@@ -98,7 +185,8 @@ const TableLayoutScreen: React.FC = () => {
           startTime: '20:00',
           position: { x: 450, y: 150 },
           shape: 'rectangle',
-          area: 'main'
+          area: 'main',
+          orders: []
         },
         {
           id: '4',
@@ -107,7 +195,8 @@ const TableLayoutScreen: React.FC = () => {
           status: 'cleaning',
           position: { x: 600, y: 150 },
           shape: 'round',
-          area: 'main'
+          area: 'main',
+          orders: []
         },
         
         // Área Principal - Meio
@@ -122,7 +211,35 @@ const TableLayoutScreen: React.FC = () => {
           startTime: '18:45',
           position: { x: 150, y: 300 },
           shape: 'rectangle',
-          area: 'main'
+          area: 'main',
+          orders: [
+            {
+              id: 'order-5-1',
+              tableId: '5',
+              seatNumber: 1,
+              customerName: 'Roberto',
+              items: [
+                { id: '7', productName: 'Picanha Grelhada', quantity: 1, price: 45.00 },
+                { id: '8', productName: 'Cerveja', quantity: 2, price: 8.00 }
+              ],
+              total: 61.00,
+              status: 'served',
+              createdAt: '19:00'
+            },
+            {
+              id: 'order-5-2',
+              tableId: '5',
+              seatNumber: 2,
+              customerName: 'Fernanda',
+              items: [
+                { id: '9', productName: 'Salmão Grelhado', quantity: 1, price: 38.00 },
+                { id: '10', productName: 'Vinho Branco', quantity: 1, price: 25.00 }
+              ],
+              total: 63.00,
+              status: 'preparing',
+              createdAt: '19:10'
+            }
+          ]
         },
         {
           id: '6',
@@ -131,7 +248,8 @@ const TableLayoutScreen: React.FC = () => {
           status: 'available',
           position: { x: 350, y: 300 },
           shape: 'square',
-          area: 'main'
+          area: 'main',
+          orders: []
         },
         {
           id: '7',
@@ -140,7 +258,8 @@ const TableLayoutScreen: React.FC = () => {
           status: 'available',
           position: { x: 500, y: 300 },
           shape: 'round',
-          area: 'main'
+          area: 'main',
+          orders: []
         },
         {
           id: '8',
@@ -153,7 +272,8 @@ const TableLayoutScreen: React.FC = () => {
           startTime: '19:15',
           position: { x: 650, y: 300 },
           shape: 'rectangle',
-          area: 'main'
+          area: 'main',
+          orders: []
         },
 
         // Área do Bar
@@ -164,7 +284,8 @@ const TableLayoutScreen: React.FC = () => {
           status: 'available',
           position: { x: 100, y: 450 },
           shape: 'square',
-          area: 'bar'
+          area: 'bar',
+          orders: []
         },
         {
           id: '10',
@@ -177,7 +298,8 @@ const TableLayoutScreen: React.FC = () => {
           startTime: '20:30',
           position: { x: 200, y: 450 },
           shape: 'square',
-          area: 'bar'
+          area: 'bar',
+          orders: []
         },
 
         // Área VIP - Canto
@@ -190,7 +312,8 @@ const TableLayoutScreen: React.FC = () => {
           startTime: '21:00',
           position: { x: 550, y: 450 },
           shape: 'rectangle',
-          area: 'vip'
+          area: 'vip',
+          orders: []
         },
         {
           id: '12',
@@ -199,7 +322,8 @@ const TableLayoutScreen: React.FC = () => {
           status: 'available',
           position: { x: 700, y: 450 },
           shape: 'round',
-          area: 'vip'
+          area: 'vip',
+          orders: []
         },
 
         // Terraço
@@ -210,7 +334,8 @@ const TableLayoutScreen: React.FC = () => {
           status: 'available',
           position: { x: 150, y: 50 },
           shape: 'round',
-          area: 'terrace'
+          area: 'terrace',
+          orders: []
         },
         {
           id: '14',
@@ -223,7 +348,8 @@ const TableLayoutScreen: React.FC = () => {
           startTime: '19:45',
           position: { x: 350, y: 50 },
           shape: 'round',
-          area: 'terrace'
+          area: 'terrace',
+          orders: []
         },
         {
           id: '15',
@@ -232,7 +358,8 @@ const TableLayoutScreen: React.FC = () => {
           status: 'available',
           position: { x: 550, y: 50 },
           shape: 'rectangle',
-          area: 'terrace'
+          area: 'terrace',
+          orders: []
         }
       ];
       
@@ -242,7 +369,7 @@ const TableLayoutScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const getStatusColor = (status: Table['status']) => {
     switch (status) {
@@ -254,13 +381,13 @@ const TableLayoutScreen: React.FC = () => {
     }
   };
 
-  const getAreaColor = (area: Table['area']) => {
-    switch (area) {
-      case 'main': return '#f5f5f5';
-      case 'terrace': return '#e8f5e8';
-      case 'vip': return '#fff3e0';
-      case 'bar': return '#e3f2fd';
-      default: return '#f5f5f5';
+  const getOrderStatusColor = (status: Order['status']) => {
+    switch (status) {
+      case 'pending': return 'warning';
+      case 'preparing': return 'info';
+      case 'ready': return 'success';
+      case 'served': return 'default';
+      default: return 'default';
     }
   };
 
@@ -296,22 +423,93 @@ const TableLayoutScreen: React.FC = () => {
         updateTableStatus(selectedTable.id, 'cleaning');
         break;
       case 'order':
-        navigate(`/pos/${terminalId}/waiter/table/${selectedTable.id}`);
+        setOrderDialogOpen(true);
+        break;
+      case 'payment':
+        navigate(`/pos/${terminalId}/payment`, {
+          state: { 
+            tableId: selectedTable.id,
+            orders: selectedTable.orders || []
+          }
+        });
+        break;
+      case 'close':
+        handleCloseTable();
         break;
     }
-    setDialogOpen(false);
+    if (action !== 'order') {
+      setDialogOpen(false);
+    }
   };
 
   const updateTableStatus = (tableId: string, status: Table['status']) => {
     setTables(prev => prev.map(table => 
       table.id === tableId 
-        ? { ...table, status, ...(status === 'available' ? { waiter: undefined, customers: undefined, orderValue: undefined, startTime: undefined } : {}) }
+        ? { 
+            ...table, 
+            status, 
+            ...(status === 'available' ? { 
+              waiter: undefined, 
+              customers: undefined, 
+              orderValue: undefined, 
+              startTime: undefined,
+              orders: []
+            } : {}) 
+          }
         : table
     ));
   };
 
+  const handleAddOrder = () => {
+    if (!selectedTable || !newOrder.customerName) return;
+
+    const order: Order = {
+      id: `order-${selectedTable.id}-${Date.now()}`,
+      tableId: selectedTable.id,
+      seatNumber: newOrder.seatNumber,
+      customerName: newOrder.customerName,
+      items: [],
+      total: 0,
+      status: 'pending',
+      createdAt: new Date().toLocaleTimeString()
+    };
+
+    setTables(prev => prev.map(table => 
+      table.id === selectedTable.id
+        ? {
+            ...table,
+            orders: [...(table.orders || []), order],
+            status: 'occupied'
+          }
+        : table
+    ));
+
+    // Navegar para tela de pedido
+    navigate(`/pos/${terminalId}/waiter/table/${selectedTable.id}/seat/${newOrder.seatNumber}`, {
+      state: { order }
+    });
+
+    setOrderDialogOpen(false);
+    setDialogOpen(false);
+    setNewOrder({ seatNumber: 1, customerName: '', items: [] });
+  };
+
+  const handleCloseTable = () => {
+    if (!selectedTable) return;
+
+    const totalValue = (selectedTable.orders || []).reduce((sum, order) => sum + order.total, 0);
+    
+    // Simular fechamento da conta
+    updateTableStatus(selectedTable.id, 'cleaning');
+    setDialogOpen(false);
+    
+    // Mostrar resumo
+    alert(`Mesa ${selectedTable.number} fechada!\nTotal: ${formatCurrency(totalValue)}`);
+  };
+
   const renderTable = (table: Table) => {
     const tableSize = table.seats <= 2 ? 60 : table.seats <= 4 ? 80 : table.seats <= 6 ? 100 : 120;
+    const hasOrders = table.orders && table.orders.length > 0;
     
     return (
       <Box
@@ -324,7 +522,7 @@ const TableLayoutScreen: React.FC = () => {
           height: table.shape === 'rectangle' ? tableSize * 0.8 : tableSize,
           borderRadius: table.shape === 'round' ? '50%' : table.shape === 'square' ? '8px' : '12px',
           backgroundColor: getStatusColor(table.status),
-          border: '3px solid #333',
+          border: hasOrders ? '4px solid #FFD700' : '3px solid #333',
           cursor: 'pointer',
           display: 'flex',
           flexDirection: 'column',
@@ -333,11 +531,11 @@ const TableLayoutScreen: React.FC = () => {
           color: 'white',
           fontWeight: 'bold',
           fontSize: '14px',
-          boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+          boxShadow: hasOrders ? '0 0 15px rgba(255, 215, 0, 0.7)' : '0 4px 8px rgba(0,0,0,0.3)',
           transition: 'all 0.2s ease',
           '&:hover': {
             transform: 'scale(1.1)',
-            boxShadow: '0 6px 12px rgba(0,0,0,0.4)',
+            boxShadow: hasOrders ? '0 0 20px rgba(255, 215, 0, 0.9)' : '0 6px 12px rgba(0,0,0,0.4)',
             zIndex: 10
           }
         }}
@@ -353,7 +551,13 @@ const TableLayoutScreen: React.FC = () => {
           </Typography>
         </Box>
         
-        {/* Indicadores visuais das cadeiras */}
+        {hasOrders && (
+          <Typography variant="caption" sx={{ fontSize: '8px', mt: 0.5 }}>
+            {table.orders!.length} pedido{table.orders!.length > 1 ? 's' : ''}
+          </Typography>
+        )}
+        
+        {/* Indicadores visuais das cadeiras ocupadas */}
         {table.shape === 'round' && (
           <Box sx={{ position: 'absolute', width: '100%', height: '100%' }}>
             {Array.from({ length: table.seats }).map((_, index) => {
@@ -361,6 +565,8 @@ const TableLayoutScreen: React.FC = () => {
               const radius = tableSize / 2 + 15;
               const x = Math.cos((angle * Math.PI) / 180) * radius;
               const y = Math.sin((angle * Math.PI) / 180) * radius;
+              const seatNumber = index + 1;
+              const hasOrderForSeat = table.orders?.some(order => order.seatNumber === seatNumber);
               
               return (
                 <Box
@@ -371,9 +577,9 @@ const TableLayoutScreen: React.FC = () => {
                     top: `calc(50% + ${y}px - 6px)`,
                     width: 12,
                     height: 12,
-                    backgroundColor: '#8D6E63',
+                    backgroundColor: hasOrderForSeat ? '#FFD700' : '#8D6E63',
                     borderRadius: '2px',
-                    border: '1px solid #5D4037'
+                    border: `1px solid ${hasOrderForSeat ? '#FFA000' : '#5D4037'}`
                   }}
                 />
               );
@@ -387,6 +593,8 @@ const TableLayoutScreen: React.FC = () => {
               const isTop = index < table.seats / 2;
               const sideIndex = index % (table.seats / 2);
               const spacing = (tableSize * 1.5) / (table.seats / 2 + 1);
+              const seatNumber = index + 1;
+              const hasOrderForSeat = table.orders?.some(order => order.seatNumber === seatNumber);
               
               return (
                 <Box
@@ -397,9 +605,9 @@ const TableLayoutScreen: React.FC = () => {
                     top: isTop ? '-18px' : `${tableSize * 0.8 + 6}px`,
                     width: 12,
                     height: 12,
-                    backgroundColor: '#8D6E63',
+                    backgroundColor: hasOrderForSeat ? '#FFD700' : '#8D6E63',
                     borderRadius: '2px',
-                    border: '1px solid #5D4037'
+                    border: `1px solid ${hasOrderForSeat ? '#FFA000' : '#5D4037'}`
                   }}
                 />
               );
@@ -411,11 +619,13 @@ const TableLayoutScreen: React.FC = () => {
           <Box sx={{ position: 'absolute', width: '100%', height: '100%' }}>
             {Array.from({ length: table.seats }).map((_, index) => {
               const positions = [
-                { left: '-18px', top: '50%', transform: 'translateY(-50%)' }, // Esquerda
-                { right: '-18px', top: '50%', transform: 'translateY(-50%)' }, // Direita
-                { left: '50%', top: '-18px', transform: 'translateX(-50%)' }, // Cima
-                { left: '50%', bottom: '-18px', transform: 'translateX(-50%)' } // Baixo
+                { left: '-18px', top: '50%', transform: 'translateY(-50%)' },
+                { right: '-18px', top: '50%', transform: 'translateY(-50%)' },
+                { left: '50%', top: '-18px', transform: 'translateX(-50%)' },
+                { left: '50%', bottom: '-18px', transform: 'translateX(-50%)' }
               ];
+              const seatNumber = index + 1;
+              const hasOrderForSeat = table.orders?.some(order => order.seatNumber === seatNumber);
               
               return (
                 <Box
@@ -425,9 +635,9 @@ const TableLayoutScreen: React.FC = () => {
                     ...positions[index],
                     width: 12,
                     height: 12,
-                    backgroundColor: '#8D6E63',
+                    backgroundColor: hasOrderForSeat ? '#FFD700' : '#8D6E63',
                     borderRadius: '2px',
-                    border: '1px solid #5D4037'
+                    border: `1px solid ${hasOrderForSeat ? '#FFA000' : '#5D4037'}`
                   }}
                 />
               );
@@ -442,7 +652,6 @@ const TableLayoutScreen: React.FC = () => {
     const areaTables = tables.filter(t => t.area === area);
     if (areaTables.length === 0) return null;
 
-    // Calcular posição média da área
     const avgX = areaTables.reduce((sum, t) => sum + t.position.x, 0) / areaTables.length;
     const avgY = areaTables.reduce((sum, t) => sum + t.position.y, 0) / areaTables.length;
 
@@ -554,7 +763,7 @@ const TableLayoutScreen: React.FC = () => {
                 Faturamento
               </Typography>
               <Typography variant="h5" component="div">
-                R$ {tables.filter(t => t.orderValue).reduce((sum, t) => sum + (t.orderValue || 0), 0).toFixed(2)}
+                {formatCurrency(tables.filter(t => t.orderValue).reduce((sum, t) => sum + (t.orderValue || 0), 0))}
               </Typography>
             </CardContent>
           </Card>
@@ -562,242 +771,211 @@ const TableLayoutScreen: React.FC = () => {
       </Grid>
 
       {/* Legenda */}
-      <Box display="flex" gap={2} mb={2} flexWrap="wrap">
-        <Box display="flex" alignItems="center">
-          <Box sx={{ width: 20, height: 20, backgroundColor: '#4CAF50', mr: 1, borderRadius: '4px' }} />
-          <Typography variant="body2">Livre</Typography>
-        </Box>
-        <Box display="flex" alignItems="center">
-          <Box sx={{ width: 20, height: 20, backgroundColor: '#F44336', mr: 1, borderRadius: '4px' }} />
-          <Typography variant="body2">Ocupada</Typography>
-        </Box>
-        <Box display="flex" alignItems="center">
-          <Box sx={{ width: 20, height: 20, backgroundColor: '#FF9800', mr: 1, borderRadius: '4px' }} />
-          <Typography variant="body2">Reservada</Typography>
-        </Box>
-        <Box display="flex" alignItems="center">
-          <Box sx={{ width: 20, height: 20, backgroundColor: '#2196F3', mr: 1, borderRadius: '4px' }} />
-          <Typography variant="body2">Limpeza</Typography>
-        </Box>
+      <Box display="flex" gap={2} mb={3} flexWrap="wrap">
+        <Chip label="Livre" sx={{ backgroundColor: '#4CAF50', color: 'white' }} />
+        <Chip label="Ocupada" sx={{ backgroundColor: '#F44336', color: 'white' }} />
+        <Chip label="Reservada" sx={{ backgroundColor: '#FF9800', color: 'white' }} />
+        <Chip label="Limpeza" sx={{ backgroundColor: '#2196F3', color: 'white' }} />
+        <Chip label="Com Pedidos" sx={{ backgroundColor: '#FFD700', color: 'black', border: '2px solid #FFA000' }} />
       </Box>
 
-      {/* Layout Visual do Salão */}
+      {/* Layout do Salão */}
       <Paper 
         sx={{ 
-          position: 'relative',
-          width: SALON_WIDTH,
-          height: SALON_HEIGHT,
+          position: 'relative', 
+          width: SALON_WIDTH, 
+          height: SALON_HEIGHT, 
           margin: '0 auto',
-          backgroundColor: '#f8f8f8',
-          border: '2px solid #333',
+          backgroundColor: '#f5f5f5',
+          border: '2px solid #ccc',
           overflow: 'hidden'
         }}
       >
-        {/* Áreas do salão com cores de fundo */}
-        {areas.map(area => {
-          const areaTables = tables.filter(t => t.area === area);
-          if (areaTables.length === 0) return null;
-          
-          const minX = Math.min(...areaTables.map(t => t.position.x)) - 50;
-          const maxX = Math.max(...areaTables.map(t => t.position.x)) + 100;
-          const minY = Math.min(...areaTables.map(t => t.position.y)) - 50;
-          const maxY = Math.max(...areaTables.map(t => t.position.y)) + 100;
-          
-          return (
-            <Box
-              key={area}
-              sx={{
-                position: 'absolute',
-                left: Math.max(0, minX),
-                top: Math.max(0, minY),
-                width: Math.min(SALON_WIDTH - Math.max(0, minX), maxX - Math.max(0, minX)),
-                height: Math.min(SALON_HEIGHT - Math.max(0, minY), maxY - Math.max(0, minY)),
-                backgroundColor: getAreaColor(area),
-                opacity: 0.3,
-                borderRadius: '8px',
-                border: `1px dashed ${getAreaColor(area)}`,
-                zIndex: 1
-              }}
-            />
-          );
-        })}
-
-        {/* Labels das áreas */}
+        {/* Renderizar labels das áreas */}
         {areas.map(area => renderAreaLabel(area, tables))}
-
-        {/* Elementos fixos do salão */}
-        {/* Entrada */}
-        <Box
-          sx={{
-            position: 'absolute',
-            left: SALON_WIDTH / 2 - 40,
-            top: 0,
-            width: 80,
-            height: 20,
-            backgroundColor: '#8D6E63',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '10px',
-            fontWeight: 'bold'
-          }}
-        >
-          ENTRADA
-        </Box>
-
-        {/* Cozinha */}
-        <Box
-          sx={{
-            position: 'absolute',
-            right: 0,
-            top: SALON_HEIGHT / 2 - 50,
-            width: 40,
-            height: 100,
-            backgroundColor: '#FF5722',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '10px',
-            fontWeight: 'bold',
-            writingMode: 'vertical-rl'
-          }}
-        >
-          COZINHA
-        </Box>
-
-        {/* Bar */}
-        <Box
-          sx={{
-            position: 'absolute',
-            left: 50,
-            bottom: 50,
-            width: 200,
-            height: 40,
-            backgroundColor: '#795548',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            borderRadius: '20px'
-          }}
-        >
-          BAR
-        </Box>
-
-        {/* Banheiros */}
-        <Box
-          sx={{
-            position: 'absolute',
-            left: 0,
-            bottom: 0,
-            width: 60,
-            height: 60,
-            backgroundColor: '#607D8B',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '10px',
-            fontWeight: 'bold'
-          }}
-        >
-          WC
-        </Box>
-
-        {/* Mesas */}
+        
+        {/* Renderizar mesas */}
         {tables.map(renderTable)}
+        
+        {/* Elementos decorativos do salão */}
+        <Box sx={{ position: 'absolute', left: 50, top: 250, width: 30, height: 30, backgroundColor: '#8BC34A', borderRadius: '50%' }} />
+        <Box sx={{ position: 'absolute', right: 50, top: 250, width: 30, height: 30, backgroundColor: '#8BC34A', borderRadius: '50%' }} />
+        <Typography sx={{ position: 'absolute', left: 20, bottom: 20, fontSize: '12px', color: '#666' }}>
+          🚪 Entrada
+        </Typography>
+        <Typography sx={{ position: 'absolute', right: 20, bottom: 20, fontSize: '12px', color: '#666' }}>
+          🍽️ Cozinha
+        </Typography>
       </Paper>
 
-      {/* Dialog de Ações da Mesa */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      {/* Dialog de Detalhes da Mesa */}
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
-          Mesa {selectedTable?.number} - {selectedTable?.area && getAreaLabel(selectedTable.area)}
+          Mesa {selectedTable?.number} - {selectedTable?.seats} lugares
+          <Chip 
+            label={selectedTable?.status === 'available' ? 'Livre' : 
+                   selectedTable?.status === 'occupied' ? 'Ocupada' :
+                   selectedTable?.status === 'reserved' ? 'Reservada' : 'Limpeza'}
+            color={selectedTable?.status === 'available' ? 'success' : 
+                   selectedTable?.status === 'occupied' ? 'error' :
+                   selectedTable?.status === 'reserved' ? 'warning' : 'info'}
+            sx={{ ml: 2 }}
+          />
         </DialogTitle>
         <DialogContent>
           {selectedTable && (
             <Box>
-              <Typography variant="body1" mb={2}>
-                Lugares: {selectedTable.seats} • Formato: {selectedTable.shape === 'round' ? 'Redonda' : selectedTable.shape === 'square' ? 'Quadrada' : 'Retangular'}
-              </Typography>
-              
-              <Chip 
-                label={selectedTable.status === 'available' ? 'Livre' : 
-                       selectedTable.status === 'occupied' ? 'Ocupada' :
-                       selectedTable.status === 'reserved' ? 'Reservada' : 'Limpeza'}
-                color={selectedTable.status === 'available' ? 'success' : 
-                       selectedTable.status === 'occupied' ? 'error' :
-                       selectedTable.status === 'reserved' ? 'warning' : 'info'}
-                sx={{ mb: 2 }}
-              />
-              
               {selectedTable.status === 'occupied' && (
                 <Box mb={2}>
-                  <Typography variant="body2">Garçom: {selectedTable.waiter}</Typography>
-                  <Typography variant="body2">Clientes: {selectedTable.customers}</Typography>
-                  <Typography variant="body2">Valor: R$ {selectedTable.orderValue?.toFixed(2)}</Typography>
-                  <Typography variant="body2">Início: {selectedTable.startTime}</Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Informações da Mesa:
+                  </Typography>
+                  <Typography>Garçom: {selectedTable.waiter}</Typography>
+                  <Typography>Clientes: {selectedTable.customers}</Typography>
+                  <Typography>Início: {selectedTable.startTime}</Typography>
+                  <Typography>Valor: {formatCurrency(selectedTable.orderValue || 0)}</Typography>
                 </Box>
               )}
 
-              {selectedTable.status === 'reserved' && (
+              {selectedTable.orders && selectedTable.orders.length > 0 && (
                 <Box mb={2}>
-                  <Typography variant="body2">Garçom: {selectedTable.waiter}</Typography>
-                  <Typography variant="body2">Horário: {selectedTable.startTime}</Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Pedidos por Cadeira:
+                  </Typography>
+                  <List>
+                    {selectedTable.orders.map((order) => (
+                      <ListItem key={order.id}>
+                        <ListItemText
+                          primary={`Cadeira ${order.seatNumber} - ${order.customerName}`}
+                          secondary={
+                            <Box>
+                              <Typography variant="body2">
+                                {order.items.length} itens - {formatCurrency(order.total)}
+                              </Typography>
+                              <Chip 
+                                label={order.status} 
+                                size="small" 
+                                color={getOrderStatusColor(order.status) as any}
+                                sx={{ mt: 0.5 }}
+                              />
+                            </Box>
+                          }
+                        />
+                        <ListItemSecondaryAction>
+                          <IconButton 
+                            size="small"
+                            onClick={() => navigate(`/pos/${terminalId}/waiter/table/${selectedTable.id}/seat/${order.seatNumber}`, {
+                              state: { order }
+                            })}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                    ))}
+                  </List>
                 </Box>
+              )}
+
+              {selectedTable.status === 'available' && (
+                <Alert severity="info">
+                  Mesa disponível para ocupação
+                </Alert>
               )}
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>
-            Cancelar
-          </Button>
+          <Button onClick={() => setDialogOpen(false)}>Fechar</Button>
           
           {selectedTable?.status === 'available' && (
-            <>
-              <Button onClick={() => handleTableAction('occupy')} color="error">
-                Ocupar Mesa
-              </Button>
-              <Button onClick={() => handleTableAction('reserve')} color="warning">
-                Reservar
-              </Button>
-            </>
+            <Button onClick={() => handleTableAction('occupy')} variant="contained" color="primary">
+              Ocupar Mesa
+            </Button>
           )}
           
           {selectedTable?.status === 'occupied' && (
             <>
-              <Button onClick={() => handleTableAction('order')} color="primary" variant="contained">
-                Ver Pedido
+              <Button 
+                onClick={() => handleTableAction('order')} 
+                variant="outlined"
+                startIcon={<AddIcon />}
+              >
+                Novo Pedido
               </Button>
-              <Button onClick={() => handleTableAction('free')} color="success">
+              <Button 
+                onClick={() => handleTableAction('payment')} 
+                variant="outlined"
+                startIcon={<PaymentIcon />}
+              >
+                Fechar Conta
+              </Button>
+              <Button 
+                onClick={() => handleTableAction('close')} 
+                variant="contained"
+                color="error"
+                startIcon={<CloseIcon />}
+              >
                 Liberar Mesa
               </Button>
             </>
           )}
           
           {selectedTable?.status === 'reserved' && (
-            <>
-              <Button onClick={() => handleTableAction('occupy')} color="error">
-                Ocupar Mesa
-              </Button>
-              <Button onClick={() => handleTableAction('free')} color="success">
-                Cancelar Reserva
-              </Button>
-            </>
-          )}
-          
-          {selectedTable?.status === 'cleaning' && (
-            <Button onClick={() => handleTableAction('free')} color="success">
-              Limpeza Concluída
+            <Button onClick={() => handleTableAction('occupy')} variant="contained" color="warning">
+              Confirmar Chegada
             </Button>
           )}
           
-          <Button onClick={() => handleTableAction('clean')} color="info">
-            Marcar Limpeza
+          {selectedTable?.status === 'cleaning' && (
+            <Button onClick={() => handleTableAction('free')} variant="contained" color="success">
+              Mesa Limpa
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de Novo Pedido */}
+      <Dialog open={orderDialogOpen} onClose={() => setOrderDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Novo Pedido - Mesa {selectedTable?.number}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 1 }}>
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Cadeira</InputLabel>
+              <Select
+                value={newOrder.seatNumber}
+                label="Cadeira"
+                onChange={(e) => setNewOrder({ ...newOrder, seatNumber: e.target.value as number })}
+              >
+                {Array.from({ length: selectedTable?.seats || 4 }).map((_, index) => (
+                  <MenuItem key={index + 1} value={index + 1}>
+                    Cadeira {index + 1}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            <TextField
+              fullWidth
+              label="Nome do Cliente"
+              value={newOrder.customerName}
+              onChange={(e) => setNewOrder({ ...newOrder, customerName: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+            
+            <Typography variant="body2" color="text.secondary">
+              Após criar o pedido, você será direcionado para a tela de seleção de produtos.
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOrderDialogOpen(false)}>Cancelar</Button>
+          <Button 
+            onClick={handleAddOrder} 
+            variant="contained"
+            disabled={!newOrder.customerName}
+          >
+            Criar Pedido
           </Button>
         </DialogActions>
       </Dialog>

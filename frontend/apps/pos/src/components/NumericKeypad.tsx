@@ -11,7 +11,9 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
-  Alert
+  Alert,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { Backspace, LockOpen } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
@@ -22,18 +24,28 @@ const KeypadContainer = styled(Paper)(({ theme }) => ({
   borderRadius: theme.shape.borderRadius,
   backgroundColor: theme.palette.background.default,
   boxShadow: theme.shadows[3],
-  maxWidth: '400px',
-  margin: '0 auto'
+  maxWidth: '100%',
+  margin: '0 auto',
+  [theme.breakpoints.up('sm')]: {
+    maxWidth: '400px',
+  }
 }));
 
 const KeypadButton = styled(Button)(({ theme }) => ({
-  minWidth: '64px',
-  minHeight: '64px',
-  margin: theme.spacing(0.5),
+  minWidth: '48px',
+  minHeight: '48px',
+  margin: theme.spacing(0.25),
   borderRadius: theme.shape.borderRadius,
-  fontSize: '1.5rem',
+  fontSize: '1.2rem',
   fontWeight: 'bold',
   transition: 'all 0.2s ease-in-out',
+  flex: 1,
+  [theme.breakpoints.up('sm')]: {
+    minWidth: '64px',
+    minHeight: '64px',
+    margin: theme.spacing(0.5),
+    fontSize: '1.5rem',
+  },
   '&:active': {
     transform: 'scale(0.95)',
     backgroundColor: theme.palette.action.selected
@@ -45,13 +57,18 @@ interface PasswordDotProps {
 }
 
 const PasswordDot = styled(Box)<PasswordDotProps>(({ theme, filled }) => ({
-  width: '16px',
-  height: '16px',
+  width: '12px',
+  height: '12px',
   borderRadius: '50%',
   backgroundColor: filled ? theme.palette.primary.main : 'transparent',
   border: `2px solid ${theme.palette.primary.main}`,
-  margin: '0 8px',
-  transition: 'all 0.2s ease-in-out'
+  margin: '0 4px',
+  transition: 'all 0.2s ease-in-out',
+  [theme.breakpoints.up('sm')]: {
+    width: '16px',
+    height: '16px',
+    margin: '0 8px',
+  }
 }));
 
 interface NumericKeypadProps {
@@ -78,12 +95,15 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
   title = "Digite o valor",
   loading = false,
   error = null,
-  dialog = false, // Mudado para false por padrão para compatibilidade
+  dialog = false,
   onValueChange,
   value: externalValue,
   maxLength,
   placeholder
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   // Estado para armazenar o valor digitado
   const [internalValue, setInternalValue] = useState('');
   const [shake, setShake] = useState(false);
@@ -125,21 +145,51 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
   // Manipulador para adicionar dígito
   const handleAddDigit = (digit: string) => {
     if (currentValue.length < effectiveLength && !loading) {
-      setValue(currentValue + digit);
+      // Para valores monetários, adicionar ponto decimal automaticamente
+      if (onValueChange && digit !== '.') {
+        const newValue = currentValue + digit;
+        // Formatar como valor monetário se necessário
+        if (newValue.length <= 2) {
+          setValue('0.' + newValue.padStart(2, '0'));
+        } else {
+          const integerPart = newValue.slice(0, -2);
+          const decimalPart = newValue.slice(-2);
+          setValue(integerPart + '.' + decimalPart);
+        }
+      } else {
+        setValue(currentValue + digit);
+      }
     }
   };
 
   // Manipulador para remover último dígito
   const handleBackspace = () => {
     if (currentValue.length > 0 && !loading) {
-      setValue(currentValue.slice(0, -1));
+      if (onValueChange) {
+        // Para valores monetários, remover formatação
+        const cleanValue = currentValue.replace('.', '');
+        if (cleanValue.length <= 1) {
+          setValue('0.00');
+        } else {
+          const newCleanValue = cleanValue.slice(0, -1);
+          if (newCleanValue.length <= 2) {
+            setValue('0.' + newCleanValue.padStart(2, '0'));
+          } else {
+            const integerPart = newCleanValue.slice(0, -2);
+            const decimalPart = newCleanValue.slice(-2);
+            setValue(integerPart + '.' + decimalPart);
+          }
+        }
+      } else {
+        setValue(currentValue.slice(0, -1));
+      }
     }
   };
 
   // Manipulador para limpar valor
   const handleClear = () => {
     if (!loading) {
-      setValue('');
+      setValue(onValueChange ? '0.00' : '');
     }
   };
 
@@ -151,10 +201,10 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
           display: 'flex', 
           justifyContent: 'center', 
           my: 2,
-          minHeight: '40px',
+          minHeight: isMobile ? '32px' : '40px',
           alignItems: 'center'
         }}>
-          <Typography variant="h6" color="text.secondary">
+          <Typography variant={isMobile ? "body1" : "h6"} color="text.secondary">
             {placeholder}
           </Typography>
         </Box>
@@ -168,7 +218,7 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
           display: 'flex', 
           justifyContent: 'center', 
           my: 2,
-          minHeight: '40px',
+          minHeight: isMobile ? '32px' : '40px',
           alignItems: 'center',
           animation: shake ? 'shake 0.5s' : 'none',
           '@keyframes shake': {
@@ -177,8 +227,15 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
             '20%, 40%, 60%, 80%': { transform: 'translateX(5px)' }
           }
         }}>
-          <Typography variant="h4" fontFamily="monospace">
-            {currentValue || '0'}
+          <Typography 
+            variant={isMobile ? "h5" : "h4"} 
+            fontFamily="monospace"
+            sx={{ 
+              fontSize: isMobile ? '1.5rem' : '2rem',
+              wordBreak: 'break-all'
+            }}
+          >
+            {currentValue || '0.00'}
           </Typography>
         </Box>
       );
@@ -190,6 +247,7 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
         display: 'flex',
         justifyContent: 'center',
         my: 2,
+        flexWrap: 'wrap',
         animation: shake ? 'shake 0.5s' : 'none',
         '@keyframes shake': {
           '0%, 100%': { transform: 'translateX(0)' },
@@ -214,9 +272,17 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
     ];
 
     return (
-      <Box>
+      <Box sx={{ width: '100%' }}>
         {keypadLayout.map((row, rowIndex) => (
-          <Box key={rowIndex} sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Box 
+            key={rowIndex} 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'center',
+              gap: 0.5,
+              mb: 0.5
+            }}
+          >
             {row.map((key) => {
               if (key === 'backspace') {
                 return (
@@ -225,8 +291,9 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
                     variant="outlined"
                     onClick={handleBackspace}
                     disabled={loading}
+                    sx={{ maxWidth: isMobile ? '80px' : '100px' }}
                   >
-                    <Backspace />
+                    <Backspace sx={{ fontSize: isMobile ? '1rem' : '1.5rem' }} />
                   </KeypadButton>
                 );
               } else if (key === 'clear') {
@@ -236,6 +303,7 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
                     variant="outlined"
                     onClick={handleClear}
                     disabled={loading}
+                    sx={{ maxWidth: isMobile ? '80px' : '100px' }}
                   >
                     C
                   </KeypadButton>
@@ -247,6 +315,7 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
                     variant="outlined"
                     onClick={() => handleAddDigit(key)}
                     disabled={loading}
+                    sx={{ maxWidth: isMobile ? '80px' : '100px' }}
                   >
                     {key}
                   </KeypadButton>
@@ -262,19 +331,24 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
   // Conteúdo principal do teclado
   const keypadContent = (
     <Box sx={{ width: '100%' }}>
-      <Typography variant="h6" align="center" gutterBottom>
+      <Typography 
+        variant={isMobile ? "subtitle1" : "h6"} 
+        align="center" 
+        gutterBottom
+        sx={{ fontSize: isMobile ? '1rem' : '1.25rem' }}
+      >
         {title}
       </Typography>
       {renderDisplay()}
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 2, fontSize: isMobile ? '0.875rem' : '1rem' }}>
           {error}
         </Alert>
       )}
       {renderKeypad()}
       {loading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-          <CircularProgress size={24} />
+          <CircularProgress size={isMobile ? 20 : 24} />
         </Box>
       )}
     </Box>
@@ -288,15 +362,25 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
         onClose={loading ? undefined : onClose}
         maxWidth="xs"
         fullWidth
+        PaperProps={{
+          sx: {
+            m: isMobile ? 1 : 3,
+            maxHeight: isMobile ? '90vh' : 'auto'
+          }
+        }}
       >
-        <DialogTitle sx={{ textAlign: 'center' }}>
+        <DialogTitle sx={{ 
+          textAlign: 'center',
+          pb: 1,
+          fontSize: isMobile ? '1.1rem' : '1.25rem'
+        }}>
           <LockOpen sx={{ mr: 1, verticalAlign: 'middle' }} />
           {title}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ pb: 1 }}>
           {renderDisplay()}
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 2, fontSize: isMobile ? '0.875rem' : '1rem' }}>
               {error}
             </Alert>
           )}
@@ -304,7 +388,7 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
           {loading ? (
-            <CircularProgress size={24} />
+            <CircularProgress size={isMobile ? 20 : 24} />
           ) : (
             <Button onClick={onClose} disabled={loading}>
               Cancelar
@@ -316,7 +400,10 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
   }
 
   return (
-    <KeypadContainer>
+    <KeypadContainer sx={{ 
+      maxWidth: '100%',
+      overflow: 'hidden'
+    }}>
       {keypadContent}
     </KeypadContainer>
   );

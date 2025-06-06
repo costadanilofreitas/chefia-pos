@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -22,6 +22,10 @@ import {
   Alert,
   Chip,
   InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -31,11 +35,11 @@ import {
   Payment as PaymentIcon,
   ArrowBack as ArrowBackIcon,
   LocalOffer as OfferIcon,
+  Add as AddIcon,
+  Remove as RemoveIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/mocks/useAuth';
 import { useCashier } from '../hooks/mocks/useCashier';
-import { useOrder } from '@common/contexts/order/hooks/useOrder';
-import { useProduct } from '@common/contexts/product/hooks/useProduct';
 import { formatCurrency } from '../utils/formatters';
 
 // Styled components
@@ -50,7 +54,7 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   flexDirection: 'column',
 }));
 
-const ProductCard = styled(Card)(({ }) => ({
+const ProductCard = styled(Card)(({ theme }) => ({
   borderRadius: '12px',
   overflow: 'hidden',
   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
@@ -65,27 +69,50 @@ const ProductCard = styled(Card)(({ }) => ({
   },
 }));
 
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  category: string;
+  image_url?: string;
+  is_combo?: boolean;
+  available: boolean;
+}
+
+interface OrderItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  notes?: string;
+}
+
+interface Order {
+  id: string;
+  items: OrderItem[];
+  total: number;
+  status: string;
+  created_at: string;
+  cashier_id: string;
+  terminal_id: string;
+  operator_id: string;
+}
+
 const POSOrderPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { terminalId } = useParams<{ terminalId: string }>();
   const { user } = useAuth();
   const { cashierStatus } = useCashier();
-  const {
-    createOrder,
-    updateOrder,
-    currentOrder,
-    setCurrentOrder,
-    removeItemFromOrder,
-    loading,
-  } = useOrder();
-  const { products, categories, getProductsByCategory, isLoading: productLoading } = useProduct();
 
-  const params = new URLSearchParams(location.search);
-  const posId = params.get('pos') || '1';
-
-  const [selectedCategory] = useState<number>(0);
+  // Estados estáveis para evitar re-renders
+  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [filteredProducts, setFilteredProducts] = useState(products || []);
+  const [loading, setLoading] = useState(false);
   const [alertInfo, setAlertInfo] = useState<{
     open: boolean;
     message: string;
@@ -96,6 +123,61 @@ const POSOrderPage: React.FC = () => {
     severity: 'info',
   });
 
+  // Mock products data - estável
+  const mockProducts: Product[] = useMemo(() => [
+    {
+      id: '1',
+      name: 'Hambúrguer Clássico',
+      price: 25.90,
+      category: 'Hambúrgueres',
+      description: 'Hambúrguer com carne, alface, tomate e molho especial',
+      available: true
+    },
+    {
+      id: '2',
+      name: 'Pizza Margherita',
+      price: 35.00,
+      category: 'Pizzas',
+      description: 'Pizza com molho de tomate, mussarela e manjericão',
+      available: true
+    },
+    {
+      id: '3',
+      name: 'Refrigerante Lata',
+      price: 5.50,
+      category: 'Bebidas',
+      description: 'Refrigerante gelado 350ml',
+      available: true
+    },
+    {
+      id: '4',
+      name: 'Batata Frita',
+      price: 12.00,
+      category: 'Acompanhamentos',
+      description: 'Porção de batata frita crocante',
+      available: true
+    },
+    {
+      id: '5',
+      name: 'Salada Caesar',
+      price: 18.50,
+      category: 'Saladas',
+      description: 'Salada com alface, croutons, parmesão e molho caesar',
+      available: true
+    },
+    {
+      id: '6',
+      name: 'Suco Natural',
+      price: 8.00,
+      category: 'Bebidas',
+      description: 'Suco natural de frutas da estação',
+      available: true
+    }
+  ], []);
+
+  const categories = useMemo(() => ['all', ...Array.from(new Set(mockProducts.map(p => p.category)))], [mockProducts]);
+
+  // Inicializar pedido apenas uma vez
   useEffect(() => {
     if (!currentOrder) {
       setCurrentOrder({
@@ -105,42 +187,105 @@ const POSOrderPage: React.FC = () => {
         status: 'pending',
         created_at: new Date().toISOString(),
         cashier_id: cashierStatus?.id || '',
-        terminal_id: `POS-${posId}`,
+        terminal_id: `POS-${terminalId}`,
         operator_id: user?.id || '',
       });
     }
-  }, [currentOrder, setCurrentOrder, cashierStatus, posId, user]);
+  }, [currentOrder, cashierStatus?.id, terminalId, user?.id]);
 
-  useEffect(() => {
-    const loadProducts = async () => {
-      if (categories && categories.length > 0) {
-        const categoryId = categories[selectedCategory]?.id;
-        if (categoryId) {
-          await getProductsByCategory(categoryId);
-        }
-      }
-    };
+  // Filtrar produtos de forma estável
+  const filteredProducts = useMemo(() => {
+    return mockProducts.filter(product => {
+      const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+      const matchesSearch = searchQuery === '' || 
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesCategory && matchesSearch && product.available;
+    });
+  }, [mockProducts, selectedCategory, searchQuery]);
 
-    loadProducts();
-  }, [selectedCategory, categories, getProductsByCategory]);
+  // Funções estáveis com useCallback
+  const handleAddToOrder = useCallback((product: Product) => {
+    if (!currentOrder) return;
 
-  useEffect(() => {
-    if (products) {
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        setFilteredProducts(
-          products.filter((product) =>
-            product.name.toLowerCase().includes(query) ||
-            product.description?.toLowerCase().includes(query)
-          )
-        );
-      } else {
-        setFilteredProducts(products);
-      }
+    const existingItem = currentOrder.items.find(item => item.product_id === product.id);
+    
+    let updatedItems: OrderItem[];
+    
+    if (existingItem) {
+      // Atualizar quantidade do item existente
+      updatedItems = currentOrder.items.map(item =>
+        item.product_id === product.id
+          ? { 
+              ...item, 
+              quantity: item.quantity + 1, 
+              total_price: (item.quantity + 1) * item.unit_price 
+            }
+          : item
+      );
+    } else {
+      // Adicionar novo item
+      const newItem: OrderItem = {
+        id: Date.now().toString(),
+        product_id: product.id,
+        product_name: product.name,
+        quantity: 1,
+        unit_price: product.price,
+        total_price: product.price,
+      };
+      updatedItems = [...currentOrder.items, newItem];
     }
-  }, [searchQuery, products]);
 
-  const handleProceedToPayment = async () => {
+    const newTotal = updatedItems.reduce((sum, item) => sum + item.total_price, 0);
+    
+    setCurrentOrder({
+      ...currentOrder,
+      items: updatedItems,
+      total: newTotal
+    });
+  }, [currentOrder]);
+
+  const handleRemoveFromOrder = useCallback((itemId: string) => {
+    if (!currentOrder) return;
+
+    const updatedItems = currentOrder.items.filter(item => item.id !== itemId);
+    const newTotal = updatedItems.reduce((sum, item) => sum + item.total_price, 0);
+    
+    setCurrentOrder({
+      ...currentOrder,
+      items: updatedItems,
+      total: newTotal
+    });
+  }, [currentOrder]);
+
+  const handleUpdateQuantity = useCallback((itemId: string, newQuantity: number) => {
+    if (!currentOrder) return;
+
+    if (newQuantity <= 0) {
+      handleRemoveFromOrder(itemId);
+      return;
+    }
+
+    const updatedItems = currentOrder.items.map(item =>
+      item.id === itemId
+        ? { 
+            ...item, 
+            quantity: newQuantity, 
+            total_price: newQuantity * item.unit_price 
+          }
+        : item
+    );
+
+    const newTotal = updatedItems.reduce((sum, item) => sum + item.total_price, 0);
+    
+    setCurrentOrder({
+      ...currentOrder,
+      items: updatedItems,
+      total: newTotal
+    });
+  }, [currentOrder, handleRemoveFromOrder]);
+
+  const handleProceedToPayment = useCallback(async () => {
     if (!currentOrder || currentOrder.items.length === 0) {
       setAlertInfo({
         open: true,
@@ -150,32 +295,26 @@ const POSOrderPage: React.FC = () => {
       return;
     }
 
+    setLoading(true);
     try {
-      let orderId: string;
-      if (currentOrder.id.startsWith('temp-')) {
-        const result = await createOrder({
-          ...currentOrder,
-          status: 'pending',
-        });
-        orderId = result.id;
-      } else {
-        await updateOrder(currentOrder.id, {
-          ...currentOrder,
-          status: 'pending',
-        });
-        orderId = currentOrder.id;
-      }
-      navigate(`/pos/payment/${orderId}?pos=${posId}`);
+      // Simular salvamento do pedido
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      navigate(`/pos/${terminalId}/payment`, {
+        state: { order: currentOrder }
+      });
     } catch (error: any) {
       setAlertInfo({
         open: true,
         message: `Erro ao salvar pedido: ${error.message}`,
         severity: 'error',
       });
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [currentOrder, navigate, terminalId]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     if (currentOrder && currentOrder.items.length > 0) {
       if (
         window.confirm(
@@ -183,18 +322,18 @@ const POSOrderPage: React.FC = () => {
         )
       ) {
         setCurrentOrder(null);
-        navigate(`/pos?pos=${posId}`);
+        navigate(`/pos/${terminalId}/main`);
       }
     } else {
-      navigate(`/pos?pos=${posId}`);
+      navigate(`/pos/${terminalId}/main`);
     }
-  };
+  }, [currentOrder, navigate, terminalId]);
 
-  const handleCloseAlert = () => {
-    setAlertInfo({ ...alertInfo, open: false });
-  };
+  const handleCloseAlert = useCallback(() => {
+    setAlertInfo(prev => ({ ...prev, open: false }));
+  }, []);
 
-  if (loading || productLoading) {
+  if (loading) {
     return (
       <Container
         sx={{
@@ -222,7 +361,7 @@ const POSOrderPage: React.FC = () => {
         </Box>
         <Box>
           <Typography variant="subtitle1" color="text.secondary">
-            Terminal POS #{posId} | Operador: {user?.name || 'Não identificado'}
+            Terminal {terminalId} | Operador: {user?.name || 'Não identificado'}
           </Typography>
         </Box>
       </Box>
@@ -231,30 +370,51 @@ const POSOrderPage: React.FC = () => {
         {/* Coluna de produtos */}
         <Grid item xs={12} md={8}>
           <StyledPaper>
-            {/* Barra de pesquisa */}
+            {/* Filtros */}
             <Box sx={{ mb: 3 }}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Buscar produtos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={8}>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    placeholder="Buscar produtos..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>Categoria</InputLabel>
+                    <Select
+                      value={selectedCategory}
+                      label="Categoria"
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                    >
+                      <MenuItem value="all">Todas</MenuItem>
+                      {categories.filter(cat => cat !== 'all').map(category => (
+                        <MenuItem key={category} value={category}>
+                          {category}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
             </Box>
 
             {/* Grid de produtos */}
-            <Box sx={{ flexGrow: 1, overflowY: 'auto', maxHeight: 'calc(100vh - 300px)' }}>
+            <Box sx={{ flexGrow: 1, overflowY: 'auto', maxHeight: 'calc(100vh - 350px)' }}>
               <Grid container spacing={2}>
-                {filteredProducts?.map((product) => (
+                {filteredProducts.map((product) => (
                   <Grid item xs={12} sm={6} md={4} key={product.id}>
-                    <ProductCard>
+                    <ProductCard onClick={() => handleAddToOrder(product)}>
                       {product.image_url && (
                         <CardMedia
                           component="img"
@@ -263,14 +423,25 @@ const POSOrderPage: React.FC = () => {
                           alt={product.name}
                         />
                       )}
-                      <CardContent>
+                      <CardContent sx={{ flexGrow: 1 }}>
                         <Typography variant="h6" component="div" noWrap>
                           {product.name}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1, height: '40px', overflow: 'hidden' }}>
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary" 
+                          sx={{ 
+                            mb: 1, 
+                            height: '40px', 
+                            overflow: 'hidden',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical'
+                          }}
+                        >
                           {product.description || 'Sem descrição'}
                         </Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
                           <Typography variant="h6" color="primary.main" fontWeight="bold">
                             {formatCurrency(product.price)}
                           </Typography>
@@ -282,7 +453,7 @@ const POSOrderPage: React.FC = () => {
                     </ProductCard>
                   </Grid>
                 ))}
-                {filteredProducts?.length === 0 && (
+                {filteredProducts.length === 0 && (
                   <Box sx={{ p: 4, width: '100%', textAlign: 'center' }}>
                     <Typography variant="body1" color="text.secondary">
                       Nenhum produto encontrado
@@ -301,50 +472,67 @@ const POSOrderPage: React.FC = () => {
               Itens do Pedido
             </Typography>
 
-            <Box sx={{ flexGrow: 1, overflowY: 'auto', maxHeight: 'calc(100vh - 350px)' }}>
-              {currentOrder?.items.length === 0 ? (
+            <Box sx={{ flexGrow: 1, overflowY: 'auto', maxHeight: 'calc(100vh - 400px)' }}>
+              {!currentOrder || currentOrder.items.length === 0 ? (
                 <Box sx={{ p: 4, textAlign: 'center' }}>
                   <CartIcon sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.3, mb: 2 }} />
                   <Typography variant="body1" color="text.secondary">
                     Nenhum item adicionado ao pedido
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Selecione produtos para adicionar
+                    Clique nos produtos para adicionar
                   </Typography>
                 </Box>
               ) : (
                 <List>
-                  {currentOrder?.items.map((item) => (
+                  {currentOrder.items.map((item, index) => (
                     <React.Fragment key={item.id}>
-                      <ListItem>
+                      <ListItem sx={{ px: 0 }}>
                         <ListItemText
                           primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Typography variant="body1" fontWeight="medium">
-                                {item.quantity}x {item.product_name}
+                            <Typography variant="body1" fontWeight="medium">
+                              {item.product_name}
+                            </Typography>
+                          }
+                          secondary={
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">
+                                {formatCurrency(item.unit_price)} x {item.quantity}
+                              </Typography>
+                              <Typography variant="body2" color="primary.main" fontWeight="medium">
+                                Total: {formatCurrency(item.total_price)}
                               </Typography>
                             </Box>
                           }
-                          secondary={
-                            <>
-                              {item.notes && (
-                                <Typography variant="caption" display="block" color="text.secondary">
-                                  Obs: {item.notes}
-                                </Typography>
-                              )}
-                              <Typography variant="body2" color="primary.main" fontWeight="medium">
-                                {formatCurrency(item.total_price)}
-                              </Typography>
-                            </>
-                          }
                         />
                         <ListItemSecondaryAction>
-                          <IconButton edge="end" onClick={() => removeItemFromOrder(item.id)}>
-                            <DeleteIcon />
-                          </IconButton>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                            >
+                              <RemoveIcon />
+                            </IconButton>
+                            <Typography variant="body2" sx={{ minWidth: 20, textAlign: 'center' }}>
+                              {item.quantity}
+                            </Typography>
+                            <IconButton 
+                              size="small" 
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                            >
+                              <AddIcon />
+                            </IconButton>
+                            <IconButton 
+                              size="small" 
+                              color="error"
+                              onClick={() => handleRemoveFromOrder(item.id)}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
                         </ListItemSecondaryAction>
                       </ListItem>
-                      <Divider />
+                      {index < currentOrder.items.length - 1 && <Divider />}
                     </React.Fragment>
                   ))}
                 </List>
@@ -352,9 +540,10 @@ const POSOrderPage: React.FC = () => {
             </Box>
 
             <Box sx={{ mt: 'auto', pt: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body1">Subtotal:</Typography>
-                <Typography variant="body1" fontWeight="medium">
+              <Divider sx={{ mb: 2 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant="h6">Total:</Typography>
+                <Typography variant="h6" color="primary.main" fontWeight="bold">
                   {formatCurrency(currentOrder?.total || 0)}
                 </Typography>
               </Box>
@@ -367,7 +556,7 @@ const POSOrderPage: React.FC = () => {
                 startIcon={<PaymentIcon />}
                 onClick={handleProceedToPayment}
                 disabled={!currentOrder || currentOrder.items.length === 0}
-                sx={{ mt: 2 }}
+                sx={{ mb: 1 }}
               >
                 Finalizar Pedido
               </Button>
@@ -377,7 +566,6 @@ const POSOrderPage: React.FC = () => {
                 color="error"
                 fullWidth
                 onClick={handleCancel}
-                sx={{ mt: 1 }}
               >
                 Cancelar
               </Button>
@@ -391,7 +579,7 @@ const POSOrderPage: React.FC = () => {
         open={alertInfo.open}
         autoHideDuration={3000}
         onClose={handleCloseAlert}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert onClose={handleCloseAlert} severity={alertInfo.severity} sx={{ width: '100%' }}>
           {alertInfo.message}
@@ -402,3 +590,4 @@ const POSOrderPage: React.FC = () => {
 };
 
 export default POSOrderPage;
+
