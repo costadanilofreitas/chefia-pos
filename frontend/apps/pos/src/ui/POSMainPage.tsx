@@ -66,7 +66,7 @@ const POSMainPage: React.FC = () => {
   const { terminalId } = useParams<{ terminalId: string }>();
   const { user, isAuthenticated } = useAuth();
   const { products, loading: productsLoading } = useProduct();
-  const { currentOrder, addItem, removeItem, updateQuantity, clearOrder } = useOrder();
+  const { currentOrder, addItemToOrder, removeItemFromOrder } = useOrder();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
