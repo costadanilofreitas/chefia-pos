@@ -1,4 +1,20 @@
 // src/services/ProductManagementService.ts
+import { 
+  mockProductService, 
+  Product as BackendProduct, 
+  ProductCategory as BackendCategory,
+  Ingredient as BackendIngredient,
+  ProductCreate,
+  ProductUpdate,
+  CategoryCreate,
+  CategoryUpdate,
+  IngredientCreate,
+  IngredientUpdate,
+  ComboItem as BackendComboItem,
+  ProductFilters
+} from './MockProductService';
+
+// Interfaces adaptadas para compatibilidade com o frontend existente
 export interface Category {
   id: string;
   name: string;
@@ -71,6 +87,84 @@ export interface Product {
   updatedAt: string;
 }
 
+// Funções de conversão entre interfaces do backend e frontend
+function convertBackendCategory(backendCategory: BackendCategory): Category {
+  return {
+    id: backendCategory.id,
+    name: backendCategory.name,
+    description: backendCategory.description,
+    color: backendCategory.color || '#666666',
+    icon: backendCategory.icon,
+    active: backendCategory.is_active,
+    sortOrder: backendCategory.sort_order,
+    createdAt: backendCategory.created_at,
+    updatedAt: backendCategory.updated_at
+  };
+}
+
+function convertBackendIngredient(backendIngredient: BackendIngredient): Ingredient {
+  return {
+    id: backendIngredient.id,
+    name: backendIngredient.name,
+    description: backendIngredient.description,
+    unit: backendIngredient.unit,
+    currentStock: backendIngredient.current_stock,
+    minimumStock: backendIngredient.minimum_stock,
+    cost: backendIngredient.cost_per_unit,
+    supplier: backendIngredient.supplier_name,
+    active: !backendIngredient.is_out_of_stock,
+    outOfStock: backendIngredient.is_out_of_stock,
+    createdAt: backendIngredient.created_at,
+    updatedAt: backendIngredient.updated_at
+  };
+}
+
+function convertBackendProduct(backendProduct: BackendProduct): Product {
+  return {
+    id: backendProduct.id,
+    name: backendProduct.name,
+    description: backendProduct.description,
+    categoryId: backendProduct.category_id,
+    price: backendProduct.price,
+    cost: backendProduct.price * 0.6, // Estimativa de custo (60% do preço)
+    ingredients: backendProduct.ingredients?.map(ing => ({
+      ingredientId: ing.id,
+      quantity: (ing as any).quantity || 1,
+      required: ing.is_required
+    })) || [],
+    allergens: [], // TODO: Implementar no backend
+    preparationTime: 15, // TODO: Implementar no backend
+    calories: undefined, // TODO: Implementar no backend
+    image: backendProduct.image_url,
+    available: backendProduct.is_available,
+    active: backendProduct.status === 'ACTIVE',
+    createdAt: backendProduct.created_at,
+    updatedAt: backendProduct.updated_at
+  };
+}
+
+function convertBackendCombo(backendProduct: BackendProduct): Combo {
+  const basePrice = backendProduct.combo_items?.reduce((sum, item) => sum + item.price_adjustment, 0) || 0;
+  return {
+    id: backendProduct.id,
+    name: backendProduct.name,
+    description: backendProduct.description,
+    items: backendProduct.combo_items?.map(item => ({
+      productId: item.product_id,
+      quantity: item.quantity,
+      optional: item.is_optional,
+      additionalCost: item.price_adjustment
+    })) || [],
+    basePrice: basePrice,
+    discountPercentage: 10, // TODO: Calcular desconto real
+    finalPrice: backendProduct.price,
+    image: backendProduct.image_url,
+    active: backendProduct.status === 'ACTIVE',
+    createdAt: backendProduct.created_at,
+    updatedAt: backendProduct.updated_at
+  };
+}
+
 export class ProductManagementService {
   private static readonly STORAGE_KEYS = {
     CATEGORIES: 'pos_categories',
@@ -80,14 +174,18 @@ export class ProductManagementService {
   };
 
   // Categorias
-  static getCategories(): Category[] {
-    const stored = localStorage.getItem(this.STORAGE_KEYS.CATEGORIES);
-    if (stored) {
-      return JSON.parse(stored);
+  static async getCategories(): Promise<Category[]> {
+    try {
+      const backendCategories = await mockProductService.getCategories();
+      return backendCategories.map(convertBackendCategory);
+    } catch (error) {
+      console.error('Erro ao buscar categorias:', error);
+      return this.getFallbackCategories();
     }
-    
-    // Dados padrão
-    const defaultCategories: Category[] = [
+  }
+
+  private static getFallbackCategories(): Category[] {
+    return [
       {
         id: '1',
         name: 'Hambúrgueres',
@@ -133,375 +231,351 @@ export class ProductManagementService {
         updatedAt: new Date().toISOString()
       }
     ];
-    
-    this.saveCategories(defaultCategories);
-    return defaultCategories;
   }
 
-  static saveCategories(categories: Category[]): void {
-    localStorage.setItem(this.STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+  static async saveCategory(category: Omit<Category, 'id' | 'createdAt' | 'updatedAt'>): Promise<Category> {
+    try {
+      const categoryData: CategoryCreate = {
+        name: category.name,
+        description: category.description,
+        color: category.color,
+        icon: category.icon,
+        is_active: category.active,
+        sort_order: category.sortOrder
+      };
+      
+      const backendCategory = await mockProductService.createCategory(categoryData);
+      return convertBackendCategory(backendCategory);
+    } catch (error) {
+      console.error('Erro ao salvar categoria:', error);
+      throw error;
+    }
   }
 
-  static addCategory(category: Omit<Category, 'id' | 'createdAt' | 'updatedAt'>): Category {
-    const categories = this.getCategories();
-    const newCategory: Category = {
-      ...category,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    categories.push(newCategory);
-    this.saveCategories(categories);
-    return newCategory;
+  static async updateCategory(id: string, category: Partial<Category>): Promise<Category> {
+    try {
+      const categoryData: CategoryUpdate = {
+        name: category.name,
+        description: category.description,
+        color: category.color,
+        icon: category.icon,
+        is_active: category.active,
+        sort_order: category.sortOrder
+      };
+      
+      const backendCategory = await mockProductService.updateCategory(id, categoryData);
+      if (!backendCategory) {
+        throw new Error('Categoria não encontrada');
+      }
+      return convertBackendCategory(backendCategory);
+    } catch (error) {
+      console.error('Erro ao atualizar categoria:', error);
+      throw error;
+    }
   }
 
-  static updateCategory(id: string, updates: Partial<Category>): Category | null {
-    const categories = this.getCategories();
-    const index = categories.findIndex(c => c.id === id);
-    
-    if (index === -1) return null;
-    
-    categories[index] = {
-      ...categories[index],
-      ...updates,
-      updatedAt: new Date().toISOString()
-    };
-    
-    this.saveCategories(categories);
-    return categories[index];
+  static async deleteCategory(id: string): Promise<boolean> {
+    try {
+      return await mockProductService.deleteCategory(id);
+    } catch (error) {
+      console.error('Erro ao excluir categoria:', error);
+      throw error;
+    }
   }
 
   // Ingredientes
-  static getIngredients(): Ingredient[] {
-    const stored = localStorage.getItem(this.STORAGE_KEYS.INGREDIENTS);
-    if (stored) {
-      return JSON.parse(stored);
+  static async getIngredients(): Promise<Ingredient[]> {
+    try {
+      const backendIngredients = await mockProductService.getIngredients();
+      return backendIngredients.map(convertBackendIngredient);
+    } catch (error) {
+      console.error('Erro ao buscar ingredientes:', error);
+      return [];
     }
-    
-    // Dados padrão
-    const defaultIngredients: Ingredient[] = [
-      {
-        id: '1',
-        name: 'Carne Bovina 150g',
-        description: 'Hambúrguer de carne bovina premium',
-        unit: 'unidade',
-        currentStock: 50,
-        minimumStock: 10,
-        cost: 8.50,
-        supplier: 'Frigorífico Premium',
-        active: true,
-        outOfStock: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: '2',
-        name: 'Pão Brioche',
-        description: 'Pão brioche artesanal',
-        unit: 'unidade',
-        currentStock: 30,
-        minimumStock: 5,
-        cost: 2.50,
-        supplier: 'Padaria Artesanal',
-        active: true,
-        outOfStock: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: '3',
-        name: 'Queijo Cheddar',
-        description: 'Fatia de queijo cheddar',
-        unit: 'fatia',
-        currentStock: 100,
-        minimumStock: 20,
-        cost: 1.20,
-        supplier: 'Laticínios São Paulo',
-        active: true,
-        outOfStock: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: '4',
-        name: 'Alface',
-        description: 'Folhas de alface fresca',
-        unit: 'folha',
-        currentStock: 200,
-        minimumStock: 50,
-        cost: 0.30,
-        supplier: 'Hortifruti Central',
-        active: true,
-        outOfStock: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: '5',
-        name: 'Tomate',
-        description: 'Fatias de tomate fresco',
-        unit: 'fatia',
-        currentStock: 80,
-        minimumStock: 20,
-        cost: 0.50,
-        supplier: 'Hortifruti Central',
-        active: true,
-        outOfStock: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: '6',
-        name: 'Molho Especial',
-        description: 'Molho especial da casa',
-        unit: 'ml',
-        currentStock: 2000,
-        minimumStock: 500,
-        cost: 0.05,
-        supplier: 'Produção Própria',
-        active: true,
-        outOfStock: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+  }
+
+  static async saveIngredient(ingredient: Omit<Ingredient, 'id' | 'createdAt' | 'updatedAt'>): Promise<Ingredient> {
+    try {
+      const ingredientData: IngredientCreate = {
+        name: ingredient.name,
+        description: ingredient.description,
+        unit: ingredient.unit,
+        cost_per_unit: ingredient.cost,
+        current_stock: ingredient.currentStock,
+        minimum_stock: ingredient.minimumStock,
+        is_required: !ingredient.outOfStock
+      };
+      
+      const backendIngredient = await mockProductService.createIngredient(ingredientData);
+      return convertBackendIngredient(backendIngredient);
+    } catch (error) {
+      console.error('Erro ao salvar ingrediente:', error);
+      throw error;
+    }
+  }
+
+  static async updateIngredient(id: string, ingredient: Partial<Ingredient>): Promise<Ingredient> {
+    try {
+      const ingredientData: IngredientUpdate = {
+        name: ingredient.name,
+        description: ingredient.description,
+        unit: ingredient.unit,
+        cost_per_unit: ingredient.cost,
+        current_stock: ingredient.currentStock,
+        minimum_stock: ingredient.minimumStock,
+        is_out_of_stock: ingredient.outOfStock
+      };
+      
+      const backendIngredient = await mockProductService.updateIngredient(id, ingredientData);
+      if (!backendIngredient) {
+        throw new Error('Ingrediente não encontrado');
       }
-    ];
-    
-    this.saveIngredients(defaultIngredients);
-    return defaultIngredients;
-  }
-
-  static saveIngredients(ingredients: Ingredient[]): void {
-    localStorage.setItem(this.STORAGE_KEYS.INGREDIENTS, JSON.stringify(ingredients));
-  }
-
-  static addIngredient(ingredient: Omit<Ingredient, 'id' | 'createdAt' | 'updatedAt'>): Ingredient {
-    const ingredients = this.getIngredients();
-    const newIngredient: Ingredient = {
-      ...ingredient,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    ingredients.push(newIngredient);
-    this.saveIngredients(ingredients);
-    return newIngredient;
-  }
-
-  static updateIngredient(id: string, updates: Partial<Ingredient>): Ingredient | null {
-    const ingredients = this.getIngredients();
-    const index = ingredients.findIndex(i => i.id === id);
-    
-    if (index === -1) return null;
-    
-    ingredients[index] = {
-      ...ingredients[index],
-      ...updates,
-      updatedAt: new Date().toISOString()
-    };
-    
-    this.saveIngredients(ingredients);
-    
-    // Se o ingrediente ficou em falta, desabilitar produtos que o usam
-    if (updates.outOfStock === true) {
-      this.disableProductsWithIngredient(id);
-    } else if (updates.outOfStock === false) {
-      this.enableProductsWithIngredient(id);
+      return convertBackendIngredient(backendIngredient);
+    } catch (error) {
+      console.error('Erro ao atualizar ingrediente:', error);
+      throw error;
     }
-    
-    return ingredients[index];
+  }
+
+  static async deleteIngredient(id: string): Promise<boolean> {
+    try {
+      return await mockProductService.deleteIngredient(id);
+    } catch (error) {
+      console.error('Erro ao excluir ingrediente:', error);
+      throw error;
+    }
   }
 
   // Produtos
-  static getProducts(): Product[] {
-    const stored = localStorage.getItem(this.STORAGE_KEYS.PRODUCTS);
-    if (stored) {
-      return JSON.parse(stored);
+  static async getProducts(): Promise<Product[]> {
+    try {
+      const backendProducts = await mockProductService.getProducts({ type: 'SIMPLE' });
+      return backendProducts.map(convertBackendProduct);
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+      return [];
     }
-    
-    // Dados padrão
-    const defaultProducts: Product[] = [
-      {
-        id: '1',
-        name: 'Hambúrguer Clássico',
-        description: 'Hambúrguer artesanal com carne bovina, alface, tomate e molho especial',
-        categoryId: '1',
-        price: 25.90,
-        cost: 12.50,
-        ingredients: [
-          { ingredientId: '1', quantity: 1, required: true },
-          { ingredientId: '2', quantity: 1, required: true },
-          { ingredientId: '3', quantity: 1, required: false },
-          { ingredientId: '4', quantity: 2, required: false },
-          { ingredientId: '5', quantity: 2, required: false },
-          { ingredientId: '6', quantity: 30, required: true }
-        ],
-        allergens: ['Glúten', 'Lactose'],
-        preparationTime: 15,
-        calories: 650,
-        available: true,
-        active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: '2',
-        name: 'Pizza Margherita',
-        description: 'Pizza tradicional com molho de tomate, mussarela e manjericão',
-        categoryId: '2',
-        price: 35.00,
-        cost: 15.00,
-        ingredients: [],
-        allergens: ['Glúten', 'Lactose'],
-        preparationTime: 20,
-        calories: 850,
-        available: true,
-        active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+  }
+
+  static async saveProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+    try {
+      const productData: ProductCreate = {
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        category_id: product.categoryId,
+        image_url: product.image,
+        is_available: product.available,
+        status: product.active ? 'ACTIVE' : 'INACTIVE',
+        type: 'SIMPLE',
+        ingredients: product.ingredients.map(ing => ({
+          id: ing.ingredientId,
+          name: '', // Será preenchido pelo backend
+          description: '',
+          unit: '',
+          cost_per_unit: 0,
+          current_stock: 0,
+          minimum_stock: 0,
+          is_out_of_stock: false,
+          is_required: ing.required,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }))
+      };
+      
+      const backendProduct = await mockProductService.createProduct(productData);
+      return convertBackendProduct(backendProduct);
+    } catch (error) {
+      console.error('Erro ao salvar produto:', error);
+      throw error;
+    }
+  }
+
+  static async updateProduct(id: string, product: Partial<Product>): Promise<Product> {
+    try {
+      const productData: ProductUpdate = {
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        category_id: product.categoryId,
+        image_url: product.image,
+        is_available: product.available,
+        status: product.active ? 'ACTIVE' : 'INACTIVE'
+      };
+      
+      const backendProduct = await mockProductService.updateProduct(id, productData);
+      if (!backendProduct) {
+        throw new Error('Produto não encontrado');
       }
-    ];
-    
-    this.saveProducts(defaultProducts);
-    return defaultProducts;
+      return convertBackendProduct(backendProduct);
+    } catch (error) {
+      console.error('Erro ao atualizar produto:', error);
+      throw error;
+    }
   }
 
-  static saveProducts(products: Product[]): void {
-    localStorage.setItem(this.STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
-  }
-
-  static addProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Product {
-    const products = this.getProducts();
-    const newProduct: Product = {
-      ...product,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    products.push(newProduct);
-    this.saveProducts(products);
-    return newProduct;
-  }
-
-  static updateProduct(id: string, updates: Partial<Product>): Product | null {
-    const products = this.getProducts();
-    const index = products.findIndex(p => p.id === id);
-    
-    if (index === -1) return null;
-    
-    products[index] = {
-      ...products[index],
-      ...updates,
-      updatedAt: new Date().toISOString()
-    };
-    
-    this.saveProducts(products);
-    return products[index];
+  static async deleteProduct(id: string): Promise<boolean> {
+    try {
+      return await mockProductService.deleteProduct(id);
+    } catch (error) {
+      console.error('Erro ao excluir produto:', error);
+      throw error;
+    }
   }
 
   // Combos
-  static getCombos(): Combo[] {
-    const stored = localStorage.getItem(this.STORAGE_KEYS.COMBOS);
-    if (stored) {
-      return JSON.parse(stored);
+  static async getCombos(): Promise<Combo[]> {
+    try {
+      const backendCombos = await mockProductService.getProducts({ type: 'COMBO' });
+      return backendCombos.map(convertBackendCombo);
+    } catch (error) {
+      console.error('Erro ao buscar combos:', error);
+      return [];
     }
-    
-    // Dados padrão
-    const defaultCombos: Combo[] = [
-      {
-        id: '1',
-        name: 'Combo Clássico',
-        description: 'Hambúrguer Clássico + Batata Frita + Refrigerante',
-        items: [
-          { productId: '1', quantity: 1, optional: false, additionalCost: 0 },
-          { productId: '3', quantity: 1, optional: false, additionalCost: 0 },
-          { productId: '4', quantity: 1, optional: true, additionalCost: 2.00 }
-        ],
-        basePrice: 35.90,
-        discountPercentage: 15,
-        finalPrice: 30.52,
-        active: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+  }
+
+  static async saveCombo(combo: Omit<Combo, 'id' | 'createdAt' | 'updatedAt'>): Promise<Combo> {
+    try {
+      const productData: ProductCreate = {
+        name: combo.name,
+        description: combo.description,
+        price: combo.finalPrice,
+        category_id: 'cat-1', // TODO: Permitir seleção de categoria
+        image_url: combo.image,
+        is_available: combo.active,
+        status: combo.active ? 'ACTIVE' : 'INACTIVE',
+        type: 'COMBO',
+        is_combo: true
+      };
+
+      const comboItems: BackendComboItem[] = combo.items.map(item => ({
+        id: `combo-item-${Date.now()}-${Math.random()}`,
+        product_id: item.productId,
+        product_name: '', // Será preenchido pelo backend
+        quantity: item.quantity,
+        is_optional: item.optional,
+        price_adjustment: item.additionalCost
+      }));
+      
+      const backendCombo = await mockProductService.createCombo(productData, comboItems);
+      return convertBackendCombo(backendCombo);
+    } catch (error) {
+      console.error('Erro ao salvar combo:', error);
+      throw error;
+    }
+  }
+
+  static async updateCombo(id: string, combo: Partial<Combo>): Promise<Combo> {
+    try {
+      const productData: ProductUpdate = {
+        name: combo.name,
+        description: combo.description,
+        price: combo.finalPrice,
+        image_url: combo.image,
+        is_available: combo.active,
+        status: combo.active ? 'ACTIVE' : 'INACTIVE'
+      };
+
+      const comboItems: BackendComboItem[] | undefined = combo.items?.map(item => ({
+        id: `combo-item-${Date.now()}-${Math.random()}`,
+        product_id: item.productId,
+        product_name: '',
+        quantity: item.quantity,
+        is_optional: item.optional,
+        price_adjustment: item.additionalCost
+      }));
+      
+      const backendCombo = await mockProductService.updateCombo(id, productData, comboItems);
+      if (!backendCombo) {
+        throw new Error('Combo não encontrado');
       }
-    ];
-    
-    this.saveCombos(defaultCombos);
-    return defaultCombos;
+      return convertBackendCombo(backendCombo);
+    } catch (error) {
+      console.error('Erro ao atualizar combo:', error);
+      throw error;
+    }
   }
 
-  static saveCombos(combos: Combo[]): void {
-    localStorage.setItem(this.STORAGE_KEYS.COMBOS, JSON.stringify(combos));
+  static async deleteCombo(id: string): Promise<boolean> {
+    try {
+      return await mockProductService.deleteProduct(id);
+    } catch (error) {
+      console.error('Erro ao excluir combo:', error);
+      throw error;
+    }
   }
 
-  // Funções auxiliares
-  static disableProductsWithIngredient(ingredientId: string): void {
-    const products = this.getProducts();
-    const updatedProducts = products.map(product => {
-      const hasIngredient = product.ingredients.some(ing => 
-        ing.ingredientId === ingredientId && ing.required
-      );
-      
-      if (hasIngredient) {
-        return { ...product, available: false, updatedAt: new Date().toISOString() };
+  // Métodos auxiliares
+  static async getProductsByCategory(categoryId: string): Promise<Product[]> {
+    try {
+      const backendProducts = await mockProductService.getProducts({ 
+        category_id: categoryId,
+        type: 'SIMPLE'
+      });
+      return backendProducts.map(convertBackendProduct);
+    } catch (error) {
+      console.error('Erro ao buscar produtos por categoria:', error);
+      return [];
+    }
+  }
+
+  static async searchProducts(query: string): Promise<Product[]> {
+    try {
+      const backendProducts = await mockProductService.getProducts({ 
+        search: query,
+        type: 'SIMPLE'
+      });
+      return backendProducts.map(convertBackendProduct);
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+      return [];
+    }
+  }
+
+  static async getAvailableProducts(): Promise<Product[]> {
+    try {
+      const backendProducts = await mockProductService.getProducts({ type: 'SIMPLE' });
+      return backendProducts
+        .filter(p => p.is_available && p.status === 'ACTIVE')
+        .map(convertBackendProduct);
+    } catch (error) {
+      console.error('Erro ao buscar produtos disponíveis:', error);
+      return [];
+    }
+  }
+
+  static async getUnavailableProducts(): Promise<Product[]> {
+    try {
+      const backendProducts = await mockProductService.getProducts({ type: 'SIMPLE' });
+      return backendProducts
+        .filter(p => !p.is_available || p.status === 'INACTIVE')
+        .map(convertBackendProduct);
+    } catch (error) {
+      console.error('Erro ao buscar produtos indisponíveis:', error);
+      return [];
+    }
+  }
+
+  static async toggleProductAvailability(id: string): Promise<Product> {
+    try {
+      const product = await mockProductService.getProduct(id);
+      if (!product) {
+        throw new Error('Produto não encontrado');
       }
-      
-      return product;
-    });
-    
-    this.saveProducts(updatedProducts);
-  }
 
-  static enableProductsWithIngredient(ingredientId: string): void {
-    const products = this.getProducts();
-    const ingredients = this.getIngredients();
-    
-    const updatedProducts = products.map(product => {
-      const hasIngredient = product.ingredients.some(ing => 
-        ing.ingredientId === ingredientId && ing.required
-      );
-      
-      if (hasIngredient) {
-        // Verificar se todos os ingredientes obrigatórios estão disponíveis
-        const allIngredientsAvailable = product.ingredients.every(ing => {
-          if (!ing.required) return true;
-          const ingredient = ingredients.find(i => i.id === ing.ingredientId);
-          return ingredient && !ingredient.outOfStock;
-        });
-        
-        if (allIngredientsAvailable) {
-          return { ...product, available: true, updatedAt: new Date().toISOString() };
-        }
+      const updatedProduct = await mockProductService.updateProduct(id, {
+        is_available: !product.is_available
+      });
+
+      if (!updatedProduct) {
+        throw new Error('Erro ao atualizar produto');
       }
-      
-      return product;
-    });
-    
-    this.saveProducts(updatedProducts);
-  }
 
-  static getProductsUsingIngredient(ingredientId: string): Product[] {
-    const products = this.getProducts();
-    return products.filter(product => 
-      product.ingredients.some(ing => ing.ingredientId === ingredientId)
-    );
-  }
-
-  static calculateProductCost(productId: string): number {
-    const products = this.getProducts();
-    const ingredients = this.getIngredients();
-    const product = products.find(p => p.id === productId);
-    
-    if (!product) return 0;
-    
-    return product.ingredients.reduce((total, productIngredient) => {
-      const ingredient = ingredients.find(i => i.id === productIngredient.ingredientId);
-      if (!ingredient) return total;
-      
-      return total + (ingredient.cost * productIngredient.quantity);
-    }, 0);
+      return convertBackendProduct(updatedProduct);
+    } catch (error) {
+      console.error('Erro ao alterar disponibilidade do produto:', error);
+      throw error;
+    }
   }
 }
 
