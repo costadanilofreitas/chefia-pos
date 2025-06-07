@@ -105,8 +105,8 @@ export class ApiClient {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        // Se for erro de conectividade (503, 500, etc.), ativar modo offline
-        if (response.status >= 500) {
+        // Se for erro de conectividade (503, 500, 404, etc.), ativar modo offline
+        if (response.status >= 400) {
           console.warn(`Service ${service} unavailable (${response.status}), switching to offline mode`);
           this.isOfflineMode = true;
           return this.getMockResponse(service, endpoint, options?.method || 'GET');
@@ -120,11 +120,12 @@ export class ApiClient {
     } catch (error) {
       clearTimeout(timeoutId);
       
-      // Se for erro de rede/timeout, usar modo offline
+      // Se for erro de rede/timeout/404, usar modo offline
       if (error instanceof Error && (
         error.name === 'AbortError' || 
         error.message.includes('fetch') ||
-        error.message.includes('Failed to fetch')
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('404')
       )) {
         console.warn(`Service ${service} unreachable, using offline mode:`, error.message);
         this.isOfflineMode = true;
@@ -143,7 +144,7 @@ export class ApiClient {
       setTimeout(() => {
         switch (service) {
           case 'cashier':
-            if (method === 'POST' && endpoint === '/') {
+            if (method === 'POST' && endpoint === '/open') {
               resolve(mockData.cashier.open);
             } else if (endpoint.includes('/status')) {
               resolve(mockData.cashier.status);
@@ -191,7 +192,7 @@ export class ApiClient {
   // Cashier methods
   cashier = {
     open: (data: { initial_amount: number; business_day_id: string; terminal_id: string }) =>
-      this.request('cashier', '/', {
+      this.request('cashier', '/open', {
         method: 'POST',
         body: JSON.stringify(data)
       }),

@@ -363,17 +363,14 @@ const ManagerScreen: React.FC = () => {
     setDashboardLoading(true);
     try {
       // Simular carregamento de dados do dashboard
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Simular dados dinâmicos
-      const randomSales = 2000 + Math.random() * 1000;
-      const randomOrders = 30 + Math.floor(Math.random() * 30);
-      
+      // Usar dados estáveis para evitar re-renders desnecessários
       setDashboardData({
-        todaySales: randomSales,
-        todayOrders: randomOrders,
-        averageTicket: randomSales / randomOrders,
-        openCashiers: 2 + Math.floor(Math.random() * 3)
+        todaySales: 2906.32,
+        todayOrders: 49,
+        averageTicket: 59.31,
+        openCashiers: 2
       });
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
@@ -382,6 +379,24 @@ const ManagerScreen: React.FC = () => {
       setDashboardLoading(false);
     }
   }, []);
+
+  // Função para toggle de disponibilidade do produto
+  const handleToggleProductAvailability = useCallback((productId: string) => {
+    setMenuItems(prevItems => 
+      prevItems.map(item => 
+        item.id === productId 
+          ? { ...item, available: !item.available }
+          : item
+      )
+    );
+    
+    // Mostrar feedback ao usuário
+    const item = menuItems.find(i => i.id === productId);
+    if (item) {
+      const newStatus = !item.available ? 'habilitado' : 'desabilitado';
+      showSnackbar(`Produto "${item.name}" ${newStatus} com sucesso`, 'success');
+    }
+  }, [menuItems]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
@@ -785,7 +800,11 @@ const ManagerScreen: React.FC = () => {
               <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                   <Typography variant="h6">{item.name}</Typography>
-                  <Switch checked={item.available} />
+                  <Switch 
+                    checked={item.available} 
+                    onChange={() => handleToggleProductAvailability(item.id)}
+                    color="primary"
+                  />
                 </Box>
                 
                 <Typography variant="body2" color="textSecondary" mb={1}>
