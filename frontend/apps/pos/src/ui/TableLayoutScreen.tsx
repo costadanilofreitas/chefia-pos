@@ -74,12 +74,13 @@ interface OperationalTable extends ConfigTableConfig {
 interface Order {
   id: string;
   tableId: string;
-  seatNumber: number;
+  seatNumber: number; // 0 para pedido da mesa toda
   customerName?: string;
   items: OrderItem[];
   total: number;
   status: 'pending' | 'preparing' | 'ready' | 'served';
   createdAt: string;
+  orderType?: 'individual' | 'table'; // Novo campo para tipo de pedido
 }
 
 interface OrderItem {
@@ -110,7 +111,8 @@ const TableLayoutScreen: React.FC = () => {
   const [newOrder, setNewOrder] = useState({
     seatNumber: 1,
     customerName: '',
-    items: [] as OrderItem[]
+    items: [] as OrderItem[],
+    orderType: 'individual' as 'individual' | 'table'
   });
 
   // Estados de feedback
@@ -255,12 +257,13 @@ const TableLayoutScreen: React.FC = () => {
     const newOrderData: Order = {
       id: `order-${selectedTable.id}-${Date.now()}`,
       tableId: selectedTable.id,
-      seatNumber: newOrder.seatNumber,
+      seatNumber: newOrder.orderType === 'table' ? 0 : newOrder.seatNumber, // 0 para mesa toda
       customerName: newOrder.customerName,
       items: newOrder.items,
       total: newOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
       status: 'pending',
-      createdAt: 'Agora'
+      createdAt: 'Agora',
+      orderType: newOrder.orderType
     };
 
     setOperationalTables(prev => prev.map(table =>
@@ -269,16 +272,25 @@ const TableLayoutScreen: React.FC = () => {
             ...table, 
             orders: [...(table.orders || []), newOrderData],
             status: 'occupied',
-            customers: Math.max(table.customers || 0, newOrder.seatNumber)
+            customers: newOrder.orderType === 'table' 
+              ? table.seats // Se for mesa toda, considera todos os assentos
+              : Math.max(table.customers || 0, newOrder.seatNumber)
           }
         : table
     ));
 
     setOrderDialogOpen(false);
-    setNewOrder({ seatNumber: 1, customerName: '', items: [] });
+    setNewOrder({ 
+      seatNumber: 1, 
+      customerName: '', 
+      items: [], 
+      orderType: 'individual' 
+    });
+    
+    const orderTypeText = newOrder.orderType === 'table' ? 'da mesa toda' : `da cadeira ${newOrder.seatNumber}`;
     setSnackbar({
       open: true,
-      message: 'Pedido adicionado com sucesso!',
+      message: `Pedido ${orderTypeText} adicionado com sucesso!`,
       severity: 'success'
     });
   }, [selectedTable, newOrder]);
@@ -724,9 +736,9 @@ const TableLayoutScreen: React.FC = () => {
                 </Grid>
               </Grid>
 
-              {/* Pedidos por cadeira */}
+              {/* Pedidos */}
               <Typography variant="h6" gutterBottom>
-                Pedidos por Cadeira
+                Pedidos da Mesa
               </Typography>
               
               {selectedTable.orders && selectedTable.orders.length > 0 ? (
@@ -734,27 +746,41 @@ const TableLayoutScreen: React.FC = () => {
                   {selectedTable.orders.map(order => (
                     <ListItem key={order.id} divider>
                       <ListItemText
-                        primary={`Cadeira ${order.seatNumber} - ${order.customerName || 'Cliente'}`}
+                        primary={
+                          order.orderType === 'table' 
+                            ? `Mesa Toda - ${order.customerName || 'Responsável'}` 
+                            : `Cadeira ${order.seatNumber} - ${order.customerName || 'Cliente'}`
+                        }
                         secondary={
                           <Box>
                             <Typography variant="body2">
                               {order.items.map(item => `${item.quantity}x ${item.productName}`).join(', ')}
                             </Typography>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                              <Chip
-                                size="small"
-                                label={
-                                  order.status === 'pending' ? 'Pendente' :
-                                  order.status === 'preparing' ? 'Preparando' :
-                                  order.status === 'ready' ? 'Pronto' : 'Servido'
-                                }
-                                color={
-                                  order.status === 'pending' ? 'warning' :
-                                  order.status === 'preparing' ? 'info' :
-                                  order.status === 'ready' ? 'success' : 'default'
-                                }
-                                variant="outlined"
-                              />
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                              <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Chip
+                                  size="small"
+                                  label={
+                                    order.status === 'pending' ? 'Pendente' :
+                                    order.status === 'preparing' ? 'Preparando' :
+                                    order.status === 'ready' ? 'Pronto' : 'Servido'
+                                  }
+                                  color={
+                                    order.status === 'pending' ? 'warning' :
+                                    order.status === 'preparing' ? 'info' :
+                                    order.status === 'ready' ? 'success' : 'default'
+                                  }
+                                  variant="outlined"
+                                />
+                                {order.orderType === 'table' && (
+                                  <Chip
+                                    size="small"
+                                    label="Mesa Toda"
+                                    color="secondary"
+                                    variant="filled"
+                                  />
+                                )}
+                              </Box>
                               <Typography variant="body2" fontWeight="bold">
                                 {formatCurrency(order.total)}
                               </Typography>
@@ -795,29 +821,69 @@ const TableLayoutScreen: React.FC = () => {
         <DialogTitle>Novo Pedido - Mesa {selectedTable?.number}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={6}>
+            {/* Opção de tipo de pedido */}
+            <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Cadeira</InputLabel>
+                <InputLabel>Tipo de Pedido</InputLabel>
                 <Select
-                  value={newOrder.seatNumber}
-                  onChange={(e) => setNewOrder(prev => ({ ...prev, seatNumber: e.target.value as number }))}
+                  value={newOrder.orderType || 'individual'}
+                  onChange={(e) => setNewOrder(prev => ({ 
+                    ...prev, 
+                    orderType: e.target.value as 'individual' | 'table',
+                    seatNumber: e.target.value === 'table' ? 0 : prev.seatNumber 
+                  }))}
                 >
-                  {Array.from({ length: selectedTable?.seats || 4 }, (_, i) => (
-                    <MenuItem key={i + 1} value={i + 1}>Cadeira {i + 1}</MenuItem>
-                  ))}
+                  <MenuItem value="individual">Pedido Individual (por cadeira)</MenuItem>
+                  <MenuItem value="table">Pedido da Mesa Toda</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={6}>
+
+            {/* Seleção de cadeira - apenas para pedidos individuais */}
+            {newOrder.orderType !== 'table' && (
+              <Grid item xs={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Cadeira</InputLabel>
+                  <Select
+                    value={newOrder.seatNumber}
+                    onChange={(e) => setNewOrder(prev => ({ ...prev, seatNumber: e.target.value as number }))}
+                  >
+                    {Array.from({ length: selectedTable?.seats || 4 }, (_, i) => (
+                      <MenuItem key={i + 1} value={i + 1}>Cadeira {i + 1}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            )}
+
+            {/* Nome do cliente */}
+            <Grid item xs={newOrder.orderType === 'table' ? 12 : 6}>
               <TextField
                 fullWidth
-                label="Nome do Cliente"
+                label={newOrder.orderType === 'table' ? "Responsável pela Mesa" : "Nome do Cliente"}
                 value={newOrder.customerName}
                 onChange={(e) => setNewOrder(prev => ({ ...prev, customerName: e.target.value }))}
+                placeholder={newOrder.orderType === 'table' ? "Nome do responsável pelo pagamento" : "Nome do cliente na cadeira"}
               />
             </Grid>
+
+            {/* Informação sobre o tipo de pedido */}
             <Grid item xs={12}>
-              <Alert severity="info">
+              {newOrder.orderType === 'table' ? (
+                <Alert severity="info">
+                  <strong>Pedido da Mesa Toda:</strong> O pedido será registrado para toda a mesa. 
+                  Ideal para quando todos os clientes fazem um pedido conjunto ou quando há um responsável pelo pagamento.
+                </Alert>
+              ) : (
+                <Alert severity="info">
+                  <strong>Pedido Individual:</strong> O pedido será registrado para uma cadeira específica. 
+                  Ideal para controle individual de consumo e pagamento separado.
+                </Alert>
+              )}
+            </Grid>
+
+            <Grid item xs={12}>
+              <Alert severity="warning">
                 Esta é uma versão simplificada. Na versão completa, você poderia selecionar produtos do cardápio.
               </Alert>
             </Grid>

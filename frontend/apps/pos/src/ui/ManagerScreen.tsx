@@ -39,7 +39,9 @@ import {
   Switch,
   Divider,
   Avatar,
-  LinearProgress
+  LinearProgress,
+  CardMedia,
+  Badge
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -66,9 +68,21 @@ import {
   Campaign as CampaignIcon,
   Lightbulb as SuggestionIcon,
   Analytics as AnalyticsIcon,
-  MonetizationOn as MoneyIcon
+  MonetizationOn as MoneyIcon,
+  Category as CategoryIcon,
+  Inventory as IngredientIcon,
+  LocalOffer as ComboIcon,
+  Warning as WarningIcon,
+  Image as ImageIcon
 } from '@mui/icons-material';
 import { formatCurrency } from '../utils/formatters';
+import { 
+  ProductManagementService, 
+  Category, 
+  Ingredient, 
+  Product, 
+  Combo 
+} from '../services/ProductManagementService';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -83,6 +97,27 @@ interface Employee {
   status: 'active' | 'inactive';
   lastLogin: string;
   email: string;
+  // Novos campos para dados completos
+  cpf: string;
+  rg?: string;
+  phone: string;
+  address: string;
+  birthDate: string;
+  hireDate: string;
+  salary?: number;
+  department: string;
+  position: string;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  bankAccount?: {
+    bank: string;
+    agency: string;
+    account: string;
+  };
+  notes?: string;
 }
 
 interface ReportConfig {
@@ -188,7 +223,27 @@ const ManagerScreen: React.FC = () => {
       role: UserRole.CASHIER,
       status: 'active',
       lastLogin: 'Hoje, 08:30',
-      email: 'joao@exemplo.com'
+      email: 'joao@exemplo.com',
+      cpf: '123.456.789-00',
+      rg: '12.345.678-9',
+      phone: '(11) 99999-1234',
+      address: 'Rua das Flores, 123 - São Paulo, SP',
+      birthDate: '1990-05-15',
+      hireDate: '2023-01-10',
+      salary: 2500.00,
+      department: 'Operações',
+      position: 'Operador de Caixa',
+      emergencyContact: {
+        name: 'Maria Silva',
+        phone: '(11) 88888-5678',
+        relationship: 'Esposa'
+      },
+      bankAccount: {
+        bank: 'Banco do Brasil',
+        agency: '1234-5',
+        account: '12345-6'
+      },
+      notes: 'Funcionário dedicado e pontual'
     },
     {
       id: '2',
@@ -196,7 +251,27 @@ const ManagerScreen: React.FC = () => {
       role: UserRole.WAITER,
       status: 'active',
       lastLogin: 'Hoje, 09:15',
-      email: 'maria@exemplo.com'
+      email: 'maria@exemplo.com',
+      cpf: '987.654.321-00',
+      rg: '98.765.432-1',
+      phone: '(11) 77777-9876',
+      address: 'Av. Paulista, 456 - São Paulo, SP',
+      birthDate: '1985-08-22',
+      hireDate: '2022-06-15',
+      salary: 2200.00,
+      department: 'Atendimento',
+      position: 'Garçonete',
+      emergencyContact: {
+        name: 'Pedro Santos',
+        phone: '(11) 66666-4321',
+        relationship: 'Irmão'
+      },
+      bankAccount: {
+        bank: 'Caixa Econômica',
+        agency: '5678-9',
+        account: '98765-4'
+      },
+      notes: 'Excelente atendimento ao cliente'
     }
   ]);
   const [employeeDialogOpen, setEmployeeDialogOpen] = useState(false);
@@ -205,7 +280,23 @@ const ManagerScreen: React.FC = () => {
     name: '',
     email: '',
     role: UserRole.CASHIER,
-    status: 'active' as 'active' | 'inactive'
+    status: 'active' as 'active' | 'inactive',
+    cpf: '',
+    rg: '',
+    phone: '',
+    address: '',
+    birthDate: '',
+    hireDate: '',
+    salary: 0,
+    department: '',
+    position: '',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    emergencyContactRelationship: '',
+    bankName: '',
+    bankAgency: '',
+    bankAccount: '',
+    notes: ''
   });
 
   // Estados para fornecedores
@@ -240,7 +331,7 @@ const ManagerScreen: React.FC = () => {
   const [supplierDialogOpen, setSupplierDialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
 
-  // Estados para cardápio
+  // Estados para cardápio (sistema antigo - será substituído)
   const [menuItems, setMenuItems] = useState<MenuItem[]>([
     {
       id: '1',
@@ -271,6 +362,24 @@ const ManagerScreen: React.FC = () => {
   ]);
   const [menuDialogOpen, setMenuDialogOpen] = useState(false);
   const [editingMenuItem, setEditingMenuItem] = useState<MenuItem | null>(null);
+
+  // Estados para sistema avançado de produtos
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [combos, setCombos] = useState<Combo[]>([]);
+  
+  // Estados para dialogs do sistema de produtos
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [ingredientDialogOpen, setIngredientDialogOpen] = useState(false);
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const [comboDialogOpen, setComboDialogOpen] = useState(false);
+  
+  // Estados para edição
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingCombo, setEditingCombo] = useState<Combo | null>(null);
 
   // Estados para campanhas IA
   const [campaigns, setCampaigns] = useState<Campaign[]>([
@@ -341,6 +450,9 @@ const ManagerScreen: React.FC = () => {
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [configType, setConfigType] = useState('');
 
+  // Estados para campanhas
+  const [campaignDialogOpen, setCampaignDialogOpen] = useState(false);
+
   // Estados para notificações
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -357,7 +469,20 @@ const ManagerScreen: React.FC = () => {
 
     // Carregar dados iniciais
     loadDashboardData();
+    loadProductData();
   }, [user, hasPermission, navigate, terminalId]);
+
+  const loadProductData = useCallback(() => {
+    try {
+      setCategories(ProductManagementService.getCategories());
+      setIngredients(ProductManagementService.getIngredients());
+      setProducts(ProductManagementService.getProducts());
+      setCombos(ProductManagementService.getCombos());
+    } catch (error) {
+      console.error('Erro ao carregar dados de produtos:', error);
+      showSnackbar('Erro ao carregar dados de produtos', 'error');
+    }
+  }, []);
 
   const loadDashboardData = useCallback(async () => {
     setDashboardLoading(true);
@@ -419,14 +544,50 @@ const ManagerScreen: React.FC = () => {
       if (editingEmployee) {
         setEmployees(prev => prev.map(emp => 
           emp.id === editingEmployee.id 
-            ? { ...emp, ...employeeForm }
+            ? { 
+                ...emp, 
+                ...employeeForm,
+                emergencyContact: {
+                  name: employeeForm.emergencyContactName,
+                  phone: employeeForm.emergencyContactPhone,
+                  relationship: employeeForm.emergencyContactRelationship
+                },
+                bankAccount: {
+                  bank: employeeForm.bankName,
+                  agency: employeeForm.bankAgency,
+                  account: employeeForm.bankAccount
+                }
+              }
             : emp
         ));
         showSnackbar('Funcionário atualizado com sucesso!', 'success');
       } else {
         const newEmployee: Employee = {
           id: Date.now().toString(),
-          ...employeeForm,
+          name: employeeForm.name,
+          email: employeeForm.email,
+          role: employeeForm.role,
+          status: employeeForm.status,
+          cpf: employeeForm.cpf,
+          rg: employeeForm.rg,
+          phone: employeeForm.phone,
+          address: employeeForm.address,
+          birthDate: employeeForm.birthDate,
+          hireDate: employeeForm.hireDate,
+          salary: employeeForm.salary,
+          department: employeeForm.department,
+          position: employeeForm.position,
+          emergencyContact: {
+            name: employeeForm.emergencyContactName,
+            phone: employeeForm.emergencyContactPhone,
+            relationship: employeeForm.emergencyContactRelationship
+          },
+          bankAccount: {
+            bank: employeeForm.bankName,
+            agency: employeeForm.bankAgency,
+            account: employeeForm.bankAccount
+          },
+          notes: employeeForm.notes,
           lastLogin: 'Nunca'
         };
         setEmployees(prev => [...prev, newEmployee]);
@@ -435,12 +596,60 @@ const ManagerScreen: React.FC = () => {
 
       setEmployeeDialogOpen(false);
       setEditingEmployee(null);
-      setEmployeeForm({ name: '', email: '', role: UserRole.CASHIER, status: 'active' });
+      setEmployeeForm({ 
+        name: '', 
+        email: '', 
+        role: UserRole.CASHIER, 
+        status: 'active',
+        cpf: '',
+        rg: '',
+        phone: '',
+        address: '',
+        birthDate: '',
+        hireDate: '',
+        salary: 0,
+        department: '',
+        position: '',
+        emergencyContactName: '',
+        emergencyContactPhone: '',
+        emergencyContactRelationship: '',
+        bankName: '',
+        bankAgency: '',
+        bankAccount: '',
+        notes: ''
+      });
     } catch (error) {
       showSnackbar('Erro ao salvar funcionário', 'error');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditEmployee = (employee: Employee) => {
+    setEditingEmployee(employee);
+    setEmployeeForm({
+      name: employee.name,
+      email: employee.email,
+      role: employee.role,
+      status: employee.status,
+      cpf: employee.cpf,
+      rg: employee.rg || '',
+      phone: employee.phone,
+      address: employee.address,
+      birthDate: employee.birthDate,
+      hireDate: employee.hireDate,
+      salary: employee.salary || 0,
+      department: employee.department,
+      position: employee.position,
+      emergencyContactName: employee.emergencyContact?.name || '',
+      emergencyContactPhone: employee.emergencyContact?.phone || '',
+      emergencyContactRelationship: employee.emergencyContact?.relationship || '',
+      bankName: employee.bankAccount?.bank || '',
+      bankAgency: employee.bankAccount?.agency || '',
+      bankAccount: employee.bankAccount?.account || '',
+      notes: employee.notes || ''
+    });
+    setEmployeeDialogOpen(true);
   };
 
   // Funções para fornecedores
@@ -678,7 +887,13 @@ const ManagerScreen: React.FC = () => {
             <CardContent>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                 <Typography variant="h6">Campanhas Ativas</Typography>
-                <Button variant="outlined" startIcon={<AddIcon />}>
+                <Button 
+                  variant="outlined" 
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    setCampaignDialogOpen(true);
+                  }}
+                >
                   Nova Campanha
                 </Button>
               </Box>
@@ -1001,7 +1216,28 @@ const ManagerScreen: React.FC = () => {
           startIcon={<AddIcon />}
           onClick={() => {
             setEditingEmployee(null);
-            setEmployeeForm({ name: '', email: '', role: UserRole.CASHIER, status: 'active' });
+            setEmployeeForm({ 
+              name: '', 
+              email: '', 
+              role: UserRole.CASHIER, 
+              status: 'active',
+              cpf: '',
+              rg: '',
+              phone: '',
+              address: '',
+              birthDate: '',
+              hireDate: '',
+              salary: 0,
+              department: '',
+              position: '',
+              emergencyContactName: '',
+              emergencyContactPhone: '',
+              emergencyContactRelationship: '',
+              bankName: '',
+              bankAgency: '',
+              bankAccount: '',
+              notes: ''
+            });
             setEmployeeDialogOpen(true);
           }}
         >
@@ -1014,8 +1250,10 @@ const ManagerScreen: React.FC = () => {
           <TableHead>
             <TableRow>
               <TableCell>Nome</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Função</TableCell>
+              <TableCell>CPF</TableCell>
+              <TableCell>Cargo</TableCell>
+              <TableCell>Departamento</TableCell>
+              <TableCell>Telefone</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Último Login</TableCell>
               <TableCell>Ações</TableCell>
@@ -1024,19 +1262,60 @@ const ManagerScreen: React.FC = () => {
           <TableBody>
             {employees.map((employee) => (
               <TableRow key={employee.id}>
-                <TableCell>{employee.name}</TableCell>
-                <TableCell>{employee.email}</TableCell>
                 <TableCell>
-                  <Chip 
-                    label={employee.role}
-                    color="primary"
-                    size="small"
-                  />
+                  <Box display="flex" alignItems="center">
+                    <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
+                      {employee.name.charAt(0)}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body2" fontWeight="bold">
+                        {employee.name}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        {employee.email}
+                      </Typography>
+                    </Box>
+                  </Box>
                 </TableCell>
+                <TableCell>{employee.cpf}</TableCell>
+                <TableCell>
+                  <Box>
+                    <Typography variant="body2" fontWeight="bold">
+                      {employee.position}
+                    </Typography>
+                    <Chip 
+                      label={employee.role}
+                      color="primary"
+                      size="small"
+                      variant="outlined"
+                    />
+                  </Box>
+                </TableCell>
+                <TableCell>{employee.department}</TableCell>
+                <TableCell>{employee.phone}</TableCell>
                 <TableCell>
                   <Chip 
                     label={employee.status === 'active' ? 'Ativo' : 'Inativo'}
                     color={employee.status === 'active' ? 'success' : 'default'}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>{employee.lastLogin}</TableCell>
+                <TableCell>
+                  <IconButton 
+                    size="small"
+                    onClick={() => handleEditEmployee(employee)}
+                  >
+                    <EditIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
                     size="small"
                   />
                 </TableCell>
@@ -1291,6 +1570,7 @@ const ManagerScreen: React.FC = () => {
           <Tab icon={<SuppliersIcon />} label="Fornecedores" />
           <Tab icon={<AIIcon />} label="IA & Campanhas" />
           <Tab icon={<MenuIcon />} label="Cardápio" />
+          <Tab icon={<CategoryIcon />} label="Produtos Avançado" />
           <Tab icon={<DuplicatesIcon />} label="Duplicatas" />
           <Tab icon={<PeopleIcon />} label="Funcionários" />
           <Tab icon={<ReportsIcon />} label="Relatórios" />
@@ -1310,69 +1590,259 @@ const ManagerScreen: React.FC = () => {
           {renderMenu()}
         </TabPanel>
         <TabPanel value={currentTab} index={4}>
-          {renderDuplicates()}
+          {renderAdvancedProducts()}
         </TabPanel>
         <TabPanel value={currentTab} index={5}>
-          {renderEmployees()}
+          {renderDuplicates()}
         </TabPanel>
         <TabPanel value={currentTab} index={6}>
-          {renderReports()}
+          {renderEmployees()}
         </TabPanel>
         <TabPanel value={currentTab} index={7}>
+          {renderReports()}
+        </TabPanel>
+        <TabPanel value={currentTab} index={8}>
           {renderSettings()}
         </TabPanel>
       </Paper>
 
       {/* Dialog de Funcionário */}
-      <Dialog open={employeeDialogOpen} onClose={() => setEmployeeDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={employeeDialogOpen} onClose={() => setEmployeeDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
           {editingEmployee ? 'Editar Funcionário' : 'Novo Funcionário'}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1 }}>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Nome"
-              fullWidth
-              variant="outlined"
-              value={employeeForm.name}
-              onChange={(e) => setEmployeeForm({ ...employeeForm, name: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              margin="dense"
-              label="Email"
-              type="email"
-              fullWidth
-              variant="outlined"
-              value={employeeForm.email}
-              onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Função</InputLabel>
-              <Select
-                value={employeeForm.role}
-                label="Função"
-                onChange={(e) => setEmployeeForm({ ...employeeForm, role: e.target.value as UserRole })}
-              >
-                <MenuItem value={UserRole.CASHIER}>Caixa</MenuItem>
-                <MenuItem value={UserRole.WAITER}>Garçom</MenuItem>
-                <MenuItem value={UserRole.MANAGER}>Gerente</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth>
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={employeeForm.status}
-                label="Status"
-                onChange={(e) => setEmployeeForm({ ...employeeForm, status: e.target.value as 'active' | 'inactive' })}
-              >
-                <MenuItem value="active">Ativo</MenuItem>
-                <MenuItem value="inactive">Inativo</MenuItem>
-              </Select>
-            </FormControl>
+            <Typography variant="h6" gutterBottom>Dados Pessoais</Typography>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  autoFocus
+                  label="Nome Completo"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.name}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, name: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="CPF"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.cpf}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, cpf: e.target.value })}
+                  placeholder="000.000.000-00"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="RG"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.rg}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, rg: e.target.value })}
+                  placeholder="00.000.000-0"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Data de Nascimento"
+                  type="date"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.birthDate}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, birthDate: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+            </Grid>
+
+            <Typography variant="h6" gutterBottom>Contato</Typography>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Email"
+                  type="email"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.email}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Telefone"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.phone}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, phone: e.target.value })}
+                  placeholder="(00) 00000-0000"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Endereço"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.address}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, address: e.target.value })}
+                  placeholder="Rua, número, bairro, cidade, estado"
+                />
+              </Grid>
+            </Grid>
+
+            <Typography variant="h6" gutterBottom>Dados Profissionais</Typography>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Cargo/Posição"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.position}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, position: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Departamento"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.department}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, department: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Função no Sistema</InputLabel>
+                  <Select
+                    value={employeeForm.role}
+                    label="Função no Sistema"
+                    onChange={(e) => setEmployeeForm({ ...employeeForm, role: e.target.value as UserRole })}
+                  >
+                    <MenuItem value={UserRole.CASHIER}>Caixa</MenuItem>
+                    <MenuItem value={UserRole.WAITER}>Garçom</MenuItem>
+                    <MenuItem value={UserRole.MANAGER}>Gerente</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Data de Admissão"
+                  type="date"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.hireDate}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, hireDate: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Salário"
+                  type="number"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.salary}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, salary: parseFloat(e.target.value) || 0 })}
+                  InputProps={{
+                    startAdornment: <Typography sx={{ mr: 1 }}>R$</Typography>
+                  }}
+                />
+              </Grid>
+            </Grid>
+
+            <Typography variant="h6" gutterBottom>Contato de Emergência</Typography>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Nome"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.emergencyContactName}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, emergencyContactName: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Telefone"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.emergencyContactPhone}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, emergencyContactPhone: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Parentesco"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.emergencyContactRelationship}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, emergencyContactRelationship: e.target.value })}
+                  placeholder="Ex: Cônjuge, Pai, Mãe"
+                />
+              </Grid>
+            </Grid>
+
+            <Typography variant="h6" gutterBottom>Dados Bancários</Typography>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Banco"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.bankName}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, bankName: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Agência"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.bankAgency}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, bankAgency: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Conta"
+                  fullWidth
+                  variant="outlined"
+                  value={employeeForm.bankAccount}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, bankAccount: e.target.value })}
+                />
+              </Grid>
+            </Grid>
+
+            <Typography variant="h6" gutterBottom>Outros</Typography>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={employeeForm.status}
+                    label="Status"
+                    onChange={(e) => setEmployeeForm({ ...employeeForm, status: e.target.value as 'active' | 'inactive' })}
+                  >
+                    <MenuItem value="active">Ativo</MenuItem>
+                    <MenuItem value="inactive">Inativo</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Observações"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  variant="outlined"
+                  value={employeeForm.notes}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, notes: e.target.value })}
+                  placeholder="Informações adicionais sobre o funcionário"
+                />
+              </Grid>
+            </Grid>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -1644,6 +2114,123 @@ const ManagerScreen: React.FC = () => {
             disabled={loading}
           >
             {loading ? <CircularProgress size={20} /> : 'Salvar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de Campanha */}
+      <Dialog open={campaignDialogOpen} onClose={() => setCampaignDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Nova Campanha de Marketing</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 1 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  margin="dense"
+                  label="Nome da Campanha"
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Ex: Promoção de Verão"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth margin="dense">
+                  <InputLabel>Tipo de Campanha</InputLabel>
+                  <Select
+                    label="Tipo de Campanha"
+                    defaultValue="discount"
+                  >
+                    <MenuItem value="discount">Desconto</MenuItem>
+                    <MenuItem value="loyalty">Fidelidade</MenuItem>
+                    <MenuItem value="seasonal">Sazonal</MenuItem>
+                    <MenuItem value="product">Produto Específico</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  margin="dense"
+                  label="Data de Início"
+                  type="date"
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  margin="dense"
+                  label="Data de Fim"
+                  type="date"
+                  fullWidth
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth margin="dense">
+                  <InputLabel>Público Alvo</InputLabel>
+                  <Select
+                    label="Público Alvo"
+                    defaultValue="all"
+                  >
+                    <MenuItem value="all">Todos os clientes</MenuItem>
+                    <MenuItem value="frequent">Clientes frequentes</MenuItem>
+                    <MenuItem value="new">Novos clientes</MenuItem>
+                    <MenuItem value="inactive">Clientes inativos</MenuItem>
+                    <MenuItem value="vip">Clientes VIP</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  margin="dense"
+                  label="Descrição da Campanha"
+                  fullWidth
+                  variant="outlined"
+                  multiline
+                  rows={3}
+                  placeholder="Descreva os detalhes da campanha, ofertas, condições..."
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  margin="dense"
+                  label="Orçamento (R$)"
+                  type="number"
+                  fullWidth
+                  variant="outlined"
+                  placeholder="0,00"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth margin="dense">
+                  <InputLabel>Canal de Comunicação</InputLabel>
+                  <Select
+                    label="Canal de Comunicação"
+                    defaultValue="whatsapp"
+                  >
+                    <MenuItem value="whatsapp">WhatsApp</MenuItem>
+                    <MenuItem value="email">E-mail</MenuItem>
+                    <MenuItem value="sms">SMS</MenuItem>
+                    <MenuItem value="push">Notificação Push</MenuItem>
+                    <MenuItem value="all">Todos os canais</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCampaignDialogOpen(false)}>Cancelar</Button>
+          <Button 
+            onClick={() => {
+              setCampaignDialogOpen(false);
+              showSnackbar('Campanha criada com sucesso!', 'success');
+            }} 
+            variant="contained"
+          >
+            Criar Campanha
           </Button>
         </DialogActions>
       </Dialog>

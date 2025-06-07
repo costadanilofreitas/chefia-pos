@@ -407,6 +407,104 @@ const LoyaltyScreen: React.FC = () => {
       setCustomers(mockCustomers);
       setCampaigns(mockCampaigns);
       setAnalytics(mockAnalytics);
+
+      // Mock data para cupons
+      const mockCoupons: Coupon[] = [
+        {
+          id: '1',
+          code: 'WELCOME20',
+          type: 'percentage',
+          value: 20,
+          description: 'Desconto de boas-vindas para novos clientes',
+          minPurchase: 50,
+          maxDiscount: 30,
+          validFrom: '2024-01-01',
+          validUntil: '2024-12-31',
+          usageLimit: 100,
+          usedCount: 45,
+          isActive: true,
+          applicableProducts: []
+        },
+        {
+          id: '2',
+          code: 'FIDELIDADE50',
+          type: 'fixed',
+          value: 50,
+          description: 'R$ 50 de desconto para clientes VIP',
+          minPurchase: 200,
+          validFrom: '2024-01-01',
+          validUntil: '2024-06-30',
+          usageLimit: 50,
+          usedCount: 12,
+          isActive: true,
+          applicableProducts: []
+        },
+        {
+          id: '3',
+          code: 'PONTOS500',
+          type: 'points',
+          value: 500,
+          description: 'Resgate 500 pontos por R$ 25 de desconto',
+          validFrom: '2024-01-01',
+          validUntil: '2024-12-31',
+          usageLimit: 1000,
+          usedCount: 234,
+          isActive: true,
+          applicableProducts: []
+        }
+      ];
+
+      // Mock data para transações
+      const mockTransactions: LoyaltyTransaction[] = [
+        {
+          id: '1',
+          customerId: '1',
+          type: 'earn',
+          points: 125,
+          description: 'Compra no valor de R$ 125,00',
+          orderId: 'ORD-001',
+          date: '2024-01-15'
+        },
+        {
+          id: '2',
+          customerId: '1',
+          type: 'redeem',
+          points: 100,
+          description: 'Resgate de pontos - Desconto R$ 10,00',
+          orderId: 'ORD-002',
+          date: '2024-01-10'
+        },
+        {
+          id: '3',
+          customerId: '2',
+          type: 'earn',
+          points: 89,
+          description: 'Compra no valor de R$ 89,50',
+          orderId: 'ORD-003',
+          date: '2024-01-12'
+        },
+        {
+          id: '4',
+          customerId: '3',
+          type: 'earn',
+          points: 156,
+          description: 'Compra no valor de R$ 156,00',
+          orderId: 'ORD-004',
+          date: '2024-01-08'
+        },
+        {
+          id: '5',
+          customerId: '2',
+          type: 'redeem',
+          points: 200,
+          description: 'Resgate de pontos - Desconto R$ 20,00',
+          orderId: 'ORD-005',
+          date: '2024-01-05'
+        }
+      ];
+
+      setCoupons(mockCoupons);
+      setTransactions(mockTransactions);
       
     } catch (error) {
       showSnackbar('Erro ao carregar dados do CRM', 'error');
@@ -909,6 +1007,173 @@ const LoyaltyScreen: React.FC = () => {
     </Box>
   );
 
+  // Renderizar cupons
+  const renderCoupons = () => (
+    <Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h5">Gestão de Cupons</Typography>
+        <Button
+          variant="contained"
+          startIcon={<LocalOffer />}
+          onClick={() => setCouponDialogOpen(true)}
+        >
+          Novo Cupom
+        </Button>
+      </Box>
+
+      <Grid container spacing={3}>
+        {coupons.map((coupon) => (
+          <Grid item xs={12} md={6} lg={4} key={coupon.id}>
+            <Card>
+              <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                  <Box>
+                    <Typography variant="h6">{coupon.code}</Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {coupon.description}
+                    </Typography>
+                  </Box>
+                  <Chip 
+                    label={coupon.isActive ? 'Ativo' : 'Inativo'}
+                    color={coupon.isActive ? 'success' : 'default'}
+                    size="small"
+                  />
+                </Box>
+
+                <Box mb={2}>
+                  <Typography variant="body2">
+                    <strong>Tipo:</strong> {coupon.type === 'percentage' ? 'Percentual' : 
+                                           coupon.type === 'fixed' ? 'Valor Fixo' : 'Pontos'}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Valor:</strong> {coupon.type === 'percentage' ? `${coupon.value}%` :
+                                           coupon.type === 'fixed' ? `R$ ${coupon.value.toFixed(2)}` :
+                                           `${coupon.value} pontos`}
+                  </Typography>
+                  {coupon.minPurchase && (
+                    <Typography variant="body2">
+                      <strong>Compra mínima:</strong> R$ {coupon.minPurchase.toFixed(2)}
+                    </Typography>
+                  )}
+                </Box>
+
+                <Box mb={2}>
+                  <Typography variant="body2">
+                    <strong>Válido:</strong> {new Date(coupon.validFrom).toLocaleDateString()} até {new Date(coupon.validUntil).toLocaleDateString()}
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={(coupon.usedCount / coupon.usageLimit) * 100}
+                    sx={{ mt: 1 }}
+                  />
+                  <Typography variant="caption" color="textSecondary">
+                    {coupon.usedCount} de {coupon.usageLimit} usos
+                  </Typography>
+                </Box>
+
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Button
+                    size="small"
+                    startIcon={<Edit />}
+                    onClick={() => {
+                      // Implementar edição de cupom
+                      showSnackbar('Funcionalidade em desenvolvimento', 'info');
+                    }}
+                  >
+                    Editar
+                  </Button>
+                  <Switch
+                    checked={coupon.isActive}
+                    onChange={() => {
+                      // Implementar toggle de cupom
+                      showSnackbar('Status do cupom alterado', 'success');
+                    }}
+                    size="small"
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
+  );
+
+  // Renderizar transações
+  const renderTransactions = () => (
+    <Box>
+      <Typography variant="h5" mb={3}>Histórico de Transações</Typography>
+      
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Data</TableCell>
+              <TableCell>Cliente</TableCell>
+              <TableCell>Tipo</TableCell>
+              <TableCell>Pontos</TableCell>
+              <TableCell>Descrição</TableCell>
+              <TableCell>Pedido</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {transactions.map((transaction) => {
+              const customer = customers.find(c => c.id === transaction.customerId);
+              return (
+                <TableRow key={transaction.id}>
+                  <TableCell>
+                    {new Date(transaction.date).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Avatar sx={{ width: 32, height: 32 }}>
+                        {customer?.name.charAt(0) || '?'}
+                      </Avatar>
+                      <Typography variant="body2">
+                        {customer?.name || 'Cliente não encontrado'}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={transaction.type === 'earn' ? 'Ganho' : 'Resgate'}
+                      color={transaction.type === 'earn' ? 'success' : 'primary'}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography 
+                      variant="body2" 
+                      color={transaction.type === 'earn' ? 'success.main' : 'primary.main'}
+                      fontWeight="bold"
+                    >
+                      {transaction.type === 'earn' ? '+' : '-'}{transaction.points}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>{transaction.description}</TableCell>
+                  <TableCell>
+                    {transaction.orderId && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => {
+                          // Implementar visualização do pedido
+                          showSnackbar('Funcionalidade em desenvolvimento', 'info');
+                        }}
+                      >
+                        #{transaction.orderId}
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
@@ -948,12 +1213,10 @@ const LoyaltyScreen: React.FC = () => {
           {renderCampaigns()}
         </TabPanel>
         <TabPanel value={currentTab} index={3}>
-          {/* Renderizar cupons (implementação existente) */}
-          <Typography variant="h5">Gestão de Cupons</Typography>
+          {renderCoupons()}
         </TabPanel>
         <TabPanel value={currentTab} index={4}>
-          {/* Renderizar transações (implementação existente) */}
-          <Typography variant="h5">Histórico de Transações</Typography>
+          {renderTransactions()}
         </TabPanel>
       </Paper>
 
