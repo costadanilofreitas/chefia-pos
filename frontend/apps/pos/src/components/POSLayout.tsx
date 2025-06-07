@@ -1,5 +1,5 @@
 // src/components/POSLayout.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   AppBar,
@@ -46,6 +46,12 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
 
+  // Força o fechamento do menu quando a rota muda
+  useEffect(() => {
+    setAnchorEl(null);
+    setUserMenuAnchor(null);
+  }, [location.pathname]);
+
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -69,8 +75,11 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
   };
 
   const navigateTo = (path: string) => {
+    // Força o fechamento do menu imediatamente
+    setAnchorEl(null);
+    
+    // Navega para a nova rota
     navigate(`/pos/${terminalId}${path}`);
-    handleMenuClose();
   };
 
   const getCurrentPageTitle = () => {
@@ -171,6 +180,12 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
         PaperProps={{
           sx: { minWidth: 250 }
         }}
+        // Força fechamento correto
+        disableAutoFocus={true}
+        disableEnforceFocus={true}
+        disableRestoreFocus={true}
+        // Adiciona key para forçar re-render quando rota muda
+        key={location.pathname}
       >
         {/* Main POS */}
         <MenuItem onClick={() => navigateTo('')}>
