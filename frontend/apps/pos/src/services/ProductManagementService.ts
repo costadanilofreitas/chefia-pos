@@ -55,6 +55,8 @@ export interface Combo {
   description: string;
   items: ComboItem[];
   basePrice: number;
+  price: number; // Adicionando propriedade price
+  discount: number; // Adicionando propriedade discount
   discountPercentage: number;
   finalPrice: number;
   image?: string;
@@ -81,6 +83,7 @@ export interface Product {
   preparationTime: number;
   calories?: number;
   image?: string;
+  imageUrl?: string; // Adicionando propriedade imageUrl
   available: boolean;
   active: boolean;
   createdAt: string;
@@ -136,6 +139,7 @@ function convertBackendProduct(backendProduct: BackendProduct): Product {
     preparationTime: 15, // TODO: Implementar no backend
     calories: undefined, // TODO: Implementar no backend
     image: backendProduct.image_url,
+    imageUrl: backendProduct.image_url, // Adicionando imageUrl
     available: backendProduct.is_available,
     active: backendProduct.status === 'ACTIVE',
     createdAt: backendProduct.created_at,
@@ -145,6 +149,7 @@ function convertBackendProduct(backendProduct: BackendProduct): Product {
 
 function convertBackendCombo(backendProduct: BackendProduct): Combo {
   const basePrice = backendProduct.combo_items?.reduce((sum, item) => sum + item.price_adjustment, 0) || 0;
+  const discount = basePrice * 0.1; // 10% de desconto
   return {
     id: backendProduct.id,
     name: backendProduct.name,
@@ -156,6 +161,8 @@ function convertBackendCombo(backendProduct: BackendProduct): Combo {
       additionalCost: item.price_adjustment
     })) || [],
     basePrice: basePrice,
+    price: backendProduct.price, // Adicionando propriedade price
+    discount: discount, // Adicionando propriedade discount
     discountPercentage: 10, // TODO: Calcular desconto real
     finalPrice: backendProduct.price,
     image: backendProduct.image_url,
@@ -367,20 +374,11 @@ export class ProductManagementService {
         image_url: product.image,
         is_available: product.available,
         status: product.active ? 'ACTIVE' : 'INACTIVE',
-        type: 'SIMPLE',
         ingredients: product.ingredients.map(ing => ({
           id: ing.ingredientId,
-          name: '', // Será preenchido pelo backend
-          description: '',
-          unit: '',
-          cost_per_unit: 0,
-          current_stock: 0,
-          minimum_stock: 0,
-          is_out_of_stock: false,
-          is_required: ing.required,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }))
+          quantity: ing.quantity,
+          is_required: ing.required
+        })),
       };
       
       const backendProduct = await mockProductService.createProduct(productData);

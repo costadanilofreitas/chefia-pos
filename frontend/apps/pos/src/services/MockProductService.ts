@@ -13,7 +13,7 @@ export interface Product {
   stock_quantity: number;
   is_combo: boolean;
   combo_items?: ComboItem[];
-  ingredients?: Ingredient[];
+  ingredients?: ProductIngredient[];
   created_at: string;
   updated_at: string;
   status: 'ACTIVE' | 'INACTIVE';
@@ -35,7 +35,7 @@ export interface ProductCreate {
   stock_quantity?: number;
   is_combo?: boolean;
   combo_items?: ComboItem[];
-  ingredients?: Ingredient[];
+  ingredients?: ProductIngredient[];
   status?: 'ACTIVE' | 'INACTIVE';
   type?: 'SIMPLE' | 'COMBO' | 'COMPOSITE';
   is_featured?: boolean;
@@ -54,7 +54,7 @@ export interface ProductUpdate {
   stock_quantity?: number;
   is_combo?: boolean;
   combo_items?: ComboItem[];
-  ingredients?: Ingredient[];
+  ingredients?: ProductIngredient[];
   status?: 'ACTIVE' | 'INACTIVE';
   type?: 'SIMPLE' | 'COMBO' | 'COMPOSITE';
   is_featured?: boolean;
@@ -100,6 +100,12 @@ export interface ComboItem {
   quantity: number;
   is_optional: boolean;
   price_adjustment: number;
+}
+
+export interface ProductIngredient {
+  id: string;
+  quantity: number;
+  is_required: boolean;
 }
 
 export interface Ingredient {
@@ -271,9 +277,9 @@ class MockProductService {
         stock_quantity: 100,
         is_combo: false,
         ingredients: [
-          { ...this.ingredients[0], quantity: 1, is_required: true },
-          { ...this.ingredients[1], quantity: 1, is_required: false },
-          { ...this.ingredients[2], quantity: 2, is_required: false }
+          { id: this.ingredients[0].id, quantity: 1, is_required: true },
+          { id: this.ingredients[1].id, quantity: 1, is_required: false },
+          { id: this.ingredients[2].id, quantity: 2, is_required: false }
         ],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
