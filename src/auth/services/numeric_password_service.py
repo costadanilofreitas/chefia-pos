@@ -2,6 +2,7 @@ import bcrypt
 import secrets
 import random
 import uuid
+import os
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 import jwt
@@ -208,8 +209,10 @@ class NumericPasswordService:
             credential.last_failed_attempt = None
             await self.repository.update_credential(credential)
         
-        # Obter informações do operador
-        operator = await self.repository.get_operator(login_data.operator_id)
+        # Obter informações do operador (simulado)
+        operator_name = login_data.operator_id.title()  # Simples conversão para nome
+        operator_roles = ["admin"] if login_data.operator_id == "admin" else ["cashier"]
+        operator_permissions = ["read", "write", "delete"] if "admin" in operator_roles else ["read"]
         
         # Verificar se a senha expirou
         require_password_change = False
@@ -222,9 +225,9 @@ class NumericPasswordService:
         token_expiry = datetime.now() + timedelta(minutes=self.config.session_expiry_minutes)
         token_payload = {
             "sub": login_data.operator_id,
-            "name": operator.get("name", ""),
-            "roles": operator.get("roles", []),
-            "permissions": operator.get("permissions", []),
+            "name": operator_name,
+            "roles": operator_roles,
+            "permissions": operator_permissions,
             "exp": token_expiry.timestamp(),
             "require_password_change": require_password_change
         }
@@ -237,9 +240,9 @@ class NumericPasswordService:
             token_type="bearer",
             expires_in=self.config.session_expiry_minutes * 60,
             operator_id=login_data.operator_id,
-            operator_name=operator.get("name", ""),
-            roles=operator.get("roles", []),
-            permissions=operator.get("permissions", []),
+            operator_name=operator_name,
+            roles=operator_roles,
+            permissions=operator_permissions,
             require_password_change=require_password_change
         )
     

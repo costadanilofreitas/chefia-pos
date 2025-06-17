@@ -30,7 +30,9 @@ import {
   Assessment,
   Notifications
 } from '@mui/icons-material';
-import { useAuth, UserRole } from '../hooks/mocks/useAuth';
+import { useAuth as useAuthMock, UserRole } from '../hooks/mocks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
+import LoginDialog from './LoginDialog';
 
 interface POSLayoutProps {
   children: React.ReactNode;
@@ -41,10 +43,11 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
   const navigate = useNavigate();
   const { terminalId } = useParams<{ terminalId: string }>();
   const location = useLocation();
-  const { user, logout, hasPermission } = useAuth();
+  const { user, logout, hasPermission, hasRole, isAuthenticated } = useAuth();
   
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [userMenuAnchor, setUserMenuAnchor] = useState<null | HTMLElement>(null);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
   // Força o fechamento do menu quando a rota muda
   useEffect(() => {
@@ -151,7 +154,7 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
           </Button>
 
           {/* User Menu */}
-          {user && (
+          {isAuthenticated ? (
             <>
               <IconButton
                 size="large"
@@ -168,6 +171,15 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
                 </Badge>
               </IconButton>
             </>
+          ) : (
+            <Button
+              color="inherit"
+              onClick={() => setLoginDialogOpen(true)}
+              startIcon={<AccountCircle />}
+              sx={{ ml: 1 }}
+            >
+              Login
+            </Button>
           )}
         </Toolbar>
       </AppBar>
@@ -237,7 +249,7 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
         <Divider />
 
         {/* Management */}
-        {hasPermission('gerente:acesso') && (
+        {hasRole('admin') && (
           <MenuItem onClick={() => navigateTo('/manager')}>
             <Settings sx={{ mr: 2 }} />
             Gestão Gerencial
@@ -258,12 +270,12 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
           <>
             <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
               <Typography variant="subtitle1" fontWeight="bold">
-                {user.name}
+                {user.operator_name}
               </Typography>
               <Chip
-                label={getRoleLabel(user.role)}
+                label={user.roles[0]?.toUpperCase() || 'USER'}
                 size="small"
-                color={getRoleColor(user.role)}
+                color={user.roles.includes('admin') ? 'error' : 'primary'}
                 sx={{ mt: 0.5 }}
               />
             </Box>
@@ -275,6 +287,17 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
           </>
         )}
       </Menu>
+
+      {/* Login Dialog */}
+      <LoginDialog
+        open={loginDialogOpen}
+        onClose={() => setLoginDialogOpen(false)}
+        onSuccess={() => {
+          setLoginDialogOpen(false);
+          // Redirecionar para página principal após login
+          navigate(`/pos/${terminalId}/main`);
+        }}
+      />
 
       {/* Main Content */}
       <Box component="main">
