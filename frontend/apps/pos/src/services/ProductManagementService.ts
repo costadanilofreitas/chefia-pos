@@ -1,6 +1,6 @@
 // src/services/ProductManagementService.ts
 import { 
-  mockProductService, 
+  productApiService, 
   Product as BackendProduct, 
   ProductCategory as BackendCategory,
   Ingredient as BackendIngredient,
@@ -10,9 +10,8 @@ import {
   CategoryUpdate,
   IngredientCreate,
   IngredientUpdate,
-  ComboItem as BackendComboItem,
   ProductFilters
-} from './MockProductService';
+} from './ProductApiService';
 
 // Interfaces adaptadas para compatibilidade com o frontend existente
 export interface Category {
@@ -183,7 +182,7 @@ export class ProductManagementService {
   // Categorias
   static async getCategories(): Promise<Category[]> {
     try {
-      const backendCategories = await mockProductService.getCategories();
+      const backendCategories = await productApiService.getActiveCategories();
       return backendCategories.map(convertBackendCategory);
     } catch (error) {
       console.error('Erro ao buscar categorias:', error);
@@ -243,17 +242,15 @@ export class ProductManagementService {
   static async saveCategory(category: Omit<Category, 'id' | 'createdAt' | 'updatedAt'>): Promise<Category> {
     try {
       const categoryData: CategoryCreate = {
-        name: category.name,
+        name: category.name!,
         description: category.description,
         color: category.color,
         icon: category.icon,
-        is_active: category.active,
-        sort_order: category.sortOrder
+        is_active: category.active
       };
       
-      const backendCategory = await mockProductService.createCategory(categoryData);
-      return convertBackendCategory(backendCategory);
-    } catch (error) {
+      const backendCategory = await productApiService.createCategory(categoryData);
+      return convertBackendCategory(backendCategory);    } catch (error) {
       console.error('Erro ao salvar categoria:', error);
       throw error;
     }
@@ -266,14 +263,10 @@ export class ProductManagementService {
         description: category.description,
         color: category.color,
         icon: category.icon,
-        is_active: category.active,
-        sort_order: category.sortOrder
+        is_active: category.active
       };
       
-      const backendCategory = await mockProductService.updateCategory(id, categoryData);
-      if (!backendCategory) {
-        throw new Error('Categoria não encontrada');
-      }
+      const backendCategory = await productApiService.updateCategory(id, categoryData);
       return convertBackendCategory(backendCategory);
     } catch (error) {
       console.error('Erro ao atualizar categoria:', error);
@@ -283,7 +276,8 @@ export class ProductManagementService {
 
   static async deleteCategory(id: string): Promise<boolean> {
     try {
-      return await mockProductService.deleteCategory(id);
+      const result = await productApiService.deleteCategory(id);
+      return result.success;
     } catch (error) {
       console.error('Erro ao excluir categoria:', error);
       throw error;
@@ -293,7 +287,7 @@ export class ProductManagementService {
   // Ingredientes
   static async getIngredients(): Promise<Ingredient[]> {
     try {
-      const backendIngredients = await mockProductService.getIngredients();
+      const backendIngredients = await productApiService.getActiveIngredients();
       return backendIngredients.map(convertBackendIngredient);
     } catch (error) {
       console.error('Erro ao buscar ingredientes:', error);
@@ -308,12 +302,11 @@ export class ProductManagementService {
         description: ingredient.description,
         unit: ingredient.unit,
         cost_per_unit: ingredient.cost,
-        current_stock: ingredient.currentStock,
-        minimum_stock: ingredient.minimumStock,
-        is_required: !ingredient.outOfStock
+        supplier: ingredient.supplier,
+        is_active: ingredient.active
       };
       
-      const backendIngredient = await mockProductService.createIngredient(ingredientData);
+      const backendIngredient = await productApiService.createIngredient(ingredientData);
       return convertBackendIngredient(backendIngredient);
     } catch (error) {
       console.error('Erro ao salvar ingrediente:', error);
@@ -328,15 +321,11 @@ export class ProductManagementService {
         description: ingredient.description,
         unit: ingredient.unit,
         cost_per_unit: ingredient.cost,
-        current_stock: ingredient.currentStock,
-        minimum_stock: ingredient.minimumStock,
-        is_out_of_stock: ingredient.outOfStock
+        supplier: ingredient.supplier,
+        is_active: ingredient.active
       };
       
-      const backendIngredient = await mockProductService.updateIngredient(id, ingredientData);
-      if (!backendIngredient) {
-        throw new Error('Ingrediente não encontrado');
-      }
+      const backendIngredient = await productApiService.updateIngredient(id, ingredientData);
       return convertBackendIngredient(backendIngredient);
     } catch (error) {
       console.error('Erro ao atualizar ingrediente:', error);
@@ -346,7 +335,8 @@ export class ProductManagementService {
 
   static async deleteIngredient(id: string): Promise<boolean> {
     try {
-      return await mockProductService.deleteIngredient(id);
+      const result = await productApiService.deleteIngredient(id);
+      return result.success;
     } catch (error) {
       console.error('Erro ao excluir ingrediente:', error);
       throw error;
@@ -356,8 +346,24 @@ export class ProductManagementService {
   // Produtos
   static async getProducts(): Promise<Product[]> {
     try {
-      const backendProducts = await mockProductService.getProducts({ type: 'SIMPLE' });
-      return backendProducts.map(convertBackendProduct);
+      const backendProducts = await productApiService.getActiveProducts();
+      return backendProducts.map(product => ({
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
+        categoryId: product.category_id || '',
+        price: product.price,
+        cost: product.price * 0.6, // Estimativa
+        ingredients: [],
+        allergens: [],
+        preparationTime: 15,
+        image: product.image_url,
+        imageUrl: product.image_url,
+        available: product.status === 'ACTIVE',
+        active: product.status === 'ACTIVE',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }));
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
       return [];
@@ -371,18 +377,30 @@ export class ProductManagementService {
         description: product.description,
         price: product.price,
         category_id: product.categoryId,
-        image_url: product.image,
-        is_available: product.available,
         status: product.active ? 'ACTIVE' : 'INACTIVE',
-        ingredients: product.ingredients.map(ing => ({
-          id: ing.ingredientId,
-          quantity: ing.quantity,
-          is_required: ing.required
-        })),
+        type: 'SIMPLE',
+        is_featured: false,
+        weight_based: false
       };
       
-      const backendProduct = await mockProductService.createProduct(productData);
-      return convertBackendProduct(backendProduct);
+      const backendProduct = await productApiService.createProduct(productData);
+      return {
+        id: backendProduct.id,
+        name: backendProduct.name,
+        description: backendProduct.description || '',
+        categoryId: backendProduct.category_id || '',
+        price: backendProduct.price,
+        cost: product.cost,
+        ingredients: product.ingredients,
+        allergens: product.allergens,
+        preparationTime: product.preparationTime,
+        image: backendProduct.images[0],
+        imageUrl: backendProduct.images[0],
+        available: backendProduct.status === 'ACTIVE',
+        active: backendProduct.status === 'ACTIVE',
+        createdAt: backendProduct.created_at,
+        updatedAt: backendProduct.updated_at
+      };
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
       throw error;
@@ -396,16 +414,27 @@ export class ProductManagementService {
         description: product.description,
         price: product.price,
         category_id: product.categoryId,
-        image_url: product.image,
-        is_available: product.available,
         status: product.active ? 'ACTIVE' : 'INACTIVE'
       };
       
-      const backendProduct = await mockProductService.updateProduct(id, productData);
-      if (!backendProduct) {
-        throw new Error('Produto não encontrado');
-      }
-      return convertBackendProduct(backendProduct);
+      const backendProduct = await productApiService.updateProduct(id, productData);
+      return {
+        id: backendProduct.id,
+        name: backendProduct.name,
+        description: backendProduct.description || '',
+        categoryId: backendProduct.category_id || '',
+        price: backendProduct.price,
+        cost: product.cost || backendProduct.price * 0.6,
+        ingredients: product.ingredients || [],
+        allergens: product.allergens || [],
+        preparationTime: product.preparationTime || 15,
+        image: backendProduct.images[0],
+        imageUrl: backendProduct.images[0],
+        available: backendProduct.status === 'ACTIVE',
+        active: backendProduct.status === 'ACTIVE',
+        createdAt: backendProduct.created_at,
+        updatedAt: backendProduct.updated_at
+      };
     } catch (error) {
       console.error('Erro ao atualizar produto:', error);
       throw error;
@@ -414,7 +443,8 @@ export class ProductManagementService {
 
   static async deleteProduct(id: string): Promise<boolean> {
     try {
-      return await mockProductService.deleteProduct(id);
+      const result = await productApiService.deleteProduct(id);
+      return result.success;
     } catch (error) {
       console.error('Erro ao excluir produto:', error);
       throw error;

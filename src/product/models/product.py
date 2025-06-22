@@ -1,133 +1,234 @@
-# Updating the Order model to support coupon and points redemption
-
 from pydantic import BaseModel, Field
-from typing import List, Optional, Literal
+from typing import List, Optional, Dict, Any
 from datetime import datetime
-import uuid
 from enum import Enum
+import uuid
 
-# Existing models (assuming these are already defined)
-class OrderItemCustomization(BaseModel):
+# Enums
+class ProductStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    OUT_OF_STOCK = "OUT_OF_STOCK"
+
+class ProductType(str, Enum):
+    SIMPLE = "SIMPLE"
+    COMBO = "COMBO"
+    COMPOSITE = "COMPOSITE"
+
+class PricingStrategy(str, Enum):
+    FIXED = "FIXED"
+    WEIGHT_BASED = "WEIGHT_BASED"
+    DYNAMIC = "DYNAMIC"
+
+# Base Models
+class ProductBase(BaseModel):
     name: str
-    price_adjustment: float = 0.0
+    description: Optional[str] = None
+    price: float
+    category_id: Optional[str] = None
+    sku: Optional[str] = None
+    barcode: Optional[str] = None
+    status: ProductStatus = ProductStatus.ACTIVE
+    type: ProductType = ProductType.SIMPLE
+    is_featured: bool = False
+    weight_based: bool = False
+    pricing_strategy: PricingStrategy = PricingStrategy.FIXED
 
-class OrderItemSection(BaseModel):
-    section_id: str
-    product_id: str
-
-class OrderStatus(str, Enum):
-    PENDING = "PENDING"
-    PREPARING = "PREPARING"
-    READY = "READY"
-    DELIVERED = "DELIVERED"
-    CANCELLED = "CANCELLED"
-    DELIVERING = "DELIVERING"  # Added for remote orders integration
-
-class PaymentStatus(str, Enum):
-    PENDING = "PENDING"
-    PAID = "PAID"
-    REFUNDED = "REFUNDED"
-    CANCELLED = "CANCELLED"
-
-class PaymentMethod(str, Enum):
-    CASH = "CASH"
-    CREDIT = "CREDIT"
-    DEBIT = "DEBIT"
-    PIX = "PIX"
-    OTHER = "OTHER"
-
-class OrderType(str, Enum):
-    DINE_IN = "DINE_IN"
-    TAKEOUT = "TAKEOUT"
-    DELIVERY = "DELIVERY"
-
-# Updated Order models with coupon and points redemption support
-class OrderItemBase(BaseModel):
-    product_id: str
-    quantity: int = 1
-    customizations: List[OrderItemCustomization] = []
-    sections: List[OrderItemSection] = []
-    notes: Optional[str] = None
-
-class OrderItemCreate(OrderItemBase):
+class ProductCreate(ProductBase):
     pass
 
-class OrderItem(OrderItemBase):
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    category_id: Optional[str] = None
+    sku: Optional[str] = None
+    barcode: Optional[str] = None
+    status: Optional[ProductStatus] = None
+    type: Optional[ProductType] = None
+    is_featured: Optional[bool] = None
+    weight_based: Optional[bool] = None
+    pricing_strategy: Optional[PricingStrategy] = None
+
+class Product(ProductBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    order_id: str
-    product_name: str
-    product_type: str
-    unit_price: float
-    total_price: float
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    images: List[str] = []
+    ingredients: List[Dict[str, Any]] = []
+    combo_items: List[Dict[str, Any]] = []
+
+class ProductSummary(BaseModel):
+    id: str
+    name: str
+    price: float
+    category_id: Optional[str] = None
+    status: ProductStatus
+    type: ProductType
+    is_featured: bool
+    image_url: Optional[str] = None
+
+# Category Models
+class CategoryBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    color: Optional[str] = None
+    icon: Optional[str] = None
+    is_active: bool = True
+
+class CategoryCreate(CategoryBase):
+    pass
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    color: Optional[str] = None
+    icon: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class ProductCategory(CategoryBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-class OrderItemUpdate(BaseModel):
-    quantity: Optional[int] = None
-    customizations: Optional[List[OrderItemCustomization]] = None
-    notes: Optional[str] = None
-
-class OrderBase(BaseModel):
-    customer_id: Optional[str] = None
-    customer_name: Optional[str] = None
-    cashier_id: Optional[str] = None
-    table_number: Optional[int] = None
-    order_type: OrderType = OrderType.DINE_IN
-    notes: Optional[str] = None
-
-class OrderCreate(OrderBase):
-    items: List[OrderItemCreate] = []
-
-class Order(OrderBase):
+# Image Models
+class ProductImage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    order_number: str
-    status: OrderStatus = OrderStatus.PENDING
-    payment_status: PaymentStatus = PaymentStatus.PENDING
-    payment_method: Optional[PaymentMethod] = None
-    items: List[OrderItem] = []
-    subtotal: float = 0.0
-    tax: float = 0.0
-    discount: float = 0.0
-    total: float = 0.0
-    
-    # New fields for coupon and points redemption
-    applied_coupon_code: Optional[str] = None
-    coupon_discount: float = 0.0
-    points_redeemed: Optional[int] = None
-    points_discount: float = 0.0
-    
+    product_id: str
+    url: str
+    filename: str
+    is_main: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ImageUploadResponse(BaseModel):
+    id: str
+    url: str
+    filename: str
+    message: str
+
+# Combo Models
+class ComboItem(BaseModel):
+    product_id: str
+    quantity: int = 1
+    is_optional: bool = False
+    price_adjustment: float = 0.0
+
+# Ingredient Models
+class IngredientBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    unit: str = "unit"
+    cost_per_unit: float = 0.0
+    supplier: Optional[str] = None
+    is_active: bool = True
+
+class IngredientCreate(IngredientBase):
+    pass
+
+class IngredientUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    unit: Optional[str] = None
+    cost_per_unit: Optional[float] = None
+    supplier: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class Ingredient(IngredientBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    current_stock: float = 0.0
+    minimum_stock: float = 0.0
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    completed_at: Optional[datetime] = None
 
-class OrderUpdate(BaseModel):
-    status: Optional[OrderStatus] = None
-    payment_status: Optional[PaymentStatus] = None
-    payment_method: Optional[PaymentMethod] = None
-    tax: Optional[float] = None
-    discount: Optional[float] = None
-    notes: Optional[str] = None
-    
-    # New fields for coupon and points redemption
-    applied_coupon_code: Optional[str] = None
-    coupon_discount: Optional[float] = None
-    points_redeemed: Optional[int] = None
-    points_discount: Optional[float] = None
+# Menu Models
+class MenuBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    is_active: bool = True
 
-# New models for applying discounts during order finalization
-class ApplyCouponRequest(BaseModel):
-    coupon_code: str
-    
-class ApplyPointsRequest(BaseModel):
-    points_to_redeem: int
+class MenuCreate(MenuBase):
+    pass
 
-class DiscountResponse(BaseModel):
-    subtotal: float
-    coupon_discount: float = 0.0
-    points_discount: float = 0.0
-    total_discount: float
-    tax: float
-    total: float
-    applied_coupon_code: Optional[str] = None
-    points_redeemed: Optional[int] = None
-    remaining_points: Optional[int] = None
+class MenuUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class Menu(MenuBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Option Models
+class OptionBase(BaseModel):
+    name: str
+    price_adjustment: float = 0.0
+    is_active: bool = True
+
+class OptionCreate(OptionBase):
+    pass
+
+class Option(OptionBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    group_id: str
+
+class OptionGroupBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    is_required: bool = False
+    max_selections: int = 1
+    is_active: bool = True
+
+class OptionGroupCreate(OptionGroupBase):
+    options: List[OptionCreate] = []
+
+class OptionGroupUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    is_required: Optional[bool] = None
+    max_selections: Optional[int] = None
+    is_active: Optional[bool] = None
+
+class OptionGroup(OptionGroupBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    options: List[Option] = []
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Composite Product Models
+class CompositeSectionBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    min_items: int = 0
+    max_items: Optional[int] = None
+    is_required: bool = False
+
+class CompositeSectionCreate(CompositeSectionBase):
+    pass
+
+class CompositeSection(CompositeSectionBase):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    product_id: str
+
+class CompositeProductCreate(ProductBase):
+    sections: List[CompositeSectionCreate] = []
+
+class CompositeProductUpdate(ProductUpdate):
+    sections: Optional[List[CompositeSectionCreate]] = None
+
+# Exchange Group Models
+class ExchangeGroup(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: Optional[str] = None
+    product_ids: List[str] = []
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Menu Export Models
+class MenuExport(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    format: str
+    file_path: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
