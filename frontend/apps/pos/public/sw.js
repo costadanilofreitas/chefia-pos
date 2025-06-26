@@ -71,7 +71,13 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // Handle API requests
+  // Allow localhost requests to pass through (for development backends)
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    // Don't intercept localhost requests - let them go directly to backend
+    return;
+  }
+  
+  // Handle API requests (only for same-origin requests)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(handleApiRequest(request));
     return;
