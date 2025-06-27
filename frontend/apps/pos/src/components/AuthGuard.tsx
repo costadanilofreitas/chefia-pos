@@ -55,7 +55,11 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     setLoginError('');
 
     try {
-      const loggedUser = await login(loginForm.username, loginForm.password);
+      const credentials = {
+        operator_id: loginForm.username,
+        password: loginForm.password
+      };
+      const loggedUser = await login(credentials);
       
       if (requiredRole && loggedUser.role !== requiredRole) {
         setLoginError(`Acesso negado. É necessário ser ${requiredRole} para acessar esta área.`);
