@@ -2,6 +2,7 @@ import bcrypt
 import secrets
 import random
 import uuid
+import os
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 import jwt
@@ -41,7 +42,7 @@ class NumericPasswordService:
             ValueError: Se o operador já possuir credencial
         """
         # Verificar se já existe credencial para este operador
-        existing = await self.repository.get_credential_by_operator_id(credential_data.operator_id)
+        existing = self.repository.get_credentials(credential_data.operator_id)
         if existing:
             raise ValueError(f"Operador {credential_data.operator_id} já possui credencial")
         
@@ -50,7 +51,7 @@ class NumericPasswordService:
         password_hash = self._hash_password(credential_data.password, salt)
         
         # Criar credencial
-        now = datetime.now()
+        now = datetime.utcnow()
         credential = OperatorCredential(
             id=str(uuid.uuid4()),
             operator_id=credential_data.operator_id,
@@ -66,7 +67,7 @@ class NumericPasswordService:
         )
         
         # Salvar no repositório
-        return await self.repository.create_credential(credential)
+        return self.repository.create_credentials(credential)
     
     async def update_password(self, operator_id: str, update_data: OperatorCredentialUpdate) -> OperatorCredential:
         """
@@ -84,7 +85,7 @@ class NumericPasswordService:
             ValueError: Se o operador não possuir credencial
         """
         # Obter credencial atual
-        credential = await self.repository.get_credential_by_operator_id(operator_id)
+        credential = self.repository.get_credentials(operator_id)
         if not credential:
             raise ValueError(f"Operador {operator_id} não possui credencial")
         
@@ -103,14 +104,14 @@ class NumericPasswordService:
         # Atualizar credencial
         credential.password_hash = password_hash
         credential.salt = salt
-        credential.last_password_change = datetime.now()
-        credential.updated_at = datetime.now()
+        credential.last_password_change = datetime.utcnow()
+        credential.updated_at = datetime.utcnow()
         credential.failed_attempts = 0
         credential.is_locked = False
         credential.lock_expiration = None
         
         # Salvar no repositório
-        return await self.repository.update_credential(credential)
+        return self.repository.update_credentials(credential)
     
     async def reset_password(self, reset_data: OperatorCredentialReset) -> Dict[str, Any]:
         """
@@ -126,7 +127,7 @@ class NumericPasswordService:
             ValueError: Se o operador não possuir credencial
         """
         # Obter credencial atual
-        credential = await self.repository.get_credential_by_operator_id(reset_data.operator_id)
+        credential = self.repository.get_credentials(reset_data.operator_id)
         if not credential:
             raise ValueError(f"Operador {reset_data.operator_id} não possui credencial")
         
@@ -142,14 +143,14 @@ class NumericPasswordService:
         # Atualizar credencial
         credential.password_hash = password_hash
         credential.salt = salt
-        credential.last_password_change = datetime.now()
-        credential.updated_at = datetime.now()
+        credential.last_password_change = datetime.utcnow()
+        credential.updated_at = datetime.utcnow()
         credential.failed_attempts = 0
         credential.is_locked = False
         credential.lock_expiration = None
         
         # Salvar no repositório
-        updated_credential = await self.repository.update_credential(credential)
+        updated_credential = self.repository.update_credentials(credential)
         
         return {
             "credential": updated_credential,
@@ -171,60 +172,55 @@ class NumericPasswordService:
             ValueError: Se a conta estiver bloqueada
         """
         # Obter credencial
-        credential = await self.repository.get_credential_by_operator_id(login_data.operator_id)
+        credential = self.repository.get_credentials(login_data.operator_id)
         if not credential:
             raise ValueError("Credenciais inválidas")
         
         # Verificar se a conta está bloqueada
-        if credential.is_locked:
-            if credential.lock_expiration and credential.lock_expiration > datetime.now():
-                minutes_remaining = (credential.lock_expiration - datetime.now()).total_seconds() / 60
+        if credential.locked_until:
+            if credential.locked_until > datetime.utcnow():
+                minutes_remaining = (credential.locked_until - datetime.utcnow()).total_seconds() / 60
                 raise ValueError(f"Conta bloqueada. Tente novamente em {int(minutes_remaining)} minutos")
             else:
                 # Desbloquear conta se o tempo expirou
-                credential.is_locked = False
-                credential.lock_expiration = None
-                await self.repository.update_credential(credential)
+                credential.locked_until = None
+                self.repository.update_credentials(credential)
         
         # Verificar senha
-        if not self._verify_password(login_data.password, credential.password_hash, credential.salt):
+        if not self.repository.verify_password(login_data.operator_id, login_data.password):
             # Incrementar contador de tentativas falhas
             credential.failed_attempts += 1
-            credential.last_failed_attempt = datetime.now()
+            credential.last_failed_attempt = datetime.utcnow()
             
             # Verificar se deve bloquear a conta
             if credential.failed_attempts >= self.config.max_failed_attempts:
-                credential.is_locked = True
-                credential.lock_expiration = datetime.now() + timedelta(minutes=self.config.lock_duration_minutes)
-                await self.repository.update_credential(credential)
+                credential.locked_until = datetime.utcnow() + timedelta(minutes=self.config.lock_duration_minutes)
+                self.repository.update_credentials(credential)
                 raise ValueError(f"Conta bloqueada por {self.config.lock_duration_minutes} minutos devido a múltiplas tentativas falhas")
             
-            await self.repository.update_credential(credential)
+            self.repository.update_credentials(credential)
             raise ValueError("Credenciais inválidas")
         
         # Resetar contador de tentativas falhas
         if credential.failed_attempts > 0:
             credential.failed_attempts = 0
             credential.last_failed_attempt = None
-            await self.repository.update_credential(credential)
-        
-        # Obter informações do operador
-        operator = await self.repository.get_operator(login_data.operator_id)
+            self.repository.update_credentials(credential)
         
         # Verificar se a senha expirou
         require_password_change = False
         if self.config.password_expiry_days > 0:
-            password_age = (datetime.now() - credential.last_password_change).days
+            password_age = (datetime.utcnow() - credential.created_at).days
             if password_age > self.config.password_expiry_days:
                 require_password_change = True
         
         # Gerar token JWT
-        token_expiry = datetime.now() + timedelta(minutes=self.config.session_expiry_minutes)
+        token_expiry = datetime.utcnow() + timedelta(minutes=self.config.session_expiry_minutes)
         token_payload = {
             "sub": login_data.operator_id,
-            "name": operator.get("name", ""),
-            "roles": operator.get("roles", []),
-            "permissions": operator.get("permissions", []),
+            "name": credential.name,
+            "roles": [credential.role],
+            "permissions": [],
             "exp": token_expiry.timestamp(),
             "require_password_change": require_password_change
         }
@@ -237,9 +233,9 @@ class NumericPasswordService:
             token_type="bearer",
             expires_in=self.config.session_expiry_minutes * 60,
             operator_id=login_data.operator_id,
-            operator_name=operator.get("name", ""),
-            roles=operator.get("roles", []),
-            permissions=operator.get("permissions", []),
+            operator_name=credential.name,
+            roles=[credential.role],
+            permissions=[],
             require_password_change=require_password_change
         )
     

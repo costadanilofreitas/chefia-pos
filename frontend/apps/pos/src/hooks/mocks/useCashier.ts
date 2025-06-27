@@ -1,5 +1,5 @@
 // src/hooks/mocks/useCashier.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTerminalConfig } from '../useTerminalConfig';
 import { createApiClient } from '../../services/ApiClient';
 
@@ -30,9 +30,12 @@ export const useCashier = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const apiClient = config ? createApiClient(config) : null;
+  // Memoizar apiClient para evitar recriação desnecessária
+  const apiClient = useMemo(() => {
+    return config ? createApiClient(config) : null;
+  }, [config]);
 
-  const openCashier = async (data: any, businessDayId?: string) => {
+  const openCashier = useCallback(async (data: any, businessDayId?: string) => {
     if (!apiClient || !config) {
       throw new Error('API client not initialized');
     }
@@ -72,9 +75,9 @@ export const useCashier = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiClient, config]);
 
-  const closeCashier = async (data: any, notes?: string) => {
+  const closeCashier = useCallback(async (data: any, notes?: string) => {
     if (!apiClient || !currentCashier) {
       throw new Error('No active cashier to close');
     }
@@ -109,9 +112,9 @@ export const useCashier = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiClient, currentCashier]);
 
-  const withdraw = async (amount: number, reason: string, authorizedBy?: string) => {
+  const withdraw = useCallback(async (amount: number, reason: string, authorizedBy?: string) => {
     if (!apiClient || !currentCashier) {
       throw new Error('No active cashier for withdrawal');
     }
@@ -137,9 +140,9 @@ export const useCashier = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiClient, currentCashier]);
 
-  const getStatus = async () => {
+  const getStatus = useCallback(async () => {
     if (!apiClient || !currentCashier) {
       return null;
     }
@@ -151,14 +154,14 @@ export const useCashier = () => {
       console.error('Failed to get cashier status:', err);
       return null;
     }
-  };
+  }, [apiClient, currentCashier]);
 
-  const getOpenCashiers = async () => {
+  const getOpenCashiers = useCallback(async () => {
     // Mock implementation - retorna array vazio por enquanto
     return [];
-  };
+  }, []);
 
-  const registerCashOut = async (data: any, reason?: string) => {
+  const registerCashOut = useCallback(async (data: any, reason?: string) => {
     // Suportar tanto formato antigo quanto novo
     let amount: number;
     let withdrawReason: string;
@@ -174,11 +177,11 @@ export const useCashier = () => {
     }
     
     return await withdraw(amount, withdrawReason);
-  };
+  }, [withdraw]);
 
-  const getCurrentCashier = async () => {
+  const getCurrentCashier = useCallback(async () => {
     return await getStatus();
-  };
+  }, [getStatus]);
 
   return {
     currentCashier,
