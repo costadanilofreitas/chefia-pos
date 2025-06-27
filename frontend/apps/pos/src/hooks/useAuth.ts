@@ -4,7 +4,9 @@ import { apiInterceptor, TokenData } from '../services/ApiInterceptor';
 export enum UserRole {
   ADMIN = "admin",
   MANAGER = "manager", 
-  CASHIER = "cashier"
+  CASHIER = "cashier",
+  WAITER = "waiter",
+  COOK = "cook"
 }
 
 export enum Permission {
