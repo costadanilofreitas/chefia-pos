@@ -1,27 +1,40 @@
-// /home/ubuntu/pos-modern/frontend/apps/kiosk/src/ui/ProductCard.jsx
+// /home/ubuntu/pos-modern/frontend/apps/kiosk/src/ui/ProductCard.tsx
 
 import React from 'react';
 import { formatCurrency } from '@common/utils/formatters';
 
-const ProductCard = ({ product, onAddToCart }) => {
+type Product = {
+  id: string | number;
+  name: string;
+  description: string;
+  price: number;
+  image_url?: string;
+};
+
+type ProductCardProps = {
+  product: Product;
+  onAddToCart: (product: Product) => void;
+};
+
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   const handleClick = () => {
     onAddToCart(product);
   };
 
   return (
     <div className="product-card" onClick={handleClick}>
-      {product.image_url && (
-        <img 
-          src={product.image_url} 
-          alt={product.name} 
+      {product.image_url ? (
+        <img
+          src={product.image_url}
+          alt={product.name}
           className="product-image"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = '/assets/placeholder-food.png';
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = '/assets/placeholder-food.png';
           }}
         />
-      )}
-      {!product.image_url && (
+      ) : (
         <div className="product-image-placeholder">
           <span className="placeholder-icon">🍔</span>
         </div>

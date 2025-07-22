@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Form, Button, Nav, Alert, Spinner, Badge } from 'react-bootstrap';
-import { kdsService, Order, OrderItem } from '../services/kdsService';
+import { kdsService, Order } from '../services/kdsService';
 import './KDSDashboard.css';
 
 interface Station {
@@ -98,7 +98,7 @@ const KDSDashboard: React.FC = () => {
         // Atualização local para feedback imediato
         setOrders(prevOrders => 
           prevOrders.map(order => {
-            if (order.order_id === orderId) {
+            if (order.id === Number(orderId)) {
               return {
                 ...order,
                 items: order.items.map(item => {
@@ -131,7 +131,7 @@ const KDSDashboard: React.FC = () => {
       
       if (success) {
         // Remover o pedido da lista local
-        setOrders(prevOrders => prevOrders.filter(order => order.order_id !== orderId));
+        setOrders(prevOrders => prevOrders.filter(order => order.id !== Number(orderId)));
         console.log(`Pedido ${orderId} marcado como completo`);
       } else {
         setError('Falha ao completar pedido. Tente novamente.');
@@ -270,7 +270,7 @@ const KDSDashboard: React.FC = () => {
         ) : (
           <>
             {sortedOrders.map(order => (
-              <Col key={order.order_id} lg={4} md={6} className="mb-3">
+              <Col key={order.id} lg={4} md={6} className="mb-3">
                 <Card className={`order-card priority-${order.priority}`}>
                   <Card.Header>
                     <div className="d-flex justify-content-between align-items-center">
@@ -309,7 +309,7 @@ const KDSDashboard: React.FC = () => {
                                 variant={item.status === 'ready' ? 'success' : 'outline-success'} 
                                 size="sm"
                                 onClick={() => handleItemStatusChange(
-                                  order.order_id, 
+                                  order.id.toString(), 
                                   item.item_id, 
                                   item.status === 'ready' ? 'preparing' : 'ready'
                                 )}
@@ -329,7 +329,7 @@ const KDSDashboard: React.FC = () => {
                     <Button 
                       variant="primary" 
                       className="w-100"
-                      onClick={() => handleOrderComplete(order.order_id)}
+                      onClick={() => handleOrderComplete(order.id.toString())}
                     >
                       Completar Pedido
                     </Button>

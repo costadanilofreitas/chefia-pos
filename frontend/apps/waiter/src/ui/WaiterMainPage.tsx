@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import TableLayoutEditor from '@common/components/layout/TableLayoutEditor';
-import { Container, Grid, Typography, Box, Tabs, Tab, Paper, Button, Badge, CircularProgress, Alert } from '@mui/material';
+import {
+  Container,
+  Grid,
+  Typography,
+  Box,
+  Tabs,
+  Tab,
+  Paper,
+  Button,
+  Badge,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
-import LocalBarIcon from '@mui/icons-material/LocalBar';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import TableRestaurantIcon from '@mui/icons-material/TableRestaurant';
 import { useAuth } from '@common/contexts/auth/hooks/useAuth';
 import { useOrder } from '@common/contexts/order/hooks/useOrder';
-import { waiterService, Table, Order, OrderItem } from '../services/waiterService';
+import { waiterService, Table, Order } from '../services/waiterService';
 
-/**
- * Página principal do aplicativo de Garçom
- * @returns {JSX.Element} Componente da página principal do Garçom
- */
 const WaiterMainPage: React.FC = () => {
   // Estados
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -24,7 +31,7 @@ const WaiterMainPage: React.FC = () => {
 
   // Hooks
   const { user } = useAuth();
-  const { createOrder, getOrdersByTable } = useOrder();
+  const {  } = useOrder();
 
   // Efeito para carregar mesas e pedidos
   useEffect(() => {
@@ -32,60 +39,57 @@ const WaiterMainPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        // Buscar dados das mesas da API
         const tablesData = await waiterService.getTables();
         setTables(tablesData);
-        
-        // Buscar pedidos ativos da API
+
         const ordersData = await waiterService.getOrders();
         setOrders(ordersData);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
         setError('Falha ao carregar dados. Tente novamente.');
-        
-        // Dados de fallback em caso de erro
+
+        // Dados fallback em caso de erro
         const fallbackTables: Table[] = [
           { id: 1, number: 1, status: 'available', seats: 4, shape: 'square', x: 100, y: 100 },
           { id: 2, number: 2, status: 'occupied', seats: 2, shape: 'round', x: 250, y: 100 },
-          { id: 3, number: 3, status: 'reserved', seats: 6, shape: 'rectangle', x: 400, y: 100 }
+          { id: 3, number: 3, status: 'reserved', seats: 6, shape: 'rectangle', x: 400, y: 100 },
         ];
-        
+
         const fallbackOrders: Order[] = [
           {
             id: 1,
             table_id: 2,
             status: 'in_progress',
             items: [
-              { id: 1, name: 'Hambúrguer', quantity: 2, price: 25.90, status: 'preparing' },
-              { id: 2, name: 'Refrigerante', quantity: 2, price: 6.50, status: 'ready' }
+              { id: 1, name: 'Hambúrguer', quantity: 2, price: 25.9, status: 'preparing' },
+              { id: 2, name: 'Refrigerante', quantity: 2, price: 6.5, status: 'ready' },
             ],
-            created_at: new Date(Date.now() - 30 * 60000).toISOString()
-          }
+            created_at: new Date(Date.now() - 30 * 60000).toISOString(),
+          },
         ];
-        
+
         setTables(fallbackTables);
         setOrders(fallbackOrders);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, []);
 
   // Manipular mudança de tab
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number): void => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number): void => {
     setActiveTab(newValue);
   };
 
   // Manipular seleção de mesa
   const handleTableSelect = async (tableId: number): Promise<void> => {
-    const table = tables.find(t => t.id === tableId);
+    const table = tables.find((t) => t.id === tableId);
     if (table) {
       setSelectedTable(table);
-      
+
       try {
-        // Buscar pedidos da mesa selecionada da API
         const tableOrders = await waiterService.getOrdersByTable(tableId);
         console.log('Pedidos da mesa:', tableOrders);
       } catch (error) {
@@ -98,13 +102,10 @@ const WaiterMainPage: React.FC = () => {
   // Manipular criação de novo pedido
   const handleNewOrder = async (): Promise<void> => {
     if (!selectedTable) return;
-    
+
     try {
-      // Criar novo pedido via API
       const newOrder = await waiterService.createOrder(selectedTable.id, []);
-      
-      // Adicionar o novo pedido à lista local
-      setOrders([...orders, newOrder]);
+      setOrders((prevOrders) => [...prevOrders, newOrder]);
       console.log('Novo pedido criado:', newOrder);
     } catch (error) {
       console.error('Erro ao criar pedido:', error);
@@ -116,13 +117,9 @@ const WaiterMainPage: React.FC = () => {
   const handleUpdateTableStatus = async (tableId: number, status: Table['status']): Promise<void> => {
     try {
       const success = await waiterService.updateTableStatus(tableId, status);
-      
       if (success) {
-        // Atualizar o status da mesa localmente
-        setTables(prevTables => 
-          prevTables.map(table => 
-            table.id === tableId ? { ...table, status } : table
-          )
+        setTables((prevTables) =>
+          prevTables.map((table) => (table.id === tableId ? { ...table, status } : table))
         );
         console.log(`Status da mesa ${tableId} atualizado para ${status}`);
       } else {
@@ -138,21 +135,18 @@ const WaiterMainPage: React.FC = () => {
   const handleDeliverItems = async (orderId: number, itemIds: number[]): Promise<void> => {
     try {
       const success = await waiterService.deliverOrderItems(orderId, itemIds);
-      
       if (success) {
-        // Atualizar o status dos itens localmente
-        setOrders(prevOrders => 
-          prevOrders.map(order => {
-            if (order.id === orderId) {
-              return {
-                ...order,
-                items: order.items.map(item => 
-                  itemIds.includes(item.id) ? { ...item, status: 'delivered' } : item
-                )
-              };
-            }
-            return order;
-          })
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.id === orderId
+              ? {
+                  ...order,
+                  items: order.items.map((item) =>
+                    itemIds.includes(item.id) ? { ...item, status: 'delivered' } : item
+                  ),
+                }
+              : order
+          )
         );
         console.log(`Itens ${itemIds.join(', ')} do pedido ${orderId} entregues`);
       } else {
@@ -167,7 +161,7 @@ const WaiterMainPage: React.FC = () => {
   // Renderizar conteúdo baseado na tab ativa
   const renderTabContent = (): React.ReactNode => {
     switch (activeTab) {
-      case 0: // Mesas
+      case 0:
         return (
           <Box sx={{ mt: 2 }}>
             <Paper sx={{ p: 2, mb: 2 }}>
@@ -175,14 +169,10 @@ const WaiterMainPage: React.FC = () => {
                 Layout do Restaurante
               </Typography>
               <Box sx={{ height: 500, border: '1px solid #ccc', borderRadius: 1 }}>
-                <TableLayoutEditor 
-                  tables={tables}
-                  onTableSelect={handleTableSelect}
-                  readOnly={true}
-                />
+                <TableLayoutEditor tables={tables} onTableSelect={handleTableSelect} readOnly />
               </Box>
             </Paper>
-            
+
             {selectedTable && (
               <Paper sx={{ p: 2 }}>
                 <Typography variant="h6" gutterBottom>
@@ -191,16 +181,18 @@ const WaiterMainPage: React.FC = () => {
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
                     <Typography>
-                      Status: {selectedTable.status === 'available' ? 'Disponível' : 
-                              selectedTable.status === 'occupied' ? 'Ocupada' : 'Reservada'}
+                      Status:{' '}
+                      {selectedTable.status === 'available'
+                        ? 'Disponível'
+                        : selectedTable.status === 'occupied'
+                        ? 'Ocupada'
+                        : 'Reservada'}
                     </Typography>
-                    <Typography>
-                      Lugares: {selectedTable.seats}
-                    </Typography>
+                    <Typography>Lugares: {selectedTable.seats}</Typography>
                   </Grid>
                   <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button 
-                      variant="contained" 
+                    <Button
+                      variant="contained"
                       color="primary"
                       disabled={selectedTable.status !== 'occupied'}
                       onClick={handleNewOrder}
@@ -213,15 +205,15 @@ const WaiterMainPage: React.FC = () => {
             )}
           </Box>
         );
-      
-      case 1: // Pedidos
+
+      case 1:
         return (
           <Box sx={{ mt: 2 }}>
             <Typography variant="h6" gutterBottom>
               Pedidos Ativos
             </Typography>
             {orders.length > 0 ? (
-              orders.map(order => (
+              orders.map((order) => (
                 <Paper key={order.id} sx={{ p: 2, mb: 2 }}>
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
@@ -233,16 +225,15 @@ const WaiterMainPage: React.FC = () => {
                       </Typography>
                     </Grid>
                     <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button 
-                        variant="outlined" 
+                      <Button
+                        variant="outlined"
                         color={order.status === 'ready' ? 'success' : 'primary'}
                         onClick={() => {
                           if (order.status === 'ready') {
-                            // Marcar todos os itens prontos como entregues
                             const readyItemIds = order.items
-                              .filter(item => item.status === 'ready')
-                              .map(item => item.id);
-                            
+                              .filter((item) => item.status === 'ready')
+                              .map((item) => item.id);
+
                             if (readyItemIds.length > 0) {
                               handleDeliverItems(order.id, readyItemIds);
                             }
@@ -253,25 +244,30 @@ const WaiterMainPage: React.FC = () => {
                       </Button>
                     </Grid>
                     <Grid item xs={12}>
-                      <Typography variant="subtitle2">
-                        Itens:
-                      </Typography>
-                      {order.items.map(item => (
-                        <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="subtitle2">Itens:</Typography>
+                      {order.items.map((item) => (
+                        <Box
+                          key={item.id}
+                          sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}
+                        >
                           <Typography variant="body2">
                             {item.quantity}x {item.name}
                           </Typography>
-                          <Typography 
-                            variant="body2" 
+                          <Typography
+                            variant="body2"
                             color={
-                              item.status === 'ready' ? 'success.main' : 
-                              item.status === 'delivered' ? 'text.disabled' : 
-                              'text.secondary'
+                              item.status === 'ready'
+                                ? 'success.main'
+                                : item.status === 'delivered'
+                                ? 'text.disabled'
+                                : 'text.secondary'
                             }
                           >
-                            {item.status === 'ready' ? 'Pronto' : 
-                             item.status === 'delivered' ? 'Entregue' : 
-                             'Em preparo'}
+                            {item.status === 'ready'
+                              ? 'Pronto'
+                              : item.status === 'delivered'
+                              ? 'Entregue'
+                              : 'Em preparo'}
                           </Typography>
                         </Box>
                       ))}
@@ -284,19 +280,17 @@ const WaiterMainPage: React.FC = () => {
             )}
           </Box>
         );
-      
-      case 2: // Cardápio
+
+      case 2:
         return (
           <Box sx={{ mt: 2 }}>
             <Typography variant="h6" gutterBottom>
               Cardápio
             </Typography>
-            <Typography>
-              Visualização do cardápio para consulta rápida
-            </Typography>
+            <Typography>Visualização do cardápio para consulta rápida</Typography>
           </Box>
         );
-      
+
       default:
         return null;
     }
@@ -304,7 +298,14 @@ const WaiterMainPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}
+      >
         <CircularProgress />
         <Typography sx={{ ml: 2 }}>Carregando dados...</Typography>
       </Box>
@@ -313,49 +314,45 @@ const WaiterMainPage: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Cabeçalho */}
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" component="h1">
           Garçom
         </Typography>
-        
+
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Typography variant="subtitle1" sx={{ mr: 2 }}>
             {user?.name || 'Usuário'}
           </Typography>
         </Box>
       </Box>
-      
-      {/* Mensagem de erro */}
+
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
-      
-      {/* Tabs de navegação */}
+
       <Paper sx={{ width: '100%' }}>
-        <Tabs 
-          value={activeTab} 
+        <Tabs
+          value={activeTab}
           onChange={handleTabChange}
           variant="fullWidth"
           indicatorColor="primary"
           textColor="primary"
         >
           <Tab icon={<TableRestaurantIcon />} label="Mesas" />
-          <Tab 
+          <Tab
             icon={
               <Badge badgeContent={orders.length} color="error">
                 <ReceiptIcon />
               </Badge>
-            } 
-            label="Pedidos" 
+            }
+            label="Pedidos"
           />
           <Tab icon={<RestaurantIcon />} label="Cardápio" />
         </Tabs>
       </Paper>
-      
-      {/* Conteúdo da tab ativa */}
+
       {renderTabContent()}
     </Container>
   );

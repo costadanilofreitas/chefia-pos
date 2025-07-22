@@ -1,18 +1,34 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, FormControl, InputLabel, Select, MenuItem, Box } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+  SelectChangeEvent
+} from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SettingsIcon from '@mui/icons-material/Settings';
 
+interface KDSHeaderProps {
+  session?: {
+    name?: string;
+  };
+  refreshInterval: number;
+  onRefreshIntervalChange: (interval: number) => void;
+}
+
 /**
  * Componente de cabeçalho para o KDS
- * @param {Object} props - Propriedades do componente
- * @param {Object} props.session - Informações da sessão do KDS
- * @param {number} props.refreshInterval - Intervalo de atualização em segundos
- * @param {Function} props.onRefreshIntervalChange - Função chamada quando o intervalo é alterado
- * @returns {JSX.Element} Componente de cabeçalho do KDS
  */
-const KDSHeader = ({ session, refreshInterval, onRefreshIntervalChange }) => {
-  // Opções de intervalo de atualização
+const KDSHeader: React.FC<KDSHeaderProps> = ({
+  session,
+  refreshInterval,
+  onRefreshIntervalChange
+}) => {
   const refreshOptions = [
     { value: 5, label: '5 segundos' },
     { value: 10, label: '10 segundos' },
@@ -21,8 +37,9 @@ const KDSHeader = ({ session, refreshInterval, onRefreshIntervalChange }) => {
     { value: 60, label: '1 minuto' }
   ];
 
-  const handleRefreshChange = (event) => {
-    onRefreshIntervalChange(event.target.value);
+  const handleRefreshChange = (event: SelectChangeEvent<number>) => {
+    const value = Number(event.target.value);
+    onRefreshIntervalChange(value);
   };
 
   return (
@@ -31,12 +48,12 @@ const KDSHeader = ({ session, refreshInterval, onRefreshIntervalChange }) => {
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           {session?.name || 'KDS'}
         </Typography>
-        
+
         <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
           <RefreshIcon sx={{ mr: 1 }} />
           <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
             <InputLabel id="refresh-interval-label">Atualizar</InputLabel>
-            <Select
+            <Select<number>
               labelId="refresh-interval-label"
               id="refresh-interval"
               value={refreshInterval}
@@ -51,7 +68,7 @@ const KDSHeader = ({ session, refreshInterval, onRefreshIntervalChange }) => {
             </Select>
           </FormControl>
         </Box>
-        
+
         <SettingsIcon />
       </Toolbar>
     </AppBar>

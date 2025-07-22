@@ -1,8 +1,14 @@
-// /home/ubuntu/pos-modern/src/kiosk/ui/WelcomeScreen.jsx
+// /home/ubuntu/pos-modern/src/kiosk/ui/WelcomeScreen.tsx
 
 import React from 'react';
 
-const WelcomeScreen = ({ welcomeMessage, logoUrl, onStart }) => {
+type WelcomeScreenProps = {
+  welcomeMessage: string;
+  logoUrl?: string;
+  onStart: () => void;
+};
+
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ welcomeMessage, logoUrl, onStart }) => {
   return (
     <div className="welcome-screen">
       {logoUrl && (
@@ -10,9 +16,10 @@ const WelcomeScreen = ({ welcomeMessage, logoUrl, onStart }) => {
           src={logoUrl} 
           alt="Logo" 
           className="welcome-logo"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = '/assets/default-logo.png';
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = '/assets/default-logo.png';
           }}
         />
       )}
