@@ -7,13 +7,13 @@ import os
 # Adicionar src ao path
 sys.path.append('/home/ubuntu/chefia-pos')
 
-# Importar router de autenticação
-from src.auth.router.numeric_password_router import router as auth_router
+# Importar router de produtos
+from src.product.router.product_router import router as product_router
 
 # Criar aplicação FastAPI
 app = FastAPI(
-    title="Chefia POS - Auth Service",
-    description="Microserviço de autenticação com senhas numéricas",
+    title="Chefia POS - Product Service (with JWT Auth)",
+    description="Microserviço de produtos com autenticação JWT",
     version="1.0.0"
 )
 
@@ -27,24 +27,28 @@ app.add_middleware(
 )
 
 # Incluir routers
-app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(product_router)
 
 # Health check
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "auth"}
+    return {"status": "healthy", "service": "product-auth"}
 
 # Root endpoint
 @app.get("/")
 async def root():
     return {
-        "service": "Chefia POS - Auth Service",
+        "service": "Chefia POS - Product Service",
         "version": "1.0.0",
-        "description": "Microserviço de autenticação com senhas numéricas",
+        "description": "Microserviço de produtos com autenticação JWT",
+        "auth_required": True,
         "endpoints": {
             "health": "/health",
             "docs": "/docs",
-            "auth": "/api/v1/auth"
+            "categories": "/api/v1/categories",
+            "products": "/api/v1/products",
+            "ingredients": "/api/v1/ingredients",
+            "me": "/api/v1/me"
         }
     }
 
@@ -52,7 +56,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8001,
+        port=8002,
         reload=False
     )
 
