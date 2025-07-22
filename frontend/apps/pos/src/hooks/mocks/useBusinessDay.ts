@@ -1,5 +1,5 @@
 // src/hooks/mocks/useBusinessDay.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTerminalConfig } from '../useTerminalConfig';
 import { createApiClient } from '../../services/ApiClient';
 
@@ -22,9 +22,12 @@ export const useBusinessDay = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const apiClient = config ? createApiClient(config) : null;
+  // Memoizar apiClient para evitar recriação desnecessária
+  const apiClient = useMemo(() => {
+    return config ? createApiClient(config) : null;
+  }, [config]);
 
-  const openDay = async (data?: { store_id?: string; notes?: string }) => {
+  const openDay = useCallback(async (data?: { store_id?: string; notes?: string }) => {
     if (!apiClient || !config) {
       throw new Error('API client not initialized');
     }
@@ -49,9 +52,9 @@ export const useBusinessDay = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiClient, config]);
 
-  const closeDay = async (data?: { notes?: string }) => {
+  const closeDay = useCallback(async (data?: { notes?: string }) => {
     if (!apiClient || !currentDay) {
       throw new Error('No active business day to close');
     }
@@ -71,9 +74,9 @@ export const useBusinessDay = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiClient, currentDay]);
 
-  const getCurrentDay = async () => {
+  const getCurrentDay = useCallback(async () => {
     if (!apiClient) {
       return null;
     }
@@ -86,14 +89,14 @@ export const useBusinessDay = () => {
       console.error('Failed to get current business day:', err);
       return null;
     }
-  };
+  }, [apiClient]);
 
-  // Carregar dia atual na inicialização
+  // Carregar dia atual na inicialização - apenas uma vez quando apiClient estiver disponível
   useEffect(() => {
-    if (apiClient) {
+    if (apiClient && !currentDay) {
       getCurrentDay();
     }
-  }, [apiClient]);
+  }, [apiClient, getCurrentDay, currentDay]);
 
   return {
     currentDay,

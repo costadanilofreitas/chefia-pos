@@ -92,3 +92,37 @@ class AuthConfig(BaseModel):
     lock_duration_minutes: int = 30
     session_expiry_minutes: int = 480  # 8 horas
     password_expiry_days: int = 90  # 3 meses
+
+
+# Modelos adicionais para o repositório
+class NumericPasswordCredentials(BaseModel):
+    """Modelo para credenciais completas de senha numérica."""
+    operator_id: str
+    password_hash: str
+    name: str
+    role: str
+    store_id: str
+    terminal_id: str
+    is_active: bool = True
+    created_at: datetime
+    last_login: Optional[datetime] = None
+    failed_attempts: int = 0
+    locked_until: Optional[datetime] = None
+
+class AuthUser(BaseModel):
+    """Modelo para usuário autenticado."""
+    operator_id: str
+    name: str
+    role: str
+    store_id: str
+    terminal_id: str
+    permissions: List[str] = []
+    is_active: bool = True
+
+class LoginAttempt(BaseModel):
+    """Modelo para tentativa de login."""
+    operator_id: str
+    timestamp: datetime
+    success: bool
+    ip_address: Optional[str] = None
+
