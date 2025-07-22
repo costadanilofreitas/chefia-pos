@@ -1,15 +1,44 @@
-// /home/ubuntu/pos-modern/frontend/apps/kiosk/src/ui/CartSidebar.jsx
+// /home/ubuntu/pos-modern/frontend/apps/kiosk/src/ui/CartSidebar.tsx
 
 import React from 'react';
 import { formatCurrency } from '@common/utils/formatters';
 
-const CartSidebar = ({ 
-  cart, 
-  orderTotal, 
-  onUpdateQuantity, 
-  onRemoveItem, 
-  onContinueShopping, 
-  onCheckout 
+interface Customization {
+  name: string;
+  price_adjustment: number;
+}
+
+interface CartItem {
+  product_name: string;
+  unit_price: number;
+  quantity: number;
+  notes?: string;
+  customizations?: Customization[];
+}
+
+interface OrderTotal {
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+}
+
+interface CartSidebarProps {
+  cart: CartItem[];
+  orderTotal: OrderTotal;
+  onUpdateQuantity: (index: number, newQuantity: number) => void;
+  onRemoveItem: (index: number) => void;
+  onContinueShopping: () => void;
+  onCheckout: () => void;
+}
+
+const CartSidebar: React.FC<CartSidebarProps> = ({
+  cart,
+  orderTotal,
+  onUpdateQuantity,
+  onRemoveItem,
+  onContinueShopping,
+  onCheckout
 }) => {
   return (
     <div className="cart-sidebar">
@@ -20,7 +49,7 @@ const CartSidebar = ({
         <h2>Seu Pedido</h2>
         <div></div> {/* Empty div for flex spacing */}
       </div>
-      
+
       <div className="cart-items">
         {cart.length === 0 ? (
           <div className="empty-cart-message">
@@ -39,9 +68,8 @@ const CartSidebar = ({
                     {item.customizations.map((customization, i) => (
                       <div key={i}>
                         {customization.name}
-                        {customization.price_adjustment > 0 && 
-                          ` (+${formatCurrency(customization.price_adjustment)})`
-                        }
+                        {customization.price_adjustment > 0 &&
+                          ` (+${formatCurrency(customization.price_adjustment)})`}
                       </div>
                     ))}
                   </div>
@@ -55,26 +83,26 @@ const CartSidebar = ({
                   {formatCurrency(item.unit_price)}
                 </div>
               </div>
-              
+
               <div className="cart-item-quantity">
-                <button 
-                  className="quantity-button" 
+                <button
+                  className="quantity-button"
                   onClick={() => onUpdateQuantity(index, item.quantity - 1)}
                   disabled={item.quantity <= 1}
                 >
                   -
                 </button>
                 <span className="quantity-value">{item.quantity}</span>
-                <button 
-                  className="quantity-button" 
+                <button
+                  className="quantity-button"
                   onClick={() => onUpdateQuantity(index, item.quantity + 1)}
                 >
                   +
                 </button>
               </div>
-              
-              <button 
-                className="remove-item-button" 
+
+              <button
+                className="remove-item-button"
                 onClick={() => onRemoveItem(index)}
               >
                 ×
@@ -83,7 +111,7 @@ const CartSidebar = ({
           ))
         )}
       </div>
-      
+
       {cart.length > 0 && (
         <>
           <div className="cart-summary">
@@ -106,16 +134,16 @@ const CartSidebar = ({
               <span>{formatCurrency(orderTotal.total)}</span>
             </div>
           </div>
-          
+
           <div className="cart-actions">
-            <button 
-              className="continue-shopping-button" 
+            <button
+              className="continue-shopping-button"
               onClick={onContinueShopping}
             >
               Continuar Comprando
             </button>
-            <button 
-              className="checkout-button" 
+            <button
+              className="checkout-button"
               onClick={onCheckout}
             >
               Finalizar Pedido

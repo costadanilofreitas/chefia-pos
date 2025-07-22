@@ -1,131 +1,128 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Badge, Button, ProgressBar, ListGroup, Alert, Spinner } from 'react-bootstrap';
+import {
+  Card,
+  Badge,
+  Button,
+  ProgressBar,
+  ListGroup,
+  Alert
+} from 'react-bootstrap';
 import { formatDistanceToNow, addSeconds } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import './KDSOrderCard.css';
 
-/**
- * Componente de card de pedido para o KDS com inteligência de sincronização
- * 
- * Exibe um pedido com seus itens, tempos de preparo estimados e controles
- * para gerenciar o fluxo de trabalho na cozinha.
- */
-const KDSOrderCard = ({ 
-  order, 
-  onItemStatusChange, 
+interface OrderItem {
+  item_id: string;
+  name: string;
+  quantity: number;
+  status: 'pending' | 'preparing' | 'ready' | string;
+  station: string;
+  estimated_start_time: string;
+  estimated_prep_time: number;
+  customizations?: Record<string, string>;
+}
+
+interface Order {
+  order_id: string;
+  order_number: string;
+  type: 'delivery' | 'takeout' | 'dinein' | string;
+  created_at: string;
+  updated_at: string;
+  customer_name?: string;
+  table_number?: string;
+  priority: 'high' | 'medium' | 'normal';
+  items: OrderItem[];
+}
+
+interface KDSOrderCardProps {
+  order: Order;
+  onItemStatusChange: (
+    orderId: string,
+    itemId: string,
+    newStatus: 'preparing' | 'ready'
+  ) => void;
+  onOrderComplete: (orderId: string) => void;
+  currentStation?: string;
+  highlightMode?: 'none' | 'always' | 'auto';
+}
+
+const KDSOrderCard: React.FC<KDSOrderCardProps> = ({
+  order,
+  onItemStatusChange,
   onOrderComplete,
   currentStation,
   highlightMode = 'auto'
 }) => {
   const [now, setNow] = useState(new Date());
   const [expandedItems, setExpandedItems] = useState(true);
-  
-  // Atualizar o tempo atual a cada segundo
+
   useEffect(() => {
-    const timer = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
-    
+    const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
-  
-  // Calcular o tempo de espera do pedido
-  const waitTime = formatDistanceToNow(new Date(order.created_at), { 
-    locale: ptBR, 
-    addSuffix: false 
+
+  const waitTime = formatDistanceToNow(new Date(order.created_at), {
+    locale: ptBR,
+    addSuffix: false
   });
-  
-  // Determinar a prioridade visual do pedido
+
   const getPriorityClass = useCallback(() => {
-    const waitTimeMinutes = (now - new Date(order.created_at)) / (1000 * 60);
-    
-    if (order.priority === 'high' || waitTimeMinutes > 20) {
-      return 'priority-high';
-    } else if (order.priority === 'medium' || waitTimeMinutes > 10) {
-      return 'priority-medium';
-    }
-    
+    const waitTimeMinutes = (now.getTime() - new Date(order.created_at).getTime()) / (1000 * 60);
+
+    if (order.priority === 'high' || waitTimeMinutes > 20) return 'priority-high';
+    if (order.priority === 'medium' || waitTimeMinutes > 10) return 'priority-medium';
     return 'priority-normal';
   }, [order.priority, order.created_at, now]);
-  
-  // Filtrar itens por estação atual (se aplicável)
-  const filteredItems = currentStation 
+
+  const filteredItems = currentStation
     ? order.items.filter(item => item.station === currentStation)
     : order.items;
-  
-  // Verificar se há itens que precisam ser iniciados agora
+
   const hasItemsToStartNow = filteredItems.some(item => {
     if (item.status !== 'pending') return false;
-    
     const startTime = new Date(item.estimated_start_time);
-    const diffSeconds = (startTime - now) / 1000;
-    return diffSeconds <= 0 && diffSeconds > -60; // Iniciar nos últimos 60 segundos
+    const diffSeconds = (startTime.getTime() - now.getTime()) / 1000;
+    return diffSeconds <= 0 && diffSeconds > -60;
   });
-  
-  // Verificar se há itens atrasados
+
   const hasDelayedItems = filteredItems.some(item => {
     if (item.status !== 'pending') return false;
-    
     const startTime = new Date(item.estimated_start_time);
     return now > startTime;
   });
-  
-  // Determinar se o card deve ser destacado
-  const shouldHighlight = () => {
+
+  const shouldHighlight = (): boolean => {
     if (highlightMode === 'none') return false;
     if (highlightMode === 'always') return true;
-    
-    // Modo automático
     return hasItemsToStartNow || hasDelayedItems;
   };
-  
-  // Calcular o progresso geral do pedido
-  const calculateOrderProgress = () => {
-    const totalItems = order.items.length;
-    if (totalItems === 0) return 0;
-    
-    const readyItems = order.items.filter(item => item.status === 'ready').length;
-    const preparingItems = order.items.filter(item => item.status === 'preparing').length;
-    
-    return ((readyItems + (preparingItems * 0.5)) / totalItems) * 100;
+
+  const calculateOrderProgress = (): number => {
+    const total = order.items.length;
+    if (total === 0) return 0;
+    const ready = order.items.filter(i => i.status === 'ready').length;
+    const preparing = order.items.filter(i => i.status === 'preparing').length;
+    return ((ready + preparing * 0.5) / total) * 100;
   };
-  
-  // Renderizar o tempo de início para um item
-  const renderStartTime = (item) => {
+
+  const renderStartTime = (item: OrderItem) => {
     if (item.status !== 'pending') return null;
-    
+
     const startTime = new Date(item.estimated_start_time);
-    const diffSeconds = (startTime - now) / 1000;
-    
+    const diffSeconds = (startTime.getTime() - now.getTime()) / 1000;
+
     if (diffSeconds <= 0) {
-      // Já deveria ter iniciado
-      return (
-        <Badge bg="danger" className="start-now-badge">
-          INICIAR AGORA!
-        </Badge>
-      );
+      return <Badge bg="danger" className="start-now-badge">INICIAR AGORA!</Badge>;
     } else if (diffSeconds < 60) {
-      // Iniciar em menos de 1 minuto
-      return (
-        <Badge bg="warning" className="start-soon-badge">
-          Iniciar em {Math.ceil(diffSeconds)}s
-        </Badge>
-      );
+      return <Badge bg="warning" className="start-soon-badge">Iniciar em {Math.ceil(diffSeconds)}s</Badge>;
     } else {
-      // Iniciar em mais de 1 minuto
       const startAt = addSeconds(now, diffSeconds);
       const timeString = startAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      
-      return (
-        <Badge bg="info" className="start-later-badge">
-          Iniciar às {timeString}
-        </Badge>
-      );
+      return <Badge bg="info" className="start-later-badge">Iniciar às {timeString}</Badge>;
     }
   };
-  
-  // Renderizar o status de um item
-  const renderItemStatus = (item) => {
+
+  const renderItemStatus = (item: OrderItem) => {
     switch (item.status) {
       case 'pending':
         return <Badge bg="secondary">Pendente</Badge>;
@@ -137,20 +134,18 @@ const KDSOrderCard = ({
         return <Badge bg="light" text="dark">{item.status}</Badge>;
     }
   };
-  
-  // Renderizar o tempo estimado de preparo
-  const renderPrepTime = (item) => {
-    const prepTimeMinutes = Math.ceil(item.estimated_prep_time / 60);
-    return `${prepTimeMinutes} min`;
+
+  const renderPrepTime = (item: OrderItem) => {
+    const minutes = Math.ceil(item.estimated_prep_time / 60);
+    return `${minutes} min`;
   };
-  
-  // Renderizar os botões de ação para um item
-  const renderItemActions = (item) => {
+
+  const renderItemActions = (item: OrderItem) => {
     if (item.status === 'pending') {
       return (
-        <Button 
-          variant="primary" 
-          size="sm" 
+        <Button
+          variant="primary"
+          size="sm"
           onClick={() => onItemStatusChange(order.order_id, item.item_id, 'preparing')}
         >
           Iniciar
@@ -158,31 +153,27 @@ const KDSOrderCard = ({
       );
     } else if (item.status === 'preparing') {
       return (
-        <Button 
-          variant="success" 
-          size="sm" 
+        <Button
+          variant="success"
+          size="sm"
           onClick={() => onItemStatusChange(order.order_id, item.item_id, 'ready')}
         >
           Concluir
         </Button>
       );
     }
-    
     return null;
   };
-  
-  // Verificar se todos os itens estão prontos
+
   const allItemsReady = order.items.every(item => item.status === 'ready');
-  
+
   return (
-    <Card 
-      className={`kds-order-card ${getPriorityClass()} ${shouldHighlight() ? 'highlight-card' : ''}`}
-    >
+    <Card className={`kds-order-card ${getPriorityClass()} ${shouldHighlight() ? 'highlight-card' : ''}`}>
       <Card.Header>
         <div className="d-flex justify-content-between align-items-center">
           <div>
             <span className="order-number">Pedido #{order.order_number}</span>
-            <Badge 
+            <Badge
               bg={order.type === 'delivery' ? 'danger' : order.type === 'takeout' ? 'warning' : 'info'}
               className="ms-2"
             >
@@ -199,7 +190,7 @@ const KDSOrderCard = ({
           </div>
         </div>
       </Card.Header>
-      
+
       <Card.Body>
         <div className="mb-3">
           <div className="d-flex justify-content-between align-items-center mb-1">
@@ -208,33 +199,33 @@ const KDSOrderCard = ({
           </div>
           <ProgressBar now={calculateOrderProgress()} />
         </div>
-        
+
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <Button 
-            variant="outline-secondary" 
-            size="sm" 
+          <Button
+            variant="outline-secondary"
+            size="sm"
             onClick={() => setExpandedItems(!expandedItems)}
           >
             {expandedItems ? 'Ocultar Itens' : 'Mostrar Itens'}
           </Button>
-          
+
           {allItemsReady && (
-            <Button 
-              variant="success" 
-              size="sm" 
+            <Button
+              variant="success"
+              size="sm"
               onClick={() => onOrderComplete(order.order_id)}
             >
               Finalizar Pedido
             </Button>
           )}
         </div>
-        
+
         {hasItemsToStartNow && (
           <Alert variant="warning" className="mb-3 py-2">
             <small>Há itens que precisam ser iniciados agora!</small>
           </Alert>
         )}
-        
+
         {expandedItems && (
           <ListGroup variant="flush" className="kds-item-list">
             {filteredItems.length === 0 ? (
@@ -243,9 +234,13 @@ const KDSOrderCard = ({
               </Alert>
             ) : (
               filteredItems.map(item => (
-                <ListGroup.Item 
+                <ListGroup.Item
                   key={item.item_id}
-                  className={`kds-item ${item.status === 'pending' && new Date(item.estimated_start_time) <= now ? 'item-highlight' : ''}`}
+                  className={`kds-item ${
+                    item.status === 'pending' && new Date(item.estimated_start_time) <= now
+                      ? 'item-highlight'
+                      : ''
+                  }`}
                 >
                   <div className="d-flex justify-content-between align-items-center">
                     <div className="item-info">
@@ -267,9 +262,7 @@ const KDSOrderCard = ({
                         <small>{renderStartTime(item)}</small>
                       </div>
                     </div>
-                    <div className="item-actions">
-                      {renderItemActions(item)}
-                    </div>
+                    <div className="item-actions">{renderItemActions(item)}</div>
                   </div>
                 </ListGroup.Item>
               ))
@@ -277,11 +270,16 @@ const KDSOrderCard = ({
           </ListGroup>
         )}
       </Card.Body>
-      
+
       <Card.Footer className="text-muted">
         <div className="d-flex justify-content-between align-items-center">
           <small>Cliente: {order.customer_name || 'Não identificado'}</small>
-          <small>Atualizado: {formatDistanceToNow(new Date(order.updated_at), { locale: ptBR, addSuffix: true })}</small>
+          <small>
+            Atualizado: {formatDistanceToNow(new Date(order.updated_at), {
+              locale: ptBR,
+              addSuffix: true
+            })}
+          </small>
         </div>
       </Card.Footer>
     </Card>

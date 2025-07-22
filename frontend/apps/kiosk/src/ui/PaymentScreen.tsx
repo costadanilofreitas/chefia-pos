@@ -1,21 +1,35 @@
-// /home/ubuntu/pos-modern/frontend/apps/kiosk/src/ui/PaymentScreen.jsx
+// /home/ubuntu/pos-modern/frontend/apps/kiosk/src/ui/PaymentScreen.tsx
 
 import React, { useState } from 'react';
 import { formatCurrency } from '@common/utils/formatters';
 
-const PaymentScreen = ({ 
-  orderTotal, 
-  onBack, 
-  onSubmitOrder, 
+interface OrderTotal {
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+}
+
+interface PaymentScreenProps {
+  orderTotal: OrderTotal;
+  onBack: () => void;
+  onSubmitOrder: () => void;
+  paymentMethods?: string[];
+  enablePayment?: boolean;
+}
+
+const PaymentScreen: React.FC<PaymentScreenProps> = ({
+  orderTotal,
+  onBack,
+  onSubmitOrder,
   paymentMethods = ["credit", "debit"],
   enablePayment = true
 }) => {
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
-  
-  const getPaymentMethodIcon = (method) => {
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
+
+  const getPaymentMethodIcon = (method: string): string => {
     switch (method.toLowerCase()) {
       case 'credit':
-        return '💳';
       case 'debit':
         return '💳';
       case 'cash':
@@ -26,8 +40,8 @@ const PaymentScreen = ({
         return '💰';
     }
   };
-  
-  const getPaymentMethodName = (method) => {
+
+  const getPaymentMethodName = (method: string): string => {
     switch (method.toLowerCase()) {
       case 'credit':
         return 'Cartão de Crédito';
@@ -41,20 +55,20 @@ const PaymentScreen = ({
         return method;
     }
   };
-  
-  const handlePaymentMethodSelect = (method) => {
+
+  const handlePaymentMethodSelect = (method: string) => {
     setSelectedPaymentMethod(method);
   };
-  
+
   const handleConfirmPayment = () => {
     if (!selectedPaymentMethod && enablePayment) {
       alert('Por favor, selecione um método de pagamento');
       return;
     }
-    
+
     onSubmitOrder();
   };
-  
+
   return (
     <div className="payment-screen">
       <div className="payment-header">
@@ -62,9 +76,9 @@ const PaymentScreen = ({
           ←
         </button>
         <h2>Pagamento</h2>
-        <div></div> {/* Empty div for flex spacing */}
+        <div></div>
       </div>
-      
+
       <div className="payment-content">
         <div className="payment-summary">
           <div className="summary-row">
@@ -86,14 +100,14 @@ const PaymentScreen = ({
             <span>{formatCurrency(orderTotal.total)}</span>
           </div>
         </div>
-        
+
         {enablePayment ? (
           <>
             <h3>Selecione o método de pagamento:</h3>
-            
+
             <div className="payment-methods">
               {paymentMethods.map((method) => (
-                <div 
+                <div
                   key={method}
                   className={`payment-method-button ${selectedPaymentMethod === method ? 'selected' : ''}`}
                   onClick={() => handlePaymentMethodSelect(method)}
@@ -107,8 +121,8 @@ const PaymentScreen = ({
                 </div>
               ))}
             </div>
-            
-            <button 
+
+            <button
               className="confirm-payment-button"
               onClick={handleConfirmPayment}
               disabled={!selectedPaymentMethod}
@@ -121,8 +135,8 @@ const PaymentScreen = ({
             <div className="payment-message">
               <p>Dirija-se ao caixa para finalizar seu pedido.</p>
             </div>
-            
-            <button 
+
+            <button
               className="confirm-payment-button"
               onClick={handleConfirmPayment}
             >

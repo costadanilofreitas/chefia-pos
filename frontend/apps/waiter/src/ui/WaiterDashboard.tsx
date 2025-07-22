@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Tabs, Button, message, Spin, Modal, Form, Input, Select, Divider, Dropdown, Menu, Badge } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SaveOutlined, 
-         UserOutlined, ShoppingCartOutlined, ClockCircleOutlined, 
-         CheckCircleOutlined, SwapOutlined, DollarOutlined, 
-         PrinterOutlined, MoreOutlined } from '@ant-design/icons';
+import {
+  Card,
+  Tabs,
+  Button,
+  message,
+  Spin,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Badge,
+  Dropdown,
+  Menu,
+} from 'antd';
+import {
+  PlusOutlined,
+  ShoppingCartOutlined,
+  SwapOutlined,
+  DollarOutlined,
+  PrinterOutlined,
+  MoreOutlined,
+} from '@ant-design/icons';
 import axios from 'axios';
 import TableLayoutEditor from './TableLayoutEditor';
 import './WaiterDashboard.css';
@@ -11,23 +28,51 @@ import './WaiterDashboard.css';
 const { TabPane } = Tabs;
 const { Option } = Select;
 
-const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
-  const [activeTab, setActiveTab] = useState('tables');
-  const [loading, setLoading] = useState(false);
-  const [tables, setTables] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [showOrderModal, setShowOrderModal] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [showBillModal, setShowBillModal] = useState(false);
-  const [currentTable, setCurrentTable] = useState(null);
-  const [availableTables, setAvailableTables] = useState([]);
+interface Table {
+  id: number;
+  number: string;
+  capacity: number;
+  status: 'available' | 'occupied' | 'reserved' | 'dirty';
+  layout_id: number;
+  current_order_id?: number;
+}
+
+interface Order {
+  id: number;
+  order_number: string | number;
+  created_at: string;
+  table_number: string;
+  status: 'pending' | 'in_progress' | 'ready' | 'delivered' | 'completed';
+  items: any[]; // Ajuste conforme a estrutura real dos itens
+  total: number;
+}
+
+interface WaiterDashboardProps {
+  restaurantId: number | string;
+  storeId: number | string;
+  waiterId: number | string;
+}
+
+const WaiterDashboard: React.FC<WaiterDashboardProps> = ({
+  restaurantId,
+  storeId,
+  waiterId,
+}) => {
+  const [activeTab, setActiveTab] = useState<string>('tables');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [tables, setTables] = useState<Table[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [showOrderModal, setShowOrderModal] = useState<boolean>(false);
+  const [showTransferModal, setShowTransferModal] = useState<boolean>(false);
+  const [showBillModal, setShowBillModal] = useState<boolean>(false);
+  const [currentTable, setCurrentTable] = useState<Table | null>(null);
+  const [availableTables, setAvailableTables] = useState<Table[]>([]);
   const [orderForm] = Form.useForm();
   const [transferForm] = Form.useForm();
   const [billForm] = Form.useForm();
-  const [viewMode, setViewMode] = useState('list'); // 'list' ou 'layout'
-  const [refreshInterval, setRefreshInterval] = useState(null);
+  const [viewMode, setViewMode] = useState<'list' | 'layout'>('list');
+  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // Carregar dados ao iniciar
   useEffect(() => {
     if (activeTab === 'tables') {
       fetchTables();
@@ -35,121 +80,118 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
       fetchOrders();
     }
 
-    // Configurar atualização automática a cada 30 segundos
     const interval = setInterval(() => {
       if (activeTab === 'tables') {
-        fetchTables(false); // false = não mostrar loading
+        fetchTables(false);
       } else if (activeTab === 'orders') {
-        fetchOrders(false); // false = não mostrar loading
+        fetchOrders(false);
       }
     }, 30000);
 
     setRefreshInterval(interval);
 
-    // Limpar intervalo ao desmontar
     return () => {
       if (refreshInterval) {
         clearInterval(refreshInterval);
       }
+      clearInterval(interval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, restaurantId, storeId]);
 
-  // Buscar mesas do servidor
   const fetchTables = async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
-      const response = await axios.get(`/api/waiter/tables/by-status?restaurant_id=${restaurantId}&store_id=${storeId}`);
+      const response = await axios.get<Table[]>(
+        `/api/waiter/tables/by-status?restaurant_id=${restaurantId}&store_id=${storeId}`
+      );
       setTables(response.data);
-      if (showLoading) setLoading(false);
     } catch (error) {
       console.error('Erro ao carregar mesas:', error);
       message.error('Não foi possível carregar as mesas');
+    } finally {
       if (showLoading) setLoading(false);
     }
   };
 
-  // Buscar pedidos do servidor
   const fetchOrders = async (showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
-      const response = await axios.get(`/api/orders?restaurant_id=${restaurantId}&store_id=${storeId}&waiter_id=${waiterId}`);
+      const response = await axios.get<Order[]>(
+        `/api/orders?restaurant_id=${restaurantId}&store_id=${storeId}&waiter_id=${waiterId}`
+      );
       setOrders(response.data);
-      if (showLoading) setLoading(false);
     } catch (error) {
       console.error('Erro ao carregar pedidos:', error);
       message.error('Não foi possível carregar os pedidos');
+    } finally {
       if (showLoading) setLoading(false);
     }
   };
 
-  // Abrir modal de novo pedido
-  const handleOpenOrderModal = (table) => {
+  const handleOpenOrderModal = (table: Table) => {
     setCurrentTable(table);
     setShowOrderModal(true);
-    
-    // Preencher formulário com dados da mesa
+
     orderForm.setFieldsValue({
       table_id: table.id,
       table_number: table.number,
-      customer_count: 1
+      customer_count: 1,
     });
   };
 
-  // Abrir modal de transferência de mesa
-  const handleOpenTransferModal = (table) => {
+  const handleOpenTransferModal = (table: Table) => {
     setCurrentTable(table);
     setShowTransferModal(true);
-    
-    // Buscar mesas disponíveis
-    const availableTables = tables.filter(t => 
-      t.status === 'available' && t.id !== table.id
+
+    const availableTablesFiltered = tables.filter(
+      (t) => t.status === 'available' && t.id !== table.id
     );
-    setAvailableTables(availableTables);
-    
-    // Preencher formulário com dados da mesa atual
+    setAvailableTables(availableTablesFiltered);
+
     transferForm.setFieldsValue({
       source_table_id: table.id,
-      source_table_number: table.number
+      source_table_number: table.number,
     });
   };
 
-  // Abrir modal de fechamento de conta
-  const handleOpenBillModal = (table) => {
+  const handleOpenBillModal = (table: Table) => {
     setCurrentTable(table);
     setShowBillModal(true);
-    
-    // Buscar detalhes do pedido atual
+
     const fetchOrderDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`/api/orders/${table.current_order_id}`);
+        const response = await axios.get<Order>(`/api/orders/${table.current_order_id}`);
         const order = response.data;
-        
-        // Preencher formulário com dados do pedido
+
         billForm.setFieldsValue({
           order_id: order.id,
           table_number: table.number,
           total_amount: order.total,
           payment_method: 'cash',
-          split_count: 1
+          split_count: 1,
         });
-        
-        setLoading(false);
       } catch (error) {
         console.error('Erro ao carregar detalhes do pedido:', error);
         message.error('Não foi possível carregar os detalhes do pedido');
+      } finally {
         setLoading(false);
       }
     };
-    
+
     fetchOrderDetails();
   };
 
-  // Criar novo pedido
   const handleCreateOrder = async () => {
     try {
       const values = await orderForm.validateFields();
-      
+
+      if (!currentTable) {
+        message.error('Mesa inválida');
+        return;
+      }
+
       setLoading(true);
       const response = await axios.post('/api/orders', {
         restaurant_id: restaurantId,
@@ -159,120 +201,130 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
         customer_count: values.customer_count,
         notes: values.notes,
         items: [],
-        payment_status: 'pending' // Pedido sem pagamento imediato
+        payment_status: 'pending',
       });
-      
-      // Atualizar status da mesa
-      await axios.put(`/api/waiter/tables/layouts/${currentTable.layout_id}/tables/${currentTable.id}/status`, {
-        status: 'occupied',
-        order_id: response.data.id,
-        waiter_id: waiterId
-      });
-      
+
+      await axios.put(
+        `/api/waiter/tables/layouts/${currentTable.layout_id}/tables/${currentTable.id}/status`,
+        {
+          status: 'occupied',
+          order_id: response.data.id,
+          waiter_id: waiterId,
+        }
+      );
+
       setShowOrderModal(false);
       orderForm.resetFields();
-      
-      // Redirecionar para a página de edição do pedido
+
       window.location.href = `/orders/edit/${response.data.id}`;
-      
-      setLoading(false);
     } catch (error) {
       console.error('Erro ao criar pedido:', error);
       message.error('Não foi possível criar o pedido');
+    } finally {
       setLoading(false);
     }
   };
 
-  // Transferir mesa
   const handleTransferTable = async () => {
     try {
       const values = await transferForm.validateFields();
-      
-      setLoading(true);
-      
-      // Obter detalhes do pedido atual
-      const sourceTable = tables.find(t => t.id === values.source_table_id);
-      const targetTable = tables.find(t => t.id === values.target_table_id);
-      
-      if (!sourceTable || !targetTable) {
-        throw new Error('Mesa de origem ou destino não encontrada');
+
+      if (!currentTable) {
+        message.error('Mesa inválida');
+        return;
       }
-      
-      // Transferir pedido para nova mesa
+
+      setLoading(true);
+
+      const sourceTable = tables.find((t) => t.id === values.source_table_id);
+      const targetTable = tables.find((t) => t.id === values.target_table_id);
+
+      if (!sourceTable || !targetTable) {
+        message.error('Mesa de origem ou destino não encontrada');
+        return;
+      }
+
       await axios.put(`/api/orders/${sourceTable.current_order_id}/transfer`, {
         new_table_id: targetTable.id,
-        new_table_number: targetTable.number
+        new_table_number: targetTable.number,
       });
-      
-      // Atualizar status das mesas
-      await axios.put(`/api/waiter/tables/layouts/${sourceTable.layout_id}/tables/${sourceTable.id}/status`, {
-        status: 'dirty',
-        order_id: null,
-        waiter_id: null
-      });
-      
-      await axios.put(`/api/waiter/tables/layouts/${targetTable.layout_id}/tables/${targetTable.id}/status`, {
-        status: 'occupied',
-        order_id: sourceTable.current_order_id,
-        waiter_id: waiterId
-      });
-      
+
+      await axios.put(
+        `/api/waiter/tables/layouts/${sourceTable.layout_id}/tables/${sourceTable.id}/status`,
+        {
+          status: 'dirty',
+          order_id: null,
+          waiter_id: null,
+        }
+      );
+
+      await axios.put(
+        `/api/waiter/tables/layouts/${targetTable.layout_id}/tables/${targetTable.id}/status`,
+        {
+          status: 'occupied',
+          order_id: sourceTable.current_order_id,
+          waiter_id: waiterId,
+        }
+      );
+
       setShowTransferModal(false);
       transferForm.resetFields();
-      
-      message.success(`Pedido transferido da mesa ${sourceTable.number} para a mesa ${targetTable.number}`);
-      
-      // Atualizar lista de mesas
+
+      message.success(
+        `Pedido transferido da mesa ${sourceTable.number} para a mesa ${targetTable.number}`
+      );
+
       fetchTables();
-      
-      setLoading(false);
     } catch (error) {
       console.error('Erro ao transferir mesa:', error);
       message.error('Não foi possível transferir a mesa');
+    } finally {
       setLoading(false);
     }
   };
 
-  // Fechar conta
   const handleCloseBill = async () => {
     try {
       const values = await billForm.validateFields();
-      
+
+      if (!currentTable) {
+        message.error('Mesa inválida');
+        return;
+      }
+
       setLoading(true);
-      
-      // Atualizar pedido para finalizado
+
       await axios.put(`/api/orders/${values.order_id}/status`, {
         status: 'completed',
         payment_status: 'paid',
         payment_method: values.payment_method,
-        split_count: values.split_count
+        split_count: values.split_count,
       });
-      
-      // Atualizar status da mesa
-      await axios.put(`/api/waiter/tables/layouts/${currentTable.layout_id}/tables/${currentTable.id}/status`, {
-        status: 'dirty',
-        order_id: null,
-        waiter_id: null
-      });
-      
+
+      await axios.put(
+        `/api/waiter/tables/layouts/${currentTable.layout_id}/tables/${currentTable.id}/status`,
+        {
+          status: 'dirty',
+          order_id: null,
+          waiter_id: null,
+        }
+      );
+
       setShowBillModal(false);
       billForm.resetFields();
-      
+
       message.success(`Conta da mesa ${currentTable.number} fechada com sucesso`);
-      
-      // Atualizar lista de mesas
+
       fetchTables();
-      
-      setLoading(false);
     } catch (error) {
       console.error('Erro ao fechar conta:', error);
       message.error('Não foi possível fechar a conta');
+    } finally {
       setLoading(false);
     }
   };
 
-  // Renderizar lista de mesas
-  const renderTablesList = () => {
+  const renderTablesList = (): JSX.Element => {
     if (loading) {
       return (
         <div className="loading-container">
@@ -290,12 +342,14 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
       );
     }
 
-    // Agrupar mesas por status
-    const tablesByStatus = {
-      available: tables.filter(table => table.status === 'available'),
-      occupied: tables.filter(table => table.status === 'occupied'),
-      reserved: tables.filter(table => table.status === 'reserved'),
-      dirty: tables.filter(table => table.status === 'dirty')
+    const tablesByStatus: Record<
+      'available' | 'occupied' | 'reserved' | 'dirty',
+      Table[]
+    > = {
+      available: tables.filter((table) => table.status === 'available'),
+      occupied: tables.filter((table) => table.status === 'occupied'),
+      reserved: tables.filter((table) => table.status === 'reserved'),
+      dirty: tables.filter((table) => table.status === 'dirty'),
     };
 
     return (
@@ -303,18 +357,19 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
         <div className="tables-section">
           <h3>Mesas Disponíveis</h3>
           <div className="tables-grid">
-            {tablesByStatus.available.map(table => (
-              <Card 
+            {tablesByStatus.available.map((table) => (
+              <Card
                 key={table.id}
                 className="table-card available"
                 actions={[
-                  <Button 
-                    type="primary" 
+                  <Button
+                    type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => handleOpenOrderModal(table)}
+                    key="start-order"
                   >
                     Iniciar Pedido
-                  </Button>
+                  </Button>,
                 ]}
               >
                 <div className="table-number">{table.number}</div>
@@ -323,40 +378,42 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
             ))}
           </div>
         </div>
-        
+
         <div className="tables-section">
           <h3>Mesas Ocupadas</h3>
           <div className="tables-grid">
-            {tablesByStatus.occupied.map(table => (
-              <Card 
+            {tablesByStatus.occupied.map((table) => (
+              <Card
                 key={table.id}
                 className="table-card occupied"
                 actions={[
                   <Dropdown
                     overlay={
                       <Menu>
-                        <Menu.Item 
+                        <Menu.Item
                           key="view_order"
                           icon={<ShoppingCartOutlined />}
-                          onClick={() => window.location.href = `/orders/edit/${table.current_order_id}`}
+                          onClick={() =>
+                            window.location.href = `/orders/edit/${table.current_order_id}`
+                          }
                         >
                           Ver Pedido
                         </Menu.Item>
-                        <Menu.Item 
+                        <Menu.Item
                           key="transfer"
                           icon={<SwapOutlined />}
                           onClick={() => handleOpenTransferModal(table)}
                         >
                           Transferir Mesa
                         </Menu.Item>
-                        <Menu.Item 
+                        <Menu.Item
                           key="close_bill"
                           icon={<DollarOutlined />}
                           onClick={() => handleOpenBillModal(table)}
                         >
                           Fechar Conta
                         </Menu.Item>
-                        <Menu.Item 
+                        <Menu.Item
                           key="print_bill"
                           icon={<PrinterOutlined />}
                           onClick={() => message.info('Funcionalidade de impressão em desenvolvimento')}
@@ -366,14 +423,12 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
                       </Menu>
                     }
                     trigger={['click']}
+                    key="actions"
                   >
-                    <Button 
-                      type="primary"
-                      icon={<MoreOutlined />}
-                    >
+                    <Button type="primary" icon={<MoreOutlined />}>
                       Ações
                     </Button>
-                  </Dropdown>
+                  </Dropdown>,
                 ]}
               >
                 <div className="table-number">{table.number}</div>
@@ -385,21 +440,22 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
             ))}
           </div>
         </div>
-        
+
         <div className="tables-section">
           <h3>Mesas Reservadas</h3>
           <div className="tables-grid">
-            {tablesByStatus.reserved.map(table => (
-              <Card 
+            {tablesByStatus.reserved.map((table) => (
+              <Card
                 key={table.id}
                 className="table-card reserved"
                 actions={[
-                  <Button 
+                  <Button
                     type="primary"
                     onClick={() => handleOpenOrderModal(table)}
+                    key="start-order"
                   >
                     Iniciar Pedido
-                  </Button>
+                  </Button>,
                 ]}
               >
                 <div className="table-number">{table.number}</div>
@@ -411,22 +467,25 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
             ))}
           </div>
         </div>
-        
+
         <div className="tables-section">
           <h3>Mesas Sujas</h3>
           <div className="tables-grid">
-            {tablesByStatus.dirty.map(table => (
-              <Card 
+            {tablesByStatus.dirty.map((table) => (
+              <Card
                 key={table.id}
                 className="table-card dirty"
                 actions={[
-                  <Button 
+                  <Button
                     type="primary"
                     onClick={async () => {
                       try {
-                        await axios.put(`/api/waiter/tables/layouts/${table.layout_id}/tables/${table.id}/status`, {
-                          status: 'available'
-                        });
+                        await axios.put(
+                          `/api/waiter/tables/layouts/${table.layout_id}/tables/${table.id}/status`,
+                          {
+                            status: 'available',
+                          }
+                        );
                         message.success(`Mesa ${table.number} marcada como disponível`);
                         fetchTables();
                       } catch (error) {
@@ -434,9 +493,10 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
                         message.error('Não foi possível atualizar o status da mesa');
                       }
                     }}
+                    key="mark-clean"
                   >
                     Marcar como Limpa
-                  </Button>
+                  </Button>,
                 ]}
               >
                 <div className="table-number">{table.number}</div>
@@ -452,21 +512,15 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
     );
   };
 
-  // Renderizar visualização de layout
-  const renderTablesLayout = () => {
+  const renderTablesLayout = (): JSX.Element => {
     return (
       <div className="tables-layout-container">
-        <TableLayoutEditor 
-          restaurantId={restaurantId}
-          storeId={storeId}
-          mode="view"
-        />
+        <TableLayoutEditor restaurantId={restaurantId} storeId={storeId} mode="view" />
       </div>
     );
   };
 
-  // Renderizar lista de pedidos
-  const renderOrdersList = () => {
+  const renderOrdersList = (): JSX.Element => {
     if (loading) {
       return (
         <div className="loading-container">
@@ -479,278 +533,167 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
     if (orders.length === 0) {
       return (
         <div className="empty-container">
-          <p>Nenhum pedido disponível</p>
+          <p>Nenhum pedido encontrado</p>
         </div>
       );
     }
 
-    // Agrupar pedidos por status
-    const ordersByStatus = {
-      pending: orders.filter(order => order.status === 'pending'),
-      in_progress: orders.filter(order => order.status === 'in_progress'),
-      ready: orders.filter(order => order.status === 'ready'),
-      delivered: orders.filter(order => order.status === 'delivered'),
-      completed: orders.filter(order => order.status === 'completed')
-    };
-
     return (
-      <div className="orders-container">
-        <div className="orders-section">
-          <h3>Pedidos Pendentes</h3>
-          <div className="orders-grid">
-            {ordersByStatus.pending.map(order => (
-              <Card 
-                key={order.id}
-                className="order-card pending"
-                onClick={() => window.location.href = `/orders/edit/${order.id}`}
+      <div className="orders-list">
+        {orders.map((order) => (
+          <Card
+            key={order.id}
+            title={`Pedido #${order.order_number} - Mesa ${order.table_number}`}
+            extra={
+              <Badge
+                status={
+                  order.status === 'pending'
+                    ? 'default'
+                    : order.status === 'in_progress'
+                    ? 'processing'
+                    : order.status === 'ready'
+                    ? 'warning'
+                    : order.status === 'delivered'
+                    ? 'success'
+                    : 'default'
+                }
+                text={order.status.replace('_', ' ')}
+              />
+            }
+            style={{ marginBottom: 16 }}
+            actions={[
+              <Button
+                type="link"
+                onClick={() => (window.location.href = `/orders/edit/${order.id}`)}
+                key="edit"
               >
-                <div className="order-header">
-                  <div className="order-number">Pedido #{order.order_number}</div>
-                  <div className="order-time">{new Date(order.created_at).toLocaleTimeString()}</div>
-                </div>
-                <div className="order-table">Mesa: {order.table_number}</div>
-                <div className="order-items">Itens: {order.items.length}</div>
-                <div className="order-total">Total: R$ {order.total.toFixed(2)}</div>
-              </Card>
-            ))}
-          </div>
-        </div>
-        
-        <div className="orders-section">
-          <h3>Pedidos em Preparo</h3>
-          <div className="orders-grid">
-            {ordersByStatus.in_progress.map(order => (
-              <Card 
-                key={order.id}
-                className="order-card in-progress"
-                onClick={() => window.location.href = `/orders/edit/${order.id}`}
-              >
-                <div className="order-header">
-                  <div className="order-number">Pedido #{order.order_number}</div>
-                  <div className="order-time">{new Date(order.created_at).toLocaleTimeString()}</div>
-                </div>
-                <div className="order-table">Mesa: {order.table_number}</div>
-                <div className="order-items">Itens: {order.items.length}</div>
-                <div className="order-total">Total: R$ {order.total.toFixed(2)}</div>
-              </Card>
-            ))}
-          </div>
-        </div>
-        
-        <div className="orders-section">
-          <h3>Pedidos Prontos</h3>
-          <div className="orders-grid">
-            {ordersByStatus.ready.map(order => (
-              <Card 
-                key={order.id}
-                className="order-card ready"
-                onClick={() => window.location.href = `/orders/edit/${order.id}`}
-              >
-                <div className="order-header">
-                  <div className="order-number">Pedido #{order.order_number}</div>
-                  <div className="order-time">{new Date(order.created_at).toLocaleTimeString()}</div>
-                </div>
-                <div className="order-table">Mesa: {order.table_number}</div>
-                <div className="order-items">Itens: {order.items.length}</div>
-                <div className="order-total">Total: R$ {order.total.toFixed(2)}</div>
-                <Button 
-                  type="primary"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    try {
-                      await axios.put(`/api/orders/${order.id}/status`, {
-                        status: 'delivered'
-                      });
-                      message.success(`Pedido #${order.order_number} marcado como entregue`);
-                      fetchOrders();
-                    } catch (error) {
-                      console.error('Erro ao atualizar status do pedido:', error);
-                      message.error('Não foi possível atualizar o status do pedido');
-                    }
-                  }}
-                >
-                  Marcar como Entregue
-                </Button>
-              </Card>
-            ))}
-          </div>
-        </div>
-        
-        <div className="orders-section">
-          <h3>Pedidos Entregues</h3>
-          <div className="orders-grid">
-            {ordersByStatus.delivered.map(order => (
-              <Card 
-                key={order.id}
-                className="order-card delivered"
-                onClick={() => window.location.href = `/orders/edit/${order.id}`}
-              >
-                <div className="order-header">
-                  <div className="order-number">Pedido #{order.order_number}</div>
-                  <div className="order-time">{new Date(order.created_at).toLocaleTimeString()}</div>
-                </div>
-                <div className="order-table">Mesa: {order.table_number}</div>
-                <div className="order-items">Itens: {order.items.length}</div>
-                <div className="order-total">Total: R$ {order.total.toFixed(2)}</div>
-                <Button 
-                  type="primary"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    try {
-                      await axios.put(`/api/orders/${order.id}/status`, {
-                        status: 'completed'
-                      });
-                      message.success(`Pedido #${order.order_number} finalizado`);
-                      fetchOrders();
-                    } catch (error) {
-                      console.error('Erro ao atualizar status do pedido:', error);
-                      message.error('Não foi possível atualizar o status do pedido');
-                    }
-                  }}
-                >
-                  Finalizar Pedido
-                </Button>
-              </Card>
-            ))}
-          </div>
-        </div>
+                Editar
+              </Button>,
+            ]}
+          >
+            <p>Itens: {order.items.length}</p>
+            <p>Total: R$ {order.total.toFixed(2)}</p>
+            <p>Criado em: {new Date(order.created_at).toLocaleString()}</p>
+          </Card>
+        ))}
       </div>
     );
   };
 
-  // Renderizar modal de novo pedido
-  const renderOrderModal = () => {
-    return (
-      <Modal
-        title="Iniciar Novo Pedido"
-        open={showOrderModal}
-        onOk={handleCreateOrder}
-        onCancel={() => setShowOrderModal(false)}
-      >
-        <Form form={orderForm} layout="vertical">
-          <Form.Item name="table_id" hidden>
-            <Input />
-          </Form.Item>
-          
-          <Form.Item label="Mesa" name="table_number">
-            <Input disabled />
-          </Form.Item>
-          
-          <Form.Item 
-            label="Número de Clientes" 
-            name="customer_count"
-            rules={[{ required: true, message: 'Por favor, informe o número de clientes' }]}
-          >
-            <Input type="number" min={1} />
-          </Form.Item>
-          
-          <Form.Item label="Observações" name="notes">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-        </Form>
-      </Modal>
-    );
-  };
+  const renderOrderModal = (): JSX.Element => (
+    <Modal
+      title={`Iniciar Pedido - Mesa ${currentTable?.number ?? ''}`}
+      visible={showOrderModal}
+      onCancel={() => {
+        setShowOrderModal(false);
+        orderForm.resetFields();
+      }}
+      onOk={handleCreateOrder}
+      confirmLoading={loading}
+      okText="Criar Pedido"
+      cancelText="Cancelar"
+    >
+      <Form form={orderForm} layout="vertical">
+        <Form.Item name="table_number" label="Número da Mesa">
+          <Input disabled />
+        </Form.Item>
 
-  // Renderizar modal de transferência de mesa
-  const renderTransferModal = () => {
-    return (
-      <Modal
-        title="Transferir Mesa"
-        open={showTransferModal}
-        onOk={handleTransferTable}
-        onCancel={() => setShowTransferModal(false)}
-      >
-        <Form form={transferForm} layout="vertical">
-          <Form.Item name="source_table_id" hidden>
-            <Input />
-          </Form.Item>
-          
-          <Form.Item label="Mesa de Origem" name="source_table_number">
-            <Input disabled />
-          </Form.Item>
-          
-          <Form.Item 
-            label="Mesa de Destino" 
-            name="target_table_id"
-            rules={[{ required: true, message: 'Por favor, selecione a mesa de destino' }]}
-          >
-            <Select placeholder="Selecione a mesa de destino">
-              {availableTables.map(table => (
-                <Option key={table.id} value={table.id}>
-                  Mesa {table.number} (Capacidade: {table.capacity})
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          
-          <Form.Item label="Motivo da Transferência" name="transfer_reason">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-        </Form>
-      </Modal>
-    );
-  };
+        <Form.Item
+          name="customer_count"
+          label="Número de Clientes"
+          rules={[{ required: true, message: 'Informe o número de clientes' }]}
+        >
+          <Input type="number" min={1} />
+        </Form.Item>
 
-  // Renderizar modal de fechamento de conta
-  const renderBillModal = () => {
-    return (
-      <Modal
-        title="Fechar Conta"
-        open={showBillModal}
-        onOk={handleCloseBill}
-        onCancel={() => setShowBillModal(false)}
-      >
-        <Form form={billForm} layout="vertical">
-          <Form.Item name="order_id" hidden>
-            <Input />
-          </Form.Item>
-          
-          <Form.Item label="Mesa" name="table_number">
-            <Input disabled />
-          </Form.Item>
-          
-          <Form.Item label="Valor Total" name="total_amount">
-            <Input 
-              prefix="R$" 
-              disabled 
-              formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={value => value.replace(/\$\s?|(,*)/g, '')}
-            />
-          </Form.Item>
-          
-          <Form.Item 
-            label="Forma de Pagamento" 
-            name="payment_method"
-            rules={[{ required: true, message: 'Por favor, selecione a forma de pagamento' }]}
-          >
-            <Select>
-              <Option value="cash">Dinheiro</Option>
-              <Option value="credit_card">Cartão de Crédito</Option>
-              <Option value="debit_card">Cartão de Débito</Option>
-              <Option value="pix">PIX</Option>
-            </Select>
-          </Form.Item>
-          
-          <Form.Item 
-            label="Dividir Conta" 
-            name="split_count"
-            rules={[{ required: true, message: 'Por favor, informe o número de divisões' }]}
-          >
-            <Input 
-              type="number" 
-              min={1} 
-              addonAfter="pessoa(s)"
-            />
-          </Form.Item>
-          
-          <Form.Item label="Observações" name="bill_notes">
-            <Input.TextArea rows={2} />
-          </Form.Item>
-        </Form>
-      </Modal>
-    );
-  };
+        <Form.Item name="notes" label="Observações">
+          <Input.TextArea rows={3} />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+
+  const renderTransferModal = (): JSX.Element => (
+    <Modal
+      title={`Transferir Pedido - Mesa ${currentTable?.number ?? ''}`}
+      visible={showTransferModal}
+      onCancel={() => {
+        setShowTransferModal(false);
+        transferForm.resetFields();
+      }}
+      onOk={handleTransferTable}
+      confirmLoading={loading}
+      okText="Transferir"
+      cancelText="Cancelar"
+    >
+      <Form form={transferForm} layout="vertical">
+        <Form.Item name="source_table_number" label="Mesa Origem">
+          <Input disabled />
+        </Form.Item>
+
+        <Form.Item
+          name="target_table_id"
+          label="Mesa Destino"
+          rules={[{ required: true, message: 'Selecione a mesa destino' }]}
+        >
+          <Select placeholder="Selecione uma mesa disponível">
+            {availableTables.map((table) => (
+              <Option key={table.id} value={table.id}>
+                {table.number} (Capacidade: {table.capacity})
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+
+  const renderBillModal = (): JSX.Element => (
+    <Modal
+      title={`Fechar Conta - Mesa ${currentTable?.number ?? ''}`}
+      visible={showBillModal}
+      onCancel={() => {
+        setShowBillModal(false);
+        billForm.resetFields();
+      }}
+      onOk={handleCloseBill}
+      confirmLoading={loading}
+      okText="Fechar Conta"
+      cancelText="Cancelar"
+    >
+      <Form form={billForm} layout="vertical">
+        <Form.Item name="table_number" label="Número da Mesa">
+          <Input disabled />
+        </Form.Item>
+
+        <Form.Item name="total_amount" label="Valor Total">
+          <Input disabled prefix="R$" />
+        </Form.Item>
+
+        <Form.Item
+          name="payment_method"
+          label="Forma de Pagamento"
+          rules={[{ required: true, message: 'Selecione a forma de pagamento' }]}
+        >
+          <Select>
+            <Option value="cash">Dinheiro</Option>
+            <Option value="credit_card">Cartão de Crédito</Option>
+            <Option value="debit_card">Cartão de Débito</Option>
+            <Option value="pix">PIX</Option>
+            <Option value="other">Outro</Option>
+          </Select>
+        </Form.Item>
+
+        <Form.Item
+          name="split_count"
+          label="Número de divisões da conta"
+          rules={[{ required: true, message: 'Informe o número de divisões' }]}
+        >
+          <Input type="number" min={1} />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
 
   return (
     <div className="waiter-dashboard">
@@ -761,45 +704,47 @@ const WaiterDashboard = ({ restaurantId, storeId, waiterId }) => {
               <h2>Gerenciamento de Mesas</h2>
               <div className="header-actions">
                 <Button.Group>
-                  <Button 
-                    type={viewMode === 'list' ? 'primary' : 'default'} 
+                  <Button
+                    type={viewMode === 'list' ? 'primary' : 'default'}
                     onClick={() => setViewMode('list')}
                   >
                     Lista
                   </Button>
-                  <Button 
-                    type={viewMode === 'layout' ? 'primary' : 'default'} 
+                  <Button
+                    type={viewMode === 'layout' ? 'primary' : 'default'}
                     onClick={() => setViewMode('layout')}
                   >
                     Layout
                   </Button>
                 </Button.Group>
-                <Button 
-                  type="default" 
-                  onClick={() => window.location.href = `/waiter/tables/layout?restaurant_id=${restaurantId}&store_id=${storeId}`}
+                <Button
+                  type="default"
+                  onClick={() =>
+                    (window.location.href = `/waiter/tables/layout?restaurant_id=${restaurantId}&store_id=${storeId}`)
+                  }
                 >
                   Editar Layout
                 </Button>
-                <Button onClick={fetchTables}>Atualizar</Button>
+                <Button onClick={() => fetchTables()}>Atualizar</Button>
               </div>
             </div>
             {viewMode === 'list' ? renderTablesList() : renderTablesLayout()}
           </div>
         </TabPane>
-        
+
         <TabPane tab="Pedidos" key="orders">
           <div className="dashboard-content">
             <div className="dashboard-header">
               <h2>Gerenciamento de Pedidos</h2>
               <div className="header-actions">
-                <Button onClick={fetchOrders}>Atualizar</Button>
+                <Button onClick={() => fetchOrders()}>Atualizar</Button>
               </div>
             </div>
             {renderOrdersList()}
           </div>
         </TabPane>
       </Tabs>
-      
+
       {renderOrderModal()}
       {renderTransferModal()}
       {renderBillModal()}

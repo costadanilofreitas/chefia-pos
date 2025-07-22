@@ -1,8 +1,18 @@
-// /home/ubuntu/pos-modern/src/kiosk/ui/OrderSummary.jsx
+// /home/ubuntu/pos-modern/src/kiosk/ui/OrderSummary.tsx
 
 import React from 'react';
 
-const OrderSummary = ({ orderNumber, estimatedTime, onNewOrder }) => {
+interface OrderSummaryProps {
+  orderNumber: number | string;
+  estimatedTime: number;
+  onNewOrder: () => void;
+}
+
+const OrderSummary: React.FC<OrderSummaryProps> = ({
+  orderNumber,
+  estimatedTime,
+  onNewOrder
+}) => {
   return (
     <div className="confirmation-screen">
       <div className="confirmation-icon">✓</div>
@@ -10,7 +20,7 @@ const OrderSummary = ({ orderNumber, estimatedTime, onNewOrder }) => {
       <p className="confirmation-message">
         Seu pedido foi recebido e está sendo preparado.
       </p>
-      
+
       <div className="order-details">
         <div className="order-number">
           Pedido #{orderNumber}
@@ -19,7 +29,7 @@ const OrderSummary = ({ orderNumber, estimatedTime, onNewOrder }) => {
           Tempo estimado: {estimatedTime} minutos
         </div>
       </div>
-      
+
       <button className="new-order-button" onClick={onNewOrder}>
         Fazer Novo Pedido
       </button>

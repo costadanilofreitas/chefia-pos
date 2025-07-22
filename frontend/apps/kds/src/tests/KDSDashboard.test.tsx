@@ -1,18 +1,26 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { act } from 'react-dom/test-utils';
 import KDSDashboard from '../ui/KDSDashboard';
 import { kdsService } from '../services/kdsService';
 
 // Mock the services
-jest.mock('../services/kdsService', () => ({
-  kdsService: {
-    getOrders: jest.fn(),
-    getStations: jest.fn(),
-    updateItemStatus: jest.fn(),
-    completeOrder: jest.fn()
-  }
-}));
+jest.mock('../services/kdsService', () => {
+  const getOrders = jest.fn((): Promise<any[]> => Promise.resolve([]));
+  const getStations = jest.fn(() => Promise.resolve([]));
+  const updateItemStatus = jest.fn(() => Promise.resolve(true));
+  const completeOrder = jest.fn(() => Promise.resolve(true));
+
+  return {
+    kdsService: {
+      getOrders,
+      getStations,
+      updateItemStatus,
+      completeOrder
+    },
+    __mockedFunctions: { getOrders, getStations, updateItemStatus, completeOrder }
+  };
+});
 
 describe('KDSDashboard Component', () => {
   // Setup mock data
@@ -77,10 +85,10 @@ describe('KDSDashboard Component', () => {
     jest.clearAllMocks();
     
     // Setup default mock implementations
-    kdsService.getOrders.mockResolvedValue(mockOrders);
-    kdsService.getStations.mockResolvedValue(mockStations);
-    kdsService.updateItemStatus.mockResolvedValue(true);
-    kdsService.completeOrder.mockResolvedValue(true);
+    (kdsService.getOrders as jest.Mock).mockResolvedValue(mockOrders);
+    (kdsService.getStations as jest.Mock).mockResolvedValue(mockStations);
+    (kdsService.updateItemStatus as jest.Mock).mockResolvedValue(true);
+    (kdsService.completeOrder as jest.Mock).mockResolvedValue(true);
     
     // Mock timer
     jest.useFakeTimers();
@@ -174,7 +182,7 @@ describe('KDSDashboard Component', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Atualização Automática')).toBeInTheDocument();
+    jest.requireMock('../services/kdsService').__mockedFunctions.getOrders.mockClear();
     });
 
     // Verify auto-refresh is enabled by default

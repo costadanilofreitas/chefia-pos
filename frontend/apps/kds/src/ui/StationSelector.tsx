@@ -1,16 +1,22 @@
 import React from 'react';
-import { FormControl, InputLabel, Select, MenuItem, Box } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, Box, SelectChangeEvent } from '@mui/material';
+
+interface Station {
+  id: string;
+  name: string;
+}
+
+interface StationSelectorProps {
+  activeStation: string;
+  onStationChange: (stationId: string) => void;
+}
 
 /**
  * Componente para seleção de estações no KDS
- * @param {Object} props - Propriedades do componente
- * @param {string} props.activeStation - Estação atualmente selecionada
- * @param {Function} props.onStationChange - Função chamada quando a estação é alterada
- * @returns {JSX.Element} Componente de seleção de estações
  */
-const StationSelector = ({ activeStation, onStationChange }) => {
+const StationSelector: React.FC<StationSelectorProps> = ({ activeStation, onStationChange }) => {
   // Lista de estações disponíveis
-  const stations = [
+  const stations: Station[] = [
     { id: 'all', name: 'Todas as Estações' },
     { id: 'kitchen', name: 'Cozinha' },
     { id: 'bar', name: 'Bar' },
@@ -18,7 +24,7 @@ const StationSelector = ({ activeStation, onStationChange }) => {
     { id: 'dessert', name: 'Sobremesas' }
   ];
 
-  const handleChange = (event) => {
+  const handleChange = (event: SelectChangeEvent<string>) => {
     onStationChange(event.target.value);
   };
 

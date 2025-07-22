@@ -1,16 +1,17 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { jest } from '@jest/globals';
 import { act } from 'react-dom/test-utils';
+import '@testing-library/jest-dom';
 import KioskMainPage from '../ui/KioskMainPage';
 import { productService } from '../services/productService';
 
 // Mock the services
 jest.mock('../services/productService', () => ({
   productService: {
-    getCategories: jest.fn(),
-    getProducts: jest.fn(),
-    getProductsByCategory: jest.fn(),
-    searchProducts: jest.fn()
+    getCategories: jest.fn(() => Promise.resolve([])),
+    getProducts: jest.fn(() => Promise.resolve([])),
+    getProductsByCategory: jest.fn(() => Promise.resolve([])),
+    searchProducts: jest.fn(() => Promise.resolve([]))
   }
 }));
 
@@ -55,12 +56,12 @@ describe('KioskMainPage Component', () => {
     jest.clearAllMocks();
     
     // Setup default mock implementations
-    productService.getCategories.mockResolvedValue(mockCategories);
-    productService.getProducts.mockResolvedValue(mockProducts);
-    productService.getProductsByCategory.mockImplementation((categoryId) => {
+    (productService.getCategories as jest.Mock).mockResolvedValue(mockCategories);
+    (productService.getProducts as jest.Mock).mockResolvedValue(mockProducts);
+    (productService.getProductsByCategory as jest.Mock).mockImplementation((categoryId) => {
       return Promise.resolve(mockProducts.filter(p => p.category_id === categoryId));
     });
-    productService.searchProducts.mockImplementation((term) => {
+    (productService.searchProducts as jest.Mock).mockImplementation((term) => {
       return Promise.resolve(mockProducts.filter(p => 
         p.name.toLowerCase().includes(term.toLowerCase()) || 
         p.description.toLowerCase().includes(term.toLowerCase())
@@ -193,8 +194,8 @@ describe('KioskMainPage Component', () => {
   });
 
   test('handles API errors gracefully', async () => {
-    productService.getCategories.mockRejectedValue(new Error('Failed to fetch categories'));
-    productService.getProducts.mockRejectedValue(new Error('Failed to fetch products'));
+    (productService.getProducts as jest.Mock).mockRejectedValue(new Error('Failed to fetch products'));
+    (productService.getProducts as jest.Mock).mockRejectedValue(new Error('Failed to fetch products'));
     
     await act(async () => {
       render(<KioskMainPage />);

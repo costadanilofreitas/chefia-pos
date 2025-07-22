@@ -22,7 +22,7 @@ export class ProductService {
 
   constructor() {
     // Use the base URL from environment or default to /api
-    const baseURL = process.env.REACT_APP_API_URL || '/api';
+    const baseURL = process.env['REACT_APP_API_URL'] || '/api';
     this.apiClient = new ApiClient(`${baseURL}/products`);
   }
 

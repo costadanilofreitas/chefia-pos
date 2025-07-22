@@ -1,29 +1,58 @@
-// /home/ubuntu/pos-modern/src/kiosk/ui/CustomizationModal.jsx
+// /home/ubuntu/pos-modern/src/kiosk/ui/CustomizationModal.tsx
 
 import React, { useState } from 'react';
 
-const CustomizationModal = ({ product, onClose, onAddToCart }) => {
-  const [selectedCustomizations, setSelectedCustomizations] = useState([]);
-  const [quantity, setQuantity] = useState(1);
-  const [notes, setNotes] = useState('');
-  
-  // Group customizations by section if product has sections
-  const customizationSections = product.customizations ? 
-    (product.customization_sections || [{ name: 'Opções', items: product.customizations }]) : 
-    [];
-  
-  const handleCustomizationToggle = (customization) => {
+type Customization = {
+  name: string;
+  price_adjustment?: number;
+};
+
+type CustomizationSection = {
+  name: string;
+  items: Customization[];
+};
+
+type Product = {
+  name: string;
+  customizations?: Customization[];
+  customization_sections?: CustomizationSection[];
+  [key: string]: any; // permite outras propriedades dinâmicas do produto
+};
+
+type Props = {
+  product: Product;
+  onClose: () => void;
+  onAddToCart: (
+    product: Product,
+    customizations: Customization[],
+    quantity: number,
+    notes: string | null
+  ) => void;
+};
+
+const CustomizationModal: React.FC<Props> = ({
+  product,
+  onClose,
+  onAddToCart
+}) => {
+  const [selectedCustomizations, setSelectedCustomizations] = useState<Customization[]>([]);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [notes, setNotes] = useState<string>('');
+
+  const customizationSections: CustomizationSection[] = product.customizations
+    ? product.customization_sections || [{ name: 'Opções', items: product.customizations }]
+    : [];
+
+  const handleCustomizationToggle = (customization: Customization) => {
     const existingIndex = selectedCustomizations.findIndex(
       c => c.name === customization.name
     );
-    
+
     if (existingIndex >= 0) {
-      // Remove if already selected
-      const updatedCustomizations = [...selectedCustomizations];
-      updatedCustomizations.splice(existingIndex, 1);
-      setSelectedCustomizations(updatedCustomizations);
+      const updated = [...selectedCustomizations];
+      updated.splice(existingIndex, 1);
+      setSelectedCustomizations(updated);
     } else {
-      // Add if not selected
       setSelectedCustomizations([
         ...selectedCustomizations,
         {
@@ -33,18 +62,18 @@ const CustomizationModal = ({ product, onClose, onAddToCart }) => {
       ]);
     }
   };
-  
-  const handleQuantityChange = (delta) => {
+
+  const handleQuantityChange = (delta: number) => {
     const newQuantity = quantity + delta;
     if (newQuantity >= 1) {
       setQuantity(newQuantity);
     }
   };
-  
+
   const handleAddToCart = () => {
     onAddToCart(product, selectedCustomizations, quantity, notes || null);
   };
-  
+
   return (
     <div className="customization-modal">
       <div className="modal-content">
@@ -52,17 +81,17 @@ const CustomizationModal = ({ product, onClose, onAddToCart }) => {
           <h2>Personalizar {product.name}</h2>
           <button className="close-modal-button" onClick={onClose}>×</button>
         </div>
-        
+
         <div className="customization-options">
           {customizationSections.map((section, sectionIndex) => (
             <div key={sectionIndex} className="customization-section">
               <h3 className="customization-section-title">{section.name}</h3>
-              
+
               {section.items.map((customization, index) => {
                 const isSelected = selectedCustomizations.some(
                   c => c.name === customization.name
                 );
-                
+
                 return (
                   <div key={index} className="customization-option">
                     <input
@@ -72,13 +101,13 @@ const CustomizationModal = ({ product, onClose, onAddToCart }) => {
                       checked={isSelected}
                       onChange={() => handleCustomizationToggle(customization)}
                     />
-                    <label 
+                    <label
                       htmlFor={`customization-${sectionIndex}-${index}`}
                       className="customization-label"
                     >
                       {customization.name}
                     </label>
-                    {customization.price_adjustment > 0 && (
+                    {customization.price_adjustment && customization.price_adjustment > 0 && (
                       <span className="customization-price">
                         +R$ {customization.price_adjustment.toFixed(2)}
                       </span>
@@ -88,7 +117,7 @@ const CustomizationModal = ({ product, onClose, onAddToCart }) => {
               })}
             </div>
           ))}
-          
+
           <div className="notes-section">
             <h3 className="customization-section-title">Observações</h3>
             <textarea
@@ -98,20 +127,20 @@ const CustomizationModal = ({ product, onClose, onAddToCart }) => {
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
-          
+
           <div className="quantity-section">
             <span className="quantity-section-label">Quantidade:</span>
             <div className="cart-item-quantity">
-              <button 
-                className="quantity-button" 
+              <button
+                className="quantity-button"
                 onClick={() => handleQuantityChange(-1)}
                 disabled={quantity <= 1}
               >
                 -
               </button>
               <span className="quantity-value">{quantity}</span>
-              <button 
-                className="quantity-button" 
+              <button
+                className="quantity-button"
                 onClick={() => handleQuantityChange(1)}
               >
                 +
@@ -119,7 +148,7 @@ const CustomizationModal = ({ product, onClose, onAddToCart }) => {
             </div>
           </div>
         </div>
-        
+
         <div className="modal-actions">
           <button className="cancel-button" onClick={onClose}>
             Cancelar
