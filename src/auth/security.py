@@ -27,7 +27,15 @@ fake_users_db = {
         "full_name": "Gerente Principal",
         "role": UserRole.MANAGER,
         "hashed_password": pwd_context.hash("senha123"),
-        "permissions": [Permission.ALL],
+        "permissions": [
+            Permission.PRODUCT_READ,
+            Permission.ORDER_CREATE,
+            Permission.ORDER_READ,
+            Permission.ORDER_UPDATE,
+            Permission.CASHIER_OPEN,
+            Permission.CASHIER_CLOSE,
+            Permission.REPORTS_VIEW
+        ],
         "disabled": False
     },
     "caixa": {
@@ -37,10 +45,10 @@ fake_users_db = {
         "role": UserRole.CASHIER,
         "hashed_password": pwd_context.hash("senha123"),
         "permissions": [
-            Permission.SALE_CREATE, 
-            Permission.SALE_READ, 
-            Permission.PRODUCT_READ, 
-            Permission.CASHIER_OPEN, 
+            Permission.ORDER_CREATE,
+            Permission.ORDER_READ,
+            Permission.PRODUCT_READ,
+            Permission.CASHIER_OPEN,
             Permission.CASHIER_CLOSE
         ],
         "disabled": False
@@ -62,7 +70,7 @@ fake_users_db = {
         "id": "4",
         "username": "cozinheiro",
         "full_name": "Cozinheiro",
-        "role": UserRole.COOK,
+        "role": UserRole.KITCHEN,
         "hashed_password": pwd_context.hash("senha123"),
         "permissions": [
             Permission.ORDER_READ, 
