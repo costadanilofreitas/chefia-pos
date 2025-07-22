@@ -1,163 +1,141 @@
-from typing import Optional, Dict, List
-from datetime import datetime, timedelta
-import bcrypt
-from ..models.numeric_password_models import (
-    NumericPasswordCredentials,
-    AuthUser,
-    LoginAttempt
-)
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+import json
+import os
+
+from ..models.numeric_password_models import OperatorCredential
+
 
 class NumericPasswordRepository:
-    """
-    Repositório em memória para credenciais de senhas numéricas.
-    Em produção, seria substituído por implementação com banco de dados.
-    """
+    """Repository para gerenciamento de credenciais de operadores."""
     
-    def __init__(self):
-        # Dados em memória (em produção seria banco de dados)
-        self.credentials: Dict[str, NumericPasswordCredentials] = {}
-        self.login_attempts: List[LoginAttempt] = []
+    def __init__(self, storage_file: str = "/tmp/operator_credentials.json"):
+        """
+        Inicializa o repository com armazenamento em arquivo JSON.
         
-        # Criar usuários padrão para desenvolvimento
-        self._create_default_users()
+        Args:
+            storage_file: Caminho para o arquivo de armazenamento
+        """
+        self.storage_file = storage_file
+        self._ensure_storage_file()
     
-    def _create_default_users(self):
-        """Criar usuários padrão para desenvolvimento"""
-        default_users = [
-            {
-                "operator_id": "admin",
-                "password": "147258",
-                "name": "Administrador",
-                "role": "admin",
-                "store_id": "1",
-                "terminal_id": "1"
-            },
-            {
-                "operator_id": "manager",
-                "password": "123456",
-                "name": "Gerente",
-                "role": "manager",
-                "store_id": "1",
-                "terminal_id": "1"
-            },
-            {
-                "operator_id": "cashier",
-                "password": "654321",
-                "name": "Operador de Caixa",
-                "role": "cashier",
-                "store_id": "1",
-                "terminal_id": "1"
-            }
-        ]
+    def _ensure_storage_file(self):
+        """Garante que o arquivo de armazenamento existe."""
+        if not os.path.exists(self.storage_file):
+            with open(self.storage_file, 'w') as f:
+                json.dump({}, f)
+    
+    def _load_data(self) -> Dict[str, Any]:
+        """Carrega dados do arquivo de armazenamento."""
+        try:
+            with open(self.storage_file, 'r') as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return {}
+    
+    def _save_data(self, data: Dict[str, Any]):
+        """Salva dados no arquivo de armazenamento."""
+        with open(self.storage_file, 'w') as f:
+            json.dump(data, f, indent=2, default=str)
+    
+    async def create(self, credential: OperatorCredential) -> OperatorCredential:
+        """Cria uma nova credencial de operador."""
+        data = self._load_data()
         
-        for user_data in default_users:
-            password_hash = bcrypt.hashpw(
-                user_data["password"].encode('utf-8'),
-                bcrypt.gensalt()
-            ).decode('utf-8')
-            
-            credentials = NumericPasswordCredentials(
-                operator_id=user_data["operator_id"],
-                password_hash=password_hash,
-                name=user_data["name"],
-                role=user_data["role"],
-                store_id=user_data["store_id"],
-                terminal_id=user_data["terminal_id"],
-                is_active=True,
-                created_at=datetime.utcnow(),
-                last_login=None,
-                failed_attempts=0,
-                locked_until=None
+        # Converte para dict para armazenamento
+        credential_dict = {
+            "operator_id": credential.operator_id,
+            "password_hash": credential.password_hash,
+            "salt": credential.salt,
+            "is_active": getattr(credential, 'is_active', True),
+            "is_temporary": getattr(credential, 'is_temporary', False),
+            "created_at": credential.created_at.isoformat(),
+            "updated_at": credential.updated_at.isoformat(),
+            "expires_at": getattr(credential, 'expires_at', None),
+            "failed_attempts": credential.failed_attempts,
+            "locked_until": getattr(credential, 'locked_until', None),
+            "last_login": getattr(credential, 'last_login', None),
+            "is_locked": credential.is_locked,
+            "lock_expiration": credential.lock_expiration.isoformat() if credential.lock_expiration else None,
+            "last_password_change": credential.last_password_change.isoformat(),
+            "last_failed_attempt": credential.last_failed_attempt.isoformat() if credential.last_failed_attempt else None
+        }
+        
+        data[credential.operator_id] = credential_dict
+        self._save_data(data)
+        
+        return credential
+    
+    async def get_by_operator_id(self, operator_id: str) -> Optional[OperatorCredential]:
+        """Busca credencial por ID do operador."""
+        data = self._load_data()
+        
+        if operator_id not in data:
+            return None
+        
+        credential_data = data[operator_id]
+        
+        # Converte de volta para OperatorCredential
+        return OperatorCredential(
+            id=credential_data.get("id", credential_data["operator_id"]),
+            operator_id=credential_data["operator_id"],
+            password_hash=credential_data["password_hash"],
+            salt=credential_data["salt"],
+            failed_attempts=credential_data["failed_attempts"],
+            last_failed_attempt=datetime.fromisoformat(credential_data["last_failed_attempt"]) if credential_data["last_failed_attempt"] else None,
+            is_locked=credential_data["is_locked"],
+            lock_expiration=datetime.fromisoformat(credential_data["lock_expiration"]) if credential_data["lock_expiration"] else None,
+            last_password_change=datetime.fromisoformat(credential_data["last_password_change"]),
+            created_at=datetime.fromisoformat(credential_data["created_at"]),
+            updated_at=datetime.fromisoformat(credential_data["updated_at"])
+        )
+    
+    async def update(self, credential: OperatorCredential) -> OperatorCredential:
+        """Atualiza uma credencial existente."""
+        return await self.create(credential)  # Sobrescreve
+    
+    async def delete(self, operator_id: str) -> bool:
+        """Remove uma credencial."""
+        data = self._load_data()
+        
+        if operator_id in data:
+            del data[operator_id]
+            self._save_data(data)
+            return True
+        
+        return False
+    
+    async def get_credential_by_operator_id(self, operator_id: str) -> Optional[OperatorCredential]:
+        """Busca credencial por ID do operador."""
+        return await self.get_by_operator_id(operator_id)
+    
+    async def create_credential(self, credential: OperatorCredential) -> OperatorCredential:
+        """Cria uma nova credencial de operador."""
+        return await self.create(credential)
+    
+    async def update_credential(self, credential: OperatorCredential) -> OperatorCredential:
+        """Atualiza uma credencial existente."""
+        return await self.update(credential)
+    
+    async def list_all(self) -> List[OperatorCredential]:
+        data = self._load_data()
+        credentials = []
+        
+        for operator_id, credential_data in data.items():
+            credential = OperatorCredential(
+                id=credential_data.get("id", credential_data["operator_id"]),
+                operator_id=credential_data["operator_id"],
+                password_hash=credential_data["password_hash"],
+                salt=credential_data["salt"],
+                failed_attempts=credential_data["failed_attempts"],
+                last_failed_attempt=datetime.fromisoformat(credential_data["last_failed_attempt"]) if credential_data["last_failed_attempt"] else None,
+                is_locked=credential_data["is_locked"],
+                lock_expiration=datetime.fromisoformat(credential_data["lock_expiration"]) if credential_data["lock_expiration"] else None,
+                last_password_change=datetime.fromisoformat(credential_data["last_password_change"]),
+                created_at=datetime.fromisoformat(credential_data["created_at"]),
+                updated_at=datetime.fromisoformat(credential_data["updated_at"])
             )
-            
-            self.credentials[user_data["operator_id"]] = credentials
-    
-    def get_credentials(self, operator_id: str) -> Optional[NumericPasswordCredentials]:
-        """Buscar credenciais por ID do operador"""
-        return self.credentials.get(operator_id)
-    
-    def create_credentials(self, credentials: NumericPasswordCredentials) -> NumericPasswordCredentials:
-        """Criar novas credenciais"""
-        self.credentials[credentials.operator_id] = credentials
+            credentials.append(credential)
+        
         return credentials
-    
-    def update_credentials(self, credentials: NumericPasswordCredentials) -> NumericPasswordCredentials:
-        """Atualizar credenciais existentes"""
-        self.credentials[credentials.operator_id] = credentials
-        return credentials
-    
-    def delete_credentials(self, operator_id: str) -> bool:
-        """Deletar credenciais"""
-        if operator_id in self.credentials:
-            del self.credentials[operator_id]
-            return True
-        return False
-    
-    def verify_password(self, operator_id: str, password: str) -> bool:
-        """Verificar senha do operador"""
-        credentials = self.get_credentials(operator_id)
-        if not credentials:
-            return False
-        
-        return bcrypt.checkpw(
-            password.encode('utf-8'),
-            credentials.password_hash.encode('utf-8')
-        )
-    
-    def record_login_attempt(self, operator_id: str, success: bool, ip_address: str = None):
-        """Registrar tentativa de login"""
-        attempt = LoginAttempt(
-            operator_id=operator_id,
-            timestamp=datetime.utcnow(),
-            success=success,
-            ip_address=ip_address
-        )
-        self.login_attempts.append(attempt)
-        
-        # Atualizar contador de tentativas falhas
-        credentials = self.get_credentials(operator_id)
-        if credentials:
-            if success:
-                credentials.failed_attempts = 0
-                credentials.last_login = datetime.utcnow()
-                credentials.locked_until = None
-            else:
-                credentials.failed_attempts += 1
-                # Bloquear após 5 tentativas falhas
-                if credentials.failed_attempts >= 5:
-                    credentials.locked_until = datetime.utcnow() + timedelta(minutes=30)
-            
-            self.update_credentials(credentials)
-    
-    def is_locked(self, operator_id: str) -> bool:
-        """Verificar se operador está bloqueado"""
-        credentials = self.get_credentials(operator_id)
-        if not credentials or not credentials.locked_until:
-            return False
-        
-        return datetime.utcnow() < credentials.locked_until
-    
-    def unlock_operator(self, operator_id: str) -> bool:
-        """Desbloquear operador"""
-        credentials = self.get_credentials(operator_id)
-        if credentials:
-            credentials.failed_attempts = 0
-            credentials.locked_until = None
-            self.update_credentials(credentials)
-            return True
-        return False
-    
-    def get_login_attempts(self, operator_id: str, limit: int = 10) -> List[LoginAttempt]:
-        """Buscar tentativas de login recentes"""
-        attempts = [
-            attempt for attempt in self.login_attempts
-            if attempt.operator_id == operator_id
-        ]
-        # Ordenar por timestamp decrescente
-        attempts.sort(key=lambda x: x.timestamp, reverse=True)
-        return attempts[:limit]
-    
-    def list_all_credentials(self) -> List[NumericPasswordCredentials]:
-        """Listar todas as credenciais (para admin)"""
-        return list(self.credentials.values())
 

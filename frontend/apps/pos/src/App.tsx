@@ -8,6 +8,7 @@ import TerminalValidator from './components/TerminalValidator';
 import POSLayout from './components/POSLayout';
 import { OrderProvider } from '@common/contexts/order/hooks/useOrder';
 import { ProductProvider } from '@common/contexts/product/hooks/useProduct';
+import { AuthProvider } from './contexts/AuthContext';
 import { UserRole } from './hooks/mocks/useAuth';
 
 // Lazy load components for better performance
@@ -135,10 +136,11 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <ErrorBoundary>
-        <Router>
-          <ProductProvider>
-            <OrderProvider>
-              <Suspense fallback={<LoadingFallback message="Inicializando sistema POS..." />}>
+        <AuthProvider>
+          <Router>
+            <ProductProvider>
+              <OrderProvider>
+                <Suspense fallback={<LoadingFallback message="Inicializando sistema POS..." />}>
                 <Routes>
                   {/* Root redirects */}
                   <Route path="/" element={<Navigate to="/pos/1" replace />} />
@@ -291,9 +293,10 @@ function App() {
             </OrderProvider>
           </ProductProvider>
         </Router>
-      </ErrorBoundary>
-    </ThemeProvider>
-  );
+      </AuthProvider>
+    </ErrorBoundary>
+  </ThemeProvider>
+);
 }
 
 export default App;
