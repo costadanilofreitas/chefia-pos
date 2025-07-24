@@ -110,19 +110,35 @@ export class ApiInterceptor {
     );
   }
 
-  public setToken(tokenData: TokenData): void {
-    this.tokenData = tokenData;
+  public setToken(tokenData: TokenData | string): void {
+    // Handle both TokenData object and raw token string
+    if (typeof tokenData === 'string') {
+      // If it's just a token string, create minimal TokenData
+      this.tokenData = {
+        access_token: tokenData,
+        token_type: 'bearer',
+        expires_in: 1800, // 30 minutes default
+        operator_id: 'unknown',
+        operator_name: 'Unknown User',
+        roles: [],
+        permissions: [],
+        require_password_change: false
+      };
+    } else {
+      this.tokenData = tokenData;
+    }
     
-    // Calculate expiration time
+    // Calculate expiration time safely
     const now = Date.now();
-    this.tokenExpirationTime = now + (tokenData.expires_in * 1000);
+    const expiresInMs = (this.tokenData.expires_in || 1800) * 1000; // Default 30 minutes
+    this.tokenExpirationTime = now + expiresInMs;
     
     // Save to localStorage
     this.saveTokenToStorage();
     
     console.log('Token set successfully:', {
-      operator: tokenData.operator_name,
-      roles: tokenData.roles,
+      operator: this.tokenData.operator_name,
+      roles: this.tokenData.roles,
       expiresAt: new Date(this.tokenExpirationTime).toISOString()
     });
   }
@@ -223,6 +239,13 @@ export class ApiInterceptor {
       if (tokenStr && expirationStr) {
         const tokenData = JSON.parse(tokenStr) as TokenData;
         const expirationTime = parseInt(expirationStr, 10);
+        
+        // Validate expiration time is a valid number
+        if (isNaN(expirationTime)) {
+          console.log('Invalid expiration time in storage, clearing...');
+          this.clearToken();
+          return;
+        }
         
         // Check if token is still valid
         const now = Date.now();

@@ -1,15 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 
-/**
- * Função para obter o token de autenticação do localStorage
- */
-const getAuthToken = (): string | null => {
-  try {
-    return localStorage.getItem('auth_token');
-  } catch {
-    return null;
-  }
-};
+import { ApiInterceptor } from '../../../../../apps/pos/src/services/ApiInterceptor';
 
 /**
  * Tipos para opções da API
@@ -27,7 +18,7 @@ type ApiResponse<T = any> = {
 };
 
 /**
- * Hook para fazer chamadas de API reais usando fetch
+ * Hook para fazer chamadas de API usando ApiInterceptor
  * @param baseUrl URL base da API
  * @param options Opções adicionais, como headers
  * @returns Objeto com métodos para interagir com a API
@@ -36,6 +27,10 @@ export const useApi = (baseUrl: string = '', options: ApiOptions = {}) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<any>(null);
+
+  // Usar ApiInterceptor singleton
+  const apiInterceptor = ApiInterceptor.getInstance();
+  const axiosInstance = apiInterceptor.getAxiosInstance();
 
   // Estabilizar opções para evitar re-criações desnecessárias
   const stableOptions = useMemo(() => options, [JSON.stringify(options)]);
@@ -51,58 +46,34 @@ export const useApi = (baseUrl: string = '', options: ApiOptions = {}) => {
       setError(null);
 
       try {
-        const queryString =
-          method === 'GET' && Object.keys(params).length
-            ? '?' + new URLSearchParams(params).toString()
-            : '';
-
-        const url = `${baseUrl}${endpoint}${queryString}`;
+        console.log(`🌐 API Request: ${method} ${baseUrl}${endpoint}`);
         
-        // Preparar headers com autenticação
-        const authToken = getAuthToken();
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-          ...stableOptions.headers,
-        };
+        // Usar axios instance do ApiInterceptor que já tem interceptors configurados
+        let response;
+        const fullUrl = `${baseUrl}${endpoint}`;
         
-        // Adicionar token de autenticação se disponível
-        if (authToken) {
-          headers['Authorization'] = `Bearer ${authToken}`;
-        }
-        
-        const fetchOptions: RequestInit = {
-          method,
-          headers,
-          body: method !== 'GET' && body ? JSON.stringify(body) : undefined,
-        };
-
-        const response = await fetch(url, fetchOptions);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          
-          // Tratamento especial para erro 401 (Unauthorized)
-          if (response.status === 401) {
-            // Limpar token inválido
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('auth_user');
-            
-            // Redirecionar para login se não estiver já na página de login
-            if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/cashier')) {
-              console.log('🔒 Token inválido, redirecionando para login...');
-              window.location.href = '/pos/1/cashier';
-            }
-          }
-          
-          throw new Error(
-            `Erro ${response.status}: ${response.statusText} - ${errorText}`
-          );
+        switch (method) {
+          case 'GET':
+            response = await axiosInstance.get(fullUrl, { params });
+            break;
+          case 'POST':
+            response = await axiosInstance.post(fullUrl, body);
+            break;
+          case 'PUT':
+            response = await axiosInstance.put(fullUrl, body);
+            break;
+          case 'DELETE':
+            response = await axiosInstance.delete(fullUrl);
+            break;
+          default:
+            throw new Error(`Método HTTP não suportado: ${method}`);
         }
 
-        const responseData = await response.json();
+        console.log(`✅ API Response: ${method} ${fullUrl} - Status: ${response.status}`);
+        
         const finalResponse: ApiResponse<T> = {
           success: true,
-          data: responseData,
+          data: response.data,
         };
 
         setData(finalResponse);

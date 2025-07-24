@@ -38,7 +38,7 @@ import {
   Search as SearchIcon,
   Category as CategoryIcon
 } from '@mui/icons-material';
-import { useAuth } from '../hooks/mocks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 import { useProduct } from '../hooks/mocks/useProduct';
 import { useOrder } from '../hooks/mocks/useOrder';
 import { formatCurrency } from '../utils/formatters';
