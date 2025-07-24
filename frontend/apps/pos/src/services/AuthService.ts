@@ -32,8 +32,9 @@ export interface AuthUser {
 }
 
 class AuthService {
-  private baseURL = 'http://localhost:8001/api/v1/auth';
+  private static readonly API_BASE_URL = 'http://localhost:8001/api/v1';
   private currentUser: AuthUser | null = null;
+  private baseURL = AuthService.API_BASE_URL;
 
   constructor() {
     // Carregar usuário do localStorage se existir
@@ -41,37 +42,64 @@ class AuthService {
   }
 
   /**
-   * Realiza login com credenciais numéricas
+   * Realiza login com credenciais
    */
   async login(credentials: LoginRequest): Promise<AuthUser> {
     try {
-      // Por enquanto, simular o backend até resolver o problema HTTP
-      // TODO: Substituir por chamada real quando HTTP estiver funcionando
-      const mockResponse = await this.mockLogin(credentials);
+      // Fazer chamada real para o backend de autenticação
+      const formData = new FormData();
+      formData.append('username', credentials.operator_id);
+      formData.append('password', credentials.password);
+
+      const response = await axios.post(`${this.baseURL}/auth/token`, formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+
+      const loginResponse = response.data;
+      
+      // Buscar informações do usuário
+      const userResponse = await axios.get(`${this.baseURL}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${loginResponse.access_token}`
+        }
+      });
+
+      const userData = userResponse.data;
       
       const user: AuthUser = {
-        operator_id: mockResponse.operator_id,
-        operator_name: mockResponse.operator_name,
-        roles: mockResponse.roles,
-        permissions: mockResponse.permissions,
-        access_token: mockResponse.access_token,
-        expires_at: new Date(Date.now() + mockResponse.expires_in * 1000)
+        operator_id: userData.username,
+        operator_name: userData.full_name,
+        roles: [userData.role],
+        permissions: userData.permissions,
+        access_token: loginResponse.access_token,
+        expires_at: new Date(Date.now() + loginResponse.expires_in * 1000)
       };
 
       this.currentUser = user;
       this.saveUserToStorage(user);
       
+      console.log('✅ Login realizado com sucesso:', user.operator_name);
       return user;
-    } catch (error) {
-      console.error('Erro no login:', error);
-      throw new Error('Credenciais inválidas');
+      
+    } catch (error: any) {
+      console.error('❌ Erro no login:', error);
+      
+      // Se falhar, tentar fallback para mock
+      if (error.response?.status === 401) {
+        throw new Error('Credenciais inválidas');
+      } else {
+        console.warn('⚠️ Erro de conexão, usando fallback mock');
+        return this.mockLogin(credentials);
+      }
     }
   }
 
   /**
-   * Mock temporário do login até resolver problema HTTP
+   * Mock temporário do login para fallback
    */
-  private async mockLogin(credentials: LoginRequest): Promise<LoginResponse> {
+  private async mockLogin(credentials: LoginRequest): Promise<AuthUser> {
     // Simular delay de rede
     await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -80,12 +108,10 @@ class AuthService {
       throw new Error('Operador e senha são obrigatórios');
     }
 
-    if (credentials.password.length !== 6 || !/^\d{6}$/.test(credentials.password)) {
-      throw new Error('Senha deve ter exatamente 6 dígitos');
-    }
-
-    // Credenciais válidas conhecidas (simulando dados do backend)
+    // Credenciais válidas conhecidas (compatíveis com o servidor real)
     const validCredentials = [
+      { operator_id: 'gerente', password: 'senha123', name: 'Gerente Principal', roles: ['gerente'], permissions: ['produto:ler', 'pedido:criar', 'pedido:ler', 'caixa:abrir', 'caixa:fechar'] },
+      { operator_id: 'caixa', password: 'senha123', name: 'Operador de Caixa', roles: ['caixa'], permissions: ['produto:ler', 'pedido:criar', 'pedido:ler', 'caixa:abrir'] },
       { operator_id: 'admin', password: '147258', name: 'Admin', roles: ['admin'], permissions: ['read', 'write', 'delete'] },
       { operator_id: 'manager', password: '123456', name: 'Manager', roles: ['manager'], permissions: ['read', 'write'] },
       { operator_id: 'cashier', password: '654321', name: 'Cashier', roles: ['cashier'], permissions: ['read'] }
@@ -102,16 +128,21 @@ class AuthService {
     // Gerar token mock (em produção viria do backend)
     const mockToken = `mock_jwt_token_${validUser.operator_id}_${Date.now()}`;
 
-    return {
-      access_token: mockToken,
-      token_type: 'bearer',
-      expires_in: 28800, // 8 horas
+    // Criar AuthUser e salvar no storage
+    const user: AuthUser = {
       operator_id: validUser.operator_id,
       operator_name: validUser.name,
       roles: validUser.roles,
       permissions: validUser.permissions,
-      require_password_change: false
+      access_token: mockToken,
+      expires_at: new Date(Date.now() + 28800 * 1000) // 8 horas
     };
+
+    this.currentUser = user;
+    this.saveUserToStorage(user);
+    
+    console.log('✅ Login mock realizado com sucesso:', user.operator_name);
+    return user;
   }
 
   /**

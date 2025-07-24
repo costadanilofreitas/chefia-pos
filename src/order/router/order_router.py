@@ -5,14 +5,14 @@ from datetime import datetime
 import uuid
 import json
 
-from src.product.models.product import (
+from src.core.models.core_models import (
     OrderItem,
-    OrderItemCreate,
-    OrderItemCustomization,
-    OrderItemSection,
+    # OrderItemCreate,
+    # OrderItemCustomization,
+    # OrderItemSection,
     Order,
-    OrderCreate,
-    OrderUpdate,
+    # OrderCreate,
+    # OrderUpdate,
     OrderStatus,
     PaymentStatus,
     PaymentMethod,

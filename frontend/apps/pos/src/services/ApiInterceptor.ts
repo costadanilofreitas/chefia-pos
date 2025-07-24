@@ -46,7 +46,7 @@ export class ApiInterceptor {
     this.axiosInstance.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
         // Skip auth for login endpoint
-        if (config.url?.includes('/api/v1/auth/auth/login')) {
+        if (config.url?.includes('/api/v1/auth/token')) {
           return config;
         }
 
@@ -175,15 +175,35 @@ export class ApiInterceptor {
 
   private async performTokenRefresh(): Promise<string> {
     try {
-      // For now, we'll implement a simple re-login approach
-      // In a production system, you'd have a refresh token endpoint
-      console.log('Token refresh not implemented yet - clearing token');
+      // Implementar verificação de token via backend
+      if (!this.tokenData?.access_token) {
+        throw new Error('No token to verify');
+      }
+
+      console.log('🔄 Verificando token com backend...');
+      
+      // Fazer chamada para verificar se o token ainda é válido
+      const response = await axios.get('http://localhost:8001/api/v1/auth/verify', {
+        headers: {
+          'Authorization': `Bearer ${this.tokenData.access_token}`
+        },
+        timeout: 5000
+      });
+
+      if (response.status === 200) {
+        console.log('✅ Token ainda válido no backend');
+        // Atualizar tempo de expiração baseado na resposta do backend
+        const now = Date.now();
+        this.tokenExpirationTime = now + (this.tokenData.expires_in * 1000);
+        this.saveTokenToStorage();
+        return this.tokenData.access_token;
+      } else {
+        throw new Error('Token inválido no backend');
+      }
+    } catch (error) {
+      console.error('❌ Verificação de token falhou:', error);
       this.clearToken();
       window.dispatchEvent(new CustomEvent('auth:token-expired'));
-      throw new Error('Token refresh not implemented');
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      this.clearToken();
       throw error;
     }
   }

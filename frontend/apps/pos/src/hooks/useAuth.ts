@@ -59,22 +59,35 @@ export const useAuth = () => {
   // Initialize auth state from stored token
   useEffect(() => {
     const initializeAuth = () => {
+      console.log('🔄 Initializing auth...');
       const tokenData = apiInterceptor.getToken();
       
       if (tokenData && apiInterceptor.isTokenValid()) {
-        const userData = tokenToUser(tokenData);
+        // Convert token data inline to avoid dependency issues
+        const userData: User = {
+          id: tokenData.operator_id,
+          username: tokenData.operator_id,
+          name: tokenData.operator_name,
+          role: tokenData.role as UserRole,
+          permissions: tokenData.permissions as Permission[],
+          requirePasswordChange: tokenData.require_password_change
+        };
+        
         setUser(userData);
         setIsAuthenticated(true);
-        console.log('Auth initialized from stored token:', userData.name);
+        console.log('✅ Auth initialized from stored token:', userData.name);
       } else {
-        console.log('No valid token found, user not authenticated');
+        console.log('❌ No valid token found, user not authenticated');
+        setUser(null);
+        setIsAuthenticated(false);
       }
       
       setLoading(false);
     };
-
+    
+    // Execute immediately without timeout to avoid delays
     initializeAuth();
-  }, [tokenToUser]);
+  }, []); // Empty dependencies to run only once
 
   // Listen for auth events
   useEffect(() => {
@@ -117,19 +130,50 @@ export const useAuth = () => {
     setError(null);
     
     try {
-      const response = await apiInterceptor.post('http://localhost:8001/api/v1/auth/auth/login', credentials);
-      const tokenData = response.data as TokenData;
+      // Prepare form data for the token endpoint
+      const formData = new FormData();
+      formData.append('username', credentials.operator_id);
+      formData.append('password', credentials.password);
+      
+      const response = await apiInterceptor.post('http://localhost:8001/api/v1/auth/token', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+      
+      const loginResponse = response.data;
+      
+      // Get user info from /me endpoint
+      const userResponse = await apiInterceptor.get('http://localhost:8001/api/v1/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${loginResponse.access_token}`
+        }
+      });
+      
+      const userData = userResponse.data;
+      
+      // Create token data structure
+      const tokenData: TokenData = {
+        access_token: loginResponse.access_token,
+        token_type: loginResponse.token_type,
+        expires_in: loginResponse.expires_in,
+        operator_id: userData.username,
+        operator_name: userData.full_name,
+        roles: [userData.role],
+        permissions: userData.permissions,
+        require_password_change: false
+      };
       
       // Set token in interceptor
       apiInterceptor.setToken(tokenData);
       
       // Convert to user format
-      const userData = tokenToUser(tokenData);
-      setUser(userData);
+      const userFormatted = tokenToUser(tokenData);
+      setUser(userFormatted);
       setIsAuthenticated(true);
       
-      console.log('Login successful:', userData.name);
-      return userData;
+      console.log('Login successful:', userFormatted.name);
+      return userFormatted;
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || 'Falha no login. Verifique suas credenciais.';
       setError(errorMessage);
@@ -140,10 +184,31 @@ export const useAuth = () => {
     }
   }, [tokenToUser]);
 
-  const logout = useCallback(async (): Promise<void> => {
+  const logout = useCallback(async (terminalId?: string): Promise<void> => {
     setLoading(true);
     
     try {
+      // Verificar se é um POS de mesa (pode deslogar sem fechar caixa)
+      const isTablePOS = terminalId?.includes('mesa') || terminalId?.includes('table');
+      
+      if (!isTablePOS) {
+        // Para POS normais, verificar se há caixa aberto
+        try {
+          const response = await apiInterceptor.get(`http://localhost:8001/api/v1/cashier/terminal/${terminalId}/status`);
+          const cashierStatus = response.data;
+          
+          if (cashierStatus.has_open_cashier) {
+            throw new Error('Não é possível fazer logout com caixa aberto. Feche o caixa primeiro.');
+          }
+        } catch (error: any) {
+          // Se não conseguir verificar o status do caixa, permitir logout
+          if (error.message.includes('caixa aberto')) {
+            throw error; // Re-throw se for erro de caixa aberto
+          }
+          console.warn('Não foi possível verificar status do caixa, permitindo logout:', error);
+        }
+      }
+      
       // Clear token from interceptor
       apiInterceptor.clearToken();
       
@@ -153,8 +218,10 @@ export const useAuth = () => {
       setError(null);
       
       console.log('Logout successful');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Logout error:', error);
+      setError(error.message || 'Erro ao fazer logout');
+      throw error;
     } finally {
       setLoading(false);
     }

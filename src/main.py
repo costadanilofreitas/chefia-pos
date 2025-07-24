@@ -40,22 +40,28 @@ app.middleware("http")(error_handling_middleware)
 register_exception_handlers(app)
 
 # Importar e registrar routers
-from src.order.router.order_router import router as order_router
-from src.payment.router.payment_router import router as payment_router
-from src.payment.router.split_payment_router import router as split_payment_router
-from src.remote_orders.router.remote_order_router import router as remote_order_router
-from src.remote_orders.router.rappi_router import router as rappi_router
-from src.waiter.router.table_layout_router import router as table_layout_router
-from src.peripherals.router.keyboard_router import router as keyboard_router
+from src.auth.auth_router import router as auth_router
+from src.cashier.router.cashier_router import router as cashier_router
+from src.product.router.product_router import router as product_router
+# from src.order.router.order_router import router as order_router
+# from src.payment.router.payment_router import router as payment_router
+# from src.payment.router.split_payment_router import router as split_payment_router
+# from src.remote_orders.router.remote_order_router import router as remote_order_router
+# from src.remote_orders.router.rappi_router import router as rappi_router
+# from src.waiter.router.table_layout_router import router as table_layout_router
+# from src.peripherals.router.keyboard_router import router as keyboard_router
 
 # Registrar routers
-app.include_router(order_router)
-app.include_router(payment_router)
-app.include_router(split_payment_router)
-app.include_router(remote_order_router)
-app.include_router(rappi_router)
-app.include_router(table_layout_router)
-app.include_router(keyboard_router)
+app.include_router(auth_router)
+app.include_router(cashier_router)
+app.include_router(product_router)
+# app.include_router(order_router)
+# app.include_router(payment_router)
+# app.include_router(split_payment_router)
+# app.include_router(remote_order_router)
+# app.include_router(rappi_router)
+# app.include_router(table_layout_router)
+# app.include_router(keyboard_router)
 
 @app.on_event("startup")
 async def startup_event():

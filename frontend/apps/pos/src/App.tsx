@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, CircularProgress, Box } from '@mui/material';
@@ -8,6 +8,7 @@ import TerminalValidator from './components/TerminalValidator';
 import POSLayout from './components/POSLayout';
 import { OrderProvider } from '@common/contexts/order/hooks/useOrder';
 import { ProductProvider } from '@common/contexts/product/hooks/useProduct';
+import { CashierProvider } from '@common/contexts/cashier/hooks/useCashier';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserRole } from './hooks/mocks/useAuth';
 
@@ -116,14 +117,19 @@ const theme = createTheme({
 });
 
 // Route wrapper with layout
-const LayoutRoute: React.FC<{ 
-  children: React.ReactNode; 
+const LayoutRoute: React.FC<{
+  children: React.ReactNode;
   title?: string;
   requireAuth?: boolean;
   requiredRole?: UserRole;
-}> = ({ children, title, requireAuth = true, requiredRole }) => (
+  requireOpenDay?: boolean;
+}> = ({ children, title, requireAuth = false, requiredRole, requireOpenDay = false }) => (
   <TerminalValidator>
-    <AuthGuard requiredRole={requiredRole} allowGuestAccess={!requireAuth}>
+    <AuthGuard 
+      requireAuth={requireAuth} 
+      requiredRole={requiredRole}
+      requireOpenDay={requireOpenDay}
+    >
       <POSLayout title={title}>
         {children}
       </POSLayout>
@@ -139,7 +145,8 @@ function App() {
         <AuthProvider>
           <Router>
             <ProductProvider>
-              <OrderProvider>
+              <CashierProvider>
+                {/* <OrderProvider> */}
                 <Suspense fallback={<LoadingFallback message="Inicializando sistema POS..." />}>
                 <Routes>
                   {/* Root redirects */}
@@ -149,17 +156,17 @@ function App() {
                   {/* Main POS Route - redirects based on auth */}
                   <Route path="/pos/:terminalId" element={
                     <TerminalValidator>
-                      <AuthGuard allowGuestAccess={true}>
+                      <AuthGuard requireAuth={false}>
                         <Navigate to="cashier" replace />
                       </AuthGuard>
                     </TerminalValidator>
                   } />
                   
-                  {/* Cashier - Entry point for unauthenticated users */}
+                  {/* Cashier - Entry point, allows free access to products */}
                   <Route path="/pos/:terminalId/cashier" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando caixa..." />}>
-                        <LayoutRoute requireAuth={false} title="Caixa">
+                        <LayoutRoute title="Caixa" requireAuth={false}>
                           <CashierOpeningClosingPage />
                         </LayoutRoute>
                       </Suspense>
@@ -198,21 +205,22 @@ function App() {
                     </ErrorBoundary>
                   } />
                   
-                  {/* Management routes */}
+                  {/* Management routes - Requires authentication for reports */}
                   <Route path="/pos/:terminalId/manager" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando painel gerencial..." />}>
-                        <LayoutRoute requiredRole={UserRole.MANAGER} title="Gestão Gerencial">
+                        <LayoutRoute requireAuth={true} requiredRole={UserRole.MANAGER} title="Gestão Gerencial">
                           <ManagerScreen />
                         </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
                   } />
                   
+                  {/* Business Day - Requires authentication to open/close day */}
                   <Route path="/pos/:terminalId/business-day" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando dia operacional..." />}>
-                        <LayoutRoute title="Dia Operacional">
+                        <LayoutRoute requireAuth={true} title="Dia Operacional">
                           <BusinessDayPage />
                         </LayoutRoute>
                       </Suspense>
@@ -290,10 +298,11 @@ function App() {
                   <Route path="*" element={<Navigate to="/pos/1" replace />} />
                 </Routes>
               </Suspense>
-            </OrderProvider>
-          </ProductProvider>
-        </Router>
-      </AuthProvider>
+            {/* </OrderProvider> */}
+          </CashierProvider>
+        </ProductProvider>
+      </Router>
+    </AuthProvider>
     </ErrorBoundary>
   </ThemeProvider>
 );

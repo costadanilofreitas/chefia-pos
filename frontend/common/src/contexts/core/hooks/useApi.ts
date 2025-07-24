@@ -1,4 +1,15 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+
+/**
+ * Função para obter o token de autenticação do localStorage
+ */
+const getAuthToken = (): string | null => {
+  try {
+    return localStorage.getItem('auth_token');
+  } catch {
+    return null;
+  }
+};
 
 /**
  * Tipos para opções da API
@@ -26,6 +37,9 @@ export const useApi = (baseUrl: string = '', options: ApiOptions = {}) => {
   const [error, setError] = useState<Error | null>(null);
   const [data, setData] = useState<any>(null);
 
+  // Estabilizar opções para evitar re-criações desnecessárias
+  const stableOptions = useMemo(() => options, [JSON.stringify(options)]);
+
   const makeRequest = useCallback(
     async <T>(
       method: 'GET' | 'POST' | 'PUT' | 'DELETE',
@@ -43,12 +57,22 @@ export const useApi = (baseUrl: string = '', options: ApiOptions = {}) => {
             : '';
 
         const url = `${baseUrl}${endpoint}${queryString}`;
+        
+        // Preparar headers com autenticação
+        const authToken = getAuthToken();
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          ...stableOptions.headers,
+        };
+        
+        // Adicionar token de autenticação se disponível
+        if (authToken) {
+          headers['Authorization'] = `Bearer ${authToken}`;
+        }
+        
         const fetchOptions: RequestInit = {
           method,
-          headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-          },
+          headers,
           body: method !== 'GET' && body ? JSON.stringify(body) : undefined,
         };
 
@@ -56,6 +80,20 @@ export const useApi = (baseUrl: string = '', options: ApiOptions = {}) => {
 
         if (!response.ok) {
           const errorText = await response.text();
+          
+          // Tratamento especial para erro 401 (Unauthorized)
+          if (response.status === 401) {
+            // Limpar token inválido
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user');
+            
+            // Redirecionar para login se não estiver já na página de login
+            if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/cashier')) {
+              console.log('🔒 Token inválido, redirecionando para login...');
+              window.location.href = '/pos/1/cashier';
+            }
+          }
+          
           throw new Error(
             `Erro ${response.status}: ${response.statusText} - ${errorText}`
           );
@@ -76,7 +114,7 @@ export const useApi = (baseUrl: string = '', options: ApiOptions = {}) => {
         setLoading(false);
       }
     },
-    [baseUrl, options.headers]
+    [baseUrl, stableOptions.headers]
   );
 
   // Método para requisição GET

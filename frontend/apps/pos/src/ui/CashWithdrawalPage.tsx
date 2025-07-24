@@ -51,7 +51,7 @@ import {
   Security as SecurityIcon
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/mocks/useAuth';
-import { useCashier } from '../hooks/mocks/useCashier';
+import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
 import { formatCurrency } from '../utils/formatters';
 import PrinterService from '../services/PrinterService';
 

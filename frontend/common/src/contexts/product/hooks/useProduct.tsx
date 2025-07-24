@@ -36,8 +36,8 @@ interface ProductContextValue {
 
 const ProductContext = createContext<ProductContextValue | null>(null);
 
-export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const api = useApi();
+export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { get } = useApi('http://localhost:8001/api/v1'); // URL base do backend de produtos
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -47,45 +47,53 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     setIsLoading(true);
     setError(null);
     try {
-      const { data } = await api.get<Product[]>('/products');
+      const { data } = await get<Product[]>('/products');
       setProducts(data);
     } catch (err: any) {
       setError(err.message || 'Erro ao buscar produtos');
     } finally {
       setIsLoading(false);
     }
-  }, [api]);
+  }, [get]);
 
   const fetchCategories = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const { data } = await api.get<Category[]>('/categories');
+      const { data } = await get<Category[]>('/categories');
       setCategories(data);
     } catch (err: any) {
       setError(err.message || 'Erro ao buscar categorias');
     } finally {
       setIsLoading(false);
     }
-  }, [api]);
+  }, [get]);
 
   const getProductsByCategory = useCallback(async (categoryId: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const { data } = await api.get<Product[]>(`/categories/${categoryId}/products`);
+      const { data } = await get<Product[]>(`/categories/${categoryId}/products`);
       setProducts(data);
     } catch (err: any) {
       setError(err.message || 'Erro ao buscar produtos por categoria');
     } finally {
       setIsLoading(false);
     }
-  }, [api]);
+  }, [get]);
 
   useEffect(() => {
-    fetchCategories();
-    fetchProducts();
-  }, [fetchCategories, fetchProducts]);
+    const loadInitialData = async () => {
+      try {
+        await fetchCategories();
+        await fetchProducts();
+      } catch (error) {
+        console.error('Erro ao carregar dados iniciais:', error);
+      }
+    };
+
+    loadInitialData();
+  }, []); // Executa apenas uma vez na montagem do componente
 
   return (
     <ProductContext.Provider

@@ -17,6 +17,14 @@ class EventType(str, Enum):
     ORDER_ITEM_REMOVED = "order.item_removed"
     ORDER_ITEM_UPDATED = "order.item_updated"
     
+    # Eventos do módulo de produtos
+    PRODUCT_CREATED = "product.created"
+    PRODUCT_UPDATED = "product.updated"
+    PRODUCT_STATUS_CHANGED = "product.status_changed"
+    CATEGORY_CREATED = "category.created"
+    CATEGORY_UPDATED = "category.updated"
+    MENU_UPDATED = "menu.updated"
+    
     # Eventos do módulo de pagamentos
     PAYMENT_CREATED = "payment.created"
     PAYMENT_UPDATED = "payment.updated"

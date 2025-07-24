@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from typing import List
 
-from src.auth.models import User, UserCreate, Token, UserRole
+from src.auth.models import User, UserCreate, Token, UserRole, Permission
 from src.auth.security import (
     authenticate_user, 
     create_access_token, 
@@ -11,8 +11,7 @@ from src.auth.security import (
     has_permission,
     has_role,
     fake_users_db,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-    Permission
+    ACCESS_TOKEN_EXPIRE_MINUTES
 )
 
 router = APIRouter(
@@ -51,7 +50,30 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {
         "access_token": access_token, 
         "token_type": "bearer",
-        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        "operator_id": user.username,
+        "operator_name": user.full_name,
+        "roles": [user.role],
+        "permissions": user.permissions,
+        "require_password_change": False
+    }
+
+
+@router.get("/verify")
+async def verify_token(current_user: User = Depends(get_current_active_user)):
+    """
+    Verifica se o token JWT ainda é válido.
+    
+    Retorna informações do usuário se o token for válido.
+    Usado para verificar persistência de login após reload.
+    """
+    return {
+        "valid": True,
+        "operator_id": current_user.username,
+        "operator_name": current_user.full_name,
+        "role": current_user.role,
+        "permissions": current_user.permissions,
+        "message": "Token válido"
     }
 
 
@@ -106,16 +128,16 @@ async def verify_user_role(
 
 
 # Exemplo de rota protegida por permissão
-@router.get("/protected-by-permission")
-async def protected_by_permission(
-    current_user: User = Depends(has_permission(Permission.REPORT_READ))
-):
-    """
-    Exemplo de endpoint protegido por permissão específica.
-    
-    Requer a permissão REPORT_READ.
-    """
-    return {"message": "Você tem acesso a este recurso protegido por permissão"}
+# @router.get("/protected-by-permission")
+# async def protected_by_permission(
+#     current_user: User = Depends(has_permission(Permission.REPORT_READ))
+# ):
+#     """
+#     Exemplo de endpoint protegido por permissão específica.
+#     
+#     Requer a permissão REPORT_READ.
+#     """
+#     return {"message": "Você tem acesso a este recurso protegido por permissão"}
 
 
 # Exemplo de rota protegida por papel

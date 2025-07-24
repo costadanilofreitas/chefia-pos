@@ -1,0 +1,45 @@
+{
+  "keyboard_standard_1": {
+    "id": "keyboard_standard_1",
+    "name": "Standard Keyboard",
+    "description": "Teclado padr\u00e3o para opera\u00e7\u00f5es do KDS",
+    "device_type": "standard_keyboard",
+    "key_mappings": {
+      "KEY_F1": "next_order",
+      "KEY_F2": "previous_order",
+      "KEY_F3": "next_item",
+      "KEY_F4": "previous_item",
+      "KEY_F5": "advance_status",
+      "KEY_F6": "mark_ready",
+      "KEY_F7": "mark_all_ready",
+      "KEY_F8": "cancel_item",
+      "KEY_F9": "print_order",
+      "KEY_SPACE": "advance_status"
+    },
+    "active": true,
+    "created_at": "2025-07-22T22:53:39.851900",
+    "updated_at": "2025-07-22T22:53:39.851904"
+  },
+  "keyboard_numeric_1": {
+    "id": "keyboard_numeric_1",
+    "name": "Numeric Keypad",
+    "description": "Teclado num\u00e9rico para opera\u00e7\u00f5es r\u00e1pidas do KDS",
+    "device_type": "numeric_keypad",
+    "key_mappings": {
+      "KEY_1": "next_order",
+      "KEY_2": "previous_order",
+      "KEY_3": "next_item",
+      "KEY_4": "previous_item",
+      "KEY_5": "advance_status",
+      "KEY_6": "mark_ready",
+      "KEY_7": "mark_all_ready",
+      "KEY_8": "cancel_item",
+      "KEY_9": "print_order",
+      "KEY_0": "advance_status",
+      "KEY_ENTER": "mark_ready"
+    },
+    "active": true,
+    "created_at": "2025-07-22T22:53:39.852253",
+    "updated_at": "2025-07-22T22:53:39.852255"
+  }
+}
