@@ -126,6 +126,9 @@ export const useAuth = () => {
   }, [tokenToUser]);
 
   const login = useCallback(async (credentials: LoginCredentials): Promise<User> => {
+    console.log('🚀 LOGIN DEBUG: Starting login process...');
+    console.log('📋 LOGIN DEBUG: Credentials:', { operator_id: credentials.operator_id, password: '***' });
+    
     setLoading(true);
     setError(null);
     
@@ -135,22 +138,44 @@ export const useAuth = () => {
       formData.append('username', credentials.operator_id);
       formData.append('password', credentials.password);
       
-      const response = await apiInterceptor.post('http://localhost:8001/api/v1/auth/token', formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+      console.log('📋 LOGIN DEBUG: FormData prepared');
+      console.log('🌐 LOGIN DEBUG: Making request to http://localhost:8001/api/v1/auth/token');
+      
+      const response = await fetch('http://localhost:8001/api/v1/auth/token', {
+        method: 'POST',
+        body: formData,
       });
       
-      const loginResponse = response.data;
+      console.log('📡 LOGIN DEBUG: Response status:', response.status);
+      console.log('📡 LOGIN DEBUG: Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      if (!response.ok) {
+        console.log('❌ LOGIN DEBUG: Response not OK, reading error...');
+        const errorData = await response.json().catch(() => ({}));
+        console.log('❌ LOGIN DEBUG: Error data:', errorData);
+        throw new Error(errorData.error?.message || 'Credenciais inválidas');
+      }
+      
+      const loginResponse = await response.json();
+      console.log('✅ LOGIN DEBUG: Token received from backend:', loginResponse);
       
       // Get user info from /me endpoint
-      const userResponse = await apiInterceptor.get('http://localhost:8001/api/v1/auth/me', {
+      console.log('📡 LOGIN DEBUG: Getting user info from /me endpoint...');
+      const userResponse = await fetch('http://localhost:8001/api/v1/auth/me', {
         headers: {
           'Authorization': `Bearer ${loginResponse.access_token}`
         }
       });
       
-      const userData = userResponse.data;
+      console.log('📡 LOGIN DEBUG: User response status:', userResponse.status);
+      
+      if (!userResponse.ok) {
+        console.log('❌ LOGIN DEBUG: User response not OK');
+        throw new Error('Erro ao obter informações do usuário');
+      }
+      
+      const userData = await userResponse.json();
+      console.log('✅ LOGIN DEBUG: User data received:', userData);
       
       // Create token data structure
       const tokenData: TokenData = {
@@ -164,22 +189,42 @@ export const useAuth = () => {
         require_password_change: false
       };
       
-      // Set token in interceptor
-      apiInterceptor.setToken(tokenData);
+      console.log('🔧 LOGIN DEBUG: TokenData created:', tokenData);
       
-      // Convert to user format
-      const userFormatted = tokenToUser(tokenData);
+      // Set token in interceptor
+      console.log('💾 LOGIN DEBUG: Saving token to ApiInterceptor...');
+      apiInterceptor.setToken(tokenData);
+      console.log('✅ LOGIN DEBUG: Token saved to ApiInterceptor');
+      
+      // Convert to user format - use userData directly instead of tokenToUser
+      const userFormatted: User = {
+        id: userData.id,
+        username: userData.username,
+        name: userData.full_name,
+        role: userData.role as UserRole,
+        permissions: userData.permissions as Permission[],
+        requirePasswordChange: false
+      };
+      console.log('👤 LOGIN DEBUG: User formatted:', userFormatted);
+      
       setUser(userFormatted);
       setIsAuthenticated(true);
       
-      console.log('Login successful:', userFormatted.name);
+      console.log('🎉 LOGIN DEBUG: Login successful, state updated');
+      console.log('🎉 LOGIN DEBUG: Final user:', userFormatted.name);
       return userFormatted;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Falha no login. Verifique suas credenciais.';
+      console.log('❌ LOGIN DEBUG: Error caught in login method');
+      console.log('❌ LOGIN DEBUG: Error details:', error);
+      console.log('❌ LOGIN DEBUG: Error message:', error.message);
+      console.log('❌ LOGIN DEBUG: Error stack:', error.stack);
+      
+      const errorMessage = error.message || 'Falha no login. Verifique suas credenciais.';
       setError(errorMessage);
-      console.error('Login error:', error);
+      console.error('❌ LOGIN DEBUG: Final error message:', errorMessage);
       throw new Error(errorMessage);
     } finally {
+      console.log('🏁 LOGIN DEBUG: Login process completed, setting loading to false');
       setLoading(false);
     }
   }, [tokenToUser]);

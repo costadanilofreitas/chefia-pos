@@ -41,12 +41,32 @@ fake_users_db = {
         "created_at": datetime.now(),
         "updated_at": datetime.now()
     },
-    "caixa": {
+    "456": {
         "id": "2",
-        "username": "caixa",
+        "username": "456",
+        "full_name": "Administrador",
+        "role": UserRole.ADMIN,
+        "hashed_password": pwd_context.hash("123456"),
+        "permissions": [
+            Permission.PRODUCT_READ,
+            Permission.PRODUCT_CREATE,
+            Permission.ORDER_CREATE,
+            Permission.ORDER_READ,
+            Permission.ORDER_UPDATE,
+            Permission.CASHIER_OPEN,
+            Permission.CASHIER_CLOSE,
+            Permission.REPORTS_VIEW
+        ],
+        "is_active": True,
+        "created_at": datetime.now(),
+        "updated_at": datetime.now()
+    },
+    "789": {
+        "id": "3",
+        "username": "789",
         "full_name": "Operador de Caixa",
         "role": UserRole.CASHIER,
-        "hashed_password": pwd_context.hash("senha123"),
+        "hashed_password": pwd_context.hash("654321"),
         "permissions": [
             Permission.ORDER_CREATE,
             Permission.ORDER_READ,
@@ -58,12 +78,12 @@ fake_users_db = {
         "created_at": datetime.now(),
         "updated_at": datetime.now()
     },
-    "garcom": {
-        "id": "3",
-        "username": "garcom",
+    "111": {
+        "id": "4",
+        "username": "111",
         "full_name": "Garçom",
         "role": UserRole.WAITER,
-        "hashed_password": pwd_context.hash("senha123"),
+        "hashed_password": pwd_context.hash("222333"),
         "permissions": [
             Permission.ORDER_CREATE, 
             Permission.ORDER_READ, 
@@ -73,12 +93,12 @@ fake_users_db = {
         "created_at": datetime.now(),
         "updated_at": datetime.now()
     },
-    "cozinheiro": {
-        "id": "4",
-        "username": "cozinheiro",
+    "555": {
+        "id": "5",
+        "username": "555",
         "full_name": "Cozinheiro",
         "role": UserRole.KITCHEN,
-        "hashed_password": pwd_context.hash("senha123"),
+        "hashed_password": pwd_context.hash("666777"),
         "permissions": [
             Permission.ORDER_READ, 
             Permission.ORDER_UPDATE
