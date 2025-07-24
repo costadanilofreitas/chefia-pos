@@ -31,7 +31,7 @@ import {
   Error as ErrorIcon,
   CheckCircle
 } from '@mui/icons-material';
-import { syncManager } from '../services/SyncManager';
+// import { syncManager } from '../services/SyncManager'; // Temporariamente desabilitado
 import { offlineStorage } from '../services/OfflineStorage';
 
 interface OfflineStatusProps {
@@ -63,8 +63,14 @@ const OfflineStatusIndicator: React.FC<OfflineStatusProps> = ({ terminalId }) =>
 
     const updateSyncStatus = async () => {
       try {
-        const status = await syncManager.getSyncStatus();
-        setSyncStatus(status);
+        // const status = await syncManager.getSyncStatus(); // Temporariamente desabilitado
+        // setSyncStatus(status); // Temporariamente desabilitado
+        setSyncStatus({
+          isOnline: navigator.onLine,
+          syncInProgress: false,
+          pendingCount: 0,
+          lastSyncTime: null
+        });
       } catch (error) {
         console.error('Failed to get sync status:', error);
       }
@@ -89,9 +95,10 @@ const OfflineStatusIndicator: React.FC<OfflineStatusProps> = ({ terminalId }) =>
 
   const handleManualSync = async () => {
     try {
-      await syncManager.manualSync();
-      const status = await syncManager.getSyncStatus();
-      setSyncStatus(status);
+      // await syncManager.manualSync(); // Temporariamente desabilitado
+      // const status = await syncManager.getSyncStatus(); // Temporariamente desabilitado
+      // setSyncStatus(status); // Temporariamente desabilitado
+      console.log('Manual sync temporariamente desabilitado');
     } catch (error) {
       console.error('Manual sync failed:', error);
     }

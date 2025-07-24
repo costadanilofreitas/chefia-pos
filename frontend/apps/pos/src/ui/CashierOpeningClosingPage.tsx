@@ -1,35 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Box,
-  Button,
   Container,
   Typography,
-  TextField,
-  Paper,
+  Button,
+  Card,
+  CardContent,
+  Box,
   Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  CircularProgress,
-  Snackbar,
+  TextField,
   Alert,
-  Card,
-  CardContent,
+  Snackbar,
+  Chip,
   Divider,
+  Paper,
+  CircularProgress,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
-  MonetizationOn as MoneyIcon,
-  LockOpen as OpenIcon,
-  Lock as CloseIcon,
-  Receipt as ReceiptIcon,
-  Person as PersonIcon,
+  AccountBalance,
+  Close as CloseIcon,
   Login as LoginIcon,
+  Logout as LogoutIcon,
+  AttachMoney,
+  TrendingUp,
+  TrendingDown,
+  LockOpen as OpenIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../hooks/mocks/useAuth';
-import { useCashier } from '../hooks/mocks/useCashier';
+import { useAuth } from '../hooks/useAuth';
+import { useCashier } from '../../../../common/src/contexts/cashier/hooks/useCashier';
+import LoginModal from '../components/LoginModal';
 import { useBusinessDay } from '../hooks/mocks/useBusinessDay';
 import { formatCurrency } from '../utils/formatters';
 import NumericKeypad from '../components/NumericKeypad';
@@ -102,47 +106,39 @@ const CashierOpeningClosingPage: React.FC = () => {
   } = useCashier();
   const { currentBusinessDay } = useBusinessDay();
 
-  const [openingAmount, setOpeningAmount] = useState<string>('100.00');
-  const [closingAmount, setClosingAmount] = useState<string>('');
-  const [openDialogVisible, setOpenDialogVisible] = useState<boolean>(false);
-  const [closeDialogVisible, setCloseDialogVisible] = useState<boolean>(false);
-  const [loginDialogVisible, setLoginDialogVisible] = useState<boolean>(false);
-  const [notes, setNotes] = useState<string>('');
-  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
-  const [loginError, setLoginError] = useState('');
-  const [alertInfo, setAlertInfo] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'info' | 'success' | 'warning' | 'error';
-  }>({ open: false, message: '', severity: 'info' });
+  const [loginDialogVisible, setLoginDialogVisible] = useState(false);
+  const [openDialogVisible, setOpenDialogVisible] = useState(false);
+  const [closeDialogVisible, setCloseDialogVisible] = useState(false);
+  const [openingAmount, setOpeningAmount] = useState('');
+  const [closingAmount, setClosingAmount] = useState('');
+  const [observations, setObservations] = useState('');
+  const [alertInfo, setAlertInfo] = useState({
+    open: false,
+    message: '',
+    severity: 'info' as 'success' | 'error' | 'warning' | 'info',
+  });
 
   useEffect(() => {
     const checkCashierStatus = async () => {
-      await getCurrentCashier();
+      try {
+        await getCurrentCashier();
+      } catch (error) {
+        console.error('Erro ao verificar status do caixa:', error);
+      }
     };
 
     checkCashierStatus();
-  }, [getCurrentCashier]);
+  }, []); // Executa apenas uma vez na montagem do componente
 
-  const handleLogin = async () => {
-    if (!loginForm.username || !loginForm.password) {
-      setLoginError('Por favor, preencha todos os campos');
-      return;
-    }
-
-    try {
-      await login(loginForm.username, loginForm.password);
-      setLoginDialogVisible(false);
-      setLoginForm({ username: '', password: '' });
-      setLoginError('');
-      setAlertInfo({
-        open: true,
-        message: 'Login realizado com sucesso!',
-        severity: 'success',
-      });
-    } catch (error) {
-      setLoginError('Credenciais inválidas');
-    }
+  const handleLoginSuccess = () => {
+    console.log('🎉 Login successful! Refreshing cashier status...');
+    setAlertInfo({
+      open: true,
+      message: 'Login realizado com sucesso!',
+      severity: 'success',
+    });
+    // Refresh cashier status after login
+    getCurrentCashier();
   };
 
   const handleOpenCashier = async () => {
@@ -302,55 +298,12 @@ const CashierOpeningClosingPage: React.FC = () => {
           </Grid>
         </StyledPaper>
 
-        {/* Dialog de Login */}
-        <Dialog 
-          open={loginDialogVisible} 
+        {/* Novo LoginModal */}
+        <LoginModal
+          open={loginDialogVisible}
           onClose={() => setLoginDialogVisible(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Login no Sistema</DialogTitle>
-          <DialogContent>
-            {loginError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {loginError}
-              </Alert>
-            )}
-            <TextField
-              autoFocus
-              margin="dense"
-              label="Usuário"
-              type="text"
-              fullWidth
-              variant="outlined"
-              value={loginForm.username}
-              onChange={(e) => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              margin="dense"
-              label="Senha"
-              type="password"
-              fullWidth
-              variant="outlined"
-              value={loginForm.password}
-              onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleLogin();
-                }
-              }}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setLoginDialogVisible(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleLogin} variant="contained">
-              Entrar
-            </Button>
-          </DialogActions>
-        </Dialog>
+          onSuccess={handleLoginSuccess}
+        />
       </Container>
     );
   }

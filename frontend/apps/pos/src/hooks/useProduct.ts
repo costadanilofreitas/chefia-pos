@@ -26,19 +26,21 @@ export const useProduct = () => {
     setLoading(true);
     setError(null);
     try {
-      // Por enquanto, usar dados mock até implementar endpoints de produtos
-      const mockProducts: Product[] = [
-        { id: '1', name: 'Hambúrguer Clássico', price: 15.90, category_id: 'cat-1' },
-        { id: '2', name: 'Pizza Margherita', price: 32.50, category_id: 'cat-2' },
-        { id: '3', name: 'Refrigerante Cola', price: 5.50, category_id: 'cat-3' },
-        { id: '4', name: 'Batata Frita', price: 8.90, category_id: 'cat-1' },
-      ];
+      // Carregar produtos reais do backend
+      const backendProducts = await productService.getProducts();
       
-      setProducts(mockProducts);
+      // Converter para formato esperado pelo frontend
+      const convertedProducts: Product[] = backendProducts.map(p => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        category_id: p.category_id,
+        is_combo: p.type === 'COMBO',
+        combo_items: p.combo_items || []
+      }));
       
-      // Testar conectividade com backend
-      await productService.healthCheck();
-      console.log('✅ Products service conectado');
+      setProducts(convertedProducts);
+      console.log('✅ Produtos carregados do backend:', convertedProducts.length);
       
     } catch (err: any) {
       console.error('❌ Erro ao carregar produtos:', err);
@@ -59,17 +61,30 @@ export const useProduct = () => {
     setLoading(true);
     setError(null);
     try {
-      const mockCategories: Category[] = [
-        { id: 'cat-1', name: 'Lanches', description: 'Hambúrgueres e sanduíches' },
-        { id: 'cat-2', name: 'Pizzas', description: 'Pizzas tradicionais e especiais' },
-        { id: 'cat-3', name: 'Bebidas', description: 'Refrigerantes e sucos' },
-      ];
+      // Carregar categorias reais do backend
+      const backendCategories = await productService.getCategories();
       
-      setCategories(mockCategories);
+      // Converter para formato esperado pelo frontend
+      const convertedCategories: Category[] = backendCategories.map(c => ({
+        id: c.id,
+        name: c.name,
+        description: c.description
+      }));
+      
+      setCategories(convertedCategories);
+      console.log('✅ Categorias carregadas do backend:', convertedCategories.length);
       
     } catch (err: any) {
       console.error('❌ Erro ao carregar categorias:', err);
       setError(err.message);
+      
+      // Fallback para dados mock em caso de erro
+      const fallbackCategories: Category[] = [
+        { id: 'cat-1', name: 'Lanches', description: 'Hambúrgueres e sanduíches' },
+        { id: 'cat-2', name: 'Pizzas', description: 'Pizzas tradicionais e especiais' },
+        { id: 'cat-3', name: 'Bebidas', description: 'Refrigerantes e sucos' },
+      ];
+      setCategories(fallbackCategories);
     } finally {
       setLoading(false);
     }

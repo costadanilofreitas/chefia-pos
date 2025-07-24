@@ -454,7 +454,7 @@ export class ProductManagementService {
   // Combos
   static async getCombos(): Promise<Combo[]> {
     try {
-      const backendCombos = await mockProductService.getProducts({ type: 'COMBO' });
+      const backendCombos = await productApiService.getProducts({ type: 'COMBO' });
       return backendCombos.map(convertBackendCombo);
     } catch (error) {
       console.error('Erro ao buscar combos:', error);
@@ -485,7 +485,7 @@ export class ProductManagementService {
         price_adjustment: item.additionalCost
       }));
       
-      const backendCombo = await mockProductService.createCombo(productData, comboItems);
+      const backendCombo = await productApiService.createCombo(productData, comboItems);
       return convertBackendCombo(backendCombo);
     } catch (error) {
       console.error('Erro ao salvar combo:', error);
@@ -513,7 +513,7 @@ export class ProductManagementService {
         price_adjustment: item.additionalCost
       }));
       
-      const backendCombo = await mockProductService.updateCombo(id, productData, comboItems);
+      const backendCombo = await productApiService.updateCombo(id, productData, comboItems);
       if (!backendCombo) {
         throw new Error('Combo não encontrado');
       }
@@ -526,7 +526,7 @@ export class ProductManagementService {
 
   static async deleteCombo(id: string): Promise<boolean> {
     try {
-      return await mockProductService.deleteProduct(id);
+      return await productApiService.deleteProduct(id);
     } catch (error) {
       console.error('Erro ao excluir combo:', error);
       throw error;
@@ -536,7 +536,7 @@ export class ProductManagementService {
   // Métodos auxiliares
   static async getProductsByCategory(categoryId: string): Promise<Product[]> {
     try {
-      const backendProducts = await mockProductService.getProducts({ 
+      const backendProducts = await productApiService.getProducts({ 
         category_id: categoryId,
         type: 'SIMPLE'
       });
@@ -549,7 +549,7 @@ export class ProductManagementService {
 
   static async searchProducts(query: string): Promise<Product[]> {
     try {
-      const backendProducts = await mockProductService.getProducts({ 
+      const backendProducts = await productApiService.getProducts({ 
         search: query,
         type: 'SIMPLE'
       });
@@ -562,7 +562,7 @@ export class ProductManagementService {
 
   static async getAvailableProducts(): Promise<Product[]> {
     try {
-      const backendProducts = await mockProductService.getProducts({ type: 'SIMPLE' });
+      const backendProducts = await productApiService.getProducts({ type: 'SIMPLE' });
       return backendProducts
         .filter(p => p.is_available && p.status === 'ACTIVE')
         .map(convertBackendProduct);
@@ -574,7 +574,7 @@ export class ProductManagementService {
 
   static async getUnavailableProducts(): Promise<Product[]> {
     try {
-      const backendProducts = await mockProductService.getProducts({ type: 'SIMPLE' });
+      const backendProducts = await productApiService.getProducts({ type: 'SIMPLE' });
       return backendProducts
         .filter(p => !p.is_available || p.status === 'INACTIVE')
         .map(convertBackendProduct);
@@ -586,12 +586,12 @@ export class ProductManagementService {
 
   static async toggleProductAvailability(id: string): Promise<Product> {
     try {
-      const product = await mockProductService.getProduct(id);
+      const product = await productApiService.getProduct(id);
       if (!product) {
         throw new Error('Produto não encontrado');
       }
 
-      const updatedProduct = await mockProductService.updateProduct(id, {
+      const updatedProduct = await productApiService.updateProduct(id, {
         is_available: !product.is_available
       });
 

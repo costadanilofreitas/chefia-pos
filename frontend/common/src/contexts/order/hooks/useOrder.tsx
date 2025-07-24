@@ -80,13 +80,13 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const api = useApi();
+  const { get, post, put } = useApi();
 
   const getPendingOrders = useCallback(async (): Promise<Order[]> => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get<Order[]>('/orders/pending');
+      const { data } = await get<Order[]>('/orders/pending');
       setPendingOrders(data);
       return data;
     } catch (err: any) {
@@ -102,7 +102,7 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post<Order>('/orders', orderData);
+      const { data } = await post<Order>('/orders', orderData);
       setCurrentOrder(data);
       setPendingOrders((prev) => [...prev, data]);
       return data;
@@ -119,7 +119,7 @@ export const OrderProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.put<Order>(`/orders/${orderId}`, orderData);
+      const { data } = await put<Order>(`/orders/${orderId}`, orderData);
       setPendingOrders((prev) =>
         prev.map((order) => (order.id === orderId ? data : order))
       );

@@ -28,7 +28,7 @@ import {
   Store as StoreIcon,
 } from '@mui/icons-material';
 import PrinterService from '../services/PrinterService';
-import { useCashier } from '../hooks/mocks/useCashier';
+import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
 // Styled components

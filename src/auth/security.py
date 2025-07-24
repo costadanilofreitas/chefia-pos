@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import Optional
+import os
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-import os
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
@@ -29,6 +29,7 @@ fake_users_db = {
         "hashed_password": pwd_context.hash("senha123"),
         "permissions": [
             Permission.PRODUCT_READ,
+            Permission.PRODUCT_CREATE,
             Permission.ORDER_CREATE,
             Permission.ORDER_READ,
             Permission.ORDER_UPDATE,
@@ -36,7 +37,9 @@ fake_users_db = {
             Permission.CASHIER_CLOSE,
             Permission.REPORTS_VIEW
         ],
-        "disabled": False
+        "is_active": True,
+        "created_at": datetime.now(),
+        "updated_at": datetime.now()
     },
     "caixa": {
         "id": "2",
@@ -51,7 +54,9 @@ fake_users_db = {
             Permission.CASHIER_OPEN,
             Permission.CASHIER_CLOSE
         ],
-        "disabled": False
+        "is_active": True,
+        "created_at": datetime.now(),
+        "updated_at": datetime.now()
     },
     "garcom": {
         "id": "3",
@@ -64,7 +69,9 @@ fake_users_db = {
             Permission.ORDER_READ, 
             Permission.PRODUCT_READ
         ],
-        "disabled": False
+        "is_active": True,
+        "created_at": datetime.now(),
+        "updated_at": datetime.now()
     },
     "cozinheiro": {
         "id": "4",
@@ -76,7 +83,9 @@ fake_users_db = {
             Permission.ORDER_READ, 
             Permission.ORDER_UPDATE
         ],
-        "disabled": False
+        "is_active": True,
+        "created_at": datetime.now(),
+        "updated_at": datetime.now()
     }
 }
 
@@ -148,7 +157,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 async def get_current_active_user(current_user: UserInDB = Depends(get_current_user)):
     """Verifica se o usuário atual está ativo."""
-    if current_user.disabled:
+    if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Usuário inativo")
     return current_user
 
@@ -156,7 +165,7 @@ async def get_current_active_user(current_user: UserInDB = Depends(get_current_u
 def has_permission(required_permission: str):
     """Verifica se o usuário tem a permissão necessária."""
     async def permission_dependency(current_user: UserInDB = Depends(get_current_active_user)):
-        if Permission.ALL in current_user.permissions or required_permission in current_user.permissions:
+        if required_permission in current_user.permissions:
             return current_user
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

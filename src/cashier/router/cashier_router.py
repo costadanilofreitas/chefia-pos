@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
 from datetime import datetime
 
-from src.auth.security import get_current_active_user, has_permission, Permission
-from src.auth.models import User
+from src.auth.security import get_current_active_user, has_permission
+from src.auth.models import User, Permission
 from src.cashier.models.cashier import (
     Cashier,
     CashierCreate,
@@ -37,17 +37,25 @@ async def open_cashier(
     current_user: User = Depends(has_permission(Permission.CASHIER_OPEN))
 ):
     """
-    Abre um novo caixa.
+    Abre um novo caixa para um terminal específico.
     
     - Apenas usuários com permissão de abertura de caixa podem executar esta operação
     - Deve haver um dia de operação aberto
     - Um operador só pode ter um caixa aberto por vez
     - Um terminal só pode ter um caixa aberto por vez
+    - O terminal_id é obrigatório e identifica o POS específico
     
     Retorna o caixa criado.
     """
     service = get_cashier_service()
     business_day_service = get_business_day_service()
+    
+    # Verificar se o terminal_id foi fornecido
+    if not cashier_create.terminal_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="O ID do terminal é obrigatório para abertura do caixa."
+        )
     
     # Verificar se o dia de operação existe e está aberto
     business_day = await business_day_service.get_business_day(cashier_create.business_day_id)
@@ -71,12 +79,12 @@ async def open_cashier(
             detail=f"O operador já possui um caixa aberto (ID: {operator_cashier.id})."
         )
     
-    # Verificar se o terminal já tem um caixa aberto
+    # Verificar se o terminal específico já tem um caixa aberto
     terminal_cashier = await service.get_cashier_by_terminal(cashier_create.terminal_id)
     if terminal_cashier:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"O terminal já possui um caixa aberto (ID: {terminal_cashier.id})."
+            detail=f"O terminal {cashier_create.terminal_id} já possui um caixa aberto (ID: {terminal_cashier.id})."
         )
     
     # Criar o caixa
@@ -245,6 +253,48 @@ async def register_cashier_withdrawal(
     return operation_response
 
 
+@router.get("/terminal/{terminal_id}/status", response_model=dict)
+async def get_terminal_cashier_status(
+    terminal_id: str,
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Verifica o status do caixa para um terminal específico.
+    
+    Retorna informações sobre se há um caixa aberto no terminal,
+    qual operador está usando e dados básicos do caixa.
+    """
+    service = get_cashier_service()
+    business_day_service = get_business_day_service()
+    
+    # Buscar caixa aberto no terminal
+    terminal_cashier = await service.get_cashier_by_terminal(terminal_id)
+    
+    if not terminal_cashier:
+        return {
+            "has_open_cashier": False,
+            "terminal_id": terminal_id,
+            "message": "Nenhum caixa aberto neste terminal"
+        }
+    
+    # Buscar dia de operação
+    business_day = await business_day_service.get_business_day(terminal_cashier.business_day_id)
+    
+    return {
+        "has_open_cashier": True,
+        "terminal_id": terminal_id,
+        "cashier_id": terminal_cashier.id,
+        "operator_id": terminal_cashier.current_operator_id,
+        "operator_name": terminal_cashier.current_operator_name,
+        "opened_at": terminal_cashier.opened_at,
+        "initial_balance": terminal_cashier.initial_balance,
+        "current_balance": terminal_cashier.current_balance,
+        "business_day_id": terminal_cashier.business_day_id,
+        "business_day_date": business_day.date if business_day else None,
+        "status": terminal_cashier.status
+    }
+
+
 @router.get("", response_model=List[CashierSummary])
 async def list_cashiers(
     business_day_id: Optional[str] = None,
@@ -362,31 +412,31 @@ async def get_cashier_operations(
     return operations
 
 
-@router.get("/{cashier_id}/report", response_model=CashierReport)
-async def get_cashier_report(
-    cashier_id: str,
-    current_user: User = Depends(has_permission(Permission.REPORT_READ))
-):
-    """
-    Gera um relatório detalhado para um caixa específico.
-    
-    - Apenas usuários com permissão de leitura de relatórios podem acessar
-    - Inclui totais, operações por tipo, vendas por método de pagamento
-    """
-    service = get_cashier_service()
-    
-    # Verificar se o caixa existe
-    cashier = await service.get_cashier(cashier_id)
-    if not cashier:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Caixa com ID {cashier_id} não encontrado."
-        )
-    
-    # Gerar relatório
-    report = await service.generate_cashier_report(cashier_id)
-    
-    return report
+# @router.get("/{cashier_id}/report", response_model=CashierReport)
+# async def get_cashier_report(
+#     cashier_id: str,
+#     current_user: User = Depends(has_permission(Permission.REPORT_READ))
+# ):
+#     """
+#     Gera um relatório detalhado para um caixa específico.
+#     
+#     - Apenas usuários com permissão de leitura de relatórios podem acessar
+#     - Inclui totais, operações por tipo, vendas por método de pagamento
+#     """
+#     service = get_cashier_service()
+#     
+#     # Verificar se o caixa existe
+#     cashier = await service.get_cashier(cashier_id)
+#     if not cashier:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail=f"Caixa com ID {cashier_id} não encontrado."
+#         )
+#     
+#     # Gerar relatório
+#     report = await service.generate_cashier_report(cashier_id)
+#     
+#     return report
 
 
 @router.put("/{cashier_id}", response_model=Cashier)

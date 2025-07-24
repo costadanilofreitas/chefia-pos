@@ -93,8 +93,13 @@ class ProductService:
 
     def _save_data(self, file_path: str, data: List[Dict[str, Any]]) -> None:
         """Salva dados em um arquivo JSON."""
+        def json_encoder(obj):
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+        
         with open(file_path, 'w') as f:
-            json.dump(data, f, indent=4)
+            json.dump(data, f, indent=4, default=json_encoder)
 
     def _load_products(self) -> List[Dict[str, Any]]:
         return self._load_data(PRODUCTS_FILE)

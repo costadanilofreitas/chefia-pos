@@ -20,7 +20,7 @@ interface CashierContextType {
 const CashierContext = createContext<CashierContextType | undefined>(undefined);
 
 export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const api = useApi();
+  const { get, post } = useApi('http://localhost:8001/api/v1');
   const [cashierStatus, setCashierStatus] = useState<CashierStatus | null>(null);
   const [cashierHistory, setCashierHistory] = useState<CashierStatus[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,63 +48,62 @@ export const CashierProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const getCurrentCashier = useCallback(async (): Promise<CashierStatus | null> => {
     return handleApiCall(
-      () => api.get<CashierStatus>('/cashiers/current').then((res) => res.data),
+      () => get<CashierStatus>('/cashier/current').then((res) => res.data),
       (data) => setCashierStatus(data)
     );
-  }, [api, handleApiCall]);
+  }, [get, post, handleApiCall]);
 
   const openCashier = useCallback(async (cashierData: OpenCashierData): Promise<CashierStatus> => {
     return handleApiCall(
-      () => api.post<CashierStatus>('/cashiers/open', cashierData).then((res) => res.data),
+      () => post<CashierStatus>('/cashier', cashierData).then((res) => res.data),
       (data) => setCashierStatus(data)
     );
-  }, [api, handleApiCall]);
+  }, [get, post, handleApiCall]);
 
   const closeCashier = useCallback(async (closingData: CloseCashierData): Promise<CashierStatus> => {
     return handleApiCall(
-      () => api.post<CashierStatus>('/cashiers/close', closingData).then((res) => res.data),
+      () => post<CashierStatus>('/cashier/close', closingData).then((res) => res.data),
       () => setCashierStatus(null)
     );
-  }, [api, handleApiCall]);
+  }, [get, post, handleApiCall]);
 
   const registerSale = useCallback(async (saleData: SaleData): Promise<CashierStatus> => {
     return handleApiCall(
-      () => api.post<CashierStatus>('/cashiers/sales', saleData).then((res) => res.data),
+      () => post<CashierStatus>('/cashier/sales', saleData).then((res) => res.data),
       (data) => setCashierStatus(data)
     );
-  }, [api, handleApiCall]);
+  }, [get, post, handleApiCall]);
 
   const registerCashOut = useCallback(async (cashOutData: CashMovementData): Promise<CashierStatus> => {
     return handleApiCall(
-      () => api.post<CashierStatus>('/cashiers/cash-out', cashOutData).then((res) => res.data),
+      () => post<CashierStatus>('/cashier/cash-out', cashOutData).then((res) => res.data),
       (data) => setCashierStatus(data)
     );
-  }, [api, handleApiCall]);
+  }, [get, post, handleApiCall]);
 
   const registerCashIn = useCallback(async (cashInData: CashMovementData): Promise<CashierStatus> => {
     return handleApiCall(
-      () => api.post<CashierStatus>('/cashiers/cash-in', cashInData).then((res) => res.data),
+      () => post<CashierStatus>('/cashiers/cash-in', cashInData).then((res) => res.data),
       (data) => setCashierStatus(data)
     );
-  }, [api, handleApiCall]);
+  }, [get, post, handleApiCall]);
 
   const getCashierHistory = useCallback(async (): Promise<CashierStatus[]> => {
     return handleApiCall(
-      () => api.get<CashierStatus[]>('/cashiers/history').then((res) => res.data),
+      () => get<CashierStatus[]>('/cashiers/history').then((res) => res.data),
       (data) => setCashierHistory(data)
     );
-  }, [api, handleApiCall]);
+  }, [get, post, handleApiCall]);
 
   const getOpenCashiers = useCallback(async (): Promise<CashierStatus[]> => {
     return handleApiCall(
-      () => api.get<CashierStatus[]>('/cashiers?status=open').then((res) => res.data),
+      () => get<CashierStatus[]>('/cashiers?status=open').then((res) => res.data),
       () => {}
     );
-  }, [api, handleApiCall]);
+  }, [get, post, handleApiCall]);
 
-  useEffect(() => {
-    getCurrentCashier();
-  }, [getCurrentCashier]);
+  // Removido useEffect automático que causava loops
+  // getCurrentCashier() deve ser chamado manualmente quando necessário
 
   return (
     <CashierContext.Provider

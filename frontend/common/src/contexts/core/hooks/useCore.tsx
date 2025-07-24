@@ -31,7 +31,7 @@ export const CoreProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<ErrorType>(null);
   const [systemInfo, setSystemInfo] = useState<SystemInfo>(null);
-  const api = useApi();
+  const { get, post } = useApi();
   const ws = useWebSocket("url");
 
   // Fetch system information
@@ -40,7 +40,7 @@ export const CoreProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
-      const response = await api.get('/api/system/info');
+      const response = await get('/api/system/info');
       setSystemInfo(response.data);
       return response.data;
     } catch (err: any) {
@@ -50,7 +50,7 @@ export const CoreProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [api]);
+  }, [get]);
 
   // Check system status
   const checkSystemStatus = useCallback(async (): Promise<any> => {
@@ -58,7 +58,7 @@ export const CoreProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
-      const response = await api.get('/api/system/status');
+      const response = await get('/api/system/status');
       return response.data;
     } catch (err: any) {
       setError(err.message || 'Failed to check system status');
@@ -67,7 +67,7 @@ export const CoreProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [api]);
+  }, [get]);
 
   // Subscribe to system events
   const subscribeToSystemEvents = useCallback(

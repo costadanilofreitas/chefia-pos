@@ -56,8 +56,6 @@ os.makedirs(MENU_EXPORTS_DIR, exist_ok=True)
 # Helper function for inline permission check (similar to other routers)
 def _check_permissions(user: User, required_permissions: List[str]):
     """Helper function to check user permissions inline."""
-    if Permission.ALL in user.permissions:
-        return # User has all permissions
     for perm in required_permissions:
         if perm not in user.permissions:
             raise HTTPException(
