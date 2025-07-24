@@ -21,12 +21,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
 
 # Simulação de banco de dados de usuários (em produção, usar banco de dados real)
 fake_users_db = {
-    "gerente": {
+    "123": {
         "id": "1",
-        "username": "gerente",
+        "username": "123",
         "full_name": "Gerente Principal",
         "role": UserRole.MANAGER,
-        "hashed_password": pwd_context.hash("senha123"),
+        "hashed_password": pwd_context.hash("456789"),
         "permissions": [
             Permission.PRODUCT_READ,
             Permission.PRODUCT_CREATE,
