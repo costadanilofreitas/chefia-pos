@@ -15,6 +15,7 @@ import { UserRole } from './hooks/mocks/useAuth';
 // Lazy load components for better performance
 const POSMainPage = lazy(() => import('./ui/POSMainPage'));
 const POSOrderPage = lazy(() => import('./ui/POSOrderPage'));
+const CounterOrdersPage = lazy(() => import('./ui/CounterOrdersPage'));
 const POSPaymentPage = lazy(() => import('./ui/POSPaymentPage'));
 const ManagerScreen = lazy(() => import('./ui/ManagerScreen'));
 const BusinessDayPage = lazy(() => import('./ui/BusinessDayPage'));
@@ -190,6 +191,17 @@ function App() {
                       <Suspense fallback={<LoadingFallback message="Carregando pedidos..." />}>
                         <LayoutRoute title="Pedidos">
                           <POSOrderPage />
+                        </LayoutRoute>
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  {/* Counter Orders - Pedidos do Balcão */}
+                  <Route path="/pos/:terminalId/counter-orders" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando pedidos do balcão..." />}>
+                        <LayoutRoute title="Pedidos do Balcão" requireAuth={true}>
+                          <CounterOrdersPage />
                         </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>

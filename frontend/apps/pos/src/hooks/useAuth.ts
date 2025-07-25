@@ -68,7 +68,7 @@ export const useAuth = () => {
           id: tokenData.operator_id,
           username: tokenData.operator_id,
           name: tokenData.operator_name,
-          role: tokenData.role as UserRole,
+          role: (tokenData.roles?.[0] || tokenData.role) as UserRole,
           permissions: tokenData.permissions as Permission[],
           requirePasswordChange: tokenData.require_password_change
         };

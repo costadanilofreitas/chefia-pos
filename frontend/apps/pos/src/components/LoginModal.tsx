@@ -84,7 +84,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
       try {
         const response = await fetch(`http://localhost:8001/api/v1/cashier/terminal/${terminalId}/status`, {
           headers: {
-            'Authorization': `Bearer ${apiInterceptor.getToken()?.access_token}`
+            'Authorization': `Bearer ${ApiInterceptor.getInstance().getToken()?.access_token}`
           }
         });
         

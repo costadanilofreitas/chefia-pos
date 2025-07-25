@@ -32,6 +32,13 @@ class PaymentStatus(str, Enum):
     REFUNDED = "refunded"
 
 
+class OrderType(str, Enum):
+    """Tipos de pedido."""
+    DINE_IN = "dine_in"
+    TAKEAWAY = "takeaway"
+    DELIVERY = "delivery"
+
+
 class BaseModel:
     """Classe base para modelos do sistema."""
     
@@ -114,6 +121,49 @@ class OrderItem(BaseModel):
         return data
 
 
+class OrderItemCreate:
+    """Modelo para criação de item de pedido."""
+    
+    def __init__(self, **kwargs):
+        self.product_id = kwargs.get('product_id', '')
+        self.product_name = kwargs.get('product_name', '')
+        self.quantity = kwargs.get('quantity', 1)
+        self.unit_price = kwargs.get('unit_price', 0.0)
+        self.notes = kwargs.get('notes', '')
+        self.customizations = kwargs.get('customizations', [])
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Converte para dicionário."""
+        return {
+            "product_id": self.product_id,
+            "product_name": self.product_name,
+            "quantity": self.quantity,
+            "unit_price": self.unit_price,
+            "notes": self.notes,
+            "customizations": self.customizations
+        }
+
+
+class OrderItemUpdate:
+    """Modelo para atualização de item de pedido."""
+    
+    def __init__(self, **kwargs):
+        self.quantity = kwargs.get('quantity', None)
+        self.notes = kwargs.get('notes', None)
+        self.customizations = kwargs.get('customizations', None)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Converte para dicionário."""
+        data = {}
+        if self.quantity is not None:
+            data["quantity"] = self.quantity
+        if self.notes is not None:
+            data["notes"] = self.notes
+        if self.customizations is not None:
+            data["customizations"] = self.customizations
+        return data
+
+
 class Order(BaseModel):
     """Modelo para pedidos."""
     
@@ -134,6 +184,7 @@ class Order(BaseModel):
         self.delivery_fee = kwargs.get('delivery_fee', 0.0)
         self.notes = kwargs.get('notes', '')
         self.source = kwargs.get('source', 'pos')  # pos, ifood, whatsapp, etc.
+        self.order_type = kwargs.get('order_type', OrderType.DINE_IN)
     
     def to_dict(self) -> Dict[str, Any]:
         """Converte o pedido para um dicionário."""
@@ -152,7 +203,8 @@ class Order(BaseModel):
             "delivery_address": self.delivery_address,
             "delivery_fee": self.delivery_fee,
             "notes": self.notes,
-            "source": self.source
+            "source": self.source,
+            "order_type": self.order_type
         })
         return data
     
@@ -160,6 +212,115 @@ class Order(BaseModel):
         """Calcula o valor total do pedido."""
         items_total = sum(item.total_price for item in self.items)
         return items_total + self.delivery_fee
+
+
+class OrderCreate:
+    """Modelo para criação de pedido."""
+    
+    def __init__(self, **kwargs):
+        self.customer_id = kwargs.get('customer_id', '')
+        self.customer_name = kwargs.get('customer_name', '')
+        self.items = kwargs.get('items', [])
+        self.table_number = kwargs.get('table_number', None)
+        self.waiter_id = kwargs.get('waiter_id', '')
+        self.is_delivery = kwargs.get('is_delivery', False)
+        self.delivery_address = kwargs.get('delivery_address', {})
+        self.delivery_fee = kwargs.get('delivery_fee', 0.0)
+        self.notes = kwargs.get('notes', '')
+        self.source = kwargs.get('source', 'pos')
+        self.order_type = kwargs.get('order_type', OrderType.DINE_IN)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Converte para dicionário."""
+        return {
+            "customer_id": self.customer_id,
+            "customer_name": self.customer_name,
+            "items": self.items,
+            "table_number": self.table_number,
+            "waiter_id": self.waiter_id,
+            "is_delivery": self.is_delivery,
+            "delivery_address": self.delivery_address,
+            "delivery_fee": self.delivery_fee,
+            "notes": self.notes,
+            "source": self.source,
+            "order_type": self.order_type
+        }
+
+
+class OrderUpdate:
+    """Modelo para atualização de pedido."""
+    
+    def __init__(self, **kwargs):
+        self.status = kwargs.get('status', None)
+        self.payment_method = kwargs.get('payment_method', None)
+        self.payment_status = kwargs.get('payment_status', None)
+        self.table_number = kwargs.get('table_number', None)
+        self.waiter_id = kwargs.get('waiter_id', None)
+        self.notes = kwargs.get('notes', None)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Converte para dicionário."""
+        data = {}
+        if self.status is not None:
+            data["status"] = self.status
+        if self.payment_method is not None:
+            data["payment_method"] = self.payment_method
+        if self.payment_status is not None:
+            data["payment_status"] = self.payment_status
+        if self.table_number is not None:
+            data["table_number"] = self.table_number
+        if self.waiter_id is not None:
+            data["waiter_id"] = self.waiter_id
+        if self.notes is not None:
+            data["notes"] = self.notes
+        return data
+
+
+class ApplyCouponRequest:
+    """Modelo para aplicação de cupom."""
+    
+    def __init__(self, **kwargs):
+        self.coupon_code = kwargs.get('coupon_code', '')
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Converte para dicionário."""
+        return {
+            "coupon_code": self.coupon_code
+        }
+
+
+class ApplyPointsRequest:
+    """Modelo para aplicação de pontos."""
+    
+    def __init__(self, **kwargs):
+        self.points_amount = kwargs.get('points_amount', 0)
+        self.customer_id = kwargs.get('customer_id', '')
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Converte para dicionário."""
+        return {
+            "points_amount": self.points_amount,
+            "customer_id": self.customer_id
+        }
+
+
+class DiscountResponse:
+    """Modelo para resposta de desconto."""
+    
+    def __init__(self, **kwargs):
+        self.discount_amount = kwargs.get('discount_amount', 0.0)
+        self.discount_type = kwargs.get('discount_type', '')
+        self.description = kwargs.get('description', '')
+        self.success = kwargs.get('success', False)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Converte para dicionário."""
+        return {
+            "discount_amount": self.discount_amount,
+            "discount_type": self.discount_type,
+            "description": self.description,
+            "success": self.success
+        }
 
 
 class CashierOperation(BaseModel):
@@ -270,3 +431,4 @@ class BusinessDay(BaseModel):
             "notes": self.notes
         })
         return data
+

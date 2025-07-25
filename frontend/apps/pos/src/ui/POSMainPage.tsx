@@ -26,7 +26,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Fab
+  Fab,
+  Snackbar
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -36,12 +37,21 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Search as SearchIcon,
-  Category as CategoryIcon
+  Category as CategoryIcon,
+  Save as SaveIcon,
+  Receipt as ReceiptIcon
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import { useProduct } from '../hooks/mocks/useProduct';
-import { useOrder } from '../hooks/mocks/useOrder';
+import { useOrder } from '../hooks/useOrder';
 import { formatCurrency } from '../utils/formatters';
+import { 
+  OrderCreate, 
+  OrderItemCreate, 
+  PaymentMethod, 
+  OrderType,
+  OrderStatus 
+} from '../types/order';
 
 interface Product {
   id: string;
@@ -66,15 +76,33 @@ const POSMainPage: React.FC = () => {
   const { terminalId } = useParams<{ terminalId: string }>();
   const { user, isAuthenticated } = useAuth();
   const { products, loading: productsLoading } = useProduct();
-  const { currentOrder, addItemToOrder, removeItemFromOrder } = useOrder();
+  
+  // Usando o hook useOrder real
+  const {
+    cart,
+    cartTotal,
+    loading: orderLoading,
+    creating: orderCreating,
+    error: orderError,
+    addToCart,
+    removeFromCart,
+    updateCartItem,
+    clearCart,
+    createOrder,
+    clearError
+  } = useOrder();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-  const [orderTotal, setOrderTotal] = useState<number>(0);
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
+  const [customerName, setCustomerName] = useState<string>('');
+  const [tableNumber, setTableNumber] = useState<number | null>(null);
+  const [orderType, setOrderType] = useState<OrderType>(OrderType.DINE_IN);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info'>('info');
 
   // Mock products data
   const mockProducts: Product[] = [
@@ -128,11 +156,22 @@ const POSMainPage: React.FC = () => {
       navigate(`/pos/${terminalId}/cashier`);
       return;
     }
+  }, [isAuthenticated, navigate, terminalId]);
 
-    // Calcular total do pedido
-    const total = orderItems.reduce((sum, item) => sum + item.total, 0);
-    setOrderTotal(total);
-  }, [isAuthenticated, navigate, terminalId, orderItems]);
+  // Mostrar mensagens de erro
+  useEffect(() => {
+    if (orderError) {
+      setSnackbarMessage(orderError);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  }, [orderError]);
+
+  const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' = 'info') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
 
   const filteredProducts = mockProducts.filter(product => {
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
@@ -146,65 +185,83 @@ const POSMainPage: React.FC = () => {
     setProductDialogOpen(true);
   };
 
-  const handleAddToOrder = () => {
+  const handleAddToCart = () => {
     if (!selectedProduct) return;
 
-    const existingItem = orderItems.find(item => item.productId === selectedProduct.id);
-    
-    if (existingItem) {
-      // Atualizar quantidade do item existente
-      const updatedItems = orderItems.map(item =>
-        item.productId === selectedProduct.id
-          ? { ...item, quantity: item.quantity + quantity, total: (item.quantity + quantity) * item.price }
-          : item
-      );
-      setOrderItems(updatedItems);
-    } else {
-      // Adicionar novo item
-      const newItem: OrderItem = {
-        id: Date.now().toString(),
-        productId: selectedProduct.id,
-        productName: selectedProduct.name,
-        quantity,
-        price: selectedProduct.price,
-        total: selectedProduct.price * quantity
-      };
-      setOrderItems([...orderItems, newItem]);
-    }
+    const cartItem: OrderItemCreate = {
+      product_id: selectedProduct.id,
+      product_name: selectedProduct.name,
+      quantity,
+      unit_price: selectedProduct.price,
+      notes: '',
+      customizations: []
+    };
 
+    addToCart(cartItem);
     setProductDialogOpen(false);
     setSelectedProduct(null);
+    showSnackbar(`${selectedProduct.name} adicionado ao carrinho`, 'success');
   };
 
-  const handleRemoveFromOrder = (itemId: string) => {
-    setOrderItems(orderItems.filter(item => item.id !== itemId));
+  const handleRemoveFromCart = (index: number) => {
+    const item = cart[index];
+    removeFromCart(index);
+    showSnackbar(`${item?.product_name} removido do carrinho`, 'info');
   };
 
-  const handleUpdateQuantity = (itemId: string, newQuantity: number) => {
+  const handleUpdateCartQuantity = (index: number, newQuantity: number) => {
     if (newQuantity <= 0) {
-      handleRemoveFromOrder(itemId);
+      handleRemoveFromCart(index);
       return;
     }
 
-    const updatedItems = orderItems.map(item =>
-      item.id === itemId
-        ? { ...item, quantity: newQuantity, total: newQuantity * item.price }
-        : item
-    );
-    setOrderItems(updatedItems);
+    updateCartItem(index, { quantity: newQuantity });
   };
 
-  const handleClearOrder = () => {
-    setOrderItems([]);
+  const handleClearCart = () => {
+    clearCart();
+    showSnackbar('Carrinho limpo', 'info');
+  };
+
+  const handleCreateOrder = async () => {
+    if (cart.length === 0) {
+      showSnackbar('Adicione itens ao carrinho antes de criar o pedido', 'error');
+      return;
+    }
+
+    const orderData: OrderCreate = {
+      customer_name: customerName || 'Cliente',
+      items: cart,
+      table_number: tableNumber,
+      waiter_id: user?.id || '',
+      order_type: orderType,
+      source: 'pos',
+      notes: ''
+    };
+
+    console.log('🔥 POSMainPage: Criando pedido', orderData);
+
+    const createdOrder = await createOrder(orderData);
+    
+    if (createdOrder) {
+      showSnackbar(`Pedido #${createdOrder.id.slice(-6)} criado com sucesso!`, 'success');
+      clearCart();
+      setCustomerName('');
+      setTableNumber(null);
+      
+      // Navegar para a página de pagamento ou detalhes do pedido
+      navigate(`/pos/${terminalId}/order/${createdOrder.id}`);
+    }
   };
 
   const handleProceedToPayment = () => {
-    if (orderItems.length === 0) return;
+    if (cart.length === 0) {
+      showSnackbar('Adicione itens ao carrinho antes de finalizar', 'error');
+      return;
+    }
     
-    // Navegar para a página de pagamento
-    navigate(`/pos/${terminalId}/payment`, {
-      state: { orderItems, orderTotal }
-    });
+    // Criar o pedido primeiro
+    handleCreateOrder();
   };
 
   if (!isAuthenticated) {
@@ -327,28 +384,28 @@ const POSMainPage: React.FC = () => {
             <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6">
-                  Pedido Atual
+                  Carrinho
                 </Typography>
                 <IconButton 
-                  onClick={handleClearOrder}
-                  disabled={orderItems.length === 0}
+                  onClick={handleClearCart}
+                  disabled={cart.length === 0}
                   color="error"
                 >
                   <DeleteIcon />
                 </IconButton>
               </Box>
               <Typography variant="body2" color="text.secondary">
-                {orderItems.length} {orderItems.length === 1 ? 'item' : 'itens'}
+                {cart.length} {cart.length === 1 ? 'item' : 'itens'}
               </Typography>
             </Box>
 
             {/* Itens do Carrinho */}
             <Box sx={{ flex: 1, overflow: 'auto' }}>
-              {orderItems.length === 0 ? (
+              {cart.length === 0 ? (
                 <Box sx={{ p: 4, textAlign: 'center' }}>
                   <CartIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
                   <Typography variant="body1" color="text.secondary">
-                    Nenhum item no pedido
+                    Carrinho vazio
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Selecione produtos para adicionar
@@ -356,18 +413,18 @@ const POSMainPage: React.FC = () => {
                 </Box>
               ) : (
                 <List>
-                  {orderItems.map((item, index) => (
-                    <React.Fragment key={item.id}>
+                  {cart.map((item, index) => (
+                    <React.Fragment key={index}>
                       <ListItem>
                         <ListItemText
-                          primary={item.productName}
+                          primary={item.product_name}
                           secondary={
                             <Box>
                               <Typography variant="body2" color="text.secondary">
-                                {formatCurrency(item.price)} x {item.quantity}
+                                {formatCurrency(item.unit_price)} x {item.quantity}
                               </Typography>
                               <Typography variant="body2" fontWeight="bold">
-                                Total: {formatCurrency(item.total)}
+                                Total: {formatCurrency(item.unit_price * item.quantity)}
                               </Typography>
                             </Box>
                           }
@@ -376,7 +433,7 @@ const POSMainPage: React.FC = () => {
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Button
                               size="small"
-                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => handleUpdateCartQuantity(index, item.quantity - 1)}
                             >
                               -
                             </Button>
@@ -385,13 +442,13 @@ const POSMainPage: React.FC = () => {
                             </Typography>
                             <Button
                               size="small"
-                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => handleUpdateCartQuantity(index, item.quantity + 1)}
                             >
                               +
                             </Button>
                             <IconButton
                               size="small"
-                              onClick={() => handleRemoveFromOrder(item.id)}
+                              onClick={() => handleRemoveFromCart(index)}
                               color="error"
                             >
                               <DeleteIcon />
@@ -399,33 +456,87 @@ const POSMainPage: React.FC = () => {
                           </Box>
                         </ListItemSecondaryAction>
                       </ListItem>
-                      {index < orderItems.length - 1 && <Divider />}
+                      {index < cart.length - 1 && <Divider />}
                     </React.Fragment>
                   ))}
                 </List>
               )}
             </Box>
 
-            {/* Total e Ações */}
-            {orderItems.length > 0 && (
+            {/* Informações do Pedido */}
+            {cart.length > 0 && (
               <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+                <Grid container spacing={2} sx={{ mb: 2 }}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Nome do Cliente"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Digite o nome do cliente"
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Mesa"
+                      value={tableNumber || ''}
+                      onChange={(e) => setTableNumber(e.target.value ? parseInt(e.target.value) : null)}
+                      placeholder="Nº da mesa"
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Tipo</InputLabel>
+                      <Select
+                        value={orderType}
+                        label="Tipo"
+                        onChange={(e) => setOrderType(e.target.value as OrderType)}
+                      >
+                        <MenuItem value={OrderType.DINE_IN}>Balcão</MenuItem>
+                        <MenuItem value={OrderType.TAKEAWAY}>Viagem</MenuItem>
+                        <MenuItem value={OrderType.DELIVERY}>Delivery</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6">
                     Total:
                   </Typography>
                   <Typography variant="h5" color="primary" fontWeight="bold">
-                    {formatCurrency(orderTotal)}
+                    {formatCurrency(cartTotal)}
                   </Typography>
                 </Box>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  size="large"
-                  startIcon={<MoneyIcon />}
-                  onClick={handleProceedToPayment}
-                >
-                  Finalizar Pedido
-                </Button>
+
+                <Grid container spacing={1}>
+                  <Grid item xs={6}>
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      startIcon={<SaveIcon />}
+                      onClick={handleCreateOrder}
+                      disabled={orderCreating}
+                    >
+                      {orderCreating ? <CircularProgress size={20} /> : 'Salvar'}
+                    </Button>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={<ReceiptIcon />}
+                      onClick={handleProceedToPayment}
+                      disabled={orderCreating}
+                    >
+                      {orderCreating ? <CircularProgress size={20} /> : 'Finalizar'}
+                    </Button>
+                  </Grid>
+                </Grid>
               </Box>
             )}
           </Paper>
@@ -435,7 +546,7 @@ const POSMainPage: React.FC = () => {
       {/* Dialog para Adicionar Produto */}
       <Dialog open={productDialogOpen} onClose={() => setProductDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
-          Adicionar ao Pedido
+          Adicionar ao Carrinho
         </DialogTitle>
         <DialogContent>
           {selectedProduct && (
@@ -480,11 +591,27 @@ const POSMainPage: React.FC = () => {
           <Button onClick={() => setProductDialogOpen(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleAddToOrder} variant="contained">
-            Adicionar ao Pedido
+          <Button onClick={handleAddToCart} variant="contained">
+            Adicionar ao Carrinho
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar para mensagens */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbarOpen(false)} 
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
