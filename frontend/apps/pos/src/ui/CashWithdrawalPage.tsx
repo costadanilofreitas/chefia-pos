@@ -51,7 +51,7 @@ import {
   Security as SecurityIcon
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/mocks/useAuth';
-import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
+import { useCashier } from '../hooks/mocks/useCashier';
 import { formatCurrency } from '../utils/formatters';
 import PrinterService from '../services/PrinterService';
 
@@ -98,7 +98,7 @@ const CashWithdrawalPage: React.FC = () => {
   const navigate = useNavigate();
   const { terminalId } = useParams<{ terminalId: string }>();
   const { user } = useAuth();
-  const { currentCashier, isLoading } = useCashier();
+  const { currentCashier, loading } = useCashier();
 
   // Estados principais
   const [amount, setAmount] = useState<string>('');
@@ -342,7 +342,7 @@ const CashWithdrawalPage: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />

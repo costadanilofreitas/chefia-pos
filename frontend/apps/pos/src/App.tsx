@@ -6,9 +6,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import AuthGuard from './components/AuthGuard';
 import TerminalValidator from './components/TerminalValidator';
 import POSLayout from './components/POSLayout';
-import { OrderProvider } from '@common/contexts/order/hooks/useOrder';
-import { ProductProvider } from '@common/contexts/product/hooks/useProduct';
-import { CashierProvider } from '@common/contexts/cashier/hooks/useCashier';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserRole } from './hooks/mocks/useAuth';
 
@@ -145,11 +142,8 @@ function App() {
       <ErrorBoundary>
         <AuthProvider>
           <Router>
-            <ProductProvider>
-              <CashierProvider>
-                {/* <OrderProvider> */}
-                <Suspense fallback={<LoadingFallback message="Inicializando sistema POS..." />}>
-                <Routes>
+            <Suspense fallback={<LoadingFallback message="Inicializando sistema POS..." />}>
+            <Routes>
                   {/* Root redirects */}
                   <Route path="/" element={<Navigate to="/pos/1" replace />} />
                   <Route path="/pos" element={<Navigate to="/pos/1" replace />} />
@@ -310,15 +304,12 @@ function App() {
                   <Route path="*" element={<Navigate to="/pos/1" replace />} />
                 </Routes>
               </Suspense>
-            {/* </OrderProvider> */}
-          </CashierProvider>
-        </ProductProvider>
-      </Router>
-    </AuthProvider>
-    </ErrorBoundary>
-  </ThemeProvider>
-);
-}
+            </Router>
+          </AuthProvider>
+        </ErrorBoundary>
+      </ThemeProvider>
+    );
+  }
 
-export default App;
+  export default App;
 

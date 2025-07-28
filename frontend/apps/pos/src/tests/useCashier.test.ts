@@ -13,32 +13,31 @@ describe('useCashier Hook', () => {
     expect(typeof result.current.registerCashOut).toBe('function');
   });
 
-  it('should have openCashier function', () => {
+  it('should have open function', () => {
     const { result } = renderHook(() => useCashier());
     
-    expect(result.current.openCashier).toBeDefined();
-    expect(typeof result.current.openCashier).toBe('function');
+    expect(result.current.open).toBeDefined();
+    expect(typeof result.current.open).toBe('function');
   });
 
-  it('should have closeCashier function', () => {
+  it('should have close function', () => {
     const { result } = renderHook(() => useCashier());
     
-    expect(result.current.closeCashier).toBeDefined();
-    expect(typeof result.current.closeCashier).toBe('function');
+    expect(result.current.close).toBeDefined();
+    expect(typeof result.current.close).toBe('function');
   });
 
-  it('should have getCurrentCashier function', () => {
+  it('should have currentCashier property', () => {
     const { result } = renderHook(() => useCashier());
     
-    expect(result.current.getCurrentCashier).toBeDefined();
-    expect(typeof result.current.getCurrentCashier).toBe('function');
+    expect(result.current.currentCashier).toBeDefined();
   });
 
-  it('should have registerCashOut function', () => {
+  it('should have withdraw function', () => {
     const { result } = renderHook(() => useCashier());
     
-    expect(result.current.registerCashOut).toBeDefined();
-    expect(typeof result.current.registerCashOut).toBe('function');
+    expect(result.current.withdraw).toBeDefined();
+    expect(typeof result.current.withdraw).toBe('function');
   });
 });
 

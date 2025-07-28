@@ -51,7 +51,8 @@ import {
   Schedule as PendingIcon,
   LocalShipping as DeliveryIcon,
   Store as StoreIcon,
-  TakeoutDining as TakeawayIcon
+  TakeoutDining as TakeawayIcon,
+  CheckCircle
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import { useOrder } from '../hooks/useOrder';

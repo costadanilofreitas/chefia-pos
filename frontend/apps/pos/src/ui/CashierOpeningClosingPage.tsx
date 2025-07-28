@@ -30,9 +30,12 @@ import {
   TrendingUp,
   TrendingDown,
   LockOpen as OpenIcon,
+  AttachMoney as MoneyIcon,
+  Person as PersonIcon,
+  Receipt as ReceiptIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
-import { useCashier } from '../../../../common/src/contexts/cashier/hooks/useCashier';
+import { useCashier } from '../hooks/mocks/useCashier';
 import LoginModal from '../components/LoginModal';
 import { useBusinessDay } from '../hooks/mocks/useBusinessDay';
 import { formatCurrency } from '../utils/formatters';
@@ -98,11 +101,13 @@ const CashierOpeningClosingPage: React.FC = () => {
   const { terminalId } = useParams<{ terminalId: string }>();
   const { user, isAuthenticated, login } = useAuth();
   const {
-    openCashier,
-    closeCashier,
-    getCurrentCashier,
-    cashierStatus,
-    isLoading,
+    currentCashier,
+    operations,
+    loading,
+    error,
+    open: openCashier,
+    close: closeCashier,
+    getSummary
   } = useCashier();
   const { currentBusinessDay } = useBusinessDay();
 
@@ -112,6 +117,7 @@ const CashierOpeningClosingPage: React.FC = () => {
   const [openingAmount, setOpeningAmount] = useState('');
   const [closingAmount, setClosingAmount] = useState('');
   const [observations, setObservations] = useState('');
+  const [notes, setNotes] = useState('');
   const [alertInfo, setAlertInfo] = useState({
     open: false,
     message: '',
@@ -119,16 +125,9 @@ const CashierOpeningClosingPage: React.FC = () => {
   });
 
   useEffect(() => {
-    const checkCashierStatus = async () => {
-      try {
-        await getCurrentCashier();
-      } catch (error) {
-        console.error('Erro ao verificar status do caixa:', error);
-      }
-    };
-
-    checkCashierStatus();
-  }, []); // Executa apenas uma vez na montagem do componente
+    // O currentCashier já é gerenciado pelo hook
+    console.log('CashierOpeningClosingPage mounted, currentCashier:', currentCashier);
+  }, [currentCashier]);
 
   const handleLoginSuccess = () => {
     console.log('🎉 Login successful! Refreshing cashier status...');
@@ -138,7 +137,8 @@ const CashierOpeningClosingPage: React.FC = () => {
       severity: 'success',
     });
     // Refresh cashier status after login
-    getCurrentCashier();
+    // O currentCashier já é gerenciado pelo hook
+    console.log('Login success, currentCashier:', currentCashier);
   };
 
   const handleOpenCashier = async () => {
@@ -152,15 +152,16 @@ const CashierOpeningClosingPage: React.FC = () => {
     }
 
     try {
-      await openCashier({
-        terminal_id: `POS-${terminalId}`,
-        business_day_id: currentBusinessDay?.id || 'default',
-        opening_balance: parseFloat(openingAmount),
-        notes,
-      });
+      await openCashier(
+        terminalId || '',
+        user?.id || '',
+        user?.name || '',
+        parseFloat(openingAmount),
+        notes
+      );
 
       await PrinterService.printOpeningReceipt({
-        cashier_id: cashierStatus?.id,
+        cashier_id: currentCashier?.id,
         terminal_id: `POS-${terminalId}`,
         user_name: user?.name ?? '',
         opening_balance: parseFloat(openingAmount),
@@ -199,26 +200,22 @@ const CashierOpeningClosingPage: React.FC = () => {
     }
 
     try {
-      await closeCashier({
-        id: cashierStatus?.id || '',
-        closing_balance: parseFloat(closingAmount),
-        notes,
-      });
+      await closeCashier(parseFloat(closingAmount), notes);
 
       await PrinterService.printClosingReceipt({
-        cashier_id: cashierStatus?.id,
+        cashier_id: currentCashier?.id,
         terminal_id: `POS-${terminalId}`,
         user_name: user?.name ?? '',
-        opening_balance: cashierStatus?.opening_balance,
+        opening_balance: currentCashier?.initial_amount,
         closing_balance: parseFloat(closingAmount),
-        expected_balance: cashierStatus?.expected_balance,
-        difference: parseFloat(closingAmount) - (cashierStatus?.expected_balance ?? 0),
-        cash_sales: cashierStatus?.cash_sales,
-        card_sales: cashierStatus?.card_sales,
-        pix_sales: cashierStatus?.pix_sales,
-        other_sales: cashierStatus?.other_sales,
-        cash_in: cashierStatus?.cash_in,
-        cash_out: cashierStatus?.cash_out,
+        expected_balance: currentCashier?.current_amount,
+        difference: parseFloat(closingAmount) - (currentCashier?.current_amount ?? 0),
+        cash_sales: 0, // Seria calculado das operações
+        card_sales: 0, // Seria calculado das operações
+        pix_sales: 0, // Seria calculado das operações
+        other_sales: 0, // Seria calculado das operações
+        cash_in: 0, // Seria calculado das operações
+        cash_out: 0, // Seria calculado das operações
         date: new Date(),
         notes,
       });
@@ -250,7 +247,7 @@ const CashierOpeningClosingPage: React.FC = () => {
     setAlertInfo({ ...alertInfo, open: false });
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <Container maxWidth="sm" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
@@ -334,14 +331,14 @@ const CashierOpeningClosingPage: React.FC = () => {
               </Typography>
               <Typography 
                 variant="h4" 
-                color={cashierStatus?.status === 'open' ? 'success.main' : 'text.secondary'}
+                color={currentCashier?.status === 'open' ? 'success.main' : 'text.secondary'}
                 sx={{ fontWeight: 'bold', mb: 2 }}
               >
-                {cashierStatus?.status === 'open' ? '🟢 ABERTO' : '🔴 FECHADO'}
+                {currentCashier?.status === 'open' ? '🟢 ABERTO' : '🔴 FECHADO'}
               </Typography>
-              {cashierStatus?.status === 'open' && (
+              {currentCashier?.status === 'open' && (
                 <Typography variant="body2" color="text.secondary">
-                  Aberto em: {new Date(cashierStatus.opened_at).toLocaleString()}
+                  Aberto em: {new Date(currentCashier.opened_at).toLocaleString()}
                 </Typography>
               )}
             </CardContent>
@@ -349,7 +346,7 @@ const CashierOpeningClosingPage: React.FC = () => {
         </Box>
         
         <Grid container spacing={4} justifyContent="center">
-          {!cashierStatus || cashierStatus.status !== 'open' ? (
+          {!currentCashier || currentCashier.status !== 'open' ? (
             <Grid item xs={12} md={6}>
               <Card elevation={3}>
                 <CardContent sx={{ p: 3, textAlign: 'center' }}>
@@ -394,7 +391,7 @@ const CashierOpeningClosingPage: React.FC = () => {
                         Saldo Inicial:
                       </Typography>
                       <Typography variant="body1" fontWeight="bold">
-                        {formatCurrency(cashierStatus.opening_balance)}
+                        {formatCurrency(currentCashier?.initial_amount || 0)}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -402,7 +399,7 @@ const CashierOpeningClosingPage: React.FC = () => {
                         Saldo Esperado:
                       </Typography>
                       <Typography variant="body1" fontWeight="bold">
-                        {formatCurrency(cashierStatus.expected_balance)}
+                        {formatCurrency(currentCashier?.current_amount || 0)}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -410,7 +407,7 @@ const CashierOpeningClosingPage: React.FC = () => {
                         Vendas em Dinheiro:
                       </Typography>
                       <Typography variant="body1">
-                        {formatCurrency(cashierStatus.cash_sales)}
+                        {formatCurrency(0)} {/* Seria calculado das operações */}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -418,7 +415,7 @@ const CashierOpeningClosingPage: React.FC = () => {
                         Vendas em Cartão:
                       </Typography>
                       <Typography variant="body1">
-                        {formatCurrency(cashierStatus.card_sales)}
+                        {formatCurrency(0)} {/* Seria calculado das operações */}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -644,7 +641,7 @@ const CashierOpeningClosingPage: React.FC = () => {
                   </Grid>
                   <Grid item xs={6}>
                     <Typography variant="body2" fontWeight="bold">
-                      {formatCurrency(cashierStatus?.opening_balance || 0)}
+                      {formatCurrency(currentCashier?.initial_amount || 0)}
                     </Typography>
                   </Grid>
                   <Grid item xs={6}>
@@ -652,7 +649,7 @@ const CashierOpeningClosingPage: React.FC = () => {
                   </Grid>
                   <Grid item xs={6}>
                     <Typography variant="body2" fontWeight="bold">
-                      {formatCurrency(cashierStatus?.expected_balance || 0)}
+                      {formatCurrency(currentCashier?.current_amount || 0)}
                     </Typography>
                   </Grid>
                   {closingAmount && (
@@ -665,12 +662,12 @@ const CashierOpeningClosingPage: React.FC = () => {
                           variant="body2" 
                           fontWeight="bold"
                           color={
-                            parseFloat(closingAmount) - (cashierStatus?.expected_balance || 0) >= 0 
+                            parseFloat(closingAmount) - (currentCashier?.current_amount || 0) >= 0 
                               ? 'success.main' 
                               : 'error.main'
                           }
                         >
-                          {formatCurrency(parseFloat(closingAmount) - (cashierStatus?.expected_balance || 0))}
+                          {formatCurrency(parseFloat(closingAmount) - (currentCashier?.current_amount || 0))}
                         </Typography>
                       </Grid>
                     </>

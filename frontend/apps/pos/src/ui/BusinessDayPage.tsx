@@ -28,7 +28,7 @@ import {
   Store as StoreIcon,
 } from '@mui/icons-material';
 import PrinterService from '../services/PrinterService';
-import { useCashier } from '@common/contexts/cashier/hooks/useCashier';
+import { useCashier } from '../hooks/mocks/useCashier';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
 // Styled components
@@ -69,7 +69,7 @@ const BusinessDayPage: FC = () => {
   } = useBusinessDay();
 
   const { user } = useAuth();
-  const { getOpenCashiers } = useCashier();
+  const { currentCashier } = useCashier();
 
   const currentBusinessDay = currentDay;
 
@@ -91,15 +91,15 @@ const BusinessDayPage: FC = () => {
     const fetchData = async () => {
       try {
         await getCurrentBusinessDay();
-        const openCashiers = await getOpenCashiers();
-        setHasOpenCashiers(openCashiers.length > 0);
+        // Verificar se há caixas abertos seria feito via API
+        setHasOpenCashiers(currentCashier?.status === 'open');
       } catch (error) {
         console.error('Erro ao buscar status do dia de operação ou caixas:', error);
       }
     };
 
     fetchData();
-  }, [getCurrentBusinessDay, getOpenCashiers]);
+  }, [getCurrentBusinessDay, currentCashier]);
 
   const handleOpenBusinessDay = async () => {
     try {

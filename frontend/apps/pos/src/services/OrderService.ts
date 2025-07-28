@@ -300,7 +300,7 @@ export const orderService = new OrderService();
 export default orderService;
 
 // Re-exportar tipos para facilitar importação
-export {
+export type {
   Order,
   OrderCreate,
   OrderUpdate,

@@ -70,7 +70,7 @@ const POSPaymentPage: React.FC = () => {
   const location = useLocation();
   const { terminalId } = useParams<{ terminalId: string }>();
   const { user } = useAuth();
-  const { cashierStatus } = useCashier();
+  const { currentCashier } = useCashier();
 
   // Estados estáveis
   const [order, setOrder] = useState<Order | null>(null);
@@ -166,7 +166,7 @@ const POSPaymentPage: React.FC = () => {
 
       const paymentData = {
         order_id: order.id,
-        cashier_id: cashierStatus?.id || 'CASHIER-1',
+        cashier_id: currentCashier?.id || 'CASHIER-1',
         terminal_id: `POS-${terminalId}`,
         operator_id: user?.id || 'USER-1',
         amount: order.total,
@@ -207,7 +207,7 @@ const POSPaymentPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [order, paymentMethod, paymentAmount, changeAmount, cashierStatus?.id, terminalId, user?.id]);
+  }, [order, paymentMethod, paymentAmount, changeAmount, currentCashier?.id, terminalId, user?.id]);
 
   const handleReprintReceipt = useCallback(async () => {
     if (!order) {
