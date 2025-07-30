@@ -46,6 +46,12 @@ npm run build
 npm run preview
 ```
 
+### ⚠️ Nota sobre Dependências
+
+Se você encontrar erros de conflito de dependências (ERESOLVE), as versões foram ajustadas para compatibilidade:
+- `date-fns`: versão 3.6.0 (compatível com react-day-picker)
+- `react-day-picker`: versão 9.4.3 (mais recente compatível)
+
 ## 📁 Estrutura do Projeto
 
 ```
@@ -76,6 +82,16 @@ marketing-site/
 - **GitHub:** https://github.com/costadanilofreitas/chefia-pos
 - **Website:** https://bhwjgxnj.manus.space
 - **Documentação:** Ver pasta `docs/` no repositório principal
+
+## 🐛 Solução de Problemas
+
+### Erro ERESOLVE
+Se você encontrar erros de dependências, execute:
+```bash
+npm install --legacy-peer-deps
+```
+
+Ou use as versões específicas já configuradas no package.json.
 
 ## 📝 Licença
 
