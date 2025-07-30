@@ -1,50 +1,83 @@
-# React + TypeScript + Vite
+# Chefia POS - Marketing Website
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Website oficial do sistema Chefia POS, um sistema completo de ponto de venda para restaurantes.
 
-Currently, two official plugins are available:
+## 🌐 Website Ao Vivo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**URL:** https://bhwjgxnj.manus.space
 
-## Expanding the ESLint configuration
+## 🚀 Funcionalidades
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **Design Moderno:** Interface profissional com gradientes e animações
+- **Responsivo:** Funciona perfeitamente em desktop, tablet e mobile
+- **Interativo:** Carrossel de features automático e testimonials rotativos
+- **Assets Personalizados:** Imagens e logos gerados especificamente para o projeto
+- **Performance Otimizada:** Build otimizado com Vite e compressão gzip
+- **SEO Friendly:** Meta tags e estrutura otimizada para buscadores
 
-- Configure the top-level `parserOptions` property like this:
+## 🛠️ Tecnologias
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- **React 18** - Biblioteca UI moderna
+- **TypeScript** - Tipagem estática
+- **Tailwind CSS** - Framework CSS utilitário
+- **Shadcn/UI** - Componentes de interface
+- **Lucide Icons** - Ícones modernos
+- **Vite** - Build tool rápido
+
+## 📦 Instalação e Execução
+
+### Pré-requisitos
+- Node.js 18+
+- npm ou yarn
+
+### Comandos
+
+```bash
+# Instalar dependências
+npm install
+
+# Executar em desenvolvimento
+npm run dev
+
+# Build para produção
+npm run build
+
+# Preview do build
+npm run preview
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## 📁 Estrutura do Projeto
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
 ```
+marketing-site/
+├── src/
+│   ├── assets/          # Imagens e recursos
+│   ├── components/      # Componentes React
+│   ├── App.jsx         # Componente principal
+│   └── main.jsx        # Ponto de entrada
+├── public/             # Arquivos públicos
+├── index.html          # Template HTML
+└── package.json        # Dependências
+```
+
+## 🎨 Seções do Website
+
+1. **Hero Section** - Apresentação principal com CTAs
+2. **Features** - Funcionalidades principais do sistema
+3. **Demo** - Mockups e demonstrações visuais
+4. **Modules** - Módulos integrados do sistema
+5. **Technology** - Stack tecnológico utilizado
+6. **Testimonials** - Depoimentos de clientes
+7. **CTA Final** - Chamada para ação
+8. **Footer** - Links e informações
+
+## 🔗 Links Importantes
+
+- **GitHub:** https://github.com/costadanilofreitas/chefia-pos
+- **Website:** https://bhwjgxnj.manus.space
+- **Documentação:** Ver pasta `docs/` no repositório principal
+
+## 📝 Licença
+
+Este projeto é parte do sistema Chefia POS e segue a mesma licença do projeto principal.
+
