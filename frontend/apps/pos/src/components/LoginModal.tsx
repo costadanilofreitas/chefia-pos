@@ -44,6 +44,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
   const handleOperatorIdComplete = (id: string) => {
     console.log('🔢 Operator ID completed:', id);
     setOperatorId(id);
+    setPassword(''); // Limpar senha antes de mostrar teclado de senha
     setShowPasswordKeypad(true);
   };
 
@@ -56,6 +57,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
   const handleLogin = async (id?: string, pwd?: string) => {
     const finalOperatorId = id || operatorId;
     const finalPassword = pwd || password;
+    
+    console.log('🔍 DEBUG DETALHADO:');
+    console.log('- id parameter:', id);
+    console.log('- pwd parameter:', pwd);
+    console.log('- operatorId state:', operatorId);
+    console.log('- password state:', password);
+    console.log('- finalOperatorId:', finalOperatorId);
+    console.log('- finalPassword:', finalPassword);
+    console.log('- finalOperatorId length:', finalOperatorId?.length);
+    console.log('- finalPassword length:', finalPassword?.length);
     
     if (!finalOperatorId || !finalPassword) {
       setError('Por favor, preencha o código do operador e a senha');
@@ -140,6 +151,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
     if (showPasswordKeypad) {
       return (
         <NumericKeypad
+          key="password-keypad" // Força re-render
           open={true}
           onClose={handleClosePasswordKeypad}
           onComplete={handlePasswordComplete}
@@ -154,6 +166,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
 
     return (
       <NumericKeypad
+        key="operator-keypad" // Força re-render
         open={true}
         onClose={onClose}
         onComplete={handleOperatorIdComplete}
@@ -161,7 +174,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
         loading={isLoading}
         error={error}
         dialog={false}
-        length={4}
+        length={3}
       />
     );
   };
