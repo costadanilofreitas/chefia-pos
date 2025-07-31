@@ -1031,7 +1031,7 @@ class EmployeeService:
         thirty_days_ago = datetime.now() - timedelta(days=30)
         recent_deliveries = [
             d for d in self.delivery_assignments
-            if datetime.fromisoformat(d.get("assigned_at")) if isinstance(d.get("assigned_at"), str) else d.get("assigned_at") >= thirty_days_ago
+            if (datetime.fromisoformat(d.get("assigned_at")) if isinstance(d.get("assigned_at"), str) else d.get("assigned_at")) >= thirty_days_ago
         ]
         
         total_deliveries = len(recent_deliveries)
@@ -1043,7 +1043,7 @@ class EmployeeService:
         # Estatísticas de presença (últimos 30 dias)
         recent_attendance = [
             a for a in self.attendance_records
-            if datetime.fromisoformat(a.get("date")) if isinstance(a.get("date"), str) else a.get("date") >= thirty_days_ago.date()
+            if (datetime.fromisoformat(a.get("date")) if isinstance(a.get("date"), str) else a.get("date")) >= thirty_days_ago.date()
         ]
         
         total_attendance = len(recent_attendance)

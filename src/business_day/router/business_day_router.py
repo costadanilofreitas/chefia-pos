@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
 from datetime import datetime, date
 
-from src.auth.security import get_current_active_user, has_permission, Permission
-from src.auth.models import User
+from src.auth.security import get_current_active_user, has_permission
+from src.auth.models import User, Permission
 from src.business_day.models.business_day import (
     BusinessDay, 
     BusinessDayCreate, 

@@ -1,0 +1,30 @@
+{
+  "terminal_id": "POS002",
+  "terminal_name": "Caixa Secundário",
+  "printer_configs": [
+    {
+      "name": "Cozinha",
+      "type": "kitchen",
+      "model": "Generic Thermal",
+      "connection_type": "network",
+      "connection_params": {"ip_address": "192.168.1.100", "port": 9100}
+    },
+    {
+      "name": "Recibo",
+      "type": "receipt",
+      "model": "Generic Thermal",
+      "connection_type": "usb",
+      "connection_params": {"vendor_id": "0x04b8", "product_id": "0x0e16"}
+    }
+  ],
+  "default_printer": "Recibo",
+  "allow_discounts": true,
+  "max_discount_percent": 10.0,
+  "allow_price_override": false,
+  "allow_returns": false,
+  "default_payment_method": "cash",
+  "tax_included": true,
+  "currency_symbol": "R$",
+  "decimal_places": 2
+}
+

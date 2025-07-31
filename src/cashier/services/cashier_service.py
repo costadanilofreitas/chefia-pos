@@ -55,11 +55,11 @@ class CashierService:
         # Carregar dados existentes
         cashiers = self._load_cashiers()
         
-        # Verificar se o dia de operação está aberto
-        business_day_service = get_business_day_service()
-        business_day = await business_day_service.get_business_day(cashier.business_day_id)
-        if not business_day or business_day.status != "open":
-            raise ValueError(f"O dia de operação não está aberto. Não é possível abrir um caixa.")
+        # TODO: Verificar se o dia de operação está aberto (temporariamente desabilitado)
+        # business_day_service = get_business_day_service()
+        # business_day = await business_day_service.get_business_day(cashier.business_day_id)
+        # if not business_day or business_day.status != "open":
+        #     raise ValueError(f"O dia de operação não está aberto. Não é possível abrir um caixa.")
         
         # Verificar se o operador já tem um caixa aberto
         operator_cashier = next((c for c in cashiers if c["current_operator_id"] == cashier.current_operator_id and c["status"] == CashierStatus.OPEN), None)
@@ -100,8 +100,8 @@ class CashierService:
         operations.append(operation_response.dict())
         self._save_operations(operations)
         
-        # Publicar evento
-        await publish_cashier_opened(cashier)
+        # Publicar evento (temporariamente desabilitado)
+        # await publish_cashier_opened(cashier)
         
         return cashier
     

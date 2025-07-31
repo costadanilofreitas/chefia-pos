@@ -35,7 +35,7 @@ import {
   Receipt as ReceiptIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
-import { useCashier } from '../hooks/mocks/useCashier';
+import { useCashier } from '../hooks/useCashier';
 import LoginModal from '../components/LoginModal';
 import { useBusinessDay } from '../hooks/mocks/useBusinessDay';
 import { formatCurrency } from '../utils/formatters';
@@ -102,12 +102,12 @@ const CashierOpeningClosingPage: React.FC = () => {
   const { user, isAuthenticated, login } = useAuth();
   const {
     currentCashier,
-    operations,
+    terminalStatus,
     loading,
     error,
-    open: openCashier,
-    close: closeCashier,
-    getSummary
+    openCashier,
+    closeCashier,
+    checkTerminalStatus
   } = useCashier();
   const { currentBusinessDay } = useBusinessDay();
 
@@ -152,13 +152,13 @@ const CashierOpeningClosingPage: React.FC = () => {
     }
 
     try {
-      await openCashier({
-        terminal_id: terminalId || '',
-        operator_id: user?.id || '',
-        opening_balance: parseFloat(openingAmount),
-        business_day_id: `bd_${new Date().toISOString().split('T')[0]}`, // Gerar business_day_id baseado na data atual
-        notes: notes
-      });
+      await openCashier(
+        terminalId || '',
+        user?.id || '',
+        user?.name || '',
+        parseFloat(openingAmount),
+        notes
+      );
 
       await PrinterService.printOpeningReceipt({
         cashier_id: currentCashier?.id,
