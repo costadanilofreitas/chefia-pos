@@ -112,14 +112,14 @@ class EmployeeService:
         """
         # Cria um novo funcionário com ID
         employee = Employee(
-            **employee_data.dict(),
+            **employee_data.model_dump(),
             id=str(uuid.uuid4()),
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
         
         # Adiciona à lista de funcionários
-        self.employees.append(employee.dict())
+        self.employees.append(employee.model_dump())
         self._save_employees()
         
         # Registra o evento
@@ -127,7 +127,7 @@ class EmployeeService:
             event_type="employee_created",
             employee_id=employee.id,
             user_id=user_id,
-            data=employee.dict()
+            data=employee.model_dump()
         )
         
         # Registra o log
@@ -182,7 +182,7 @@ class EmployeeService:
                 updated_employee.updated_at = datetime.now()
                 
                 # Substitui na lista
-                self.employees[i] = updated_employee.dict()
+                self.employees[i] = updated_employee.model_dump()
                 self._save_employees()
                 
                 # Registra o evento
@@ -191,7 +191,7 @@ class EmployeeService:
                     employee_id=employee_id,
                     user_id=user_id,
                     data={
-                        "employee": updated_employee.dict(),
+                        "employee": updated_employee.model_dump(),
                         "updated_fields": list(update_data.keys())
                     }
                 )
@@ -233,7 +233,7 @@ class EmployeeService:
                 employee_obj.is_active = False
                 employee_obj.termination_date = date.today()
                 employee_obj.updated_at = datetime.now()
-                self.employees[i] = employee_obj.dict()
+                self.employees[i] = employee_obj.model_dump()
                 self._save_employees()
                 
                 # Registra o evento
@@ -352,14 +352,14 @@ class EmployeeService:
         
         # Cria uma nova atribuição com ID
         assignment = DeliveryAssignment(
-            **assignment_data.dict(),
+            **assignment_data.model_dump(),
             id=str(uuid.uuid4()),
             status="assigned",
             assigned_at=datetime.now()
         )
         
         # Adiciona à lista de atribuições
-        self.delivery_assignments.append(assignment.dict())
+        self.delivery_assignments.append(assignment.model_dump())
         self._save_delivery_assignments()
         
         # Registra o evento
@@ -367,7 +367,7 @@ class EmployeeService:
             event_type="delivery_assigned",
             employee_id=assignment.employee_id,
             user_id=user_id,
-            data=assignment.dict()
+            data=assignment.model_dump()
         )
         
         # Registra o log
@@ -426,7 +426,7 @@ class EmployeeService:
                 updated_assignment = current_assignment.copy(update=update_dict)
                 
                 # Substitui na lista
-                self.delivery_assignments[i] = updated_assignment.dict()
+                self.delivery_assignments[i] = updated_assignment.model_dump()
                 self._save_delivery_assignments()
                 
                 # Registra o evento
@@ -435,7 +435,7 @@ class EmployeeService:
                     event_type=event_type,
                     employee_id=updated_assignment.employee_id,
                     user_id=user_id,
-                    data=updated_assignment.dict()
+                    data=updated_assignment.model_dump()
                 )
                 
                 # Registra o log
@@ -573,7 +573,7 @@ class EmployeeService:
         
         # Cria um novo registro com ID
         attendance = EmployeeAttendance(
-            **attendance_data.dict(),
+            **attendance_data.model_dump(),
             id=str(uuid.uuid4()),
             date=attendance_data.clock_in.date(),
             created_at=datetime.now(),
@@ -581,7 +581,7 @@ class EmployeeService:
         )
         
         # Adiciona à lista de registros
-        self.attendance_records.append(attendance.dict())
+        self.attendance_records.append(attendance.model_dump())
         self._save_attendance_records()
         
         # Registra o evento
@@ -589,7 +589,7 @@ class EmployeeService:
             event_type="attendance_recorded",
             employee_id=attendance.employee_id,
             user_id=user_id,
-            data=attendance.dict()
+            data=attendance.model_dump()
         )
         
         # Registra o log
@@ -655,7 +655,7 @@ class EmployeeService:
                 updated_attendance.updated_at = datetime.now()
                 
                 # Substitui na lista
-                self.attendance_records[i] = updated_attendance.dict()
+                self.attendance_records[i] = updated_attendance.model_dump()
                 self._save_attendance_records()
                 
                 # Obtém o funcionário
@@ -671,7 +671,7 @@ class EmployeeService:
                     event_type=event_type,
                     employee_id=updated_attendance.employee_id,
                     user_id=user_id,
-                    data=updated_attendance.dict()
+                    data=updated_attendance.model_dump()
                 )
                 
                 # Registra o log
@@ -764,14 +764,14 @@ class EmployeeService:
         
         # Cria uma nova avaliação com ID
         evaluation = EmployeePerformance(
-            **evaluation_data.dict(),
+            **evaluation_data.model_dump(),
             id=str(uuid.uuid4()),
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
         
         # Adiciona à lista de avaliações
-        self.performance_records.append(evaluation.dict())
+        self.performance_records.append(evaluation.model_dump())
         self._save_performance_records()
         
         # Registra o evento
@@ -779,7 +779,7 @@ class EmployeeService:
             event_type="performance_evaluated",
             employee_id=evaluation.employee_id,
             user_id=user_id,
-            data=evaluation.dict()
+            data=evaluation.model_dump()
         )
         
         # Registra o log
@@ -823,7 +823,7 @@ class EmployeeService:
                 updated_evaluation.updated_at = datetime.now()
                 
                 # Substitui na lista
-                self.performance_records[i] = updated_evaluation.dict()
+                self.performance_records[i] = updated_evaluation.model_dump()
                 self._save_performance_records()
                 
                 # Obtém o funcionário
@@ -835,7 +835,7 @@ class EmployeeService:
                     event_type="performance_updated",
                     employee_id=updated_evaluation.employee_id,
                     user_id=user_id,
-                    data=updated_evaluation.dict()
+                    data=updated_evaluation.model_dump()
                 )
                 
                 # Registra o log
@@ -1090,7 +1090,7 @@ class EmployeeService:
         await self.event_bus.publish(
             event_type,
             Event(
-                data=event.dict(),
+                data=event.model_dump(),
                 metadata={"event_type": event_type, "module": "employee"}
             )
         )

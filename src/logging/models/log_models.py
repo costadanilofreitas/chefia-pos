@@ -28,6 +28,7 @@ class LogSource(str, enum.Enum):
     KIOSK = "kiosk"
     STOCK = "stock"
     CUSTOMER = "customer"
+    EMPLOYEE = "employee"
     SUPPLIER = "supplier"
     PAYMENT = "payment"
     INTEGRATION = "integration"
