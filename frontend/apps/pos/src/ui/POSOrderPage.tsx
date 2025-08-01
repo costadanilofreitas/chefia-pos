@@ -61,8 +61,8 @@ import {
   Home as HomeIcon,
   Store as StoreIcon
 } from '@mui/icons-material';
-import { useAuth } from '../hooks/mocks/useAuth';
-import { useCashier } from '../hooks/mocks/useCashier';
+import { useAuth } from '../hooks/useAuth';
+import { useCashier } from '../hooks/useCashier';
 import { formatCurrency } from '../utils/formatters';
 
 // Styled components

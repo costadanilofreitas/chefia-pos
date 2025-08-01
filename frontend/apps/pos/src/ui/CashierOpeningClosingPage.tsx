@@ -35,9 +35,9 @@ import {
   Receipt as ReceiptIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
-import { useCashier } from '../hooks/mocks/useCashier';
+import { useCashier } from '../hooks/useCashier';
 import LoginModal from '../components/LoginModal';
-import { useBusinessDay } from '../hooks/mocks/useBusinessDay';
+import { useBusinessDay } from '../hooks/useBusinessDay';
 import { formatCurrency } from '../utils/formatters';
 import NumericKeypad from '../components/NumericKeypad';
 import PrinterService from '../services/PrinterService';

@@ -29,6 +29,13 @@ export const API_CONFIG = {
       CLOSE: (cashierId: string) => `/api/v1/cashier/${cashierId}/close`,
       WITHDRAW: (cashierId: string) => `/api/v1/cashier/${cashierId}/withdrawal`
     },
+    BUSINESS_DAY: {
+      BASE: '/api/v1/business-day',
+      OPEN: '/api/v1/business-day',
+      CLOSE: '/api/v1/business-day',
+      CURRENT: '/api/v1/business-day/current',
+      SUMMARY: (id: string) => `/api/v1/business-day/${id}/summary`
+    },
     CUSTOMERS: {
       LIST: '/api/v1/customers',
       CREATE: '/api/v1/customers',

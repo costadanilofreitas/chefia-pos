@@ -50,8 +50,8 @@ import {
   AccountBalance as BalanceIcon,
   Security as SecurityIcon
 } from '@mui/icons-material';
-import { useAuth } from '../hooks/mocks/useAuth';
-import { useCashier } from '../hooks/mocks/useCashier';
+import { useAuth } from '../hooks/useAuth';
+import { useCashier } from '../hooks/useCashier';
 import { formatCurrency } from '../utils/formatters';
 import PrinterService from '../services/PrinterService';
 

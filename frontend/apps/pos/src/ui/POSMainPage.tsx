@@ -42,7 +42,7 @@ import {
   Receipt as ReceiptIcon
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
-import { useProduct } from '../hooks/mocks/useProduct';
+import { useProduct } from '../hooks/useProduct';
 import { useOrder } from '../hooks/useOrder';
 import { formatCurrency } from '../utils/formatters';
 import { 

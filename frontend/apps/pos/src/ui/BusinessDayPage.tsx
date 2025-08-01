@@ -18,8 +18,8 @@ import {
   Divider,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { useBusinessDay } from '../hooks/mocks/useBusinessDay';
-import { useAuth } from '../hooks/mocks/useAuth';
+import { useBusinessDay } from '../hooks/useBusinessDay';
+import { useAuth } from '../hooks/useAuth';
 import {
   Today as TodayIcon,
   LockOpen as OpenIcon,
@@ -28,7 +28,7 @@ import {
   Store as StoreIcon,
 } from '@mui/icons-material';
 import PrinterService from '../services/PrinterService';
-import { useCashier } from '../hooks/mocks/useCashier';
+import { useCashier } from '../hooks/useCashier';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
 // Styled components
