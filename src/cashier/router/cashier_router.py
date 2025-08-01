@@ -58,20 +58,6 @@ async def open_cashier(
             detail="O ID do terminal é obrigatório para abertura do caixa."
         )
     
-    # TODO: Verificar se o dia de operação existe e está aberto (temporariamente desabilitado)
-    # business_day = await business_day_service.get_business_day(cashier_create.business_day_id)
-    # if not business_day:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_404_NOT_FOUND,
-    #         detail=f"Dia de operação com ID {cashier_create.business_day_id} não encontrado."
-    #     )
-    # 
-    # if business_day.status != "open":
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail=f"O dia de operação está fechado. Não é possível abrir um caixa."
-    #     )
-    
     # Verificar se o operador já tem um caixa aberto
     operator_cashier = await service.get_cashier_by_operator(cashier_create.operator_id)
     if operator_cashier:

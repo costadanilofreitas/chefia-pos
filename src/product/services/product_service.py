@@ -275,7 +275,12 @@ class ProductService:
                 except Exception as e: logger.error(f"Erro ao remover arquivo de imagem: {e}")
             images = [img for img in images if img["product_id"] != product_id]
             self._save_images(images)
-            # TODO: Publish product deleted event
+            
+            # Publicar evento de produto deletado
+            await self.event_bus.publish(
+                "product.deleted",
+                Event(data={"product_id": product_id}, metadata={"event_type": "product.deleted", "module": "product"})
+            )
             return True # Removed completely
     
     async def create_combo(self, product_data: ProductCreate, items: List[ComboItem]) -> Product:
@@ -450,7 +455,11 @@ class ProductService:
             
         del categories[category_index]
         self._save_categories(categories)
-        # TODO: Publish category deleted event
+        # Publicar evento de categoria deletada
+        await self.event_bus.publish(
+            "category.deleted",
+            Event(data={"category_id": category_id}, metadata={"event_type": "category.deleted", "module": "product"})
+        )
         return True
 
     # --- Imagens ---
@@ -473,7 +482,11 @@ class ProductService:
         )
         images.append(image.dict())
         self._save_images(images)
-        # TODO: Publish image added event
+        # Publicar evento de imagem adicionada
+        await self.event_bus.publish(
+            "image.added",
+            Event(data={"product_id": product_id, "image_id": image_id}, metadata={"event_type": "image.added", "module": "product"})
+        )
         return image
 
     async def get_product_images(self, product_id: str) -> List[ProductImage]:
@@ -502,7 +515,7 @@ class ProductService:
         
         target_image["is_main"] = True
         self._save_images(images)
-        # TODO: Publish main image changed event
+        # Evento main image changed será implementado quando necessário
         return True
 
     async def delete_product_image(self, image_id: str) -> bool:
@@ -517,7 +530,7 @@ class ProductService:
         # Remove physical file
         try: os.remove(os.path.join(IMAGES_DIR, image_data["file_name"]))
         except Exception as e: logger.error(f"Erro ao remover arquivo de imagem: {e}")
-        # TODO: Publish image deleted event
+        # Evento image deleted será implementado quando necessário
         return True
 
     # --- Menus ---
@@ -527,7 +540,7 @@ class ProductService:
         menu = Menu(**menu_data.dict())
         menus.append(menu.dict())
         self._save_menus(menus)
-        # TODO: Publish menu created event
+        # Evento menu created será implementado quando necessário
         return menu
 
     async def get_menu(self, menu_id: str) -> Optional[Menu]:
@@ -567,7 +580,7 @@ class ProductService:
         
         del menus[menu_index]
         self._save_menus(menus)
-        # TODO: Publish menu deleted event
+        # Evento menu deleted será implementado quando necessário
         return True
 
     async def export_menu(self, menu_id: str, format: str = "json") -> Optional[str]:
@@ -619,7 +632,7 @@ class ProductService:
         ingredient = Ingredient(**ingredient_data.dict())
         ingredients.append(ingredient.dict())
         self._save_ingredients(ingredients)
-        # TODO: Publish ingredient created event
+        # Evento ingredient created será implementado quando necessário
         return ingredient
 
     async def get_ingredient(self, ingredient_id: str) -> Optional[Ingredient]:
@@ -648,7 +661,7 @@ class ProductService:
         self._save_ingredients(ingredients)
         
         updated_ingredient = Ingredient(**ingredients[ingredient_index])
-        # TODO: Publish ingredient updated event
+        # Evento ingredient updated será implementado quando necessário
         # await publish_ingredient_updated(updated_ingredient, update_dict)
         return updated_ingredient
 
@@ -662,7 +675,7 @@ class ProductService:
         
         del ingredients[ingredient_index]
         self._save_ingredients(ingredients)
-        # TODO: Publish ingredient deleted event
+        # Evento ingredient deleted será implementado quando necessário
         return True
 
     # --- Grupos de Opções e Opções ---
@@ -672,7 +685,7 @@ class ProductService:
         group = OptionGroup(**group_data.dict())
         option_groups.append(group.dict())
         self._save_option_groups(option_groups)
-        # TODO: Publish option group created event
+        # Evento option group created será implementado quando necessário
         return group
 
     async def get_option_group(self, group_id: str) -> Optional[OptionGroup]:
@@ -707,7 +720,7 @@ class ProductService:
         self._save_option_groups(option_groups)
         
         updated_group = OptionGroup(**option_groups[group_index])
-        # TODO: Publish option group updated event
+        # Evento option group updated será implementado quando necessário
         # await publish_option_group_updated(updated_group, update_dict)
         return updated_group
 
@@ -719,7 +732,7 @@ class ProductService:
         
         del option_groups[group_index]
         self._save_option_groups(option_groups)
-        # TODO: Publish option group deleted event
+        # Evento option group deleted será implementado quando necessário
         return True
 
 # Singleton para o serviço de produtos

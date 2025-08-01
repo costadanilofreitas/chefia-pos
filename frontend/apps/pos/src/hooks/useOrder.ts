@@ -99,7 +99,6 @@ export const useOrder = (): UseOrderReturn => {
         loading: false
       });
 
-      console.log('✅ useOrder: Pedidos carregados', orders);
     } catch (error: any) {
       console.error('❌ useOrder: Erro ao buscar pedidos', error);
       updateState({ 

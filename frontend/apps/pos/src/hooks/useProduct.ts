@@ -40,10 +40,8 @@ export const useProduct = () => {
       }));
       
       setProducts(convertedProducts);
-      console.log('✅ Produtos carregados do backend:', convertedProducts.length);
       
     } catch (err: any) {
-      console.error('❌ Erro ao carregar produtos:', err);
       setError(err.message);
       setProducts([]); // Sem fallback mock - mostrar erro real
     } finally {
@@ -69,7 +67,6 @@ export const useProduct = () => {
       console.log('✅ Categorias carregadas do backend:', convertedCategories.length);
       
     } catch (err: any) {
-      console.error('❌ Erro ao carregar categorias:', err);
       setError(err.message);
     } finally {
       setLoading(false);

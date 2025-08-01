@@ -55,12 +55,6 @@ class CashierService:
         # Carregar dados existentes
         cashiers = self._load_cashiers()
         
-        # TODO: Verificar se o dia de operação está aberto (temporariamente desabilitado)
-        # business_day_service = get_business_day_service()
-        # business_day = await business_day_service.get_business_day(cashier.business_day_id)
-        # if not business_day or business_day.status != "open":
-        #     raise ValueError(f"O dia de operação não está aberto. Não é possível abrir um caixa.")
-        
         # Verificar se o operador já tem um caixa aberto
         operator_cashier = next((c for c in cashiers if c["current_operator_id"] == cashier.current_operator_id and c["status"] == CashierStatus.OPEN), None)
         if operator_cashier:

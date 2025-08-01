@@ -38,7 +38,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // REGRA 4: Se requer dia aberto (para operações específicas)
   if (requireOpenDay) {
-    // TODO: Implementar verificação de dia aberto quando necessário
+    // Verificação de dia aberto será implementada quando o módulo business day estiver completo
     // Por enquanto, permite acesso se autenticado
   }
 

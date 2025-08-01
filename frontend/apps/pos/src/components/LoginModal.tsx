@@ -25,7 +25,6 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => {
-  console.log('🚀 LoginModal component loaded');
   
   const navigate = useNavigate();
   const { terminalId } = useParams<{ terminalId: string }>();
@@ -42,14 +41,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
   };
 
   const handleOperatorIdComplete = (id: string) => {
-    console.log('🔢 Operator ID completed:', id);
     setOperatorId(id);
     setPassword(''); // Limpar senha antes de mostrar teclado de senha
     setShowPasswordKeypad(true);
   };
 
   const handlePasswordComplete = async (pwd: string) => {
-    console.log('🔐 Password completed, attempting login...');
     setPassword(pwd);
     await handleLogin(operatorId, pwd);
   };
@@ -58,40 +55,23 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
     const finalOperatorId = id || operatorId;
     const finalPassword = pwd || password;
     
-    console.log('🔍 DEBUG DETALHADO:');
-    console.log('- id parameter:', id);
-    console.log('- pwd parameter:', pwd);
-    console.log('- operatorId state:', operatorId);
-    console.log('- password state:', password);
-    console.log('- finalOperatorId:', finalOperatorId);
-    console.log('- finalPassword:', finalPassword);
-    console.log('- finalOperatorId length:', finalOperatorId?.length);
-    console.log('- finalPassword length:', finalPassword?.length);
-    
     if (!finalOperatorId || !finalPassword) {
       setError('Por favor, preencha o código do operador e a senha');
       return;
     }
-
-    console.log('🚀 FORM SUBMIT TRIGGERED! 🚀');
-    console.log('Operator ID:', finalOperatorId);
-    console.log('Password length:', finalPassword.length);
 
     setIsLoading(true);
     setError('');
 
     try {
       // Usar apenas o hook useAuth para fazer login
-      console.log('📡 Making login request via useAuth...');
       const user = await login({
         operator_id: finalOperatorId,
         password: finalPassword
       });
       
-      console.log('✅ Login successful:', user);
 
       // Verificar status do caixa para decidir redirecionamento
-      console.log('🔍 Checking cashier status...');
       try {
         const response = await fetch(`http://localhost:8001/api/v1/cashier/terminal/${terminalId}/status`, {
           headers: {
@@ -101,20 +81,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
         
         if (response.ok) {
           const cashierStatus = await response.json();
-          console.log('📊 Cashier status:', cashierStatus);
           
           if (cashierStatus.has_open_cashier) {
             // Caixa já aberto - vai para tela principal de pedidos
-            console.log('🔄 Cashier is open, redirecting to main page...');
             navigate(`/pos/${terminalId}/main`);
           } else {
             // Caixa não aberto - permanece na tela de caixa para abrir o dia
-            console.log('🔄 Cashier is closed, staying on cashier page...');
             // Não redireciona, permanece na tela atual
           }
         } else {
           // Se não conseguir verificar status, vai para main por padrão
-          console.log('⚠️ Could not check cashier status, redirecting to main...');
           navigate(`/pos/${terminalId}/main`);
         }
       } catch (error) {
@@ -129,17 +105,14 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
         onSuccess();
       }
 
-      console.log('🎉 Login process completed successfully');
     } catch (error) {
       console.error('❌ Login error:', error);
       setError(error instanceof Error ? error.message : 'Erro ao fazer login');
-    } finally {
       setIsLoading(false);
     }
   };
 
   const handleTextLogin = async () => {
-    console.log('🔥 TEXT LOGIN BUTTON CLICKED! 🔥');
     await handleLogin();
   };
 
@@ -159,7 +132,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
           loading={isLoading}
           error={error}
           dialog={false}
-          length={6}
         />
       );
     }
@@ -174,7 +146,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
         loading={isLoading}
         error={error}
         dialog={false}
-        length={3}
       />
     );
   };
