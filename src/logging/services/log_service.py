@@ -458,7 +458,7 @@ class LogService:
         # Clear in-memory logs
         self._in_memory_logs = [
             log for log in self._in_memory_logs
-            if datetime.fromisoformat(log["timestamp"]) if isinstance(log["timestamp"], str) else log["timestamp"] >= cutoff_date
+            if (datetime.fromisoformat(log["timestamp"]) if isinstance(log["timestamp"], str) else log["timestamp"]) >= cutoff_date
         ]
         
         return {
