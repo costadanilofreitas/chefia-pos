@@ -16,7 +16,6 @@ interface UseAnalyticsReturn {
   // Ações
   refreshMetrics: () => Promise<void>;
   loadSummary: () => Promise<void>;
-  simulateSale: (amount: number) => Promise<void>;
   
   // Utilitários
   formatCurrency: (value: number) => string;
@@ -69,25 +68,7 @@ export const useAnalytics = (autoRefresh: boolean = true, refreshInterval: numbe
     }
   }, []);
 
-  // Função para simular venda
-  const simulateSale = useCallback(async (amount: number) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      await analyticsService.simulateSale(amount);
-      
-      // Atualiza métricas após simular venda
-      await refreshMetrics();
-      
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao simular venda';
-      setError(errorMessage);
-      console.error('Erro ao simular venda:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [refreshMetrics]);
+
 
   // Função para formatar moeda
   const formatCurrency = useCallback((value: number): string => {
@@ -133,7 +114,6 @@ export const useAnalytics = (autoRefresh: boolean = true, refreshInterval: numbe
     // Ações
     refreshMetrics,
     loadSummary,
-    simulateSale,
 
     // Utilitários
     formatCurrency,

@@ -201,8 +201,7 @@ const ManagerScreen: React.FC = () => {
     loading: analyticsLoading, 
     error: analyticsError,
     refreshMetrics,
-    formatCurrency,
-    simulateSale 
+    formatCurrency
   } = useAnalytics(true, 30000); // Auto-refresh a cada 30 segundos
 
   // Função para carregar dados de produtos
@@ -615,14 +614,7 @@ const ManagerScreen: React.FC = () => {
         >
           {analyticsLoading ? 'Atualizando...' : 'Atualizar Métricas'}
         </Button>
-        <Button 
-          variant="contained" 
-          color="success"
-          onClick={() => simulateSale(Math.random() * 100 + 20)}
-          disabled={analyticsLoading}
-        >
-          Simular Venda
-        </Button>
+
       </Box>
 
       {/* Exibir erro se houver */}

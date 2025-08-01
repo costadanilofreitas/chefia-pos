@@ -19,7 +19,6 @@ from src.analytics.models.dashboard_models import (
     UserDashboardPreference, DashboardAlert, DashboardExport,
     ScheduledReport
 )
-from src.core.db.db_service import DatabaseService
 from src.core.config.config_service import ConfigService
 from src.core.events.event_bus import EventBus
 
@@ -27,8 +26,8 @@ from src.core.events.event_bus import EventBus
 class AnalyticsService:
     """Serviço principal para analytics"""
     
-    def __init__(self, db_service: DatabaseService, config_service: ConfigService, event_bus: EventBus):
-        self.db_service = db_service
+    def __init__(self, config_service: ConfigService, event_bus: EventBus):
+        # db_service removido
         self.config_service = config_service
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
@@ -99,8 +98,8 @@ class AnalyticsService:
 class DashboardService:
     """Serviço para gerenciamento de dashboards"""
     
-    def __init__(self, db_service: DatabaseService, config_service: ConfigService, event_bus: EventBus):
-        self.db_service = db_service
+    def __init__(self, config_service: ConfigService, event_bus: EventBus):
+        # db_service removido
         self.config_service = config_service
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
@@ -491,8 +490,8 @@ class DashboardService:
 class DataSourceService:
     """Serviço para gerenciamento de fontes de dados"""
     
-    def __init__(self, db_service: DatabaseService, config_service: ConfigService, event_bus: EventBus):
-        self.db_service = db_service
+    def __init__(self, config_service: ConfigService, event_bus: EventBus):
+        # db_service removido
         self.config_service = config_service
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
@@ -747,8 +746,8 @@ class DataSourceService:
 class AlertService:
     """Serviço para gerenciamento de alertas"""
     
-    def __init__(self, db_service: DatabaseService, config_service: ConfigService, event_bus: EventBus):
-        self.db_service = db_service
+    def __init__(self, config_service: ConfigService, event_bus: EventBus):
+        # db_service removido
         self.config_service = config_service
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
@@ -1050,8 +1049,8 @@ class AlertService:
 class ExportService:
     """Serviço para exportação de dashboards"""
     
-    def __init__(self, db_service: DatabaseService, config_service: ConfigService, event_bus: EventBus):
-        self.db_service = db_service
+    def __init__(self, config_service: ConfigService, event_bus: EventBus):
+        # db_service removido
         self.config_service = config_service
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
@@ -1233,8 +1232,8 @@ class ExportService:
 class ReportService:
     """Serviço para relatórios agendados"""
     
-    def __init__(self, db_service: DatabaseService, config_service: ConfigService, event_bus: EventBus):
-        self.db_service = db_service
+    def __init__(self, config_service: ConfigService, event_bus: EventBus):
+        # db_service removido
         self.config_service = config_service
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)

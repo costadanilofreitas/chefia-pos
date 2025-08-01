@@ -5,7 +5,7 @@ import uuid
 import json
 import os
 
-from src.product.models.product import (
+from src.core.models.core_models import (
     OrderItem, OrderItemCreate, OrderItemUpdate, Order, OrderCreate, OrderUpdate,
     OrderStatus, PaymentStatus, PaymentMethod, OrderType,
     ApplyCouponRequest, ApplyPointsRequest, DiscountResponse
