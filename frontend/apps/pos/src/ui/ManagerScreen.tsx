@@ -1,6 +1,7 @@
 // Reescrevendo arquivo limpo com todas as funções corretas
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useEmployee } from '../hooks/useEmployee';
 import {
   Box,
   Typography,
@@ -125,8 +126,17 @@ const ManagerScreen: React.FC = () => {
     severity: 'success' as 'success' | 'error' | 'warning' | 'info'
   });
 
-  // Estados para funcionários
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  // Hook para funcionários - integração com backend
+  const { 
+    employees, 
+    loading: employeesLoading, 
+    error: employeesError,
+    createEmployee,
+    updateEmployee,
+    deleteEmployee,
+    loadEmployees 
+  } = useEmployee();
+  
   const [employeeDialogOpen, setEmployeeDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [employeeForm, setEmployeeForm] = useState({
@@ -226,67 +236,9 @@ const ManagerScreen: React.FC = () => {
     loadProductData();
 
     // Dados mock para funcionários
-    const mockEmployees: Employee[] = [
-      {
-        id: '1',
-        name: 'João Silva',
-        email: 'joao.silva@empresa.com',
-        role: 'manager',
-        status: 'active',
-        cpf: '123.456.789-00',
-        rg: '12.345.678-9',
-        phone: '(11) 99999-9999',
-        address: 'Rua das Flores, 123 - São Paulo/SP',
-        birthDate: '1985-03-15',
-        hireDate: '2020-01-10',
-        salary: 5500,
-        department: 'Operações',
-        position: 'Gerente de Loja',
-        emergencyContact: {
-          name: 'Maria Silva',
-          phone: '(11) 88888-8888',
-          relationship: 'Esposa'
-        },
-        bankAccount: {
-          bank: 'Banco do Brasil',
-          agency: '1234-5',
-          account: '12345-6'
-        },
-        notes: 'Funcionário exemplar, responsável pelo turno da manhã',
-        lastLogin: '2024-01-15 08:30'
-      },
-      {
-        id: '2',
-        name: 'Maria Santos',
-        email: 'maria.santos@empresa.com',
-        role: 'cashier',
-        status: 'active',
-        cpf: '987.654.321-00',
-        rg: '98.765.432-1',
-        phone: '(11) 77777-7777',
-        address: 'Av. Paulista, 456 - São Paulo/SP',
-        birthDate: '1992-07-22',
-        hireDate: '2021-06-15',
-        salary: 2800,
-        department: 'Atendimento',
-        position: 'Operadora de Caixa',
-        emergencyContact: {
-          name: 'José Santos',
-          phone: '(11) 66666-6666',
-          relationship: 'Pai'
-        },
-        bankAccount: {
-          bank: 'Caixa Econômica',
-          agency: '5678-9',
-          account: '98765-4'
-        },
-        notes: 'Excelente atendimento ao cliente',
-        lastLogin: '2024-01-15 14:20'
-      }
-    ];
-
-    setEmployees(mockEmployees);
-  }, [terminalId, navigate, loadProductData]);
+    // Carregar funcionários do backend
+    loadEmployees();
+  }, [terminalId, navigate, loadProductData, loadEmployees]);
 
   const showSnackbar = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
     setSnackbar({ open: true, message, severity });
@@ -337,58 +289,31 @@ const ManagerScreen: React.FC = () => {
 
   const handleSaveEmployee = async () => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       if (editingEmployee) {
-        setEmployees(prev => prev.map(emp => 
-          emp.id === editingEmployee.id 
-            ? { 
-                ...emp, 
-                ...employeeForm,
-                emergencyContact: {
-                  name: employeeForm.emergencyContactName,
-                  phone: employeeForm.emergencyContactPhone,
-                  relationship: employeeForm.emergencyContactRelationship
-                },
-                bankAccount: {
-                  bank: employeeForm.bankName,
-                  agency: employeeForm.bankAgency,
-                  account: employeeForm.bankAccount
-                }
-              }
-            : emp
-        ));
-        showSnackbar('Funcionário atualizado com sucesso!', 'success');
-      } else {
-        const newEmployee: Employee = {
-          id: Date.now().toString(),
+        // Atualizar funcionário existente
+        await updateEmployee(editingEmployee.id, {
           name: employeeForm.name,
           email: employeeForm.email,
-          role: employeeForm.role,
-          status: employeeForm.status,
-          cpf: employeeForm.cpf,
-          rg: employeeForm.rg,
           phone: employeeForm.phone,
-          address: employeeForm.address,
-          birthDate: employeeForm.birthDate,
-          hireDate: employeeForm.hireDate,
-          salary: employeeForm.salary,
-          department: employeeForm.department,
-          position: employeeForm.position,
-          emergencyContact: {
-            name: employeeForm.emergencyContactName,
-            phone: employeeForm.emergencyContactPhone,
-            relationship: employeeForm.emergencyContactRelationship
-          },
-          bankAccount: {
-            bank: employeeForm.bankName,
-            agency: employeeForm.bankAgency,
-            account: employeeForm.bankAccount
-          },
-          notes: employeeForm.notes,
-          lastLogin: 'Nunca'
-        };
-        setEmployees(prev => [...prev, newEmployee]);
+          role: employeeForm.role as any,
+          employment_type: 'permanent',
+          payment_frequency: 'monthly',
+          base_salary: employeeForm.salary,
+          hire_date: employeeForm.hireDate || new Date().toISOString().split('T')[0]
+        });
+        showSnackbar('Funcionário atualizado com sucesso!', 'success');
+      } else {
+        // Criar novo funcionário
+        await createEmployee({
+          name: employeeForm.name,
+          email: employeeForm.email,
+          phone: employeeForm.phone,
+          role: employeeForm.role as any,
+          employment_type: 'permanent',
+          payment_frequency: 'monthly',
+          base_salary: employeeForm.salary,
+          hire_date: employeeForm.hireDate || new Date().toISOString().split('T')[0]
+        });
         showSnackbar('Funcionário criado com sucesso!', 'success');
       }
 

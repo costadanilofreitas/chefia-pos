@@ -30,8 +30,7 @@ import {
   Assessment,
   Notifications
 } from '@mui/icons-material';
-import { useAuth as useAuthMock, UserRole } from '../hooks/mocks/useAuth';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, UserRole } from '../hooks/useAuth';
 import LoginDialog from './LoginDialog';
 
 interface POSLayoutProps {

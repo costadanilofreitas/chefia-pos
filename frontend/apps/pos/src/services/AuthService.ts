@@ -150,14 +150,24 @@ class AuthService {
    */
   async createCredentials(data: CreateCredentialRequest): Promise<void> {
     try {
-      // TODO: Implementar chamada real para o backend
-      console.log('Criando credenciais para:', data.operator_id);
-      
-      // Por enquanto, apenas simular sucesso
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Implementar chamada real para o backend
+      const response = await fetch(`${this.baseURL}/auth/credentials`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      console.log('✅ Credenciais criadas com sucesso para:', data.operator_id);
       
     } catch (error) {
-      console.error('Erro ao criar credenciais:', error);
+      console.error('❌ Erro ao criar credenciais:', error);
       throw new Error('Erro ao criar credenciais');
     }
   }

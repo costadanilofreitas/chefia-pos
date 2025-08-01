@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useCustomer } from '../hooks/useCustomer';
 import {
   Box,
   Typography,
@@ -199,8 +200,18 @@ const LoyaltyScreen: React.FC = () => {
   const { terminalId } = useParams<{ terminalId: string }>();
   const navigate = useNavigate();
   
+  // Hook para clientes - integração com backend
+  const { 
+    customers, 
+    loading: customersLoading, 
+    error: customersError,
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
+    loadCustomers 
+  } = useCustomer();
+  
   const [currentTab, setCurrentTab] = useState(0);
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [transactions, setTransactions] = useState<LoyaltyTransaction[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -404,7 +415,8 @@ const LoyaltyScreen: React.FC = () => {
         }
       };
 
-      setCustomers(mockCustomers);
+      // Carregar clientes do backend
+      loadCustomers();
       setCampaigns(mockCampaigns);
       setAnalytics(mockAnalytics);
 

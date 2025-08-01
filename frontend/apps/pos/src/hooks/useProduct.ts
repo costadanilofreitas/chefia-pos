@@ -45,13 +45,7 @@ export const useProduct = () => {
     } catch (err: any) {
       console.error('❌ Erro ao carregar produtos:', err);
       setError(err.message);
-      
-      // Fallback para dados mock em caso de erro
-      const fallbackProducts: Product[] = [
-        { id: '1', name: 'Produto Mock 1', price: 10.0, category_id: 'cat-1' },
-        { id: '2', name: 'Produto Mock 2', price: 20.0, category_id: 'cat-2' },
-      ];
-      setProducts(fallbackProducts);
+      setProducts([]); // Sem fallback mock - mostrar erro real
     } finally {
       setLoading(false);
     }
@@ -77,14 +71,6 @@ export const useProduct = () => {
     } catch (err: any) {
       console.error('❌ Erro ao carregar categorias:', err);
       setError(err.message);
-      
-      // Fallback para dados mock em caso de erro
-      const fallbackCategories: Category[] = [
-        { id: 'cat-1', name: 'Lanches', description: 'Hambúrgueres e sanduíches' },
-        { id: 'cat-2', name: 'Pizzas', description: 'Pizzas tradicionais e especiais' },
-        { id: 'cat-3', name: 'Bebidas', description: 'Refrigerantes e sucos' },
-      ];
-      setCategories(fallbackCategories);
     } finally {
       setLoading(false);
     }

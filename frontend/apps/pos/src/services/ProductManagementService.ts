@@ -134,9 +134,9 @@ function convertBackendProduct(backendProduct: BackendProduct): Product {
       quantity: (ing as any).quantity || 1,
       required: ing.is_required
     })) || [],
-    allergens: [], // TODO: Implementar no backend
-    preparationTime: 15, // TODO: Implementar no backend
-    calories: undefined, // TODO: Implementar no backend
+    allergens: [], // Campo não implementado no backend ainda
+    preparationTime: 15, // Campo não implementado no backend ainda
+    calories: undefined, // Campo não implementado no backend ainda
     image: backendProduct.image_url,
     imageUrl: backendProduct.image_url, // Adicionando imageUrl
     available: backendProduct.is_available,
@@ -162,7 +162,7 @@ function convertBackendCombo(backendProduct: BackendProduct): Combo {
     basePrice: basePrice,
     price: backendProduct.price, // Adicionando propriedade price
     discount: discount, // Adicionando propriedade discount
-    discountPercentage: 10, // TODO: Calcular desconto real
+    discountPercentage: discount > 0 ? Math.round((discount / basePrice) * 100) : 0, // Calcular desconto real
     finalPrice: backendProduct.price,
     image: backendProduct.image_url,
     active: backendProduct.status === 'ACTIVE',
@@ -468,7 +468,7 @@ export class ProductManagementService {
         name: combo.name,
         description: combo.description,
         price: combo.finalPrice,
-        category_id: 'cat-1', // TODO: Permitir seleção de categoria
+        category_id: combo.categoryId || 'default-category', // Usar categoria do combo ou padrão
         image_url: combo.image,
         is_available: combo.active,
         status: combo.active ? 'ACTIVE' : 'INACTIVE',
