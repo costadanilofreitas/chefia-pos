@@ -62,12 +62,12 @@ class DeliveryService:
         )
         
         # Publicar evento
-        await self.event_bus.publish(Event(
-            event_type=EventType.ORDER_CREATED,
+        await self.event_bus.publish("DELIVERY_EVENT", Event(
             data={
                 "delivery_order": delivery_order.dict(),
                 "source": "delivery_service"
-            }
+            },
+            metadata={"event_type": "ORDER_CREATED", "module": "delivery"}
         ))
         
         return delivery_order
@@ -104,14 +104,14 @@ class DeliveryService:
         )
         
         # Publicar evento
-        await self.event_bus.publish(Event(
-            event_type=EventType.ORDER_STATUS_CHANGED,
+        await self.event_bus.publish("DELIVERY_EVENT", Event(
             data={
                 "delivery_order_id": delivery_order.id,
                 "status": delivery_order.status,
                 "courier_id": courier_id,
                 "source": "delivery_service"
-            }
+            },
+            metadata={"event_type": "ORDER_STATUS_CHANGED", "module": "delivery"}
         ))
         
         return delivery_order
@@ -174,15 +174,15 @@ class DeliveryService:
                 await courier_service.update_courier_after_delivery(delivery_order.courier_id)
         
         # Publicar evento
-        await self.event_bus.publish(Event(
-            event_type=EventType.ORDER_STATUS_CHANGED,
+        await self.event_bus.publish("DELIVERY_EVENT", Event(
             data={
                 "delivery_order_id": delivery_order.id,
                 "old_status": old_status,
                 "new_status": status,
                 "notes": notes,
                 "source": "delivery_service"
-            }
+            },
+            metadata={"event_type": "ORDER_STATUS_CHANGED", "module": "delivery"}
         ))
         
         return delivery_order
@@ -478,13 +478,13 @@ class CourierService:
         self.couriers[courier.id] = courier
         
         # Publicar evento
-        await self.event_bus.publish(Event(
-            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+        await self.event_bus.publish("DELIVERY_EVENT", Event(
             data={
                 "courier": courier.dict(),
                 "action": "created",
                 "source": "courier_service"
-            }
+            },
+            metadata={"event_type": "COURIER_CREATED", "module": "delivery"}
         ))
         
         return courier
@@ -509,8 +509,7 @@ class CourierService:
         courier.updated_at = datetime.now()
         
         # Publicar evento
-        await self.event_bus.publish(Event(
-            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+        await self.event_bus.publish("DELIVERY_EVENT", Event(
             data={
                 "courier_id": courier_id,
                 "updates": data,
@@ -537,8 +536,7 @@ class CourierService:
             courier.current_deliveries += 1
         
         # Publicar evento
-        await self.event_bus.publish(Event(
-            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+        await self.event_bus.publish("DELIVERY_EVENT", Event(
             data={
                 "courier_id": courier_id,
                 "old_status": old_status,
@@ -561,8 +559,7 @@ class CourierService:
         courier.updated_at = datetime.now()
         
         # Publicar evento
-        await self.event_bus.publish(Event(
-            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+        await self.event_bus.publish("DELIVERY_EVENT", Event(
             data={
                 "courier_id": courier_id,
                 "location": location,
@@ -629,8 +626,7 @@ class CourierService:
         courier.updated_at = datetime.now()
         
         # Publicar evento
-        await self.event_bus.publish(Event(
-            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+        await self.event_bus.publish("DELIVERY_EVENT", Event(
             data={
                 "courier_id": courier_id,
                 "status": courier.status,
@@ -700,8 +696,7 @@ class DeliveryZoneService:
         self.zones[zone.id] = zone
         
         # Publicar evento
-        await self.event_bus.publish(Event(
-            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+        await self.event_bus.publish("DELIVERY_EVENT", Event(
             data={
                 "zone": zone.dict(),
                 "action": "created",
@@ -731,8 +726,7 @@ class DeliveryZoneService:
         zone.updated_at = datetime.now()
         
         # Publicar evento
-        await self.event_bus.publish(Event(
-            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+        await self.event_bus.publish("DELIVERY_EVENT", Event(
             data={
                 "zone_id": zone_id,
                 "updates": data,

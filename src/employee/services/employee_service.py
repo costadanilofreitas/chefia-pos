@@ -1088,9 +1088,10 @@ class EmployeeService:
         )
         
         await self.event_bus.publish(
+            event_type,
             Event(
-                type=EventType.EMPLOYEE,
-                data=event.dict()
+                data=event.dict(),
+                metadata={"event_type": event_type, "module": "employee"}
             )
         )
 

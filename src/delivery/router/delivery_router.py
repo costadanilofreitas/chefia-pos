@@ -8,7 +8,7 @@ from src.delivery.models.delivery_models import (
     DeliveryOrder, DeliveryOrderStatus, DeliveryCourier, CourierStatus, 
     CourierType, DeliveryRoute, RouteStatus, DeliveryZone, 
     DeliveryTracking, TrackingEventType,
-    CreateDeliveryOrderRequest, UpdateDeliveryOrderStatusRequest,
+    CreateDeliveryOrderRequest, UpdateDeliveryOrderRequest, UpdateDeliveryOrderStatusRequest,
     AssignCourierRequest, CreateCourierRequest, UpdateCourierStatusRequest,
     UpdateCourierLocationRequest, CreateZoneRequest, CreateTrackingEventRequest,
     CheckAddressRequest
@@ -120,6 +120,62 @@ async def list_delivery_orders(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao listar pedidos: {str(e)}")
+
+@router.put("/delivery/orders/{order_id}", response_model=DeliveryOrder)
+async def update_delivery_order(
+    order_id: str,
+    order_data: UpdateDeliveryOrderRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Atualiza um pedido de delivery."""
+    try:
+        # Verificar se o pedido existe
+        delivery_order = await delivery_service.get_delivery_order(order_id)
+        if not delivery_order:
+            raise HTTPException(status_code=404, detail=f"Pedido de delivery {order_id} não encontrado")
+        
+        # Atualizar campos fornecidos
+        update_data = order_data.dict(exclude_unset=True)
+        
+        # Simular atualização (implementar no service)
+        for field, value in update_data.items():
+            setattr(delivery_order, field, value)
+        
+        delivery_order.updated_at = datetime.now()
+        
+        # Salvar no service (implementar método update_delivery_order no service)
+        # updated_order = await delivery_service.update_delivery_order(order_id, update_data)
+        
+        return delivery_order
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar pedido: {str(e)}")
+
+@router.delete("/delivery/orders/{order_id}")
+async def delete_delivery_order(
+    order_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Cancela/exclui um pedido de delivery."""
+    try:
+        # Verificar se o pedido existe
+        delivery_order = await delivery_service.get_delivery_order(order_id)
+        if not delivery_order:
+            raise HTTPException(status_code=404, detail=f"Pedido de delivery {order_id} não encontrado")
+        
+        # Cancelar o pedido em vez de excluir
+        cancelled_order = await delivery_service.update_order_status(
+            delivery_order_id=order_id,
+            status=DeliveryOrderStatus.CANCELLED,
+            notes="Pedido cancelado via API"
+        )
+        
+        return {"message": f"Pedido {order_id} cancelado com sucesso", "status": "cancelled"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao cancelar pedido: {str(e)}")
 
 # Endpoints para entregadores
 @router.post("/delivery/couriers/", response_model=DeliveryCourier)

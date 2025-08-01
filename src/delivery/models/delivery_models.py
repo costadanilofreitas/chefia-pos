@@ -161,6 +161,17 @@ class UpdateDeliveryOrderStatusRequest(BaseModel):
     notes: Optional[str] = None
 
 
+class UpdateDeliveryOrderRequest(BaseModel):
+    """Modelo para requisição de atualização de pedido de delivery."""
+    delivery_fee: Optional[float] = None
+    estimated_delivery_time: Optional[datetime] = None
+    delivery_notes: Optional[str] = None
+    payment_on_delivery: Optional[bool] = None
+    payment_amount: Optional[float] = None
+    payment_method: Optional[str] = None
+    priority: Optional[int] = None
+
+
 class AssignCourierRequest(BaseModel):
     """Modelo para requisição de atribuição de entregador."""
     courier_id: str
