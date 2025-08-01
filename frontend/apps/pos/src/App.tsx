@@ -7,7 +7,7 @@ import AuthGuard from './components/AuthGuard';
 import TerminalValidator from './components/TerminalValidator';
 import POSLayout from './components/POSLayout';
 import { AuthProvider } from './contexts/AuthContext';
-import { useAuth } from './hooks/useAuth';;
+import { useAuth, UserRole } from './hooks/useAuth';;
 
 // Lazy load components for better performance
 const POSMainPage = lazy(() => import('./ui/POSMainPage'));

@@ -44,7 +44,7 @@ export const TokenExpirationWarning: React.FC<TokenExpirationWarningProps> = ({
             <span className="font-medium">Sessão Expirada</span>
           </div>
           <button
-            onClick={logout}
+            onClick={() => logout()}
             className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
           >
             Fazer Login

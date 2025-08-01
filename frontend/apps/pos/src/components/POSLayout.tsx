@@ -269,12 +269,12 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
           <>
             <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
               <Typography variant="subtitle1" fontWeight="bold">
-                {user.operator_name}
+                {user.name}
               </Typography>
               <Chip
-                label={user.roles[0]?.toUpperCase() || 'USER'}
+                label={user.role?.toUpperCase() || 'USER'}
                 size="small"
-                color={user.roles.includes('admin') ? 'error' : 'primary'}
+                color={user.role === 'admin' ? 'error' : 'primary'}
                 sx={{ mt: 0.5 }}
               />
             </Box>
