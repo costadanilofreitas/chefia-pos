@@ -44,10 +44,10 @@ register_exception_handlers(app)
 from src.auth.auth_router import router as auth_router
 from src.cashier.router.cashier_router import router as cashier_router
 from src.product.router.product_router import router as product_router
-# from src.customer.router.customer_router import router as customer_router
-# from src.delivery.router.delivery_router import router as delivery_router
-# from src.delivery.router.maps_router import router as maps_router
-# from src.employee.router.employee_router import router as employee_router
+from src.customer.router.customer_router import router as customer_router
+from src.delivery.router.delivery_router import router as delivery_router
+from src.delivery.router.maps_router import router as maps_router
+from src.employee.router.employee_router import router as employee_router
 # from src.business_day.router.business_day_router import router as business_day_router
 # from src.order.router.order_router import router as order_router
 # from src.payment.router.payment_router import router as payment_router
@@ -61,10 +61,10 @@ from src.product.router.product_router import router as product_router
 app.include_router(auth_router)
 app.include_router(cashier_router)
 app.include_router(product_router)
-# app.include_router(customer_router)
-# app.include_router(delivery_router)
-# app.include_router(maps_router)
-# app.include_router(employee_router)
+app.include_router(customer_router)
+app.include_router(delivery_router)
+app.include_router(maps_router)
+app.include_router(employee_router)
 # app.include_router(business_day_router)
 # app.include_router(order_router)
 # app.include_router(payment_router)
