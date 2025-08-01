@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEmployee } from '../hooks/useEmployee';
+import { useAnalytics } from '../hooks/useAnalytics';
 import {
   Box,
   Typography,
@@ -194,13 +195,15 @@ const ManagerScreen: React.FC = () => {
     format: 'pdf'
   });
 
-  // Estados para dashboard
-  const [dashboardData, setDashboardData] = useState({
-    totalRevenue: 15420.50,
-    todayOrders: 127,
-    averageTicket: 45.30,
-    openCashiers: 3
-  });
+  // Hook para analytics (substitui dados mock)
+  const { 
+    metrics: dashboardData, 
+    loading: analyticsLoading, 
+    error: analyticsError,
+    refreshMetrics,
+    formatCurrency,
+    simulateSale 
+  } = useAnalytics(true, 30000); // Auto-refresh a cada 30 segundos
 
   // Função para carregar dados de produtos
   const loadProductData = useCallback(async () => {
@@ -250,13 +253,6 @@ const ManagerScreen: React.FC = () => {
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
-  };
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
   };
 
   // Funções para funcionários
@@ -549,7 +545,7 @@ const ManagerScreen: React.FC = () => {
                     Faturamento Hoje
                   </Typography>
                   <Typography variant="h5">
-                    {formatCurrency(dashboardData.totalRevenue)}
+                    {dashboardData ? formatCurrency(dashboardData.totalRevenue) : 'Carregando...'}
                   </Typography>
                 </Box>
               </Box>
@@ -566,7 +562,7 @@ const ManagerScreen: React.FC = () => {
                     Pedidos Hoje
                   </Typography>
                   <Typography variant="h5">
-                    {dashboardData.todayOrders}
+                    {dashboardData ? dashboardData.todayOrders : 'Carregando...'}
                   </Typography>
                 </Box>
               </Box>
@@ -583,7 +579,7 @@ const ManagerScreen: React.FC = () => {
                     Ticket Médio
                   </Typography>
                   <Typography variant="h5">
-                    {formatCurrency(dashboardData.averageTicket)}
+                    {dashboardData ? formatCurrency(dashboardData.averageTicket) : 'Carregando...'}
                   </Typography>
                 </Box>
               </Box>
@@ -600,7 +596,7 @@ const ManagerScreen: React.FC = () => {
                     Caixas Abertos
                   </Typography>
                   <Typography variant="h5">
-                    {dashboardData.openCashiers}
+                    {dashboardData ? dashboardData.openCashiers : 'Carregando...'}
                   </Typography>
                 </Box>
               </Box>
@@ -608,6 +604,33 @@ const ManagerScreen: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Controles do Dashboard */}
+      <Box sx={{ mb: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+        <Button 
+          variant="outlined" 
+          onClick={refreshMetrics}
+          disabled={analyticsLoading}
+          startIcon={analyticsLoading ? <CircularProgress size={16} /> : undefined}
+        >
+          {analyticsLoading ? 'Atualizando...' : 'Atualizar Métricas'}
+        </Button>
+        <Button 
+          variant="contained" 
+          color="success"
+          onClick={() => simulateSale(Math.random() * 100 + 20)}
+          disabled={analyticsLoading}
+        >
+          Simular Venda
+        </Button>
+      </Box>
+
+      {/* Exibir erro se houver */}
+      {analyticsError && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          Erro ao carregar analytics: {analyticsError}
+        </Alert>
+      )}
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
