@@ -168,11 +168,11 @@ function App() {
                     </ErrorBoundary>
                   } />
                   
-                  {/* Main POS Interface - Requires authentication */}
+                  {/* Main POS Interface - Test without auth */}
                   <Route path="/pos/:terminalId/main" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
-                        <LayoutRoute title="POS Principal">
+                        <LayoutRoute title="POS Principal" requireAuth={false} requireOpenDay={false}>
                           <POSMainPage />
                         </LayoutRoute>
                       </Suspense>

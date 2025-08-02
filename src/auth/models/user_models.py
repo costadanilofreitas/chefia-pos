@@ -30,6 +30,12 @@ class Permission(str, Enum):
     PRODUCT_UPDATE = "product:update"
     PRODUCT_DELETE = "product:delete"
     
+    # Categorias
+    CATEGORY_CREATE = "category:create"
+    CATEGORY_READ = "category:read"
+    CATEGORY_UPDATE = "category:update"
+    CATEGORY_DELETE = "category:delete"
+    
     # Pedidos
     ORDER_CREATE = "order:create"
     ORDER_READ = "order:read"

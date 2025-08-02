@@ -73,9 +73,13 @@ interface OrderItem {
 }
 
 const POSMainPage: React.FC = () => {
+  console.log('🚀 POSMainPage: Componente iniciado');
+  
   const navigate = useNavigate();
   const { terminalId } = useParams<{ terminalId: string }>();
   const { user, isAuthenticated } = useAuth();
+  
+  console.log('🔐 POSMainPage: Auth status:', { user: user?.name, isAuthenticated });
   
   // Usando o hook useOrder real
   const {

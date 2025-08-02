@@ -199,7 +199,7 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
         key={location.pathname}
       >
         {/* Main POS */}
-        <MenuItem onClick={() => navigateTo('')}>
+        <MenuItem onClick={() => navigateTo('/main')}>
           <Restaurant sx={{ mr: 2 }} />
           POS Principal
         </MenuItem>
