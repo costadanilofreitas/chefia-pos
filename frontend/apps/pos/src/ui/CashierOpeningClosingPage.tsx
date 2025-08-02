@@ -127,10 +127,28 @@ const CashierOpeningClosingPage: React.FC = () => {
   });
 
   useEffect(() => {
-    // Verificar status do terminal quando componente monta
+    // Verificar status do terminal quando componente monta ou quando autenticação muda
     if (terminalId && isAuthenticated) {
       console.log('🔄 Checking terminal status for:', terminalId);
-      checkTerminalStatus(terminalId).catch(console.error);
+      checkTerminalStatus(terminalId)
+        .then(status => {
+          console.log('✅ Terminal status loaded:', status);
+        })
+        .catch(error => {
+          console.error('❌ Error checking terminal status:', error);
+        });
+    }
+  }, [terminalId, isAuthenticated, checkTerminalStatus]);
+
+  // Verificar status periodicamente para manter sincronizado
+  useEffect(() => {
+    if (terminalId && isAuthenticated) {
+      const interval = setInterval(() => {
+        console.log('🔄 Periodic terminal status check');
+        checkTerminalStatus(terminalId).catch(console.error);
+      }, 30000); // Verificar a cada 30 segundos
+
+      return () => clearInterval(interval);
     }
   }, [terminalId, isAuthenticated, checkTerminalStatus]);
 
@@ -146,9 +164,20 @@ const CashierOpeningClosingPage: React.FC = () => {
       message: 'Login realizado com sucesso!',
       severity: 'success',
     });
-    // Refresh cashier status after login
-    // O currentCashier já é gerenciado pelo hook
-    console.log('Login success, currentCashier:', currentCashier);
+    
+    // Forçar verificação de status após login
+    if (terminalId) {
+      setTimeout(() => {
+        console.log('🔄 Force checking terminal status after login');
+        checkTerminalStatus(terminalId)
+          .then(status => {
+            console.log('✅ Terminal status after login:', status);
+          })
+          .catch(error => {
+            console.error('❌ Error checking terminal status after login:', error);
+          });
+      }, 1000); // Aguardar 1 segundo para garantir que o token foi salvo
+    }
   };
 
   const handleOpenCashier = async () => {

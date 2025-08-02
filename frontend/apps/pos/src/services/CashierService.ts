@@ -70,12 +70,16 @@ export class CashierService {
    */
   async getTerminalStatus(terminalId: string): Promise<TerminalStatus> {
     try {
-      const response = await apiInterceptor.get(
-        API_ENDPOINTS.CASHIER.STATUS(terminalId)
-      );
+      const endpoint = API_ENDPOINTS.CASHIER.STATUS(terminalId);
+      console.log('🔄 Calling terminal status endpoint:', endpoint);
+      
+      const response = await apiInterceptor.get(endpoint);
+      console.log('✅ Terminal status response:', response.data);
+      
       return response.data;
     } catch (error: any) {
-      console.error('Erro ao verificar status do terminal:', error);
+      console.error('❌ Erro ao verificar status do terminal:', error);
+      console.error('❌ Error details:', error.response?.data);
       throw new Error(error.response?.data?.message || 'Erro ao verificar status do terminal');
     }
   }
