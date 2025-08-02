@@ -1,6 +1,7 @@
-from typing import Dict, Any, List, Optional
 from enum import Enum
 from datetime import datetime
+from typing import Dict, Any, List, Optional
+from pydantic import BaseModel as PydanticBaseModel
 import uuid
 
 
@@ -93,18 +94,22 @@ class Product(BaseModel):
         return data
 
 
-class OrderItem(BaseModel):
+class OrderItem(PydanticBaseModel):
     """Modelo para itens de pedido."""
     
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.product_id = kwargs.get('product_id', '')
-        self.product_name = kwargs.get('product_name', '')
-        self.quantity = kwargs.get('quantity', 1)
-        self.unit_price = kwargs.get('unit_price', 0.0)
-        self.total_price = kwargs.get('total_price', self.quantity * self.unit_price)
-        self.notes = kwargs.get('notes', '')
-        self.customizations = kwargs.get('customizations', [])
+    id: str = ""
+    created_at: str = ""
+    updated_at: str = ""
+    product_id: str = ""
+    product_name: str = ""
+    quantity: int = 1
+    unit_price: float = 0.0
+    total_price: float = 0.0
+    notes: str = ""
+    customizations: List[Dict[str, Any]] = []
+    
+    class Config:
+        from_attributes = True
     
     def to_dict(self) -> Dict[str, Any]:
         """Converte o item de pedido para um dicionário."""
@@ -121,16 +126,15 @@ class OrderItem(BaseModel):
         return data
 
 
-class OrderItemCreate:
+class OrderItemCreate(PydanticBaseModel):
     """Modelo para criação de item de pedido."""
     
-    def __init__(self, **kwargs):
-        self.product_id = kwargs.get('product_id', '')
-        self.product_name = kwargs.get('product_name', '')
-        self.quantity = kwargs.get('quantity', 1)
-        self.unit_price = kwargs.get('unit_price', 0.0)
-        self.notes = kwargs.get('notes', '')
-        self.customizations = kwargs.get('customizations', [])
+    product_id: str = ""
+    product_name: str = ""
+    quantity: int = 1
+    unit_price: float = 0.0
+    notes: str = ""
+    customizations: List[Dict[str, Any]] = []
     
     def to_dict(self) -> Dict[str, Any]:
         """Converte para dicionário."""
@@ -144,13 +148,12 @@ class OrderItemCreate:
         }
 
 
-class OrderItemUpdate:
+class OrderItemUpdate(PydanticBaseModel):
     """Modelo para atualização de item de pedido."""
     
-    def __init__(self, **kwargs):
-        self.quantity = kwargs.get('quantity', None)
-        self.notes = kwargs.get('notes', None)
-        self.customizations = kwargs.get('customizations', None)
+    quantity: Optional[int] = None
+    notes: Optional[str] = None
+    customizations: Optional[List[Dict[str, Any]]] = None
     
     def to_dict(self) -> Dict[str, Any]:
         """Converte para dicionário."""
@@ -164,27 +167,30 @@ class OrderItemUpdate:
         return data
 
 
-class Order(BaseModel):
+class Order(PydanticBaseModel):
     """Modelo para pedidos."""
     
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.customer_id = kwargs.get('customer_id', '')
-        self.customer_name = kwargs.get('customer_name', '')
-        self.items = [OrderItem(**item) if isinstance(item, dict) else item 
-                     for item in kwargs.get('items', [])]
-        self.status = kwargs.get('status', OrderStatus.PENDING)
-        self.total_amount = kwargs.get('total_amount', 0.0)
-        self.payment_method = kwargs.get('payment_method', None)
-        self.payment_status = kwargs.get('payment_status', PaymentStatus.PENDING)
-        self.table_number = kwargs.get('table_number', None)
-        self.waiter_id = kwargs.get('waiter_id', '')
-        self.is_delivery = kwargs.get('is_delivery', False)
-        self.delivery_address = kwargs.get('delivery_address', {})
-        self.delivery_fee = kwargs.get('delivery_fee', 0.0)
-        self.notes = kwargs.get('notes', '')
-        self.source = kwargs.get('source', 'pos')  # pos, ifood, whatsapp, etc.
-        self.order_type = kwargs.get('order_type', OrderType.DINE_IN)
+    id: str = ""
+    created_at: str = ""
+    updated_at: str = ""
+    customer_id: str = ""
+    customer_name: str = ""
+    items: List[Dict[str, Any]] = []
+    status: OrderStatus = OrderStatus.PENDING
+    total_amount: float = 0.0
+    payment_method: Optional[str] = None
+    payment_status: PaymentStatus = PaymentStatus.PENDING
+    table_number: Optional[int] = None
+    waiter_id: str = ""
+    is_delivery: bool = False
+    delivery_address: Dict[str, Any] = {}
+    delivery_fee: float = 0.0
+    notes: str = ""
+    source: str = "pos"
+    order_type: OrderType = OrderType.DINE_IN
+    
+    class Config:
+        from_attributes = True
     
     def to_dict(self) -> Dict[str, Any]:
         """Converte o pedido para um dicionário."""
@@ -214,21 +220,20 @@ class Order(BaseModel):
         return items_total + self.delivery_fee
 
 
-class OrderCreate:
+class OrderCreate(PydanticBaseModel):
     """Modelo para criação de pedido."""
     
-    def __init__(self, **kwargs):
-        self.customer_id = kwargs.get('customer_id', '')
-        self.customer_name = kwargs.get('customer_name', '')
-        self.items = kwargs.get('items', [])
-        self.table_number = kwargs.get('table_number', None)
-        self.waiter_id = kwargs.get('waiter_id', '')
-        self.is_delivery = kwargs.get('is_delivery', False)
-        self.delivery_address = kwargs.get('delivery_address', {})
-        self.delivery_fee = kwargs.get('delivery_fee', 0.0)
-        self.notes = kwargs.get('notes', '')
-        self.source = kwargs.get('source', 'pos')
-        self.order_type = kwargs.get('order_type', OrderType.DINE_IN)
+    customer_id: str = ""
+    customer_name: str = ""
+    items: List[Dict[str, Any]] = []
+    table_number: Optional[int] = None
+    waiter_id: str = ""
+    is_delivery: bool = False
+    delivery_address: Dict[str, Any] = {}
+    delivery_fee: float = 0.0
+    notes: str = ""
+    source: str = "pos"
+    order_type: OrderType = OrderType.DINE_IN
     
     def to_dict(self) -> Dict[str, Any]:
         """Converte para dicionário."""
@@ -247,16 +252,15 @@ class OrderCreate:
         }
 
 
-class OrderUpdate:
+class OrderUpdate(PydanticBaseModel):
     """Modelo para atualização de pedido."""
     
-    def __init__(self, **kwargs):
-        self.status = kwargs.get('status', None)
-        self.payment_method = kwargs.get('payment_method', None)
-        self.payment_status = kwargs.get('payment_status', None)
-        self.table_number = kwargs.get('table_number', None)
-        self.waiter_id = kwargs.get('waiter_id', None)
-        self.notes = kwargs.get('notes', None)
+    status: Optional[OrderStatus] = None
+    payment_method: Optional[str] = None
+    payment_status: Optional[PaymentStatus] = None
+    table_number: Optional[int] = None
+    waiter_id: Optional[str] = None
+    notes: Optional[str] = None
     
     def to_dict(self) -> Dict[str, Any]:
         """Converte para dicionário."""
@@ -276,7 +280,7 @@ class OrderUpdate:
         return data
 
 
-class ApplyCouponRequest:
+class ApplyCouponRequest(PydanticBaseModel):
     """Modelo para aplicação de cupom."""
     
     def __init__(self, **kwargs):
@@ -289,7 +293,7 @@ class ApplyCouponRequest:
         }
 
 
-class ApplyPointsRequest:
+class ApplyPointsRequest(PydanticBaseModel):
     """Modelo para aplicação de pontos."""
     
     def __init__(self, **kwargs):
@@ -304,7 +308,7 @@ class ApplyPointsRequest:
         }
 
 
-class DiscountResponse:
+class DiscountResponse(PydanticBaseModel):
     """Modelo para resposta de desconto."""
     
     def __init__(self, **kwargs):

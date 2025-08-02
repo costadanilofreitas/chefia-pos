@@ -28,7 +28,7 @@ router = APIRouter(
 @router.post("", response_model=BusinessDay, status_code=status.HTTP_201_CREATED)
 async def open_business_day(
     business_day_create: BusinessDayCreate,
-    current_user: User = Depends(has_permission(Permission.DAY_OPEN))
+    current_user: User = Depends(has_permission(Permission.CASHIER_OPEN))
 ):
     """
     Abre um novo dia de operação.
@@ -77,7 +77,7 @@ async def open_business_day(
 async def close_business_day(
     business_day_id: str,
     close_data: BusinessDayClose,
-    current_user: User = Depends(has_permission(Permission.DAY_CLOSE))
+    current_user: User = Depends(has_permission(Permission.CASHIER_CLOSE))
 ):
     """
     Fecha um dia de operação.
@@ -220,7 +220,7 @@ async def get_business_day(
 @router.get("/{business_day_id}/report", response_model=DailySalesReport)
 async def get_business_day_report(
     business_day_id: str,
-    current_user: User = Depends(has_permission(Permission.REPORT_READ))
+    current_user: User = Depends(has_permission(Permission.REPORTS_VIEW))
 ):
     """
     Gera um relatório detalhado de vendas para um dia de operação específico.
@@ -248,7 +248,7 @@ async def get_business_day_report(
 async def update_business_day(
     business_day_id: str,
     update_data: BusinessDayUpdate,
-    current_user: User = Depends(has_permission(Permission.DAY_CLOSE))
+    current_user: User = Depends(has_permission(Permission.CASHIER_CLOSE))
 ):
     """
     Atualiza informações de um dia de operação.

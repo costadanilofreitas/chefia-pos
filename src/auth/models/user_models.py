@@ -41,6 +41,10 @@ class Permission(str, Enum):
     CASHIER_CLOSE = "cashier:close"
     CASHIER_WITHDRAW = "cashier:withdraw"
     
+    # Dia operacional
+    DAY_OPEN = "day:open"
+    DAY_CLOSE = "day:close"
+    
     # Relatórios
     REPORTS_VIEW = "reports:view"
     REPORTS_EXPORT = "reports:export"

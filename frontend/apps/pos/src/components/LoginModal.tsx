@@ -146,6 +146,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
         loading={isLoading}
         error={error}
         dialog={false}
+        length={3} // ID do operador tem 3 dígitos
       />
     );
   };
