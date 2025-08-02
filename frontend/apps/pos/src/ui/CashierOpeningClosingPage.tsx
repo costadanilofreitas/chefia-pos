@@ -190,19 +190,30 @@ const CashierOpeningClosingPage: React.FC = () => {
       return;
     }
 
+    // Verificar se há business day disponível
+    if (!currentBusinessDay?.id) {
+      setAlertInfo({
+        open: true,
+        message: 'Erro: Nenhum dia comercial aberto. Abra o dia comercial primeiro.',
+        severity: 'error',
+      });
+      return;
+    }
+
     try {
       console.log('🔄 Opening cashier with data:', {
         terminal_id: terminalId,
-        operator_id: user?.id,
+        operator_id: user?.operator_id || user?.id,
         opening_balance: parseFloat(openingAmount),
+        business_day_id: currentBusinessDay.id,
         notes
       });
 
       await openCashier({
         terminal_id: terminalId || '',
-        operator_id: user?.id || '',
+        operator_id: user?.operator_id || user?.id || '',
         opening_balance: parseFloat(openingAmount),
-        business_day_id: `bd_${new Date().toISOString().split('T')[0]}`, // Gerar business_day_id baseado na data atual
+        business_day_id: currentBusinessDay.id, // Usar ID real do business day
         notes: notes
       });
 

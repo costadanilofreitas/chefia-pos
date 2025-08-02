@@ -18,14 +18,14 @@ export class ApiInterceptor {
   private tokenExpirationTime: number = 0;
   private refreshPromise: Promise<string> | null = null;
 
-  private constructor() {
+  private  constructor() {
     this.axiosInstance = axios.create({
+      baseURL: 'http://localhost:8001',
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
       },
     });
-
     this.setupRequestInterceptor();
     this.setupResponseInterceptor();
     this.loadTokenFromStorage();
