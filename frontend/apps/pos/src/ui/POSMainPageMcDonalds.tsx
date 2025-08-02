@@ -99,9 +99,19 @@ export default function POSMainPageMcDonalds() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Obter terminalId da URL
+  const terminalId = window.location.pathname.split('/')[2] || '1';
+
   // Usar produtos do backend se disponíveis, senão usar mock
   const products = backendProducts && backendProducts.length > 0 ? backendProducts : mockProducts;
-  const categories = backendCategories && backendCategories.length > 0 ? backendCategories : mockCategories;
+  
+  // Usar apenas categorias do backend, com fallback para lista vazia
+  const categories = backendCategories || [];
+  
+  // Adicionar categoria "Todos" no início se houver categorias
+  const allCategories = categories.length > 0 
+    ? [{ id: 'all', name: 'Todos', icon: '🍽️' }, ...categories]
+    : [{ id: 'all', name: 'Todos', icon: '🍽️' }];
 
   // Filtrar produtos por categoria e busca
   const filteredProducts = products.filter(product => {
@@ -154,52 +164,63 @@ export default function POSMainPageMcDonalds() {
     setCart(prevCart => prevCart.filter(item => item.id !== productId));
   };
 
+  // Função para abrir menu
+  const handleMenuOpen = () => {
+    setMenuOpen(!menuOpen);
+  };
+
   // Calcular total do carrinho
   const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#f5f5f5' }}>
-      {/* Header estilo McDonald's */}
-      <AppBar position="static" sx={{ bgcolor: '#d32f2f', boxShadow: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#f5f5f5' }}>      {/* Header */}
+      <AppBar position="static">
         <Toolbar>
           <IconButton
             edge="start"
             color="inherit"
             aria-label="menu"
-            onClick={() => setMenuOpen(!menuOpen)}
-            sx={{ mr: 2 }}
+            onClick={handleMenuOpen}
           >
             <MenuIcon />
           </IconButton>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', mr: 1 }}>
-              🍔 POS Modern
-            </Typography>
-            <Chip 
-              label={`Terminal 1`} 
-              size="small" 
-              sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', mr: 2 }} 
-            />
-            {isAuthenticated && (
-              <Chip 
-                label={user?.name || 'Usuário'} 
-                size="small" 
-                sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} 
-              />
-            )}
-          </Box>
-
-          <IconButton color="inherit">
-            <Badge badgeContent={cartItemCount} color="warning">
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 1 }}>
+            POS Principal
+          </Typography>
+          
+          <Chip
+            label={`Terminal ${terminalId}`}
+            size="small"
+            variant="outlined"
+            sx={{ 
+              color: 'white', 
+              borderColor: 'rgba(255,255,255,0.3)',
+              mr: 2 
+            }}
+          />
+          
+          <Chip
+            label={user?.name || 'Usuário'}
+            size="small"
+            sx={{ 
+              backgroundColor: 'rgba(255,255,255,0.2)', 
+              color: 'white',
+              mr: 1
+            }}
+          />
+          
+          <IconButton
+            color="inherit"
+            onClick={() => {}}
+          >
+            <Badge badgeContent={cart.length} color="secondary">
               <ShoppingCartIcon />
             </Badge>
           </IconButton>
         </Toolbar>
-      </AppBar>
-
-      {/* Layout principal em 3 colunas */}
+      </AppBar>     {/* Layout principal em 3 colunas */}
       <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
         {/* Coluna 1: Categorias (esquerda) */}
@@ -242,7 +263,7 @@ export default function POSMainPageMcDonalds() {
               </ListItemButton>
             </ListItem>
             
-            {categories.map((category) => (
+            {allCategories.map((category) => (
               <ListItem key={category.id} disablePadding>
                 <ListItemButton
                   selected={selectedCategory === category.id}
@@ -347,7 +368,7 @@ export default function POSMainPageMcDonalds() {
                           {product.description}
                         </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Typography variant="h6" sx={{ color: '#d32f2f', fontWeight: 'bold' }}>
+                          <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 'bold' }}>
                             R$ {product.price.toFixed(2)}
                           </Typography>
                           <Button
@@ -355,8 +376,8 @@ export default function POSMainPageMcDonalds() {
                             size="small"
                             startIcon={<AddIcon />}
                             sx={{
-                              bgcolor: '#ff9800',
-                              '&:hover': { bgcolor: '#f57c00' },
+                              bgcolor: '#1976d2',
+                              '&:hover': { bgcolor: '#1565c0' },
                               borderRadius: 2
                             }}
                           >
@@ -450,7 +471,7 @@ export default function POSMainPageMcDonalds() {
                             <AddIcon fontSize="small" />
                           </IconButton>
                         </Box>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
                           R$ {(item.price * item.quantity).toFixed(2)}
                         </Typography>
                       </Box>
@@ -468,7 +489,7 @@ export default function POSMainPageMcDonalds() {
                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                   Total:
                 </Typography>
-                <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
                   R$ {cartTotal.toFixed(2)}
                 </Typography>
               </Box>
@@ -478,8 +499,8 @@ export default function POSMainPageMcDonalds() {
                 variant="contained"
                 size="large"
                 sx={{
-                  bgcolor: '#4caf50',
-                  '&:hover': { bgcolor: '#388e3c' },
+                  bgcolor: '#1976d2',
+                  '&:hover': { bgcolor: '#1565c0' },
                   py: 1.5,
                   fontSize: '1.1rem',
                   fontWeight: 'bold',

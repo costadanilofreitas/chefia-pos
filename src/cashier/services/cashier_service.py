@@ -30,7 +30,7 @@ from src.business_day.services.business_day_service import (
 logger = logging.getLogger(__name__)
 
 # Simulação de banco de dados com arquivo JSON
-DATA_DIR = Path("/home/ubuntu/pos-modern/data")
+DATA_DIR = Path("/home/ubuntu/chefia-pos/data")
 CASHIERS_FILE = DATA_DIR / "cashiers.json"
 OPERATIONS_FILE = DATA_DIR / "cashier_operations.json"
 
