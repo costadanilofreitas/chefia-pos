@@ -8,6 +8,7 @@ export interface Product {
   category_id?: string;
   is_combo?: boolean;
   combo_items?: any[];
+  type?: string;
 }
 
 export interface Category {
@@ -30,13 +31,13 @@ export const useProduct = () => {
       const backendProducts = await productService.getProducts();
       
       // Converter para formato esperado pelo frontend
-      const convertedProducts: Product[] = backendProducts.map(p => ({
+      const convertedProducts = backendProducts.map(p => ({
         id: p.id,
         name: p.name,
         price: p.price,
         category_id: p.category_id,
-        is_combo: p.type === 'COMBO',
-        combo_items: p.combo_items || []
+        is_combo: (p as any).type === 'COMBO',
+        combo_items: (p as any).combo_items || []
       }));
       
       setProducts(convertedProducts);

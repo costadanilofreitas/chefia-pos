@@ -60,6 +60,7 @@ interface Product {
   category: string;
   description: string;
   available: boolean;
+  image?: string;
 }
 
 interface OrderItem {
@@ -75,7 +76,6 @@ const POSMainPage: React.FC = () => {
   const navigate = useNavigate();
   const { terminalId } = useParams<{ terminalId: string }>();
   const { user, isAuthenticated } = useAuth();
-  const { products, loading: productsLoading } = useProduct();
   
   // Usando o hook useOrder real
   const {

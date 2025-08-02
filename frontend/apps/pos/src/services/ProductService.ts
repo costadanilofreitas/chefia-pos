@@ -49,7 +49,7 @@ export interface CategoryUpdate {
 }
 
 export class ProductService {
-  private baseURL = 'http://localhost:8002';
+  private baseURL = 'http://localhost:8001/api/v1';
 
   // Product endpoints
   async getProducts(): Promise<Product[]> {
