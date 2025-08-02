@@ -1,92 +1,107 @@
-from fastapi import APIRouter, HTTPException
-from typing import List, Dict, Any
-import json
-import os
-from datetime import datetime
+from fastapi import APIRouter, HTTPException, Depends, status
+from typing import List, Optional, Dict
 import uuid
+
+from ..models.coupon_models import Coupon, CouponCreate, CouponUpdate
+from ..services.coupon_service import coupon_service
+from src.auth.security import get_current_active_user
 
 router = APIRouter(
     prefix="/api/v1/coupons",
-    tags=["Coupons"]
+    tags=["Coupons"],
+    responses={401: {"description": "Não autorizado"}},
 )
 
-DATA_FILE = "/home/ubuntu/chefia-pos/data/coupons.json"
+def _check_permissions(current_user, required_permissions: List[str]):
+    """Check if user has required permissions."""
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
+    
+    user_permissions = getattr(current_user, 'permissions', [])
+    for permission in required_permissions:
+        if permission not in user_permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Permission '{permission}' required"
+            )
 
-def load_coupons():
-    """Carrega cupons do arquivo JSON."""
-    if not os.path.exists(DATA_FILE):
-        return []
-    try:
-        with open(DATA_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except:
-        return []
+@router.post("/", response_model=Coupon, status_code=status.HTTP_201_CREATED)
+async def create_coupon_endpoint(
+    coupon_create: CouponCreate,
+    current_user = Depends(get_current_active_user)
+):
+    """Creates a new coupon."""
+    _check_permissions(current_user, ["coupons.create"])
+    return await coupon_service.create_coupon(coupon_create)
 
-def save_coupons(coupons):
-    """Salva cupons no arquivo JSON."""
-    os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
-    with open(DATA_FILE, 'w', encoding='utf-8') as f:
-        json.dump(coupons, f, ensure_ascii=False, indent=2)
+@router.get("/", response_model=List[Coupon])
+async def list_coupons_endpoint(
+    active_only: bool = False,
+    current_user = Depends(get_current_active_user)
+):
+    """Lists all coupons, optionally filtering by active status."""
+    _check_permissions(current_user, ["coupons.read"])
+    return await coupon_service.list_coupons(active_only)
 
-@router.get("/")
-async def get_coupons():
-    """Lista todos os cupons."""
-    return load_coupons()
+@router.get("/{coupon_id}", response_model=Coupon)
+async def get_coupon_endpoint(
+    coupon_id: uuid.UUID,
+    current_user = Depends(get_current_active_user)
+):
+    """Retrieves a specific coupon by ID."""
+    _check_permissions(current_user, ["coupons.read"])
+    coupon = await coupon_service.get_coupon(coupon_id)
+    if not coupon:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+    return coupon
 
-@router.post("/")
-async def create_coupon(coupon_data: Dict[str, Any]):
-    """Cria um novo cupom."""
-    coupons = load_coupons()
-    
-    new_coupon = {
-        "id": str(uuid.uuid4()),
-        "code": coupon_data.get("code", ""),
-        "discount_type": coupon_data.get("discount_type", "percentage"),
-        "discount_value": coupon_data.get("discount_value", 0),
-        "minimum_purchase": coupon_data.get("minimum_purchase", 0),
-        "description": coupon_data.get("description", ""),
-        "valid_from": coupon_data.get("valid_from", ""),
-        "valid_until": coupon_data.get("valid_until", ""),
-        "usage_limit": coupon_data.get("usage_limit", 0),
-        "usage_count": 0,
-        "is_active": coupon_data.get("is_active", True),
-        "created_at": datetime.now().isoformat(),
-        "updated_at": datetime.now().isoformat()
-    }
-    
-    coupons.append(new_coupon)
-    save_coupons(coupons)
-    
-    return new_coupon
+@router.get("/code/{code}", response_model=Coupon)
+async def get_coupon_by_code_endpoint(
+    code: str,
+    current_user = Depends(get_current_active_user)
+):
+    """Retrieves a specific coupon by code."""
+    _check_permissions(current_user, ["coupons.read"])
+    coupon = await coupon_service.get_coupon_by_code(code)
+    if not coupon:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+    return coupon
 
-@router.put("/{coupon_id}")
-async def update_coupon(coupon_id: str, coupon_data: Dict[str, Any]):
-    """Atualiza um cupom existente."""
-    coupons = load_coupons()
-    
-    for i, coupon in enumerate(coupons):
-        if coupon["id"] == coupon_id:
-            # Atualiza apenas os campos fornecidos
-            for key, value in coupon_data.items():
-                if key != "id":  # Não permite alterar o ID
-                    coupon[key] = value
-            coupon["updated_at"] = datetime.now().isoformat()
-            coupons[i] = coupon
-            save_coupons(coupons)
-            return coupon
-    
-    raise HTTPException(status_code=404, detail="Cupom não encontrado")
+@router.put("/{coupon_id}", response_model=Coupon)
+async def update_coupon_endpoint(
+    coupon_id: uuid.UUID,
+    coupon_update: CouponUpdate,
+    current_user = Depends(get_current_active_user)
+):
+    """Updates an existing coupon."""
+    _check_permissions(current_user, ["coupons.update"])
+    coupon = await coupon_service.update_coupon(coupon_id, coupon_update)
+    if not coupon:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+    return coupon
 
-@router.delete("/{coupon_id}")
-async def delete_coupon(coupon_id: str):
-    """Deleta um cupom."""
-    coupons = load_coupons()
-    
-    for i, coupon in enumerate(coupons):
-        if coupon["id"] == coupon_id:
-            coupons.pop(i)
-            save_coupons(coupons)
-            return {"message": "Cupom deletado com sucesso"}
-    
-    raise HTTPException(status_code=404, detail="Cupom não encontrado")
+@router.delete("/{coupon_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_coupon_endpoint(
+    coupon_id: uuid.UUID,
+    current_user = Depends(get_current_active_user)
+):
+    """Deletes a coupon."""
+    _check_permissions(current_user, ["coupons.delete"])
+    success = await coupon_service.delete_coupon(coupon_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+
+@router.post("/validate", response_model=dict)
+async def validate_coupon_endpoint(
+    code: str,
+    order_value: float,
+    product_id: Optional[uuid.UUID] = None,
+    current_user = Depends(get_current_active_user)
+):
+    """Validates a coupon for use in an order."""
+    _check_permissions(current_user, ["coupons.read"])
+    return await coupon_service.validate_coupon(code, order_value, product_id)
 

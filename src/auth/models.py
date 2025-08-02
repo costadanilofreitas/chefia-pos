@@ -40,6 +40,24 @@ class Permission(str, Enum):
     # Relatórios
     REPORT_READ = "relatorio:ler"
     
+    # Cupons
+    COUPONS_CREATE = "coupons.create"
+    COUPONS_READ = "coupons.read"
+    COUPONS_UPDATE = "coupons.update"
+    COUPONS_DELETE = "coupons.delete"
+    
+    # Campanhas
+    CAMPAIGNS_CREATE = "campaigns.create"
+    CAMPAIGNS_READ = "campaigns.read"
+    CAMPAIGNS_UPDATE = "campaigns.update"
+    CAMPAIGNS_DELETE = "campaigns.delete"
+    
+    # Clientes
+    CUSTOMERS_CREATE = "customers.create"
+    CUSTOMERS_READ = "customers.read"
+    CUSTOMERS_UPDATE = "customers.update"
+    CUSTOMERS_DELETE = "customers.delete"
+    
     # Usuários
     USER_CREATE = "usuario:criar"
     USER_READ = "usuario:ler"

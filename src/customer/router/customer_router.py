@@ -6,7 +6,7 @@ import uuid
 
 from ..models.customer_models import (
     Customer, CustomerCreate, CustomerUpdate, Address, PurchaseHistoryEntry, Loyalty,
-    Coupon, CouponCreate, CouponUpdate, CouponRedemption, PointsRedemption
+    PointsRedemption
 )
 from ..services.customer_service import customer_service, CustomerService
 from src.auth.security import get_current_user
@@ -187,100 +187,3 @@ async def add_customer_purchase_history_endpoint(
     if not customer:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
     return customer
-
-# === Coupon Management Endpoints ===
-
-@router.post("/coupons/", response_model=Coupon, status_code=status.HTTP_201_CREATED)
-async def create_coupon_endpoint(
-    coupon_create: CouponCreate,
-    current_user: User = Depends(get_current_user),
-    service: CustomerService = Depends(lambda: customer_service)
-):
-    """Creates a new coupon."""
-    _check_permissions(current_user, ["coupons.create"])
-    try:
-        return await service.create_coupon(coupon_create)
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
-@router.get("/coupons/", response_model=List[Coupon])
-async def list_coupons_endpoint(
-    active_only: bool = False,
-    current_user: User = Depends(get_current_user),
-    service: CustomerService = Depends(lambda: customer_service)
-):
-    """Lists all coupons, optionally filtering by active status."""
-    _check_permissions(current_user, ["coupons.read"])
-    return await service.list_coupons(active_only)
-
-@router.get("/coupons/{coupon_id}", response_model=Coupon)
-async def get_coupon_endpoint(
-    coupon_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
-    service: CustomerService = Depends(lambda: customer_service)
-):
-    """Retrieves a specific coupon by its ID."""
-    _check_permissions(current_user, ["coupons.read"])
-    coupon = await service.get_coupon(coupon_id)
-    if not coupon:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coupon not found")
-    return coupon
-
-@router.get("/coupons/code/{code}", response_model=Coupon)
-async def get_coupon_by_code_endpoint(
-    code: str,
-    current_user: User = Depends(get_current_user),
-    service: CustomerService = Depends(lambda: customer_service)
-):
-    """Retrieves a specific coupon by its code."""
-    _check_permissions(current_user, ["coupons.read"])
-    coupon = await service.get_coupon_by_code(code)
-    if not coupon:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coupon not found")
-    return coupon
-
-@router.put("/coupons/{coupon_id}", response_model=Coupon)
-async def update_coupon_endpoint(
-    coupon_id: uuid.UUID,
-    coupon_update: CouponUpdate,
-    current_user: User = Depends(get_current_user),
-    service: CustomerService = Depends(lambda: customer_service)
-):
-    """Updates a coupon."""
-    _check_permissions(current_user, ["coupons.update"])
-    updated_coupon = await service.update_coupon(coupon_id, coupon_update)
-    if not updated_coupon:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coupon not found")
-    return updated_coupon
-
-@router.delete("/coupons/{coupon_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_coupon_endpoint(
-    coupon_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
-    service: CustomerService = Depends(lambda: customer_service)
-):
-    """Deletes a coupon."""
-    _check_permissions(current_user, ["coupons.delete"])
-    deleted = await service.delete_coupon(coupon_id)
-    if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Coupon not found")
-    return None
-
-@router.post("/coupons/validate", response_model=dict)
-async def validate_coupon_endpoint(
-    code: str,
-    order_value: float,
-    product_id: Optional[uuid.UUID] = None,
-    current_user: User = Depends(get_current_user),
-    service: CustomerService = Depends(lambda: customer_service)
-):
-    """Validates a coupon and calculates the discount amount."""
-    _check_permissions(current_user, ["coupons.read"])
-    try:
-        return await service.validate_coupon(code, order_value, product_id)
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
