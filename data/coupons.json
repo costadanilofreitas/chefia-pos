@@ -1,0 +1,17 @@
+[
+  {
+    "id": "25b2e21c-b595-4bb7-9151-f0d6d6277476",
+    "code": "TESTE20",
+    "discount_type": "percentage",
+    "discount_value": 20,
+    "minimum_purchase": 0,
+    "description": "Teste direto backend",
+    "valid_from": "",
+    "valid_until": "",
+    "usage_limit": 0,
+    "usage_count": 0,
+    "is_active": true,
+    "created_at": "2025-08-02T18:11:16.050240",
+    "updated_at": "2025-08-02T18:11:16.050248"
+  }
+]

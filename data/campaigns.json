@@ -1,0 +1,14 @@
+[
+  {
+    "id": "446cadd3-ea0a-41dd-9796-af453a18e676",
+    "name": "Teste Backend",
+    "type": "WhatsApp",
+    "segment": "Todos",
+    "message": "Teste direto",
+    "start_date": "",
+    "end_date": "",
+    "status": "Ativa",
+    "created_at": "2025-08-02T18:11:03.493697",
+    "updated_at": "2025-08-02T18:11:03.493706"
+  }
+]

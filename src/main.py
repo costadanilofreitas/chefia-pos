@@ -49,6 +49,8 @@ from src.delivery.router.delivery_router import router as delivery_router
 from src.product.router.product_router import router as product_router
 from src.order.router.order_router import router as order_router
 from src.business_day.router.business_day_router import router as business_day_router
+from src.loyalty.router.campaign_router import router as campaign_router
+from src.loyalty.router.coupon_router import router as coupon_router
 # from src.analytics.router.analytics_router import router as analytics_router  # Comentado temporariamente
 # from src.payment.router.payment_router import router as payment_router
 # from src.payment.router.split_payment_router import router as split_payment_router
@@ -66,6 +68,8 @@ app.include_router(delivery_router)
 # app.include_router(maps_router)  # Comentado - não definido
 app.include_router(employee_router)
 app.include_router(business_day_router)
+app.include_router(campaign_router)
+app.include_router(coupon_router)
 app.include_router(order_router)
 # app.include_router(analytics_router)  # Comentado temporariamente
 # app.include_router(payment_router)

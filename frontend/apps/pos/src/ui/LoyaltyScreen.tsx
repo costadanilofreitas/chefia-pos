@@ -1203,6 +1203,148 @@ const LoyaltyScreen: React.FC = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Dialog de Novo Cliente */}
+      <Dialog open={customerDialogOpen} onClose={() => setCustomerDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Novo Cliente</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Nome Completo"
+                placeholder="Ex: João Silva"
+                value={customerForm.name}
+                onChange={(e) => setCustomerForm({...customerForm, name: e.target.value})}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="E-mail"
+                type="email"
+                placeholder="Ex: joao@email.com"
+                value={customerForm.email}
+                onChange={(e) => setCustomerForm({...customerForm, email: e.target.value})}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Telefone"
+                placeholder="Ex: (11) 99999-9999"
+                value={customerForm.phone}
+                onChange={(e) => setCustomerForm({...customerForm, phone: e.target.value})}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Data de Nascimento"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={customerForm.birthDate}
+                onChange={(e) => setCustomerForm({...customerForm, birthDate: e.target.value})}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Endereço"
+                placeholder="Ex: Rua das Flores, 123 - Centro"
+                value={customerForm.address}
+                onChange={(e) => setCustomerForm({...customerForm, address: e.target.value})}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom>
+                Preferências de Comunicação
+              </Typography>
+              <FormControlLabel
+                control={
+                  <Switch 
+                    checked={customerForm.whatsappEnabled}
+                    onChange={(e) => setCustomerForm({...customerForm, whatsappEnabled: e.target.checked})}
+                  />
+                }
+                label="WhatsApp"
+              />
+              <FormControlLabel
+                control={
+                  <Switch 
+                    checked={customerForm.emailEnabled}
+                    onChange={(e) => setCustomerForm({...customerForm, emailEnabled: e.target.checked})}
+                  />
+                }
+                label="E-mail"
+              />
+              <FormControlLabel
+                control={
+                  <Switch 
+                    checked={customerForm.smsEnabled}
+                    onChange={(e) => setCustomerForm({...customerForm, smsEnabled: e.target.checked})}
+                  />
+                }
+                label="SMS"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCustomerDialogOpen(false)}>Cancelar</Button>
+          <Button 
+            variant="contained" 
+            onClick={async () => {
+              try {
+                setLoading(true);
+                // Criar cliente via API
+                const newCustomer = {
+                  name: customerForm.name,
+                  email: customerForm.email,
+                  phone: customerForm.phone,
+                  birth_date: customerForm.birthDate,
+                  address: customerForm.address,
+                  whatsapp_enabled: customerForm.whatsappEnabled,
+                  email_enabled: customerForm.emailEnabled,
+                  sms_enabled: customerForm.smsEnabled
+                };
+                
+                const response = await fetch('http://localhost:8001/api/v1/customers/', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                  },
+                  body: JSON.stringify(newCustomer)
+                });
+                
+                if (response.ok) {
+                  setCustomerDialogOpen(false);
+                  setSnackbar({
+                    open: true,
+                    message: 'Cliente criado com sucesso!',
+                    severity: 'success'
+                  });
+                  loadCustomers(); // Recarregar lista
+                } else {
+                  throw new Error('Erro ao criar cliente');
+                }
+              } catch (error) {
+                setSnackbar({
+                  open: true,
+                  message: 'Erro ao criar cliente: ' + error.message,
+                  severity: 'error'
+                });
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={20} /> : 'Criar Cliente'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Snackbar para notificações */}
       <Snackbar
         open={snackbar.open}
