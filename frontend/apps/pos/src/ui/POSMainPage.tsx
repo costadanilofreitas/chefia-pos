@@ -32,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import { useProduct } from '../hooks/useProduct';
+import { POSLayout } from '../components/POSLayout';
 
 // Dados carregados apenas do backend
 
@@ -125,53 +126,8 @@ export default function POSMainPage() {
   const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#f5f5f5' }}>      {/* Header */}
-      <AppBar position="static">
-        <Toolbar>
-          <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            onClick={handleMenuOpen}
-          >
-            <MenuIcon />
-          </IconButton>
-          
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 1 }}>
-            POS Principal
-          </Typography>
-          
-          <Chip
-            label={`Terminal ${terminalId}`}
-            size="small"
-            variant="outlined"
-            sx={{ 
-              color: 'white', 
-              borderColor: 'rgba(255,255,255,0.3)',
-              mr: 2 
-            }}
-          />
-          
-          <Chip
-            label={user?.name || 'Usuário'}
-            size="small"
-            sx={{ 
-              backgroundColor: 'rgba(255,255,255,0.2)', 
-              color: 'white',
-              mr: 1
-            }}
-          />
-          
-          <IconButton
-            color="inherit"
-            onClick={() => {}}
-          >
-            <Badge badgeContent={cart.length} color="secondary">
-              <ShoppingCartIcon />
-            </Badge>
-          </IconButton>
-        </Toolbar>
-      </AppBar>     {/* Layout principal em 3 colunas */}
+    <POSLayout title="POS Principal">
+      {/* Layout principal em 3 colunas */}
       <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
         {/* Coluna 1: Categorias (esquerda) */}
@@ -441,7 +397,7 @@ export default function POSMainPage() {
           )}
         </Paper>
       </Box>
-    </Box>
+    </POSLayout>
   );
 }
 

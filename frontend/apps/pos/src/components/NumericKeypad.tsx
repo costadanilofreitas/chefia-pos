@@ -227,51 +227,21 @@ const NumericKeypad: React.FC<NumericKeypadProps> = ({
   // Manipulador para adicionar dígito
   const handleAddDigit = (digit: string) => {
     if (currentValue.length < effectiveLength && !loading) {
-      // Para valores monetários, adicionar ponto decimal automaticamente
-      if (onValueChange && digit !== '.') {
-        const newValue = currentValue + digit;
-        // Formatar como valor monetário se necessário
-        if (newValue.length <= 2) {
-          setValue('0.' + newValue.padStart(2, '0'));
-        } else {
-          const integerPart = newValue.slice(0, -2);
-          const decimalPart = newValue.slice(-2);
-          setValue(integerPart + '.' + decimalPart);
-        }
-      } else {
-        setValue(currentValue + digit);
-      }
+      setValue(currentValue + digit);
     }
   };
 
   // Manipulador para remover último dígito
   const handleBackspace = () => {
     if (currentValue.length > 0 && !loading) {
-      if (onValueChange) {
-        // Para valores monetários, remover formatação
-        const cleanValue = currentValue.replace('.', '');
-        if (cleanValue.length <= 1) {
-          setValue('0.00');
-        } else {
-          const newCleanValue = cleanValue.slice(0, -1);
-          if (newCleanValue.length <= 2) {
-            setValue('0.' + newCleanValue.padStart(2, '0'));
-          } else {
-            const integerPart = newCleanValue.slice(0, -2);
-            const decimalPart = newCleanValue.slice(-2);
-            setValue(integerPart + '.' + decimalPart);
-          }
-        }
-      } else {
-        setValue(currentValue.slice(0, -1));
-      }
+      setValue(currentValue.slice(0, -1));
     }
   };
 
   // Manipulador para limpar valor
   const handleClear = () => {
     if (!loading) {
-      setValue(onValueChange ? '0.00' : '');
+      setValue('');
     }
   };
 

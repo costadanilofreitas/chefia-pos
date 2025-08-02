@@ -116,8 +116,8 @@ const CashierOpeningClosingPage: React.FC = () => {
   const [loginDialogVisible, setLoginDialogVisible] = useState(false);
   const [openDialogVisible, setOpenDialogVisible] = useState(false);
   const [closeDialogVisible, setCloseDialogVisible] = useState(false);
-  const [openingAmount, setOpeningAmount] = useState('');
-  const [closingAmount, setClosingAmount] = useState('');
+  const [openingAmount, setOpeningAmount] = useState('0.00');
+  const [closingAmount, setClosingAmount] = useState('0.00');
   const [observations, setObservations] = useState('');
   const [notes, setNotes] = useState('');
   const [alertInfo, setAlertInfo] = useState({
@@ -301,10 +301,28 @@ const CashierOpeningClosingPage: React.FC = () => {
   };
 
   const handleKeypadInput = (value: string, isOpeningDialog: boolean) => {
+    // Formatar valor como moeda (centavos para reais)
+    const formatMoneyValue = (inputValue: string) => {
+      // Remove tudo que não é dígito
+      const cleanValue = inputValue.replace(/\D/g, '');
+      
+      if (cleanValue === '' || cleanValue === '0') {
+        return '0.00';
+      }
+      
+      // Converte centavos para reais
+      const cents = parseInt(cleanValue);
+      const reais = cents / 100;
+      
+      return reais.toFixed(2);
+    };
+    
+    const formattedValue = formatMoneyValue(value);
+    
     if (isOpeningDialog) {
-      setOpeningAmount(value);
+      setOpeningAmount(formattedValue);
     } else {
-      setClosingAmount(value);
+      setClosingAmount(formattedValue);
     }
   };
 
