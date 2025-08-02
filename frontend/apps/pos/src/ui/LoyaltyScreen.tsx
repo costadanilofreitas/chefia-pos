@@ -281,249 +281,43 @@ const LoyaltyScreen: React.FC = () => {
   const loadLoyaltyData = useCallback(async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Mock data expandido para CRM
-      const mockCustomers: Customer[] = [
-        {
-          id: '1',
-          name: 'Maria Silva',
-          email: 'maria@email.com',
-          phone: '(11) 99999-1234',
-          birthDate: '1985-03-15',
-          address: 'Rua das Flores, 123 - Centro',
-          totalPoints: 1250,
-          usedPoints: 300,
-          totalSpent: 2450.80,
-          visitCount: 15,
-          lastVisit: '2024-01-15',
-          registrationDate: '2023-06-10',
-          tier: 'gold',
-          preferences: {
-            favoriteItems: ['Hambúrguer Clássico', 'Pizza Margherita'],
-            allergies: ['Lactose'],
-            dietaryRestrictions: ['Vegetariano']
-          },
-          communication: {
-            whatsapp: true,
-            email: true,
-            sms: false
-          },
-          satisfaction: 4.5,
-          clv: 3200.00,
-          segment: 'vip'
-        },
-        {
-          id: '2',
-          name: 'João Santos',
-          email: 'joao@email.com',
-          phone: '(11) 88888-5678',
-          birthDate: '1990-07-22',
-          totalPoints: 850,
-          usedPoints: 150,
-          totalSpent: 1680.50,
-          visitCount: 12,
-          lastVisit: '2024-01-10',
-          registrationDate: '2023-08-20',
-          tier: 'silver',
-          preferences: {
-            favoriteItems: ['Batata Frita', 'Refrigerante'],
-            allergies: [],
-            dietaryRestrictions: []
-          },
-          communication: {
-            whatsapp: true,
-            email: false,
-            sms: true
-          },
-          satisfaction: 4.0,
-          clv: 2100.00,
-          segment: 'regular'
-        },
-        {
-          id: '3',
-          name: 'Ana Costa',
-          email: 'ana@email.com',
-          phone: '(11) 77777-9999',
-          birthDate: '1992-11-08',
-          totalPoints: 450,
-          usedPoints: 50,
-          totalSpent: 890.30,
-          visitCount: 8,
-          lastVisit: '2024-01-05',
-          registrationDate: '2023-12-01',
-          tier: 'bronze',
-          preferences: {
-            favoriteItems: ['Salada Caesar'],
-            allergies: ['Glúten'],
-            dietaryRestrictions: ['Sem Glúten']
-          },
-          communication: {
-            whatsapp: false,
-            email: true,
-            sms: false
-          },
-          satisfaction: 3.8,
-          clv: 1200.00,
-          segment: 'new'
-        }
-      ];
-
-      const mockCampaigns: Campaign[] = [
-        {
-          id: '1',
-          name: 'Promoção de Aniversário',
-          type: 'whatsapp',
-          status: 'active',
-          targetSegment: 'birthday_month',
-          message: '🎉 Feliz aniversário! Ganhe 20% de desconto em qualquer pedido hoje!',
-          sentCount: 45,
-          openRate: 89.5,
-          clickRate: 34.2,
-          conversionRate: 12.8,
-          createdAt: '2024-01-10',
-          scheduledAt: '2024-01-15'
-        },
-        {
-          id: '2',
-          name: 'Reativação de Clientes',
-          type: 'email',
-          status: 'completed',
-          targetSegment: 'inactive',
-          message: 'Sentimos sua falta! Volte e ganhe 15% de desconto.',
-          sentCount: 120,
-          openRate: 45.2,
-          clickRate: 18.7,
-          conversionRate: 8.3,
-          createdAt: '2024-01-05'
-        }
-      ];
-
-      const mockAnalytics: CRMAnalytics = {
-        totalCustomers: 1250,
-        activeCustomers: 890,
-        newCustomersThisMonth: 45,
-        averageClv: 2100.00,
-        retentionRate: 78.5,
-        satisfactionScore: 4.2,
-        topSpenders: mockCustomers.slice(0, 3),
+      // Carregar dados reais do backend
+      await loadCustomers();
+      
+      // Dados reais baseados nos customers do backend
+      const realCustomers = customers || [];
+      const realCampaigns: Campaign[] = []; // Array vazio até implementar no backend
+      const realCoupons: Coupon[] = []; // Array vazio até implementar no backend
+      const realTransactions: LoyaltyTransaction[] = []; // Array vazio até implementar no backend
+      
+      // Analytics calculados com dados reais
+      const realAnalytics: CRMAnalytics = {
+        totalCustomers: realCustomers.length,
+        activeCustomers: realCustomers.filter(c => c.lastVisit && new Date(c.lastVisit) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length,
+        newCustomersThisMonth: realCustomers.filter(c => c.registrationDate && new Date(c.registrationDate) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length,
+        averageClv: realCustomers.length > 0 ? realCustomers.reduce((sum, c) => sum + (c.clv || 0), 0) / realCustomers.length : 0,
+        retentionRate: realCustomers.length > 0 ? (realCustomers.filter(c => c.visitCount && c.visitCount > 1).length / realCustomers.length) * 100 : 0,
+        satisfactionScore: realCustomers.length > 0 ? realCustomers.reduce((sum, c) => sum + (c.satisfaction || 0), 0) / realCustomers.length : 0,
+        topSpenders: realCustomers.sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0)).slice(0, 3),
         segmentDistribution: {
-          new: 15,
-          regular: 45,
-          vip: 25,
-          inactive: 15
+          new: realCustomers.filter(c => c.segment === 'new').length,
+          regular: realCustomers.filter(c => c.segment === 'regular').length,
+          vip: realCustomers.filter(c => c.segment === 'vip').length,
+          inactive: realCustomers.filter(c => c.segment === 'inactive').length
         }
       };
 
-      // Carregar clientes do backend
-      loadCustomers();
-      setCampaigns(mockCampaigns);
-      setAnalytics(mockAnalytics);
-
-      // Mock data para cupons
-      const mockCoupons: Coupon[] = [
-        {
-          id: '1',
-          code: 'WELCOME20',
-          type: 'percentage',
-          value: 20,
-          description: 'Desconto de boas-vindas para novos clientes',
-          minPurchase: 50,
-          maxDiscount: 30,
-          validFrom: '2024-01-01',
-          validUntil: '2024-12-31',
-          usageLimit: 100,
-          usedCount: 45,
-          isActive: true,
-          applicableProducts: []
-        },
-        {
-          id: '2',
-          code: 'FIDELIDADE50',
-          type: 'fixed',
-          value: 50,
-          description: 'R$ 50 de desconto para clientes VIP',
-          minPurchase: 200,
-          validFrom: '2024-01-01',
-          validUntil: '2024-06-30',
-          usageLimit: 50,
-          usedCount: 12,
-          isActive: true,
-          applicableProducts: []
-        },
-        {
-          id: '3',
-          code: 'PONTOS500',
-          type: 'points',
-          value: 500,
-          description: 'Resgate 500 pontos por R$ 25 de desconto',
-          validFrom: '2024-01-01',
-          validUntil: '2024-12-31',
-          usageLimit: 1000,
-          usedCount: 234,
-          isActive: true,
-          applicableProducts: []
-        }
-      ];
-
-      // Mock data para transações
-      const mockTransactions: LoyaltyTransaction[] = [
-        {
-          id: '1',
-          customerId: '1',
-          type: 'earn',
-          points: 125,
-          description: 'Compra no valor de R$ 125,00',
-          orderId: 'ORD-001',
-          date: '2024-01-15'
-        },
-        {
-          id: '2',
-          customerId: '1',
-          type: 'redeem',
-          points: 100,
-          description: 'Resgate de pontos - Desconto R$ 10,00',
-          orderId: 'ORD-002',
-          date: '2024-01-10'
-        },
-        {
-          id: '3',
-          customerId: '2',
-          type: 'earn',
-          points: 89,
-          description: 'Compra no valor de R$ 89,50',
-          orderId: 'ORD-003',
-          date: '2024-01-12'
-        },
-        {
-          id: '4',
-          customerId: '3',
-          type: 'earn',
-          points: 156,
-          description: 'Compra no valor de R$ 156,00',
-          orderId: 'ORD-004',
-          date: '2024-01-08'
-        },
-        {
-          id: '5',
-          customerId: '2',
-          type: 'redeem',
-          points: 200,
-          description: 'Resgate de pontos - Desconto R$ 20,00',
-          orderId: 'ORD-005',
-          date: '2024-01-05'
-        }
-      ];
-
-      setCoupons(mockCoupons);
-      setTransactions(mockTransactions);
+      setCampaigns(realCampaigns);
+      setCoupons(realCoupons);
+      setTransactions(realTransactions);
+      setAnalytics(realAnalytics);
       
     } catch (error) {
       showSnackbar('Erro ao carregar dados do CRM', 'error');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [customers, loadCustomers]);
 
   const showSnackbar = useCallback((message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
     setSnackbar({ open: true, message, severity });
