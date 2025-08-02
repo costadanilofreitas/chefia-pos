@@ -1,6 +1,7 @@
 // src/ui/TableLayoutScreen.tsx - Versão atualizada com sistema configurável
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useOrder } from '../hooks/useOrder';
 import {
   Box,
   Typography,
@@ -95,6 +96,18 @@ const TableLayoutScreen: React.FC = () => {
   const { terminalId } = useParams<{ terminalId: string }>();
   const navigate = useNavigate();
   
+  // Hook para integração com backend
+  const {
+    orders,
+    loading: ordersLoading,
+    error: ordersError,
+    getOrders,
+    createOrder,
+    updateOrder,
+    cancelOrder,
+    completeOrder
+  } = useOrder();
+  
   // Estados principais
   const [layoutConfig, setLayoutConfig] = useState<RestaurantLayoutConfig | null>(null);
   const [operationalTables, setOperationalTables] = useState<OperationalTable[]>([]);
@@ -130,6 +143,13 @@ const TableLayoutScreen: React.FC = () => {
     loadLayoutAndOperationalData();
   }, [terminalId]);
 
+  // Carregar pedidos reais do backend
+  useEffect(() => {
+    if (terminalId) {
+      getOrders({ terminal_id: terminalId });
+    }
+  }, [terminalId, getOrders]);
+
   const loadLayoutAndOperationalData = useCallback(async () => {
     if (!terminalId) return;
 
@@ -147,7 +167,7 @@ const TableLayoutScreen: React.FC = () => {
       setLayoutConfig(config);
       setCanvasSize(config.dimensions);
 
-      // Converter mesas de configuração para mesas operacionais com dados mock
+      // Converter mesas de configuração para mesas operacionais com dados reais
       const operational = await generateOperationalData(config.tables);
       setOperationalTables(operational);
 
@@ -163,76 +183,80 @@ const TableLayoutScreen: React.FC = () => {
     }
   }, [terminalId]);
 
-  // Gerar dados operacionais mock baseados na configuração
-  const generateOperationalData = async (configTables: ConfigTableConfig[]): Promise<OperationalTable[]> => {
-    // Simular dados operacionais realistas
-    const statuses: Array<'available' | 'occupied' | 'reserved' | 'cleaning'> = 
-      ['available', 'occupied', 'reserved', 'cleaning'];
-    
-    const waiters = ['João Silva', 'Maria Santos', 'Pedro Costa', 'Ana Oliveira'];
-    
-    return configTables.map((table, index) => {
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      const isOccupied = status === 'occupied';
+  // Gerar dados operacionais baseados nos pedidos reais do backend
+  const generateOperationalData = useCallback(async (configTables: ConfigTableConfig[]): Promise<OperationalTable[]> => {
+    return configTables.map((table) => {
+      // Buscar pedidos reais para esta mesa
+      const tableOrders = orders.filter(order => order.table_id === table.id);
       
+      // Determinar status da mesa baseado nos pedidos
+      let status: 'available' | 'occupied' | 'reserved' | 'cleaning' = 'available';
+      let customers = 0;
+      let orderValue = 0;
+      let startTime: string | undefined;
+      let waiter: string | undefined;
+
+      if (tableOrders.length > 0) {
+        status = 'occupied';
+        
+        // Calcular valor total dos pedidos ativos
+        orderValue = tableOrders
+          .filter(order => !['completed', 'cancelled'].includes(order.status))
+          .reduce((sum, order) => sum + order.total_amount, 0);
+        
+        // Contar clientes únicos (baseado em seat_number ou estimativa)
+        const uniqueSeats = new Set(tableOrders.map(order => order.seat_number || 1));
+        customers = uniqueSeats.size;
+        
+        // Pegar horário do primeiro pedido
+        const firstOrder = tableOrders.sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        )[0];
+        startTime = new Date(firstOrder.created_at).toLocaleTimeString('pt-BR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        
+        // Pegar garçom do primeiro pedido (se disponível)
+        waiter = firstOrder.waiter_name || 'Não definido';
+      }
+
       const operationalTable: OperationalTable = {
         ...table,
         status,
-        waiter: isOccupied ? waiters[Math.floor(Math.random() * waiters.length)] : undefined,
-        customers: isOccupied ? Math.floor(Math.random() * table.seats) + 1 : undefined,
-        orderValue: isOccupied ? Math.random() * 200 + 50 : undefined,
-        startTime: isOccupied ? `${Math.floor(Math.random() * 3) + 18}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}` : undefined,
-        orders: isOccupied ? generateMockOrders(table.id, table.seats) : []
+        waiter,
+        customers: customers || undefined,
+        orderValue: orderValue || undefined,
+        startTime,
+        orders: tableOrders.map(order => ({
+          id: order.id,
+          tableId: order.table_id,
+          seatNumber: order.seat_number || 1,
+          customerName: order.customer_name || 'Cliente',
+          items: order.items?.map(item => ({
+            id: item.id,
+            productName: item.product_name,
+            quantity: item.quantity,
+            price: item.unit_price,
+            notes: item.notes
+          })) || [],
+          total: order.total_amount,
+          status: order.status as any,
+          createdAt: new Date(order.created_at).toLocaleString('pt-BR'),
+          orderType: order.seat_number === 0 ? 'table' : 'individual'
+        }))
       };
 
       return operationalTable;
     });
-  };
+  }, [orders]);
 
-  // Gerar pedidos mock para uma mesa
-  const generateMockOrders = (tableId: string, seats: number): Order[] => {
-    const orders: Order[] = [];
-    const customerNames = ['Ana', 'Carlos', 'Maria', 'João', 'Pedro', 'Lucia'];
-    const products = [
-      { name: 'Hambúrguer Clássico', price: 25.90 },
-      { name: 'Pizza Margherita', price: 35.00 },
-      { name: 'Salada Caesar', price: 18.50 },
-      { name: 'Refrigerante', price: 5.50 },
-      { name: 'Suco Natural', price: 8.00 },
-      { name: 'Água', price: 3.00 }
-    ];
-
-    // Gerar pedidos para algumas cadeiras aleatoriamente
-    for (let seat = 1; seat <= Math.min(seats, 3); seat++) {
-      if (Math.random() > 0.3) { // 70% chance de ter pedido
-        const numItems = Math.floor(Math.random() * 3) + 1;
-        const items: OrderItem[] = [];
-        
-        for (let i = 0; i < numItems; i++) {
-          const product = products[Math.floor(Math.random() * products.length)];
-          items.push({
-            id: `item-${seat}-${i}`,
-            productName: product.name,
-            quantity: 1,
-            price: product.price
-          });
-        }
-
-        orders.push({
-          id: `order-${tableId}-${seat}`,
-          tableId,
-          seatNumber: seat,
-          customerName: customerNames[Math.floor(Math.random() * customerNames.length)],
-          items,
-          total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-          status: ['pending', 'preparing', 'ready', 'served'][Math.floor(Math.random() * 4)] as any,
-          createdAt: `${Math.floor(Math.random() * 60) + 10} min atrás`
-        });
-      }
+  // Atualizar dados operacionais quando pedidos mudarem
+  useEffect(() => {
+    if (layoutConfig) {
+      generateOperationalData(layoutConfig.tables).then(setOperationalTables);
     }
-
-    return orders;
-  };
+  }, [orders, layoutConfig, generateOperationalData]);
 
   // Funções de mesa
   const handleTableClick = useCallback((table: OperationalTable) => {
@@ -251,49 +275,56 @@ const TableLayoutScreen: React.FC = () => {
     });
   }, [operationalTables]);
 
-  const handleAddOrder = useCallback(() => {
-    if (!selectedTable) return;
+  const handleAddOrder = useCallback(async () => {
+    if (!selectedTable || !terminalId) return;
 
-    const newOrderData: Order = {
-      id: `order-${selectedTable.id}-${Date.now()}`,
-      tableId: selectedTable.id,
-      seatNumber: newOrder.orderType === 'table' ? 0 : newOrder.seatNumber, // 0 para mesa toda
-      customerName: newOrder.customerName,
-      items: newOrder.items,
-      total: newOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-      status: 'pending',
-      createdAt: 'Agora',
-      orderType: newOrder.orderType
-    };
+    try {
+      // Criar pedido no backend
+      const orderData = {
+        table_id: selectedTable.id,
+        terminal_id: terminalId,
+        seat_number: newOrder.orderType === 'table' ? 0 : newOrder.seatNumber,
+        customer_name: newOrder.customerName || 'Cliente',
+        items: newOrder.items.map(item => ({
+          product_id: item.id,
+          product_name: item.productName,
+          quantity: item.quantity,
+          unit_price: item.price,
+          notes: item.notes
+        })),
+        order_type: newOrder.orderType === 'table' ? 'dine_in' : 'dine_in',
+        status: 'pending' as const,
+        total_amount: newOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      };
 
-    setOperationalTables(prev => prev.map(table =>
-      table.id === selectedTable.id
-        ? { 
-            ...table, 
-            orders: [...(table.orders || []), newOrderData],
-            status: 'occupied',
-            customers: newOrder.orderType === 'table' 
-              ? table.seats // Se for mesa toda, considera todos os assentos
-              : Math.max(table.customers || 0, newOrder.seatNumber)
-          }
-        : table
-    ));
+      await createOrder(orderData);
+      
+      // Recarregar pedidos para atualizar a interface
+      await getOrders({ terminal_id: terminalId });
 
-    setOrderDialogOpen(false);
-    setNewOrder({ 
-      seatNumber: 1, 
-      customerName: '', 
-      items: [], 
-      orderType: 'individual' 
-    });
-    
-    const orderTypeText = newOrder.orderType === 'table' ? 'da mesa toda' : `da cadeira ${newOrder.seatNumber}`;
-    setSnackbar({
-      open: true,
-      message: `Pedido ${orderTypeText} adicionado com sucesso!`,
-      severity: 'success'
-    });
-  }, [selectedTable, newOrder]);
+      setOrderDialogOpen(false);
+      setNewOrder({ 
+        seatNumber: 1, 
+        customerName: '', 
+        items: [], 
+        orderType: 'individual' 
+      });
+      
+      const orderTypeText = newOrder.orderType === 'table' ? 'da mesa toda' : `da cadeira ${newOrder.seatNumber}`;
+      setSnackbar({
+        open: true,
+        message: `Pedido ${orderTypeText} criado com sucesso!`,
+        severity: 'success'
+      });
+    } catch (error) {
+      console.error('Erro ao criar pedido:', error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao criar pedido. Tente novamente.',
+        severity: 'error'
+      });
+    }
+  }, [selectedTable, newOrder, terminalId, createOrder, getOrders]);
 
   // Função para abrir editor de layout
   const openLayoutEditor = useCallback(() => {
