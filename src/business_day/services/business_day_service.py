@@ -21,7 +21,7 @@ from src.business_day.events.business_day_events import (
 logger = logging.getLogger(__name__)
 
 # Simulação de banco de dados com arquivo JSON
-DATA_DIR = Path("/home/ubuntu/pos-modern/data")
+DATA_DIR = Path("/home/ubuntu/chefia-pos/data")
 BUSINESS_DAYS_FILE = DATA_DIR / "business_days.json"
 
 # Garantir que o diretório de dados existe

@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "date": "2025-08-02",
+    "notes": "Teste de abertura",
+    "id": "3dfd28c6-3f09-4448-8d3d-d7a03cc6dccb",
+    "status": "open",
+    "opened_by": "1",
+    "closed_by": null,
+    "opened_at": "2025-08-01T22:12:05.563257",
+    "closed_at": null,
+    "total_sales": 0.0,
+    "total_orders": 0,
+    "created_at": "2025-08-01T22:12:05.563257",
+    "updated_at": "2025-08-01T22:12:05.563257"
+  }
+]

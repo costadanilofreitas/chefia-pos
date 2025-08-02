@@ -9,20 +9,22 @@ export interface BusinessDay {
   closed_at?: string;
   opened_by: string;
   closed_by?: string;
-  initial_cash: number;
-  final_cash?: number;
   total_sales?: number;
   total_orders?: number;
   notes?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface BusinessDayCreate {
-  initial_cash: number;
+  store_id: string;
+  date: string;
+  opened_by: string;
   notes?: string;
 }
 
 export interface BusinessDayClose {
-  final_cash: number;
+  closed_by: string;
   notes?: string;
 }
 

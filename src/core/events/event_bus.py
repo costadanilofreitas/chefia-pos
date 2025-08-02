@@ -55,6 +55,14 @@ class EventType(str, Enum):
     PERIPHERAL_CASH_DRAWER_STATUS = "peripheral.cash_drawer.status"
     PERIPHERAL_CARD_READER_STATUS = "peripheral.card_reader.status"
     PERIPHERAL_CUSTOM_EVENT = "peripheral.custom"
+    
+    # Eventos do módulo de business day
+    DAY_OPENED = "business_day.opened"
+    DAY_CLOSED = "business_day.closed"
+    DAY_UPDATED = "business_day.updated"
+    
+    # Eventos do sistema
+    SYSTEM_CONFIG_CHANGED = "system.config_changed"
 
 class Event:
     """Representa um evento no sistema."""

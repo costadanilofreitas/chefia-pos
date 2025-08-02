@@ -59,12 +59,12 @@ const BusinessDayPage: FC = () => {
   const navigate = useNavigate();
   
   const {
-    currentDay,
+    currentBusinessDay: currentDay,
     loading,
     error,
-    openDay: openBusinessDay,
-    closeDay: closeBusinessDay,
-    getCurrentDay: getCurrentBusinessDay,
+    openBusinessDay,
+    closeBusinessDay,
+    refreshCurrentBusinessDay: getCurrentBusinessDay,
     isOpen
   } = useBusinessDay();
 
@@ -105,6 +105,8 @@ const BusinessDayPage: FC = () => {
     try {
       await openBusinessDay({
         store_id: 'STORE-001',
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+        opened_by: user?.employee_id || '123',
         notes,
       });
 
