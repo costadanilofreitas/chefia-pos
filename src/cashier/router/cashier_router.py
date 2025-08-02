@@ -282,7 +282,7 @@ async def get_terminal_cashier_status(
             "operator_id": terminal_cashier.current_operator_id,
             "operator_name": getattr(terminal_cashier, 'current_operator_name', 'Operador'),
             "opened_at": terminal_cashier.opened_at,
-            "initial_balance": terminal_cashier.initial_balance,
+            "initial_balance": terminal_cashier.opening_balance,  # Corrigido: usar opening_balance
             "current_balance": terminal_cashier.current_balance,
             "business_day_id": terminal_cashier.business_day_id,
             "business_day_date": business_day.date if business_day else None,

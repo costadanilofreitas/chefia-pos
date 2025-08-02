@@ -26,6 +26,7 @@ export enum Permission {
 
 export interface User {
   id: string;
+  operator_id?: string; // Adicionar operator_id opcional
   username: string;
   name: string;
   role: UserRole;
@@ -66,6 +67,7 @@ export const useAuth = () => {
         // Convert token data inline to avoid dependency issues
         const userData: User = {
           id: tokenData.operator_id,
+          operator_id: tokenData.operator_id, // Adicionar operator_id explicitamente
           username: tokenData.operator_id,
           name: tokenData.operator_name,
           role: (tokenData.roles?.[0] || tokenData.role) as UserRole,
@@ -198,7 +200,8 @@ export const useAuth = () => {
       
       // Convert to user format - use userData directly instead of tokenToUser
       const userFormatted: User = {
-        id: userData.id,
+        id: userData.username, // Usar username como id para compatibilidade
+        operator_id: userData.username, // Adicionar operator_id explicitamente
         username: userData.username,
         name: userData.full_name,
         role: userData.role as UserRole,
