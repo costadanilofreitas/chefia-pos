@@ -104,51 +104,34 @@ const POSMainPage: React.FC = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info'>('info');
 
-  // Mock products data
-  const mockProducts: Product[] = [
-    {
-      id: '1',
-      name: 'Hambúrguer Clássico',
-      price: 25.90,
-      category: 'Hambúrgueres',
-      description: 'Hambúrguer com carne, alface, tomate e molho especial',
-      available: true
-    },
-    {
-      id: '2',
-      name: 'Pizza Margherita',
-      price: 35.00,
-      category: 'Pizzas',
-      description: 'Pizza com molho de tomate, mussarela e manjericão',
-      available: true
-    },
-    {
-      id: '3',
-      name: 'Refrigerante Lata',
-      price: 5.50,
-      category: 'Bebidas',
-      description: 'Refrigerante gelado 350ml',
-      available: true
-    },
-    {
-      id: '4',
-      name: 'Batata Frita',
-      price: 12.00,
-      category: 'Acompanhamentos',
-      description: 'Porção de batata frita crocante',
-      available: true
-    },
-    {
-      id: '5',
-      name: 'Salada Caesar',
-      price: 18.50,
-      category: 'Saladas',
-      description: 'Salada com alface, croutons, parmesão e molho caesar',
-      available: true
-    }
-  ];
+  // Carregar produtos e categorias do backend
+  const {
+    products: backendProducts,
+    categories: backendCategories,
+    loading: productsLoading,
+    error: productsError,
+    loadProducts,
+    loadCategories
+  } = useProduct();
 
-  const categories = ['all', ...Array.from(new Set(mockProducts.map(p => p.category)))];
+  // Converter produtos do backend para formato da interface
+  const products: Product[] = backendProducts.map(p => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    category: backendCategories.find(c => c.id === p.category_id)?.name || 'Sem categoria',
+    description: `Produto ${p.name}`,
+    available: true
+  }));
+
+  // Extrair categorias únicas dos produtos
+  const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
+
+  // Carregar dados na inicialização
+  useEffect(() => {
+    loadProducts();
+    loadCategories();
+  }, [loadProducts, loadCategories]);
 
   useEffect(() => {
     // Redirecionar se não estiver autenticado
@@ -167,13 +150,22 @@ const POSMainPage: React.FC = () => {
     }
   }, [orderError]);
 
+  // Mostrar erro de produtos
+  useEffect(() => {
+    if (productsError) {
+      setSnackbarMessage(`Erro ao carregar produtos: ${productsError}`);
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  }, [productsError]);
+
   const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' = 'info') => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
-  const filteredProducts = mockProducts.filter(product => {
+  const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch && product.available;
@@ -330,6 +322,19 @@ const POSMainPage: React.FC = () => {
               {productsLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                   <CircularProgress />
+                </Box>
+              ) : filteredProducts.length === 0 ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 4 }}>
+                  <RestaurantIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {products.length === 0 ? 'Nenhum produto encontrado' : 'Nenhum produto corresponde aos filtros'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {products.length === 0 
+                      ? 'Verifique se há produtos cadastrados no sistema'
+                      : 'Tente alterar a categoria ou termo de busca'
+                    }
+                  </Typography>
                 </Box>
               ) : (
                 <Grid container spacing={2}>
