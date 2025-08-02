@@ -319,9 +319,6 @@ async def get_category(
 async def list_categories(
     parent_id: Optional[str] = Query(None, description="Filtrar por categoria pai (vazio para categorias de nível superior)"),
     type: Optional[str] = Query(None, description="Filtrar por tipo"),
-    is_active: Optional[bool] = Query(None, description="Filtrar por status ativo"),
-    limit: int = Query(100, description="Limite de resultados"),
-    offset: int = Query(0, description="Deslocamento para paginação"),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -332,10 +329,7 @@ async def list_categories(
     product_service = get_product_service()
     return await product_service.list_categories(
         parent_id=parent_id,
-        type=type,
-        is_active=is_active,
-        limit=limit,
-        offset=offset
+        type=type
     )
 
 @router.put("/categories/{category_id}", response_model=ProductCategory)
