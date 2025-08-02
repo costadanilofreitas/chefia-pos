@@ -58,6 +58,30 @@ class BusinessDayService:
         
         return business_day
     
+    async def openBusinessDay(self, opened_by: str, notes: Optional[str] = None) -> BusinessDay:
+        """Abre um novo dia de operação (função compatível com frontend)."""
+        # Verificar se já existe um dia aberto
+        open_day = await self.get_open_business_day()
+        if open_day:
+            raise ValueError(f"Já existe um dia aberto com data {open_day.date}. Feche-o antes de abrir um novo dia.")
+        
+        # Criar novo dia de operação
+        now = datetime.now()
+        business_day = BusinessDay(
+            id=str(uuid.uuid4()),
+            date=now.strftime("%Y-%m-%d"),
+            opened_by=opened_by,
+            opened_at=now.isoformat(),
+            status=DayStatus.OPEN,
+            notes=notes or "",
+            total_sales=0.0,
+            total_orders=0,
+            created_at=now.isoformat(),
+            updated_at=now.isoformat()
+        )
+        
+        return await self.create_business_day(business_day)
+    
     async def get_business_day(self, business_day_id: str) -> Optional[BusinessDay]:
         """Busca um dia de operação pelo ID."""
         business_days = self._load_business_days()

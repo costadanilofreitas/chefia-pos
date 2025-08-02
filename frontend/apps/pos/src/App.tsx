@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, CircularProgress, Box } from '@mui/material';
@@ -7,10 +7,12 @@ import AuthGuard from './components/AuthGuard';
 import TerminalValidator from './components/TerminalValidator';
 import POSLayout from './components/POSLayout';
 import { AuthProvider } from './contexts/AuthContext';
-import { useAuth, UserRole } from './hooks/useAuth';;
+import { useAuth, UserRole } from './hooks/useAuth';
 
 // Lazy load components for better performance
 const POSMainPage = lazy(() => import('./ui/POSMainPage'));
+const POSMainPageTest = lazy(() => import('./ui/POSMainPageTest'));
+const POSMainPageSimplified = lazy(() => import('./ui/POSMainPageSimplified'));
 const POSOrderPage = lazy(() => import('./ui/POSOrderPage'));
 const CounterOrdersPage = lazy(() => import('./ui/CounterOrdersPage'));
 const POSPaymentPage = lazy(() => import('./ui/POSPaymentPage'));
@@ -168,13 +170,22 @@ function App() {
                     </ErrorBoundary>
                   } />
                   
-                  {/* Main POS Interface - Test without auth */}
+                  {/* Main POS Interface - Requires authentication */}
                   <Route path="/pos/:terminalId/main" element={
                     <ErrorBoundary>
                       <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
-                        <LayoutRoute title="POS Principal" requireAuth={false} requireOpenDay={false}>
+                        <LayoutRoute title="POS Principal" requireAuth={true}>
                           <POSMainPage />
                         </LayoutRoute>
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  {/* Rota de teste com integração de produtos */}
+                  <Route path="/pos/:terminalId/test-main" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
+                        <POSMainPageSimplified />
                       </Suspense>
                     </ErrorBoundary>
                   } />
