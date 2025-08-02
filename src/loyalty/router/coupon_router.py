@@ -59,3 +59,34 @@ async def create_coupon(coupon_data: Dict[str, Any]):
     
     return new_coupon
 
+@router.put("/{coupon_id}")
+async def update_coupon(coupon_id: str, coupon_data: Dict[str, Any]):
+    """Atualiza um cupom existente."""
+    coupons = load_coupons()
+    
+    for i, coupon in enumerate(coupons):
+        if coupon["id"] == coupon_id:
+            # Atualiza apenas os campos fornecidos
+            for key, value in coupon_data.items():
+                if key != "id":  # Não permite alterar o ID
+                    coupon[key] = value
+            coupon["updated_at"] = datetime.now().isoformat()
+            coupons[i] = coupon
+            save_coupons(coupons)
+            return coupon
+    
+    raise HTTPException(status_code=404, detail="Cupom não encontrado")
+
+@router.delete("/{coupon_id}")
+async def delete_coupon(coupon_id: str):
+    """Deleta um cupom."""
+    coupons = load_coupons()
+    
+    for i, coupon in enumerate(coupons):
+        if coupon["id"] == coupon_id:
+            coupons.pop(i)
+            save_coupons(coupons)
+            return {"message": "Cupom deletado com sucesso"}
+    
+    raise HTTPException(status_code=404, detail="Cupom não encontrado")
+

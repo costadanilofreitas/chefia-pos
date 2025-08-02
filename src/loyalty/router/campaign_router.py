@@ -56,3 +56,34 @@ async def create_campaign(campaign_data: Dict[str, Any]):
     
     return new_campaign
 
+@router.put("/{campaign_id}")
+async def update_campaign(campaign_id: str, campaign_data: Dict[str, Any]):
+    """Atualiza uma campanha existente."""
+    campaigns = load_campaigns()
+    
+    for i, campaign in enumerate(campaigns):
+        if campaign["id"] == campaign_id:
+            # Atualiza apenas os campos fornecidos
+            for key, value in campaign_data.items():
+                if key != "id":  # Não permite alterar o ID
+                    campaign[key] = value
+            campaign["updated_at"] = datetime.now().isoformat()
+            campaigns[i] = campaign
+            save_campaigns(campaigns)
+            return campaign
+    
+    raise HTTPException(status_code=404, detail="Campanha não encontrada")
+
+@router.delete("/{campaign_id}")
+async def delete_campaign(campaign_id: str):
+    """Deleta uma campanha."""
+    campaigns = load_campaigns()
+    
+    for i, campaign in enumerate(campaigns):
+        if campaign["id"] == campaign_id:
+            campaigns.pop(i)
+            save_campaigns(campaigns)
+            return {"message": "Campanha deletada com sucesso"}
+    
+    raise HTTPException(status_code=404, detail="Campanha não encontrada")
+
