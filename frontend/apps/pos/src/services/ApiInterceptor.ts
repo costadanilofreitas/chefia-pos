@@ -83,34 +83,41 @@ export class ApiInterceptor {
       async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-        // Handle 401 Unauthorized - mas ser menos agressivo
+        // Handle 401 Unauthorized - mas ser muito menos agressivo
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
 
-          try {
-            console.log('🔄 401 detected, attempting token refresh...');
-            await this.refreshToken();
-            
-            // Retry original request with new token
-            if (this.tokenData?.access_token) {
-              originalRequest.headers = originalRequest.headers || {};
-              (originalRequest.headers as any).Authorization = `Bearer ${this.tokenData.access_token}`;
-              return this.axiosInstance(originalRequest);
+          // Só tentar refresh se tivermos um token válido
+          if (this.tokenData && this.isTokenValid()) {
+            try {
+              console.log('🔄 401 detected, attempting token refresh...');
+              await this.refreshToken();
+              
+              // Retry original request with new token
+              if (this.tokenData?.access_token) {
+                originalRequest.headers = originalRequest.headers || {};
+                (originalRequest.headers as any).Authorization = `Bearer ${this.tokenData.access_token}`;
+                return this.axiosInstance(originalRequest);
+              }
+            } catch (refreshError) {
+              console.error('Token refresh failed:', refreshError);
+              // Só limpar token em casos muito específicos
+              if (originalRequest.url?.includes('/auth/token') || originalRequest.url?.includes('/auth/me')) {
+                console.log('🚨 Auth endpoint failed, clearing token');
+                this.clearToken();
+                window.dispatchEvent(new CustomEvent('auth:logout'));
+              } else {
+                console.warn('⚠️ Non-auth endpoint failed, keeping token for retry');
+              }
+              return Promise.reject(refreshError);
             }
-          } catch (refreshError) {
-            console.error('Token refresh failed:', refreshError);
-            // Só limpar token se for erro crítico de autenticação
-            if (error.response?.status === 401 && originalRequest.url?.includes('/auth/')) {
-              console.log('🚨 Critical auth error, clearing token');
-              this.clearToken();
-              window.dispatchEvent(new CustomEvent('auth:logout'));
-            } else {
-              console.warn('⚠️ Non-critical error, keeping token');
-            }
-            return Promise.reject(refreshError);
+          } else {
+            console.log('⚠️ No valid token for refresh, keeping current state');
           }
         }
 
+        // Para outros erros, não limpar token
+        console.log('🔄 Non-401 error, keeping token:', error.response?.status);
         return Promise.reject(error);
       }
     );
@@ -154,12 +161,15 @@ export class ApiInterceptor {
   }
 
   public clearToken(): void {
+    console.log('🗑️ CLEAR TOKEN DEBUG: clearToken() called');
+    console.log('🗑️ CLEAR TOKEN DEBUG: Stack trace:', new Error().stack);
+    
     this.tokenData = null;
     this.tokenExpirationTime = 0;
     this.refreshPromise = null;
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_token_expiration');
-    console.log('Token cleared');
+    console.log('🗑️ CLEAR TOKEN DEBUG: Token cleared from memory and localStorage');
   }
 
   public isTokenValid(): boolean {
@@ -241,6 +251,12 @@ export class ApiInterceptor {
         console.log('💾 SAVE TOKEN DEBUG: Token serialized successfully, length:', tokenStr.length);
         console.log('💾 SAVE TOKEN DEBUG: Token preview:', tokenStr.substring(0, 100) + '...');
         
+        // Verificar localStorage antes de salvar
+        console.log('💾 SAVE TOKEN DEBUG: localStorage before save:', {
+          auth_token: localStorage.getItem('auth_token') ? 'EXISTS' : 'NULL',
+          auth_token_expiration: localStorage.getItem('auth_token_expiration') ? 'EXISTS' : 'NULL'
+        });
+        
         localStorage.setItem('auth_token', tokenStr);
         console.log('💾 SAVE TOKEN DEBUG: Token saved to localStorage');
         
@@ -257,6 +273,12 @@ export class ApiInterceptor {
           console.error('❌ SAVE TOKEN ERROR: Token was not saved to localStorage!');
         } else {
           console.log('✅ SAVE TOKEN SUCCESS: Token successfully persisted');
+          
+          // Verificar novamente após um pequeno delay
+          setTimeout(() => {
+            const delayedCheck = localStorage.getItem('auth_token');
+            console.log('💾 DELAYED CHECK: Token still exists after 100ms:', delayedCheck ? 'YES' : 'NO');
+          }, 100);
         }
       } catch (error) {
         console.error('❌ SAVE TOKEN ERROR: Failed to save token:', error);
