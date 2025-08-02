@@ -11,8 +11,6 @@ import { useAuth, UserRole } from './hooks/useAuth';
 
 // Lazy load components for better performance
 const POSMainPage = lazy(() => import('./ui/POSMainPage'));
-const POSMainPageTest = lazy(() => import('./ui/POSMainPageTest'));
-const POSMainPageSimplified = lazy(() => import('./ui/POSMainPageSimplified'));
 const POSOrderPage = lazy(() => import('./ui/POSOrderPage'));
 const CounterOrdersPage = lazy(() => import('./ui/CounterOrdersPage'));
 const POSPaymentPage = lazy(() => import('./ui/POSPaymentPage'));
@@ -169,27 +167,16 @@ function App() {
                       </Suspense>
                     </ErrorBoundary>
                   } />
-                  
-                  {/* Main POS Interface - Requires authentication */}
+                            {/* Main POS interface - requires auth and open business day */}
                   <Route path="/pos/:terminalId/main" element={
-                    <ErrorBoundary>
-                      <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
-                        <LayoutRoute title="POS Principal" requireAuth={true}>
+                    <AuthGuard requireAuth={true} requireOpenDay={true}>
+                      <ErrorBoundary>
+                        <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
                           <POSMainPage />
-                        </LayoutRoute>
-                      </Suspense>
-                    </ErrorBoundary>
-                  } />
-                  
-                  {/* Rota de teste com integração de produtos */}
-                  <Route path="/pos/:terminalId/test-main" element={
-                    <ErrorBoundary>
-                      <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
-                        <POSMainPageSimplified />
-                      </Suspense>
-                    </ErrorBoundary>
-                  } />
-                  
+                        </Suspense>
+                      </ErrorBoundary>
+                    </AuthGuard>
+                  } />                  
                   {/* Order management */}
                   <Route path="/pos/:terminalId/order" element={
                     <ErrorBoundary>
