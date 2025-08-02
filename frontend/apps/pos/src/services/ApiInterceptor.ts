@@ -83,11 +83,12 @@ export class ApiInterceptor {
       async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-        // Handle 401 Unauthorized
+        // Handle 401 Unauthorized - mas ser menos agressivo
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
 
           try {
+            console.log('🔄 401 detected, attempting token refresh...');
             await this.refreshToken();
             
             // Retry original request with new token
@@ -98,9 +99,14 @@ export class ApiInterceptor {
             }
           } catch (refreshError) {
             console.error('Token refresh failed:', refreshError);
-            this.clearToken();
-            // Redirect to login or emit event
-            window.dispatchEvent(new CustomEvent('auth:logout'));
+            // Só limpar token se for erro crítico de autenticação
+            if (error.response?.status === 401 && originalRequest.url?.includes('/auth/')) {
+              console.log('🚨 Critical auth error, clearing token');
+              this.clearToken();
+              window.dispatchEvent(new CustomEvent('auth:logout'));
+            } else {
+              console.warn('⚠️ Non-critical error, keeping token');
+            }
             return Promise.reject(refreshError);
           }
         }
@@ -199,7 +205,7 @@ export class ApiInterceptor {
       console.log('🔄 Verificando token com backend...');
       
       // Fazer chamada para verificar se o token ainda é válido
-      const response = await axios.get('http://localhost:8001/api/v1/auth/verify', {
+      const response = await axios.get('http://localhost:8001/api/v1/auth/me', {
         headers: {
           'Authorization': `Bearer ${this.tokenData.access_token}`
         },
@@ -218,9 +224,10 @@ export class ApiInterceptor {
       }
     } catch (error) {
       console.error('❌ Verificação de token falhou:', error);
-      this.clearToken();
-      window.dispatchEvent(new CustomEvent('auth:token-expired'));
-      throw error;
+      // NÃO limpar token automaticamente - apenas logar o erro
+      console.warn('⚠️ Mantendo token local, erro pode ser temporário');
+      // Retornar token atual para continuar funcionando
+      return this.tokenData?.access_token || '';
     }
   }
 

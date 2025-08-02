@@ -102,11 +102,13 @@ const CashierOpeningClosingPage: React.FC = () => {
   const { user, isAuthenticated, login } = useAuth();
   const {
     currentCashier,
+    terminalStatus,
     operations,
     loading,
     error,
-    open: openCashier,
-    close: closeCashier,
+    openCashier,
+    closeCashier,
+    checkTerminalStatus,
     getSummary
   } = useCashier();
   const { currentBusinessDay } = useBusinessDay();
@@ -125,9 +127,17 @@ const CashierOpeningClosingPage: React.FC = () => {
   });
 
   useEffect(() => {
-    // O currentCashier já é gerenciado pelo hook
+    // Verificar status do terminal quando componente monta
+    if (terminalId && isAuthenticated) {
+      console.log('🔄 Checking terminal status for:', terminalId);
+      checkTerminalStatus(terminalId).catch(console.error);
+    }
+  }, [terminalId, isAuthenticated, checkTerminalStatus]);
+
+  useEffect(() => {
     console.log('CashierOpeningClosingPage mounted, currentCashier:', currentCashier);
-  }, [currentCashier]);
+    console.log('Terminal status:', terminalStatus);
+  }, [currentCashier, terminalStatus]);
 
   const handleLoginSuccess = () => {
     console.log('🎉 Login successful! Refreshing cashier status...');
@@ -152,6 +162,13 @@ const CashierOpeningClosingPage: React.FC = () => {
     }
 
     try {
+      console.log('🔄 Opening cashier with data:', {
+        terminal_id: terminalId,
+        operator_id: user?.id,
+        opening_balance: parseFloat(openingAmount),
+        notes
+      });
+
       await openCashier({
         terminal_id: terminalId || '',
         operator_id: user?.id || '',
@@ -159,6 +176,13 @@ const CashierOpeningClosingPage: React.FC = () => {
         business_day_id: `bd_${new Date().toISOString().split('T')[0]}`, // Gerar business_day_id baseado na data atual
         notes: notes
       });
+
+      console.log('✅ Cashier opened successfully, refreshing status...');
+
+      // Recarregar status do terminal após abertura
+      if (terminalId) {
+        await checkTerminalStatus(terminalId);
+      }
 
       await PrinterService.printOpeningReceipt({
         cashier_id: currentCashier?.id,
@@ -181,6 +205,7 @@ const CashierOpeningClosingPage: React.FC = () => {
         navigate(`/pos/${terminalId}/main`);
       }, 1500);
     } catch (error: any) {
+      console.error('❌ Error opening cashier:', error);
       setAlertInfo({
         open: true,
         message: `Erro ao abrir caixa: ${error.message}`,
@@ -331,14 +356,24 @@ const CashierOpeningClosingPage: React.FC = () => {
               </Typography>
               <Typography 
                 variant="h4" 
-                color={currentCashier?.status === 'open' ? 'success.main' : 'text.secondary'}
+                color={terminalStatus?.has_open_cashier ? 'success.main' : 'text.secondary'}
                 sx={{ fontWeight: 'bold', mb: 2 }}
               >
-                {currentCashier?.status === 'open' ? '🟢 ABERTO' : '🔴 FECHADO'}
+                {terminalStatus?.has_open_cashier ? '🟢 ABERTO' : '🔴 FECHADO'}
               </Typography>
-              {currentCashier?.status === 'open' && (
+              {terminalStatus?.has_open_cashier && terminalStatus?.opened_at && (
                 <Typography variant="body2" color="text.secondary">
-                  Aberto em: {new Date(currentCashier.opened_at).toLocaleString()}
+                  Aberto em: {new Date(terminalStatus.opened_at).toLocaleString()}
+                </Typography>
+              )}
+              {terminalStatus?.has_open_cashier && terminalStatus?.operator_name && (
+                <Typography variant="body2" color="text.secondary">
+                  Operador: {terminalStatus.operator_name}
+                </Typography>
+              )}
+              {terminalStatus?.has_open_cashier && terminalStatus?.current_balance !== undefined && (
+                <Typography variant="body2" color="text.secondary">
+                  Saldo Atual: {formatCurrency(terminalStatus.current_balance)}
                 </Typography>
               )}
             </CardContent>
@@ -346,7 +381,7 @@ const CashierOpeningClosingPage: React.FC = () => {
         </Box>
         
         <Grid container spacing={4} justifyContent="center">
-          {!currentCashier || currentCashier.status !== 'open' ? (
+          {!terminalStatus?.has_open_cashier ? (
             <Grid item xs={12} md={6}>
               <Card elevation={3}>
                 <CardContent sx={{ p: 3, textAlign: 'center' }}>
