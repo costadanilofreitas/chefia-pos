@@ -113,18 +113,17 @@ const POSMainPage: React.FC = () => {
     loadProducts,
     loadCategories
   } = useProduct();
-
   // Converter produtos do backend para formato da interface
-  const products: Product[] = backendProducts.map(p => ({
+  const products: Product[] = backendProducts?.map(p => ({
     id: p.id,
     name: p.name,
     price: p.price,
-    category: backendCategories.find(c => c.id === p.category_id)?.name || 'Sem categoria',
+    category: backendCategories?.find(c => c.id === p.category_id)?.name || 'Sem categoria',
     description: `Produto ${p.name}`,
-    available: true
-  }));
-
-  // Extrair categorias únicas dos produtos
+    available: true,
+    image: '/placeholder-product.jpg'
+  })) || [];
+  
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
 
   // Carregar dados na inicialização
