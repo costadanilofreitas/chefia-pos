@@ -1,540 +1,447 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
-  Typography,
   Grid,
   Card,
   CardContent,
+  CardMedia,
+  Typography,
   Button,
-  Paper,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  Chip,
-  Divider,
-  CircularProgress,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Paper,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Fab,
-  Snackbar,
-  CardMedia,
-  CardActions
+  InputAdornment,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Badge,
+  Divider,
+  Chip,
+  Avatar
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  ShoppingCart as CartIcon,
-  Restaurant as RestaurantIcon,
-  AttachMoney as MoneyIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
   Search as SearchIcon,
-  Category as CategoryIcon,
-  Save as SaveIcon,
-  Receipt as ReceiptIcon
+  Menu as MenuIcon,
+  ShoppingCart as ShoppingCartIcon,
+  Add as AddIcon,
+  Remove as RemoveIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import { useProduct } from '../hooks/useProduct';
-import { useOrder } from '../hooks/useOrder';
-import { formatCurrency } from '../utils/formatters';
-import { 
-  OrderCreate, 
-  OrderItemCreate, 
-  PaymentMethod, 
-  OrderType,
-  OrderStatus 
-} from '../types/order';
 
-interface Product {
+// Dados carregados apenas do backend
+
+interface CartItem {
   id: string;
   name: string;
   price: number;
-  category: string;
-  description: string;
-  available: boolean;
-  image?: string;
-}
-
-interface OrderItem {
-  id: string;
-  productId: string;
-  productName: string;
   quantity: number;
-  price: number;
-  total: number;
+  image: string;
 }
 
-const POSMainPage: React.FC = () => {
-  console.log('🚀 POSMainPage: Componente iniciado');
-  
-  const navigate = useNavigate();
-  const { terminalId } = useParams<{ terminalId: string }>();
+export default function POSMainPage() {
   const { user, isAuthenticated } = useAuth();
+  const { products: backendProducts, categories: backendCategories, loading, error } = useProduct();
   
-  console.log('🔐 POSMainPage: Auth status:', { user: user?.name, isAuthenticated });
-  
-  // Usando o hook useOrder real
-  const {
-    cart,
-    cartTotal,
-    loading: orderLoading,
-    creating: orderCreating,
-    error: orderError,
-    addToCart,
-    removeFromCart,
-    updateCartItem,
-    clearCart,
-    createOrder,
-    clearError
-  } = useOrder();
-
-  // Usando o hook useProduct real para carregar dados do backend
-  const {
-    products: backendProducts,
-    categories: backendCategories,
-    loading: productsLoading,
-    error: productsError,
-    loadProducts,
-    loadCategories
-  } = useProduct();
-
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [productDialogOpen, setProductDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [quantity, setQuantity] = useState<number>(1);
-  const [customerName, setCustomerName] = useState<string>('');
-  const [orderType, setOrderType] = useState<OrderType>(OrderType.DINE_IN);
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [tableNumber, setTableNumber] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Usar dados reais do backend ou array vazio se não houver
+  // Obter terminalId da URL
+  const terminalId = window.location.pathname.split('/')[2] || '1';
+
+  // Usar apenas produtos do backend
   const products = backendProducts || [];
+  
+  // Usar apenas categorias do backend, com fallback para lista vazia
   const categories = backendCategories || [];
+  
+  // Adicionar categoria "Todos" apenas uma vez no início
+  const allCategories = [{ id: 'all', name: 'Todos', icon: '🍽️' }, ...categories];
 
-  // Carregar produtos na inicialização
-  useEffect(() => {
-    console.log('🔄 POSMainPage: Carregando produtos do backend...');
-    loadProducts();
-    loadCategories();
-  }, [loadProducts, loadCategories]);
-
-  console.log('📊 POSMainPage: Estado atual:', {
-    productsCount: products.length,
-    categoriesCount: categories.length,
-    loading: productsLoading,
-    error: productsError
-  });
-
-  // Filtrar produtos
+  // Filtrar produtos por categoria e busca
   const filteredProducts = products.filter(product => {
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.description?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch && product.available;
   });
 
-  const handleAddToCart = (product: Product) => {
-    setSelectedProduct(product);
-    setQuantity(1);
-    setProductDialogOpen(true);
+  // Adicionar produto ao carrinho
+  const addToCart = (product: any) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === product.id);
+      if (existingItem) {
+        return prevCart.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        return [...prevCart, {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+          image: product.image
+        }];
+      }
+    });
   };
 
-  const confirmAddToCart = () => {
-    if (selectedProduct) {
-      const orderItem: OrderItemCreate = {
-        product_id: selectedProduct.id,
-        quantity: quantity,
-        unit_price: selectedProduct.price,
-        notes: ''
-      };
-      
-      addToCart(orderItem);
-      setProductDialogOpen(false);
-      setSnackbarMessage(`${selectedProduct.name} adicionado ao carrinho`);
-      setSnackbarOpen(true);
-    }
+  // Remover produto do carrinho
+  const removeFromCart = (productId: string) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === productId);
+      if (existingItem && existingItem.quantity > 1) {
+        return prevCart.map(item =>
+          item.id === productId
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        );
+      } else {
+        return prevCart.filter(item => item.id !== productId);
+      }
+    });
   };
 
-  const handleRemoveFromCart = (itemId: string) => {
-    removeFromCart(itemId);
-    setSnackbarMessage('Item removido do carrinho');
-    setSnackbarOpen(true);
+  // Remover item completamente do carrinho
+  const deleteFromCart = (productId: string) => {
+    setCart(prevCart => prevCart.filter(item => item.id !== productId));
   };
 
-  const handleCheckout = () => {
-    if (cart.length === 0) {
-      setSnackbarMessage('Carrinho vazio');
-      setSnackbarOpen(true);
-      return;
-    }
-    setPaymentDialogOpen(true);
+  // Função para abrir menu
+  const handleMenuOpen = () => {
+    setMenuOpen(!menuOpen);
   };
 
-  const handleCreateOrder = async () => {
-    if (cart.length === 0) return;
-
-    const orderData: OrderCreate = {
-      customer_name: customerName || 'Cliente',
-      order_type: orderType,
-      table_number: tableNumber,
-      items: cart.map(item => ({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        notes: item.notes || ''
-      })),
-      payment_method: PaymentMethod.CASH,
-      notes: ''
-    };
-
-    try {
-      await createOrder(orderData);
-      setPaymentDialogOpen(false);
-      clearCart();
-      setCustomerName('');
-      setTableNumber(null);
-      setSnackbarMessage('Pedido criado com sucesso!');
-      setSnackbarOpen(true);
-    } catch (error) {
-      console.error('Erro ao criar pedido:', error);
-      setSnackbarMessage('Erro ao criar pedido');
-      setSnackbarOpen(true);
-    }
-  };
+  // Calcular total do carrinho
+  const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Painel de Produtos */}
-      <Box sx={{ flex: 1, p: 2 }}>
-        {/* Header */}
-        <Paper sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <RestaurantIcon color="primary" sx={{ fontSize: 32 }} />
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h5" fontWeight="bold">
-              POS Principal - Terminal {terminalId}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {user?.name} • Sistema integrado com backend
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#f5f5f5' }}>      {/* Header */}
+      <AppBar position="static">
+        <Toolbar>
+          <IconButton
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            onClick={handleMenuOpen}
+          >
+            <MenuIcon />
+          </IconButton>
+          
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, ml: 1 }}>
+            POS Principal
+          </Typography>
+          
+          <Chip
+            label={`Terminal ${terminalId}`}
+            size="small"
+            variant="outlined"
+            sx={{ 
+              color: 'white', 
+              borderColor: 'rgba(255,255,255,0.3)',
+              mr: 2 
+            }}
+          />
+          
+          <Chip
+            label={user?.name || 'Usuário'}
+            size="small"
+            sx={{ 
+              backgroundColor: 'rgba(255,255,255,0.2)', 
+              color: 'white',
+              mr: 1
+            }}
+          />
+          
+          <IconButton
+            color="inherit"
+            onClick={() => {}}
+          >
+            <Badge badgeContent={cart.length} color="secondary">
+              <ShoppingCartIcon />
+            </Badge>
+          </IconButton>
+        </Toolbar>
+      </AppBar>     {/* Layout principal em 3 colunas */}
+      <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        
+        {/* Coluna 1: Categorias (esquerda) */}
+        <Paper 
+          elevation={2} 
+          sx={{ 
+            width: 250, 
+            bgcolor: 'white',
+            borderRadius: 0,
+            borderRight: '1px solid #e0e0e0'
+          }}
+        >
+          <Box sx={{ p: 2, bgcolor: '#fafafa', borderBottom: '1px solid #e0e0e0' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
+              Categorias
             </Typography>
           </Box>
-          <Chip 
-            label={`${cart.length} itens`} 
-            color="primary" 
-            icon={<CartIcon />}
-          />
+          
+          <List sx={{ p: 0 }}>
+            {allCategories.map((category) => (
+              <ListItem key={category.id} disablePadding>
+                <ListItemButton
+                  selected={selectedCategory === category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  sx={{
+                    py: 2,
+                    '&.Mui-selected': {
+                      bgcolor: '#fff3e0',
+                      borderRight: '3px solid #ff9800'
+                    }
+                  }}
+                >
+                  <ListItemText 
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography sx={{ fontSize: '1.2rem', mr: 1 }}>
+                          {category.icon || '📦'}
+                        </Typography>
+                        <Typography sx={{ fontWeight: 'medium' }}>
+                          {category.name}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
         </Paper>
 
-        {/* Barra de Pesquisa e Filtros */}
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        {/* Coluna 2: Produtos (centro) */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {/* Barra de pesquisa */}
+          <Box sx={{ p: 2, bgcolor: 'white', borderBottom: '1px solid #e0e0e0' }}>
             <TextField
               fullWidth
               placeholder="Pesquisar produtos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 3,
+                  bgcolor: '#f8f9fa'
+                }
               }}
             />
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>Categoria</InputLabel>
-              <Select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                label="Categoria"
-              >
-                <MenuItem value="all">Todas</MenuItem>
-                {categories.map((category) => (
-                  <MenuItem key={category} value={category}>
-                    {category}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
           </Box>
-        </Paper>
 
-        {/* Status de carregamento */}
-        {productsLoading && (
-          <Paper sx={{ p: 3, textAlign: 'center', mb: 2 }}>
-            <CircularProgress sx={{ mb: 2 }} />
-            <Typography variant="h6">Carregando produtos...</Typography>
-          </Paper>
-        )}
-
-        {/* Erro de carregamento */}
-        {productsError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            <Typography variant="h6">Erro ao carregar produtos</Typography>
-            <Typography variant="body2">{productsError}</Typography>
-          </Alert>
-        )}
-
-        {/* Lista de Produtos */}
-        {!productsLoading && (
-          <Box sx={{ height: 'calc(100vh - 280px)', overflow: 'auto' }}>
-            {filteredProducts.length === 0 ? (
-              <Paper sx={{ p: 4, textAlign: 'center' }}>
-                <CartIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+          {/* Grid de produtos */}
+          <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
+                <Typography>Carregando produtos...</Typography>
+              </Box>
+            ) : filteredProducts.length === 0 ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 200 }}>
                 <Typography variant="h6" color="text.secondary" gutterBottom>
-                  Nenhum produto encontrado
+                  🍔 Nenhum produto encontrado
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {products.length === 0 
-                    ? 'Não há produtos cadastrados no sistema.'
-                    : searchTerm 
-                      ? `Nenhum produto encontrado para "${searchTerm}"`
-                      : `Nenhum produto na categoria "${selectedCategory}"`
-                  }
+                <Typography color="text.secondary">
+                  {searchTerm ? 'Tente uma busca diferente' : 'Não há produtos nesta categoria'}
                 </Typography>
-              </Paper>
+              </Box>
             ) : (
               <Grid container spacing={2}>
                 {filteredProducts.map((product) => (
-                  <Grid item xs={12} sm={6} md={4} key={product.id}>
+                  <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
                     <Card 
                       sx={{ 
-                        height: '100%', 
-                        display: 'flex', 
-                        flexDirection: 'column',
+                        height: '100%',
                         cursor: 'pointer',
-                        '&:hover': { boxShadow: 4 }
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          boxShadow: 4
+                        }
                       }}
-                      onClick={() => handleAddToCart(product)}
+                      onClick={() => addToCart(product)}
                     >
                       <CardMedia
-                        component="div"
-                        sx={{
-                          height: 120,
-                          backgroundColor: 'primary.main',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
+                        component="img"
+                        height="160"
+                        image={product.image}
+                        alt={product.name}
+                        sx={{ 
+                          objectFit: 'cover',
+                          bgcolor: '#f8f9fa'
                         }}
-                      >
-                        <RestaurantIcon sx={{ fontSize: 40, color: 'white' }} />
-                      </CardMedia>
-                      <CardContent sx={{ flex: 1 }}>
-                        <Typography variant="h6" gutterBottom>
+                      />
+                      <CardContent sx={{ p: 2 }}>
+                        <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
                           {product.name}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" paragraph>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, minHeight: 40 }}>
                           {product.description}
                         </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Typography variant="h6" color="primary">
-                            {formatCurrency(product.price)}
+                          <Typography variant="h6" sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+                            R$ {product.price.toFixed(2)}
                           </Typography>
-                          <Chip 
-                            label={product.category}
+                          <Button
+                            variant="contained"
                             size="small"
-                            color="secondary"
-                          />
+                            startIcon={<AddIcon />}
+                            sx={{
+                              bgcolor: '#1976d2',
+                              '&:hover': { bgcolor: '#1565c0' },
+                              borderRadius: 2
+                            }}
+                          >
+                            Adicionar
+                          </Button>
                         </Box>
                       </CardContent>
-                      <CardActions>
-                        <Button 
-                          fullWidth 
-                          variant="contained" 
-                          startIcon={<AddIcon />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToCart(product);
-                          }}
-                        >
-                          Adicionar
-                        </Button>
-                      </CardActions>
                     </Card>
                   </Grid>
                 ))}
               </Grid>
             )}
           </Box>
-        )}
-      </Box>
+        </Box>
 
-      {/* Painel do Carrinho */}
-      <Paper sx={{ width: 400, p: 2, display: 'flex', flexDirection: 'column' }}>
-        <Typography variant="h6" gutterBottom>
-          <CartIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-          Carrinho ({cart.length})
-        </Typography>
-        
-        <Divider sx={{ mb: 2 }} />
-        
-        {cart.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: 4, flex: 1 }}>
-            <CartIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-            <Typography variant="body1" color="text.secondary">
-              Carrinho vazio
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Adicione produtos para começar
+        {/* Coluna 3: Carrinho (direita) */}
+        <Paper 
+          elevation={2} 
+          sx={{ 
+            width: 350, 
+            bgcolor: 'white',
+            borderRadius: 0,
+            borderLeft: '1px solid #e0e0e0',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          {/* Header do carrinho */}
+          <Box sx={{ p: 2, bgcolor: '#fafafa', borderBottom: '1px solid #e0e0e0' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#333' }}>
+              🛒 Pedido ({cartItemCount} {cartItemCount === 1 ? 'item' : 'itens'})
             </Typography>
           </Box>
-        ) : (
-          <>
-            <List sx={{ flex: 1, overflow: 'auto' }}>
-              {cart.map((item) => (
-                <ListItem key={item.id} divider>
-                  <ListItemText
-                    primary={`${item.quantity}x ${item.product_name || 'Produto'}`}
-                    secondary={`${formatCurrency(item.unit_price)} cada`}
-                  />
-                  <ListItemSecondaryAction>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2" fontWeight="bold">
-                        {formatCurrency(item.quantity * item.unit_price)}
-                      </Typography>
-                      <IconButton 
-                        size="small" 
-                        color="error"
-                        onClick={() => handleRemoveFromCart(item.id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              ))}
-            </List>
-            
-            <Divider sx={{ my: 2 }} />
-            
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="h6" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Total:</span>
-                <span>{formatCurrency(cartTotal)}</span>
-              </Typography>
-            </Box>
-            
-            <Button
-              fullWidth
-              variant="contained"
-              size="large"
-              startIcon={<ReceiptIcon />}
-              onClick={handleCheckout}
-              disabled={orderCreating}
-            >
-              {orderCreating ? 'Processando...' : 'Finalizar Pedido'}
-            </Button>
-          </>
-        )}
-      </Paper>
 
-      {/* Dialog de Adicionar Produto */}
-      <Dialog open={productDialogOpen} onClose={() => setProductDialogOpen(false)}>
-        <DialogTitle>Adicionar ao Carrinho</DialogTitle>
-        <DialogContent>
-          {selectedProduct && (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                {selectedProduct.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                {selectedProduct.description}
-              </Typography>
-              <Typography variant="h6" color="primary" gutterBottom>
-                {formatCurrency(selectedProduct.price)}
-              </Typography>
-              <TextField
+          {/* Lista de itens do carrinho */}
+          <Box sx={{ flex: 1, overflow: 'auto' }}>
+            {cart.length === 0 ? (
+              <Box sx={{ p: 3, textAlign: 'center' }}>
+                <Typography color="text.secondary" gutterBottom>
+                  🛒 Carrinho vazio
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Adicione produtos para começar seu pedido
+                </Typography>
+              </Box>
+            ) : (
+              <List sx={{ p: 1 }}>
+                {cart.map((item) => (
+                  <ListItem key={item.id} sx={{ px: 1, py: 1 }}>
+                    <Paper sx={{ width: '100%', p: 2, bgcolor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Avatar
+                          src={item.image}
+                          alt={item.name}
+                          sx={{ width: 40, height: 40, mr: 2 }}
+                        />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                            {item.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            R$ {item.price.toFixed(2)} cada
+                          </Typography>
+                        </Box>
+                        <IconButton 
+                          size="small" 
+                          onClick={() => deleteFromCart(item.id)}
+                          sx={{ color: '#d32f2f' }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <IconButton 
+                            size="small" 
+                            onClick={() => removeFromCart(item.id)}
+                            sx={{ bgcolor: 'white', mr: 1 }}
+                          >
+                            <RemoveIcon fontSize="small" />
+                          </IconButton>
+                          <Typography sx={{ mx: 1, fontWeight: 'bold' }}>
+                            {item.quantity}
+                          </Typography>
+                          <IconButton 
+                            size="small" 
+                            onClick={() => addToCart({ ...item, category_id: '1', description: '', available: true })}
+                            sx={{ bgcolor: 'white', ml: 1 }}
+                          >
+                            <AddIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                          R$ {(item.price * item.quantity).toFixed(2)}
+                        </Typography>
+                      </Box>
+                    </Paper>
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </Box>
+
+          {/* Footer do carrinho com total e botão de finalizar */}
+          {cart.length > 0 && (
+            <Box sx={{ p: 2, bgcolor: '#fafafa', borderTop: '1px solid #e0e0e0' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                  Total:
+                </Typography>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                  R$ {cartTotal.toFixed(2)}
+                </Typography>
+              </Box>
+              
+              <Button
                 fullWidth
-                label="Quantidade"
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                inputProps={{ min: 1 }}
-                sx={{ mt: 2 }}
-              />
+                variant="contained"
+                size="large"
+                sx={{
+                  bgcolor: '#1976d2',
+                  '&:hover': { bgcolor: '#1565c0' },
+                  py: 1.5,
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold',
+                  borderRadius: 2
+                }}
+              >
+                Finalizar Pedido
+              </Button>
             </Box>
           )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setProductDialogOpen(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={confirmAddToCart} variant="contained">
-            Adicionar ({formatCurrency((selectedProduct?.price || 0) * quantity)})
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Dialog de Pagamento */}
-      <Dialog open={paymentDialogOpen} onClose={() => setPaymentDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Finalizar Pedido</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-            <TextField
-              fullWidth
-              label="Nome do Cliente"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-            />
-            
-            <FormControl fullWidth>
-              <InputLabel>Tipo de Pedido</InputLabel>
-              <Select
-                value={orderType}
-                onChange={(e) => setOrderType(e.target.value as OrderType)}
-                label="Tipo de Pedido"
-              >
-                <MenuItem value={OrderType.DINE_IN}>Comer no Local</MenuItem>
-                <MenuItem value={OrderType.TAKEAWAY}>Para Viagem</MenuItem>
-                <MenuItem value={OrderType.DELIVERY}>Delivery</MenuItem>
-              </Select>
-            </FormControl>
-            
-            {orderType === OrderType.DINE_IN && (
-              <TextField
-                fullWidth
-                label="Número da Mesa"
-                type="number"
-                value={tableNumber || ''}
-                onChange={(e) => setTableNumber(parseInt(e.target.value) || null)}
-              />
-            )}
-            
-            <Box sx={{ p: 2, backgroundColor: 'grey.100', borderRadius: 1 }}>
-              <Typography variant="h6" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Total:</span>
-                <span>{formatCurrency(cartTotal)}</span>
-              </Typography>
-            </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setPaymentDialogOpen(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleCreateOrder} variant="contained" disabled={orderCreating}>
-            {orderCreating ? 'Processando...' : 'Confirmar Pedido'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={() => setSnackbarOpen(false)}
-        message={snackbarMessage}
-      />
+        </Paper>
+      </Box>
     </Box>
   );
-};
-
-export default POSMainPage;
+}
 

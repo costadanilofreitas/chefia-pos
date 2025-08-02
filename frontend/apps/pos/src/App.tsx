@@ -10,7 +10,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { useAuth, UserRole } from './hooks/useAuth';
 
 // Lazy load components for better performance
-const POSMainPage = lazy(() => import('./ui/POSMainPageMcDonalds'));
+const POSMainPage = lazy(() => import('./ui/POSMainPage'));
 const POSOrderPage = lazy(() => import('./ui/POSOrderPage'));
 const CounterOrdersPage = lazy(() => import('./ui/CounterOrdersPage'));
 const POSPaymentPage = lazy(() => import('./ui/POSPaymentPage'));
