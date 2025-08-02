@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useDelivery } from '../hooks/useDelivery';
 import {
   Box,
   Typography,
@@ -93,146 +94,91 @@ const DeliveryScreen: React.FC = () => {
   const { terminalId } = useParams<{ terminalId: string }>();
   const navigate = useNavigate();
   
-  const [orders, setOrders] = useState<DeliveryOrder[]>([]);
-  const [motoboys, setMotoboys] = useState<Motoboy[]>([]);
+  // Hook para integração com backend
+  const {
+    deliveryOrders,
+    couriers,
+    loading,
+    error,
+    loadDeliveryOrders,
+    loadCouriers,
+    assignCourier,
+    startDelivery,
+    completeDelivery,
+    cancelDeliveryOrder,
+    clearError
+  } = useDelivery();
+  
   const [selectedOrder, setSelectedOrder] = useState<DeliveryOrder | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'orders' | 'motoboys'>('orders');
 
   useEffect(() => {
-    loadDeliveryData();
-  }, []);
-
-  const loadDeliveryData = async () => {
-    setLoading(true);
+    // Carregar dados reais do backend (com fallback)
     try {
-      // Mock data para demonstração
-      const mockOrders: DeliveryOrder[] = [
-        {
-          id: '1',
-          customerId: 'c1',
-          customerName: 'Ana Silva',
-          address: {
-            id: 'a1',
-            customerId: 'c1',
-            customerName: 'Ana Silva',
-            street: 'Rua das Flores',
-            number: '123',
-            complement: 'Apto 45',
-            neighborhood: 'Centro',
-            city: 'São Paulo',
-            zipCode: '01234-567',
-            phone: '(11) 99999-1234',
-            isDefault: true
-          },
-          items: [
-            { id: '1', name: 'Pizza Margherita', quantity: 1, price: 35.90 },
-            { id: '2', name: 'Refrigerante 2L', quantity: 1, price: 8.50 }
-          ],
-          total: 44.40,
-          deliveryFee: 5.00,
-          status: 'preparing',
-          paymentMethod: 'card',
-          paymentStatus: 'paid',
-          estimatedTime: '45 min',
-          createdAt: '19:30',
-        },
-        {
-          id: '2',
-          customerId: 'c2',
-          customerName: 'João Santos',
-          address: {
-            id: 'a2',
-            customerId: 'c2',
-            customerName: 'João Santos',
-            street: 'Av. Paulista',
-            number: '1000',
-            neighborhood: 'Bela Vista',
-            city: 'São Paulo',
-            zipCode: '01310-100',
-            phone: '(11) 88888-5678',
-            isDefault: true
-          },
-          items: [
-            { id: '3', name: 'Hambúrguer Especial', quantity: 2, price: 28.90 },
-            { id: '4', name: 'Batata Frita', quantity: 1, price: 12.90 }
-          ],
-          total: 70.70,
-          deliveryFee: 6.00,
-          status: 'ready',
-          paymentMethod: 'cash',
-          paymentStatus: 'pending',
-          estimatedTime: '30 min',
-          createdAt: '20:15',
-        },
-        {
-          id: '3',
-          customerId: 'c3',
-          customerName: 'Maria Costa',
-          address: {
-            id: 'a3',
-            customerId: 'c3',
-            customerName: 'Maria Costa',
-            street: 'Rua Augusta',
-            number: '500',
-            neighborhood: 'Consolação',
-            city: 'São Paulo',
-            zipCode: '01305-000',
-            phone: '(11) 77777-9012',
-            isDefault: true
-          },
-          items: [
-            { id: '5', name: 'Salada Caesar', quantity: 1, price: 24.90 }
-          ],
-          total: 24.90,
-          deliveryFee: 4.50,
-          status: 'dispatched',
-          paymentMethod: 'pix',
-          paymentStatus: 'paid',
-          estimatedTime: '20 min',
-          motoboyId: 'm1',
-          motoboyName: 'Carlos Moto',
-          createdAt: '20:45',
-          dispatchedAt: '21:10'
-        }
-      ];
-
-      const mockMotoboys: Motoboy[] = [
-        {
-          id: 'm1',
-          name: 'Carlos Moto',
-          phone: '(11) 99999-0001',
-          status: 'busy',
-          currentDeliveries: 1,
-          maxDeliveries: 3
-        },
-        {
-          id: 'm2',
-          name: 'Pedro Delivery',
-          phone: '(11) 99999-0002',
-          status: 'available',
-          currentDeliveries: 0,
-          maxDeliveries: 2
-        },
-        {
-          id: 'm3',
-          name: 'Lucas Express',
-          phone: '(11) 99999-0003',
-          status: 'busy',
-          currentDeliveries: 2,
-          maxDeliveries: 3
-        }
-      ];
-
-      setOrders(mockOrders);
-      setMotoboys(mockMotoboys);
+      loadDeliveryOrders();
+      loadCouriers();
     } catch (error) {
       console.error('Erro ao carregar dados de delivery:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [loadDeliveryOrders, loadCouriers]);
+
+  // Converter dados do backend para formato da interface local (temporário)
+  // Com fallback para arrays vazios se não houver dados
+  const convertedOrders: DeliveryOrder[] = React.useMemo(() => {
+    if (!deliveryOrders || !Array.isArray(deliveryOrders)) {
+      return [];
+    }
+    
+    return deliveryOrders.map(order => ({
+      id: order.id,
+      customerId: order.customer_id,
+      customerName: 'Cliente', // Será preenchido quando tivermos integração com customers
+      address: {
+        id: order.address_id,
+        customerId: order.customer_id,
+        customerName: 'Cliente',
+        street: 'Endereço não carregado',
+        number: '',
+        neighborhood: '',
+        city: '',
+        zipCode: '',
+        phone: '',
+        isDefault: true
+      },
+      items: [], // Será preenchido quando tivermos integração com order items
+      total: 0,
+      deliveryFee: order.delivery_fee,
+      status: order.status as any,
+      paymentMethod: order.payment_method as any || 'cash',
+      paymentStatus: 'pending',
+      estimatedTime: order.estimated_delivery_time || '30 min',
+      motoboyId: order.courier_id,
+      motoboyName: couriers?.find(c => c.id === order.courier_id)?.name,
+      createdAt: new Date(order.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      dispatchedAt: undefined,
+      deliveredAt: order.actual_delivery_time ? new Date(order.actual_delivery_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : undefined
+    }));
+  }, [deliveryOrders, couriers]);
+
+  const convertedMotoboys: Motoboy[] = React.useMemo(() => {
+    if (!couriers || !Array.isArray(couriers)) {
+      return [];
+    }
+    
+    return couriers.map(courier => ({
+      id: courier.id,
+      name: courier.name,
+      phone: courier.phone,
+      status: courier.status as any,
+      currentDeliveries: 0, // Será calculado quando tivermos mais dados
+      maxDeliveries: 3,
+      location: courier.current_location ? {
+        lat: courier.current_location.latitude,
+        lng: courier.current_location.longitude
+      } : undefined
+    }));
+  }, [couriers]);
 
   const getStatusColor = (status: DeliveryOrder['status']) => {
     switch (status) {
@@ -260,66 +206,40 @@ const DeliveryScreen: React.FC = () => {
     }
   };
 
-  const handleOrderAction = (orderId: string, action: string, motoboyId?: string) => {
-    setOrders(prev => prev.map(order => {
-      if (order.id === orderId) {
-        switch (action) {
-          case 'confirm':
-            return { ...order, status: 'confirmed' as const };
-          case 'prepare':
-            return { ...order, status: 'preparing' as const };
-          case 'ready':
-            return { ...order, status: 'ready' as const };
-          case 'dispatch':
-            const motoboy = motoboys.find(m => m.id === motoboyId);
-            return { 
-              ...order, 
-              status: 'dispatched' as const,
-              motoboyId,
-              motoboyName: motoboy?.name,
-              dispatchedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-            };
-          case 'deliver':
-            return { 
-              ...order, 
-              status: 'delivered' as const,
-              deliveredAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-            };
-          case 'cancel':
-            return { ...order, status: 'cancelled' as const };
-          default:
-            return order;
-        }
+  const handleOrderAction = async (orderId: string, action: string, motoboyId?: string) => {
+    try {
+      switch (action) {
+        case 'confirm':
+          // Implementar quando tivermos endpoint específico de confirmação
+          break;
+        case 'prepare':
+          // Implementar quando tivermos endpoint específico de preparação
+          break;
+        case 'ready':
+          // Implementar quando tivermos endpoint específico de pronto
+          break;
+        case 'dispatch':
+          if (motoboyId) {
+            await assignCourier(orderId, motoboyId);
+            await startDelivery(orderId);
+          }
+          break;
+        case 'deliver':
+          await completeDelivery(orderId);
+          break;
+        case 'cancel':
+          await cancelDeliveryOrder(orderId, 'Cancelado pelo usuário');
+          break;
+        default:
+          break;
       }
-      return order;
-    }));
-
-    // Atualizar status do motoboy se necessário
-    if (action === 'dispatch' && motoboyId) {
-      setMotoboys(prev => prev.map(motoboy => 
-        motoboy.id === motoboyId 
-          ? { 
-              ...motoboy, 
-              currentDeliveries: motoboy.currentDeliveries + 1,
-              status: motoboy.currentDeliveries + 1 >= motoboy.maxDeliveries ? 'busy' as const : motoboy.status
-            }
-          : motoboy
-      ));
+      
+      // Recarregar dados após ação
+      await loadDeliveryOrders();
+      await loadCouriers();
+    } catch (error) {
+      console.error('Erro ao executar ação:', error);
     }
-
-    if (action === 'deliver' && selectedOrder?.motoboyId) {
-      setMotoboys(prev => prev.map(motoboy => 
-        motoboy.id === selectedOrder.motoboyId 
-          ? { 
-              ...motoboy, 
-              currentDeliveries: Math.max(0, motoboy.currentDeliveries - 1),
-              status: 'available' as const
-            }
-          : motoboy
-      ));
-    }
-
-    setDialogOpen(false);
   };
 
   const renderOrderCard = (order: DeliveryOrder) => (
@@ -428,7 +348,7 @@ const DeliveryScreen: React.FC = () => {
                 Pedidos Ativos
               </Typography>
               <Typography variant="h5" component="div">
-                {orders.filter(o => !['delivered', 'cancelled'].includes(o.status)).length}
+                {convertedOrders.filter(o => !['delivered', 'cancelled'].includes(o.status)).length}
               </Typography>
             </CardContent>
           </Card>
@@ -440,7 +360,7 @@ const DeliveryScreen: React.FC = () => {
                 Prontos para Entrega
               </Typography>
               <Typography variant="h5" component="div" color="green">
-                {orders.filter(o => o.status === 'ready').length}
+                {convertedOrders.filter(o => o.status === 'ready').length}
               </Typography>
             </CardContent>
           </Card>
@@ -452,7 +372,7 @@ const DeliveryScreen: React.FC = () => {
                 Em Entrega
               </Typography>
               <Typography variant="h5" component="div" color="blue">
-                {orders.filter(o => o.status === 'dispatched').length}
+                {convertedOrders.filter(o => o.status === 'dispatched').length}
               </Typography>
             </CardContent>
           </Card>
@@ -464,7 +384,7 @@ const DeliveryScreen: React.FC = () => {
                 Motoboys Disponíveis
               </Typography>
               <Typography variant="h5" component="div" color="green">
-                {motoboys.filter(m => m.status === 'available').length}
+                {convertedMotoboys.filter(m => m.status === 'available').length}
               </Typography>
             </CardContent>
           </Card>
@@ -494,15 +414,15 @@ const DeliveryScreen: React.FC = () => {
           <>
             <Grid item xs={12} md={4}>
               <Typography variant="h6" mb={2}>Pendentes/Preparando</Typography>
-              {orders.filter(o => ['pending', 'confirmed', 'preparing'].includes(o.status)).map(renderOrderCard)}
+              {convertedOrders.filter(o => ['pending', 'confirmed', 'preparing'].includes(o.status)).map(renderOrderCard)}
             </Grid>
             <Grid item xs={12} md={4}>
               <Typography variant="h6" mb={2}>Prontos</Typography>
-              {orders.filter(o => o.status === 'ready').map(renderOrderCard)}
+              {convertedOrders.filter(o => o.status === 'ready').map(renderOrderCard)}
             </Grid>
             <Grid item xs={12} md={4}>
               <Typography variant="h6" mb={2}>Em Entrega/Entregues</Typography>
-              {orders.filter(o => ['dispatched', 'delivered'].includes(o.status)).map(renderOrderCard)}
+              {convertedOrders.filter(o => ['dispatched', 'delivered'].includes(o.status)).map(renderOrderCard)}
             </Grid>
           </>
         )}
@@ -510,7 +430,7 @@ const DeliveryScreen: React.FC = () => {
         {activeTab === 'motoboys' && (
           <Grid item xs={12}>
             <Grid container spacing={2}>
-              {motoboys.map(motoboy => (
+              {convertedMotoboys.map(motoboy => (
                 <Grid item xs={12} md={4} key={motoboy.id}>
                   {renderMotoboyCard(motoboy)}
                 </Grid>
@@ -619,7 +539,7 @@ const DeliveryScreen: React.FC = () => {
                 value=""
                 onChange={(e) => handleOrderAction(selectedOrder.id, 'dispatch', e.target.value)}
               >
-                {motoboys.filter(m => m.status === 'available' || m.currentDeliveries < m.maxDeliveries).map(motoboy => (
+                {convertedMotoboys.filter(m => m.status === 'available' || m.currentDeliveries < m.maxDeliveries).map(motoboy => (
                   <MenuItem key={motoboy.id} value={motoboy.id}>
                     {motoboy.name}
                   </MenuItem>

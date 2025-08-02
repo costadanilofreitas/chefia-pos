@@ -29,7 +29,7 @@ from ..models.accounts_models import (
     AccountsEvent
 )
 
-from src.logging.services.log_service import log_info, log_error, LogSource
+from src.logs_module.services.log_service import log_info, log_error, LogSource
 from src.core.events.event_bus import get_event_bus, Event, EventType
 
 # Configuração

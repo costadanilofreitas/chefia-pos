@@ -20,7 +20,7 @@ from ..models.supplier_models import (
 )
 
 from src.stock.services.stock_service import stock_service
-from src.logging.services.log_service import log_info, log_error, LogSource
+from src.logs_module.services.log_service import log_info, log_error, LogSource
 
 # Configuration
 SUPPLIERS_DATA_FILE = os.path.join("/home/ubuntu/pos-modern/data", "suppliers.json")
