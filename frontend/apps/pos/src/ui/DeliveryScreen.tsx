@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDelivery } from '../hooks/useDelivery';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import {
   Box,
   Typography,
@@ -242,6 +244,124 @@ const DeliveryScreen: React.FC = () => {
     }
   };
 
+  const DraggableOrderCard: React.FC<{ order: DeliveryOrder }> = ({ order }) => {
+    const [{ isDragging }, drag] = useDrag(() => ({
+      type: 'order',
+      item: { id: order.id, status: order.status },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+    }));
+
+    return (
+      <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
+        <Card sx={{ mb: 2, cursor: 'move' }} onClick={() => { setSelectedOrder(order); setDialogOpen(true); }}>
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Typography variant="h6">
+                Pedido #{order.id}
+              </Typography>
+              <Chip 
+                label={getStatusText(order.status)}
+                color={getStatusColor(order.status)}
+                size="small"
+              />
+            </Box>
+
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              <Person fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
+              {order.customerName}
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              <LocationOn fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
+              {order.address.street}, {order.address.number} - {order.address.neighborhood}
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              <Phone fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
+              {order.address.phone}
+            </Typography>
+
+            <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
+              <Typography variant="body2">
+                Total: R$ {(order.total + order.deliveryFee).toFixed(2)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {order.estimatedTime} • {order.createdAt}
+              </Typography>
+            </Box>
+
+            {order.motoboyName && (
+              <Typography variant="body2" color="primary" mt={1}>
+                <TwoWheeler fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
+                {order.motoboyName}
+              </Typography>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const DroppableColumn: React.FC<{ 
+    title: string; 
+    status: DeliveryOrder['status'][]; 
+    onDrop: (orderId: string, newStatus: DeliveryOrder['status']) => void;
+    targetStatus: DeliveryOrder['status'];
+  }> = ({ title, status, onDrop, targetStatus }) => {
+    const [{ isOver }, drop] = useDrop(() => ({
+      accept: 'order',
+      drop: (item: { id: string; status: DeliveryOrder['status'] }) => {
+        if (item.status !== targetStatus) {
+          onDrop(item.id, targetStatus);
+        }
+      },
+      collect: (monitor) => ({
+        isOver: monitor.isOver(),
+      }),
+    }));
+
+    const orders = convertedOrders.filter(o => status.includes(o.status));
+
+    return (
+      <div ref={drop} style={{ minHeight: '400px', backgroundColor: isOver ? '#f0f0f0' : 'transparent', padding: '8px', borderRadius: '8px' }}>
+        <Typography variant="h6" mb={2}>{title}</Typography>
+        {orders.map(order => (
+          <DraggableOrderCard key={order.id} order={order} />
+        ))}
+      </div>
+    );
+  };
+
+  const handleDrop = async (orderId: string, newStatus: DeliveryOrder['status']) => {
+    try {
+      // Mapear status para ações
+      switch (newStatus) {
+        case 'confirmed':
+          await handleOrderAction(orderId, 'confirm');
+          break;
+        case 'preparing':
+          await handleOrderAction(orderId, 'prepare');
+          break;
+        case 'ready':
+          await handleOrderAction(orderId, 'ready');
+          break;
+        case 'dispatched':
+          // Para dispatch, precisamos de um motoboy - por enquanto, apenas mudamos o status
+          await handleOrderAction(orderId, 'dispatch');
+          break;
+        case 'delivered':
+          await handleOrderAction(orderId, 'deliver');
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error('Erro ao mover pedido:', error);
+    }
+  };
+
   const renderOrderCard = (order: DeliveryOrder) => (
     <Card key={order.id} sx={{ mb: 2, cursor: 'pointer' }} onClick={() => { setSelectedOrder(order); setDialogOpen(true); }}>
       <CardContent>
@@ -409,36 +529,50 @@ const DeliveryScreen: React.FC = () => {
       </Box>
 
       {/* Conteúdo */}
-      <Grid container spacing={3}>
-        {activeTab === 'orders' && (
-          <>
-            <Grid item xs={12} md={4}>
-              <Typography variant="h6" mb={2}>Pendentes/Preparando</Typography>
-              {convertedOrders.filter(o => ['pending', 'confirmed', 'preparing'].includes(o.status)).map(renderOrderCard)}
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Typography variant="h6" mb={2}>Prontos</Typography>
-              {convertedOrders.filter(o => o.status === 'ready').map(renderOrderCard)}
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Typography variant="h6" mb={2}>Em Entrega/Entregues</Typography>
-              {convertedOrders.filter(o => ['dispatched', 'delivered'].includes(o.status)).map(renderOrderCard)}
-            </Grid>
-          </>
-        )}
+      <DndProvider backend={HTML5Backend}>
+        <Grid container spacing={3}>
+          {activeTab === 'orders' && (
+            <>
+              <Grid item xs={12} md={4}>
+                <DroppableColumn
+                  title="Pendentes/Preparando"
+                  status={['pending', 'confirmed', 'preparing']}
+                  onDrop={handleDrop}
+                  targetStatus="preparing"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <DroppableColumn
+                  title="Prontos"
+                  status={['ready']}
+                  onDrop={handleDrop}
+                  targetStatus="ready"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <DroppableColumn
+                  title="Em Entrega/Entregues"
+                  status={['dispatched', 'delivered']}
+                  onDrop={handleDrop}
+                  targetStatus="dispatched"
+                />
+              </Grid>
+            </>
+          )}
 
-        {activeTab === 'motoboys' && (
-          <Grid item xs={12}>
-            <Grid container spacing={2}>
-              {convertedMotoboys.map(motoboy => (
-                <Grid item xs={12} md={4} key={motoboy.id}>
-                  {renderMotoboyCard(motoboy)}
-                </Grid>
-              ))}
+          {activeTab === 'motoboys' && (
+            <Grid item xs={12}>
+              <Grid container spacing={2}>
+                {convertedMotoboys.map(motoboy => (
+                  <Grid item xs={12} md={4} key={motoboy.id}>
+                    {renderMotoboyCard(motoboy)}
+                  </Grid>
+                ))}
+              </Grid>
             </Grid>
-          </Grid>
-        )}
-      </Grid>
+          )}
+        </Grid>
+      </DndProvider>
 
       {/* Dialog de Detalhes do Pedido */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>

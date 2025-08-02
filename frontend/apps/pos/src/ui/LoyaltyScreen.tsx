@@ -1027,7 +1027,181 @@ const LoyaltyScreen: React.FC = () => {
       </Paper>
 
       {/* Dialogs existentes e novos... */}
-      {/* (Implementação dos dialogs seria muito extensa, mas seguiria o mesmo padrão) */}
+      
+      {/* Dialog de Nova Campanha */}
+      <Dialog open={campaignDialogOpen} onClose={() => setCampaignDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Nova Campanha de Marketing</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Nome da Campanha"
+                placeholder="Ex: Promoção de Verão 2024"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Tipo de Campanha</InputLabel>
+                <Select defaultValue="">
+                  <MenuItem value="whatsapp">WhatsApp</MenuItem>
+                  <MenuItem value="email">E-mail</MenuItem>
+                  <MenuItem value="sms">SMS</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Segmento de Clientes</InputLabel>
+                <Select defaultValue="">
+                  <MenuItem value="all">Todos os Clientes</MenuItem>
+                  <MenuItem value="vip">Clientes VIP</MenuItem>
+                  <MenuItem value="regular">Clientes Regulares</MenuItem>
+                  <MenuItem value="inactive">Clientes Inativos</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                label="Mensagem da Campanha"
+                placeholder="Digite a mensagem que será enviada aos clientes..."
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="datetime-local"
+                label="Data de Início"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="datetime-local"
+                label="Data de Fim"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCampaignDialogOpen(false)}>Cancelar</Button>
+          <Button 
+            variant="contained" 
+            onClick={() => {
+              // Implementar criação de campanha
+              setCampaignDialogOpen(false);
+              setSnackbar({
+                open: true,
+                message: 'Campanha criada com sucesso!',
+                severity: 'success'
+              });
+            }}
+          >
+            Criar Campanha
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog de Novo Cupom */}
+      <Dialog open={couponDialogOpen} onClose={() => setCouponDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Novo Cupom de Desconto</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Código do Cupom"
+                placeholder="Ex: DESCONTO10"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Tipo de Desconto</InputLabel>
+                <Select defaultValue="">
+                  <MenuItem value="percentage">Porcentagem (%)</MenuItem>
+                  <MenuItem value="fixed">Valor Fixo (R$)</MenuItem>
+                  <MenuItem value="points">Pontos de Fidelidade</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Valor do Desconto"
+                placeholder="Ex: 10"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Compra Mínima (R$)"
+                placeholder="Ex: 50.00"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Descrição"
+                placeholder="Ex: 10% de desconto em pedidos acima de R$ 50"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="date"
+                label="Válido de"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="date"
+                label="Válido até"
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Limite de Uso"
+                placeholder="Ex: 100"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={<Switch defaultChecked />}
+                label="Cupom Ativo"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCouponDialogOpen(false)}>Cancelar</Button>
+          <Button 
+            variant="contained" 
+            onClick={() => {
+              // Implementar criação de cupom
+              setCouponDialogOpen(false);
+              setSnackbar({
+                open: true,
+                message: 'Cupom criado com sucesso!',
+                severity: 'success'
+              });
+            }}
+          >
+            Criar Cupom
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar para notificações */}
       <Snackbar
