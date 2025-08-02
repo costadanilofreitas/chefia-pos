@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
 from datetime import datetime
+import logging
 
 from src.auth.security import get_current_active_user, has_permission
 from src.auth.models import User, Permission
@@ -24,6 +25,8 @@ from src.cashier.services.cashier_service import (
 from src.business_day.services.business_day_service import (
     get_business_day_service
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/api/v1/cashier",
@@ -251,35 +254,46 @@ async def get_terminal_cashier_status(
     Retorna informações sobre se há um caixa aberto no terminal,
     qual operador está usando e dados básicos do caixa.
     """
-    service = get_cashier_service()
-    business_day_service = get_business_day_service()
-    
-    # Buscar caixa aberto no terminal
-    terminal_cashier = await service.get_cashier_by_terminal(terminal_id)
-    
-    if not terminal_cashier:
+    try:
+        service = get_cashier_service()
+        business_day_service = get_business_day_service()
+        
+        # Buscar caixa aberto no terminal
+        terminal_cashier = await service.get_cashier_by_terminal(terminal_id)
+        
+        if not terminal_cashier:
+            return {
+                "has_open_cashier": False,
+                "terminal_id": terminal_id,
+                "message": "Nenhum caixa aberto neste terminal"
+            }
+        
+        # Buscar dia de operação (com tratamento de erro)
+        business_day = None
+        try:
+            business_day = await business_day_service.get_business_day(terminal_cashier.business_day_id)
+        except Exception as e:
+            logger.warning(f"Erro ao buscar business_day {terminal_cashier.business_day_id}: {e}")
+        
         return {
-            "has_open_cashier": False,
+            "has_open_cashier": True,
             "terminal_id": terminal_id,
-            "message": "Nenhum caixa aberto neste terminal"
+            "cashier_id": terminal_cashier.id,
+            "operator_id": terminal_cashier.current_operator_id,
+            "operator_name": getattr(terminal_cashier, 'current_operator_name', 'Operador'),
+            "opened_at": terminal_cashier.opened_at,
+            "initial_balance": terminal_cashier.initial_balance,
+            "current_balance": terminal_cashier.current_balance,
+            "business_day_id": terminal_cashier.business_day_id,
+            "business_day_date": business_day.date if business_day else None,
+            "status": terminal_cashier.status
         }
-    
-    # Buscar dia de operação
-    business_day = await business_day_service.get_business_day(terminal_cashier.business_day_id)
-    
-    return {
-        "has_open_cashier": True,
-        "terminal_id": terminal_id,
-        "cashier_id": terminal_cashier.id,
-        "operator_id": terminal_cashier.current_operator_id,
-        "operator_name": terminal_cashier.current_operator_name,
-        "opened_at": terminal_cashier.opened_at,
-        "initial_balance": terminal_cashier.initial_balance,
-        "current_balance": terminal_cashier.current_balance,
-        "business_day_id": terminal_cashier.business_day_id,
-        "business_day_date": business_day.date if business_day else None,
-        "status": terminal_cashier.status
-    }
+    except Exception as e:
+        logger.error(f"Erro ao verificar status do terminal {terminal_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno ao verificar status do terminal: {str(e)}"
+        )
 
 
 @router.get("", response_model=List[CashierSummary])

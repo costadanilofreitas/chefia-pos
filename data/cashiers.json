@@ -1,1 +1,19 @@
-[]
+[
+  {
+    "terminal_id": "1",
+    "business_day_id": "bd_2025-08-02",
+    "id": "7550cfbd-047f-4148-a23a-e62370d52090",
+    "status": "closed",
+    "current_operator_id": "123",
+    "opening_balance": 0.1,
+    "current_balance": 0.1,
+    "expected_balance": 0.1,
+    "physical_cash_amount": 0.01,
+    "cash_difference": -0.09000000000000001,
+    "opened_at": "2025-08-02T00:35:26.418122",
+    "closed_at": "2025-08-02T00:41:15.840815",
+    "created_at": "2025-08-02T00:35:26.418122",
+    "updated_at": "2025-08-02T00:41:15.840815",
+    "notes": "Fechamento para teste"
+  }
+]
