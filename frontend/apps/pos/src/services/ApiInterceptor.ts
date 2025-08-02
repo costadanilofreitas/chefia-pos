@@ -225,9 +225,37 @@ export class ApiInterceptor {
   }
 
   private saveTokenToStorage(): void {
+    console.log('💾 SAVE TOKEN DEBUG: Starting saveTokenToStorage...');
+    console.log('💾 SAVE TOKEN DEBUG: tokenData exists:', this.tokenData ? 'YES' : 'NO');
+    
     if (this.tokenData) {
-      localStorage.setItem('auth_token', JSON.stringify(this.tokenData));
-      localStorage.setItem('auth_token_expiration', this.tokenExpirationTime.toString());
+      try {
+        const tokenStr = JSON.stringify(this.tokenData);
+        console.log('💾 SAVE TOKEN DEBUG: Token serialized successfully, length:', tokenStr.length);
+        console.log('💾 SAVE TOKEN DEBUG: Token preview:', tokenStr.substring(0, 100) + '...');
+        
+        localStorage.setItem('auth_token', tokenStr);
+        console.log('💾 SAVE TOKEN DEBUG: Token saved to localStorage');
+        
+        localStorage.setItem('auth_token_expiration', this.tokenExpirationTime.toString());
+        console.log('💾 SAVE TOKEN DEBUG: Expiration saved:', this.tokenExpirationTime);
+        
+        // Verificar se foi salvo corretamente
+        const savedToken = localStorage.getItem('auth_token');
+        const savedExpiration = localStorage.getItem('auth_token_expiration');
+        console.log('💾 SAVE TOKEN DEBUG: Verification - token exists:', savedToken ? 'YES' : 'NO');
+        console.log('💾 SAVE TOKEN DEBUG: Verification - expiration exists:', savedExpiration ? 'YES' : 'NO');
+        
+        if (!savedToken) {
+          console.error('❌ SAVE TOKEN ERROR: Token was not saved to localStorage!');
+        } else {
+          console.log('✅ SAVE TOKEN SUCCESS: Token successfully persisted');
+        }
+      } catch (error) {
+        console.error('❌ SAVE TOKEN ERROR: Failed to save token:', error);
+      }
+    } else {
+      console.log('⚠️ SAVE TOKEN WARNING: No tokenData to save');
     }
   }
 

@@ -160,8 +160,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
         onChange={(e) => setOperatorId(e.target.value)}
         margin="normal"
         disabled={isLoading}
-        type="number"
-        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+        type="text"
+        placeholder="Ex: manager, admin, cashier"
       />
       
       <TextField
@@ -172,7 +172,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
         onChange={(e) => setPassword(e.target.value)}
         margin="normal"
         disabled={isLoading}
-        inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+        placeholder="Digite sua senha"
       />
 
       {error && (
@@ -230,13 +230,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onSuccess }) => 
             <strong>Credenciais de teste:</strong>
           </Typography>
           <Typography variant="caption" display="block">
-            • Manager: 123 / 456789
+            • Manager: manager / 123456789
           </Typography>
           <Typography variant="caption" display="block">
-            • Admin: 456 / 123456
+            • Admin: admin / 456123456
           </Typography>
           <Typography variant="caption" display="block">
-            • Cashier: 789 / 654321
+            • Cashier: cashier / 789654321
           </Typography>
         </Box>
       </DialogContent>

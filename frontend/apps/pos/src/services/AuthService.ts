@@ -112,9 +112,9 @@ class AuthService {
     const validCredentials = [
       { operator_id: 'gerente', password: 'senha123', name: 'Gerente Principal', roles: ['gerente'], permissions: ['produto:ler', 'pedido:criar', 'pedido:ler', 'caixa:abrir', 'caixa:fechar'] },
       { operator_id: 'caixa', password: 'senha123', name: 'Operador de Caixa', roles: ['caixa'], permissions: ['produto:ler', 'pedido:criar', 'pedido:ler', 'caixa:abrir'] },
-      { operator_id: 'admin', password: '147258', name: 'Admin', roles: ['admin'], permissions: ['read', 'write', 'delete'] },
-      { operator_id: 'manager', password: '123456', name: 'Manager', roles: ['manager'], permissions: ['read', 'write'] },
-      { operator_id: 'cashier', password: '654321', name: 'Cashier', roles: ['cashier'], permissions: ['read'] }
+      { operator_id: 'admin', password: '456123456', name: 'Admin', roles: ['admin'], permissions: ['read', 'write', 'delete'] },
+      { operator_id: 'manager', password: '123456789', name: 'Manager', roles: ['manager'], permissions: ['read', 'write'] },
+      { operator_id: 'cashier', password: '789654321', name: 'Cashier', roles: ['cashier'], permissions: ['read'] }
     ];
 
     const validUser = validCredentials.find(

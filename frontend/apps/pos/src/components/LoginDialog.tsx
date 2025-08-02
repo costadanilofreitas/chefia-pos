@@ -47,8 +47,8 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onSuccess }) =
 
   const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
-    // Permitir apenas dígitos e máximo 6 caracteres
-    if (/^\d{0,6}$/.test(value)) {
+    // Permitir apenas dígitos e máximo 12 caracteres
+    if (/^\d{0,12}$/.test(value)) {
       setFormData(prev => ({
         ...prev,
         password: value
@@ -65,8 +65,8 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onSuccess }) =
       return;
     }
 
-    if (formData.password.length !== 6) {
-      setError('Senha deve ter exatamente 6 dígitos');
+    if (formData.password.length < 3) {
+      setError('Senha deve ter pelo menos 3 dígitos');
       return;
     }
 
@@ -156,10 +156,10 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onSuccess }) =
               fullWidth
               required
               disabled={loading}
-              placeholder="6 dígitos"
+              placeholder="3-12 dígitos"
               inputProps={{
-                maxLength: 6,
-                pattern: '[0-9]{6}',
+                maxLength: 12,
+                pattern: '[0-9]{3,12}',
                 inputMode: 'numeric'
               }}
               InputProps={{
@@ -180,7 +180,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onSuccess }) =
                   </InputAdornment>
                 ),
               }}
-              helperText="Senha de 6 dígitos numéricos"
+              helperText="Senha de 3-12 dígitos numéricos"
             />
 
             <Box 
@@ -196,9 +196,9 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onSuccess }) =
                 <strong>Credenciais de Teste:</strong>
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                • Admin: <code>admin</code> / <code>147258</code><br/>
-                • Manager: <code>manager</code> / <code>123456</code><br/>
-                • Cashier: <code>cashier</code> / <code>654321</code>
+                • Admin: <code>admin</code> / <code>456123456</code><br/>
+                • Manager: <code>manager</code> / <code>123456789</code><br/>
+                • Cashier: <code>cashier</code> / <code>789654321</code>
               </Typography>
             </Box>
           </Box>
@@ -215,7 +215,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ open, onClose, onSuccess }) =
           <Button 
             type="submit"
             variant="contained" 
-            disabled={loading || !formData.operator_id.trim() || formData.password.length !== 6}
+            disabled={loading || !formData.operator_id.trim() || formData.password.length < 3}
             startIcon={loading ? <CircularProgress size={20} /> : <Lock />}
           >
             {loading ? 'Autenticando...' : 'Entrar'}
