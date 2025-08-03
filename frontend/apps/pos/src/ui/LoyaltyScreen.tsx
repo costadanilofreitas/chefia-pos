@@ -249,15 +249,14 @@ const LoyaltyScreen: React.FC = () => {
 
   const [couponForm, setCouponForm] = useState({
     code: '',
-    type: 'percentage' as const,
-    value: 0,
+    discount_type: 'percentage' as const,
+    discount_value: '',
+    minimum_purchase: '',
     description: '',
-    minPurchase: 0,
-    maxDiscount: 0,
-    validFrom: '',
-    validUntil: '',
-    usageLimit: 1,
-    applicableProducts: [] as string[]
+    valid_from: '',
+    valid_until: '',
+    usage_limit: '',
+    is_active: true
   });
 
   const [pointsForm, setPointsForm] = useState({
@@ -284,10 +283,28 @@ const LoyaltyScreen: React.FC = () => {
       // Carregar dados reais do backend
       await loadCustomers();
       
+      // Carregar cupons do backend
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const couponsResponse = await fetch('http://localhost:8001/api/v1/coupons/', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Origin': 'http://localhost:3000'
+            }
+          });
+          if (couponsResponse.ok) {
+            const couponsData = await couponsResponse.json();
+            setCoupons(couponsData);
+          }
+        } catch (error) {
+          console.error('Erro ao carregar cupons:', error);
+        }
+      }
+      
       // Dados reais baseados nos customers do backend
       const realCustomers = customers || [];
       const realCampaigns: Campaign[] = []; // Array vazio até implementar no backend
-      const realCoupons: Coupon[] = []; // Array vazio até implementar no backend
       const realTransactions: LoyaltyTransaction[] = []; // Array vazio até implementar no backend
       
       // Analytics calculados com dados reais
@@ -308,7 +325,6 @@ const LoyaltyScreen: React.FC = () => {
       };
 
       setCampaigns(realCampaigns);
-      setCoupons(realCoupons);
       setTransactions(realTransactions);
       setAnalytics(realAnalytics);
       
@@ -1117,12 +1133,17 @@ const LoyaltyScreen: React.FC = () => {
                 fullWidth
                 label="Código do Cupom"
                 placeholder="Ex: DESCONTO10"
+                value={couponForm.code}
+                onChange={(e) => setCouponForm(prev => ({ ...prev, code: e.target.value }))}
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
                 <InputLabel>Tipo de Desconto</InputLabel>
-                <Select defaultValue="">
+                <Select 
+                  value={couponForm.discount_type}
+                  onChange={(e) => setCouponForm(prev => ({ ...prev, discount_type: e.target.value as 'percentage' | 'fixed' | 'points' }))}
+                >
                   <MenuItem value="percentage">Porcentagem (%)</MenuItem>
                   <MenuItem value="fixed">Valor Fixo (R$)</MenuItem>
                   <MenuItem value="points">Pontos de Fidelidade</MenuItem>
@@ -1135,6 +1156,8 @@ const LoyaltyScreen: React.FC = () => {
                 type="number"
                 label="Valor do Desconto"
                 placeholder="Ex: 10"
+                value={couponForm.discount_value}
+                onChange={(e) => setCouponForm(prev => ({ ...prev, discount_value: e.target.value }))}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -1143,6 +1166,8 @@ const LoyaltyScreen: React.FC = () => {
                 type="number"
                 label="Compra Mínima (R$)"
                 placeholder="Ex: 50.00"
+                value={couponForm.minimum_purchase}
+                onChange={(e) => setCouponForm(prev => ({ ...prev, minimum_purchase: e.target.value }))}
               />
             </Grid>
             <Grid item xs={12}>
@@ -1150,6 +1175,8 @@ const LoyaltyScreen: React.FC = () => {
                 fullWidth
                 label="Descrição"
                 placeholder="Ex: 10% de desconto em pedidos acima de R$ 50"
+                value={couponForm.description}
+                onChange={(e) => setCouponForm(prev => ({ ...prev, description: e.target.value }))}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -1158,6 +1185,8 @@ const LoyaltyScreen: React.FC = () => {
                 type="date"
                 label="Válido de"
                 InputLabelProps={{ shrink: true }}
+                value={couponForm.valid_from}
+                onChange={(e) => setCouponForm(prev => ({ ...prev, valid_from: e.target.value }))}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -1166,6 +1195,8 @@ const LoyaltyScreen: React.FC = () => {
                 type="date"
                 label="Válido até"
                 InputLabelProps={{ shrink: true }}
+                value={couponForm.valid_until}
+                onChange={(e) => setCouponForm(prev => ({ ...prev, valid_until: e.target.value }))}
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -1174,11 +1205,18 @@ const LoyaltyScreen: React.FC = () => {
                 type="number"
                 label="Limite de Uso"
                 placeholder="Ex: 100"
+                value={couponForm.usage_limit}
+                onChange={(e) => setCouponForm(prev => ({ ...prev, usage_limit: e.target.value }))}
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <FormControlLabel
-                control={<Switch defaultChecked />}
+                control={
+                  <Switch 
+                    checked={couponForm.is_active}
+                    onChange={(e) => setCouponForm(prev => ({ ...prev, is_active: e.target.checked }))}
+                  />
+                }
                 label="Cupom Ativo"
               />
             </Grid>
@@ -1188,14 +1226,76 @@ const LoyaltyScreen: React.FC = () => {
           <Button onClick={() => setCouponDialogOpen(false)}>Cancelar</Button>
           <Button 
             variant="contained" 
-            onClick={() => {
-              // Implementar criação de cupom
-              setCouponDialogOpen(false);
-              setSnackbar({
-                open: true,
-                message: 'Cupom criado com sucesso!',
-                severity: 'success'
-              });
+            onClick={async () => {
+              try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  setSnackbar({
+                    open: true,
+                    message: 'Token de autenticação não encontrado',
+                    severity: 'error'
+                  });
+                  return;
+                }
+
+                const couponData = {
+                  code: couponForm.code,
+                  discount_type: couponForm.discount_type || 'percentage',
+                  discount_value: parseFloat(couponForm.discount_value) || 0,
+                  minimum_purchase: parseFloat(couponForm.minimum_purchase) || 0,
+                  description: couponForm.description,
+                  valid_from: couponForm.valid_from,
+                  valid_until: couponForm.valid_until,
+                  usage_limit: parseInt(couponForm.usage_limit) || 0,
+                  is_active: couponForm.is_active
+                };
+
+                const response = await fetch('http://localhost:8001/api/v1/coupons/', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'Origin': 'http://localhost:3000'
+                  },
+                  body: JSON.stringify(couponData)
+                });
+
+                if (response.ok) {
+                  const newCoupon = await response.json();
+                  setCoupons(prev => [...prev, newCoupon]);
+                  setCouponDialogOpen(false);
+                  setCouponForm({
+                    code: '',
+                    discount_type: 'percentage',
+                    discount_value: '',
+                    minimum_purchase: '',
+                    description: '',
+                    valid_from: '',
+                    valid_until: '',
+                    usage_limit: '',
+                    is_active: true
+                  });
+                  setSnackbar({
+                    open: true,
+                    message: 'Cupom criado com sucesso!',
+                    severity: 'success'
+                  });
+                } else {
+                  const errorData = await response.json();
+                  setSnackbar({
+                    open: true,
+                    message: `Erro ao criar cupom: ${errorData.detail || 'Erro desconhecido'}`,
+                    severity: 'error'
+                  });
+                }
+              } catch (error) {
+                console.error('Erro ao criar cupom:', error);
+                setSnackbar({
+                  open: true,
+                  message: 'Erro ao criar cupom',
+                  severity: 'error'
+                });
+              }
             }}
           >
             Criar Cupom
