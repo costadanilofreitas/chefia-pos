@@ -719,8 +719,14 @@ class SupplierService:
             
             month_str = month.strftime("%Y-%m")
             months[month_str] = sum(
-                1 for po in self.purchase_orders
-                if datetime.fromisoformat(po.get("created_at")) if isinstance(po.get("created_at"), str) else po.get("created_at").strftime("%Y-%m") == month_str
+                1
+                for po in self.purchase_orders
+                if (
+                    (datetime.fromisoformat(po["created_at"])
+                    if isinstance(po["created_at"], str)
+                    else po["created_at"]
+                    ).strftime("%Y-%m") == month_str
+                )
             )
         
         return {
