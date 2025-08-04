@@ -43,8 +43,8 @@ async def create_terminal_config(
 
 @router.put("/configs/{terminal_id}", response_model=TerminalConfig)
 async def update_terminal_config(
-    terminal_id: str = Path(..., description="ID do terminal"),
     config: TerminalConfig,
+    terminal_id: str = Path(..., description="ID do terminal"),
     terminal_service: TerminalService = Depends()
 ):
     """Atualiza a configuração de um terminal."""
@@ -92,8 +92,8 @@ async def get_terminal_session(
 
 @router.put("/sessions/{session_id}/status", response_model=TerminalSession)
 async def update_terminal_status(
-    session_id: str = Path(..., description="ID da sessão"),
     status: TerminalStatus,
+    session_id: str = Path(..., description="ID da sessão"),
     battery_level: Optional[int] = Query(None, description="Nível de bateria em percentual"),
     signal_strength: Optional[int] = Query(None, description="Força do sinal em percentual"),
     terminal_service: TerminalService = Depends()
