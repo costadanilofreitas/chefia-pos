@@ -146,9 +146,9 @@ class EventLogger:
             return []
         
         try:
-            # Consultar eventos no banco de dados
+            # Consultar eventos no banco de dados ordenado por timestamp (decrescente)
             cursor = self.database.transaction_events.find(criteria) \
-                .sort("timestamp", -1) \  # Ordenar por timestamp (decrescente)
+                .sort("timestamp", -1) \
                 .skip(skip) \
                 .limit(limit)
             
