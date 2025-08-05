@@ -5,8 +5,10 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 import uuid
 
+
 class KioskConfig(BaseModel):
     """Configuration model for a self-service kiosk."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     location: str
@@ -23,7 +25,7 @@ class KioskConfig(BaseModel):
     welcome_message: Optional[str] = "Bem-vindo! Toque para começar seu pedido."
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -39,12 +41,14 @@ class KioskConfig(BaseModel):
                 "enable_combos": True,
                 "enable_customization": True,
                 "logo_url": "/assets/logo.png",
-                "welcome_message": "Bem-vindo! Toque para começar seu pedido."
+                "welcome_message": "Bem-vindo! Toque para começar seu pedido.",
             }
         }
 
+
 class KioskSession(BaseModel):
     """Model for tracking a customer session on the kiosk."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     kiosk_id: str
     started_at: datetime = Field(default_factory=datetime.utcnow)
@@ -52,8 +56,10 @@ class KioskSession(BaseModel):
     ended_at: Optional[datetime] = None
     order_id: Optional[str] = None  # ID of the order created in this session
     session_completed: bool = False  # Whether the session resulted in a completed order
-    interaction_data: Dict[str, Any] = {}  # For analytics (pages viewed, time spent, etc.)
-    
+    interaction_data: Dict[str, Any] = (
+        {}
+    )  # For analytics (pages viewed, time spent, etc.)
+
     class Config:
         schema_extra = {
             "example": {
@@ -67,13 +73,15 @@ class KioskSession(BaseModel):
                     "pages_viewed": ["welcome", "menu", "cart", "payment"],
                     "time_spent_seconds": 650,
                     "items_viewed": 12,
-                    "search_terms": ["hamburguer", "batata"]
-                }
+                    "search_terms": ["hamburguer", "batata"],
+                },
             }
         }
 
+
 class KioskOrderItem(BaseModel):
     """Model for an item in a kiosk order (simplified for UI)."""
+
     product_id: str
     product_name: str
     quantity: int = 1
@@ -81,7 +89,7 @@ class KioskOrderItem(BaseModel):
     total_price: float
     customizations: List[Dict[str, Any]] = []
     notes: Optional[str] = None
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -92,21 +100,23 @@ class KioskOrderItem(BaseModel):
                 "total_price": 31.80,
                 "customizations": [
                     {"name": "Sem cebola", "price_adjustment": 0.0},
-                    {"name": "Queijo extra", "price_adjustment": 2.50}
+                    {"name": "Queijo extra", "price_adjustment": 2.50},
                 ],
-                "notes": "Bem passado, por favor"
+                "notes": "Bem passado, por favor",
             }
         }
 
+
 class KioskOrder(BaseModel):
     """Model for a kiosk order (simplified for UI)."""
+
     id: Optional[str] = None
     items: List[KioskOrderItem] = []
     subtotal: float = 0.0
     tax: float = 0.0
     discount: float = 0.0
     total: float = 0.0
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -119,8 +129,8 @@ class KioskOrder(BaseModel):
                         "total_price": 31.80,
                         "customizations": [
                             {"name": "Sem cebola", "price_adjustment": 0.0},
-                            {"name": "Queijo extra", "price_adjustment": 2.50}
-                        ]
+                            {"name": "Queijo extra", "price_adjustment": 2.50},
+                        ],
                     },
                     {
                         "product_id": "223e4567-e89b-12d3-a456-426614174001",
@@ -128,18 +138,20 @@ class KioskOrder(BaseModel):
                         "quantity": 1,
                         "unit_price": 12.90,
                         "total_price": 12.90,
-                        "customizations": []
-                    }
+                        "customizations": [],
+                    },
                 ],
                 "subtotal": 44.70,
                 "tax": 4.47,
                 "discount": 0.0,
-                "total": 49.17
+                "total": 49.17,
             }
         }
 
+
 class KioskAnalytics(BaseModel):
     """Model for kiosk usage analytics."""
+
     kiosk_id: str
     date: datetime = Field(default_factory=lambda: datetime.utcnow().date())
     total_sessions: int = 0
@@ -150,7 +162,7 @@ class KioskAnalytics(BaseModel):
     most_viewed_category: Optional[str] = None
     most_ordered_product: Optional[str] = None
     total_revenue: float = 0.0
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -163,6 +175,6 @@ class KioskAnalytics(BaseModel):
                 "peak_hour": 12,
                 "most_viewed_category": "Lanches",
                 "most_ordered_product": "Hambúrguer Clássico",
-                "total_revenue": 3245.67
+                "total_revenue": 3245.67,
             }
         }

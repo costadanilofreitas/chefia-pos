@@ -6,8 +6,10 @@ from datetime import datetime
 import uuid
 import re
 
+
 class Address(BaseModel):
     """Model for a supplier address."""
+
     street: str
     number: str
     complement: Optional[str] = None
@@ -16,19 +18,19 @@ class Address(BaseModel):
     state: str
     zip_code: str
     country: str = "Brasil"
-    
-    @validator('zip_code')
+
+    @validator("zip_code")
     def validate_zip_code(cls, v):
         # Remove non-numeric characters
-        v = re.sub(r'\D', '', v)
-        
+        v = re.sub(r"\D", "", v)
+
         # Check if it's a valid Brazilian CEP
         if len(v) != 8:
-            raise ValueError('CEP must have 8 digits')
-        
+            raise ValueError("CEP must have 8 digits")
+
         # Format as 00000-000
         return f"{v[:5]}-{v[5:]}"
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -39,34 +41,36 @@ class Address(BaseModel):
                 "city": "São Paulo",
                 "state": "SP",
                 "zip_code": "01310-100",
-                "country": "Brasil"
+                "country": "Brasil",
             }
         }
 
+
 class Contact(BaseModel):
     """Model for a supplier contact."""
+
     name: str
     role: Optional[str] = None
     email: EmailStr
     phone: str
     is_primary: bool = False
     notes: Optional[str] = None
-    
-    @validator('phone')
+
+    @validator("phone")
     def validate_phone(cls, v):
         # Remove non-numeric characters
-        v = re.sub(r'\D', '', v)
-        
+        v = re.sub(r"\D", "", v)
+
         # Check if it's a valid Brazilian phone number
         if len(v) < 10 or len(v) > 11:
-            raise ValueError('Phone must have 10 or 11 digits')
-        
+            raise ValueError("Phone must have 10 or 11 digits")
+
         # Format as (00) 00000-0000 or (00) 0000-0000
         if len(v) == 11:
             return f"({v[:2]}) {v[2:7]}-{v[7:]}"
         else:
             return f"({v[:2]}) {v[2:6]}-{v[6:]}"
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -75,27 +79,31 @@ class Contact(BaseModel):
                 "email": "joao.silva@fornecedor.com",
                 "phone": "(11) 98765-4321",
                 "is_primary": True,
-                "notes": "Prefere contato por email"
+                "notes": "Prefere contato por email",
             }
         }
 
+
 class PaymentTerm(BaseModel):
     """Model for supplier payment terms."""
+
     days: int
     discount_percentage: float = 0.0
     description: Optional[str] = None
-    
+
     class Config:
         schema_extra = {
             "example": {
                 "days": 30,
                 "discount_percentage": 2.5,
-                "description": "2.5% de desconto para pagamento em 30 dias"
+                "description": "2.5% de desconto para pagamento em 30 dias",
             }
         }
 
+
 class SupplierProduct(BaseModel):
     """Model for a product supplied by a supplier."""
+
     product_id: str
     product_name: str
     supplier_code: Optional[str] = None
@@ -105,7 +113,7 @@ class SupplierProduct(BaseModel):
     is_preferred: bool = False
     last_purchase_date: Optional[datetime] = None
     last_purchase_price: Optional[float] = None
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -117,12 +125,14 @@ class SupplierProduct(BaseModel):
                 "lead_time_days": 3,
                 "is_preferred": True,
                 "last_purchase_date": "2025-05-20T10:00:00",
-                "last_purchase_price": 2.45
+                "last_purchase_price": 2.45,
             }
         }
 
+
 class Supplier(BaseModel):
     """Model for a supplier."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     trading_name: Optional[str] = None
@@ -138,28 +148,28 @@ class Supplier(BaseModel):
     notes: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    
-    @validator('document')
+
+    @validator("document")
     def validate_document(cls, v, values):
         # Remove non-numeric characters
-        v = re.sub(r'\D', '', v)
-        
+        v = re.sub(r"\D", "", v)
+
         # Check document type
-        doc_type = values.get('document_type', 'CNPJ')
-        
-        if doc_type == 'CNPJ':
+        doc_type = values.get("document_type", "CNPJ")
+
+        if doc_type == "CNPJ":
             if len(v) != 14:
-                raise ValueError('CNPJ must have 14 digits')
-            
+                raise ValueError("CNPJ must have 14 digits")
+
             # Format as 00.000.000/0000-00
             return f"{v[:2]}.{v[2:5]}.{v[5:8]}/{v[8:12]}-{v[12:]}"
         else:  # CPF
             if len(v) != 11:
-                raise ValueError('CPF must have 11 digits')
-            
+                raise ValueError("CPF must have 11 digits")
+
             # Format as 000.000.000-00
             return f"{v[:3]}.{v[3:6]}.{v[6:9]}-{v[9:]}"
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -175,7 +185,7 @@ class Supplier(BaseModel):
                     "city": "São Paulo",
                     "state": "SP",
                     "zip_code": "04000-000",
-                    "country": "Brasil"
+                    "country": "Brasil",
                 },
                 "contacts": [
                     {
@@ -183,31 +193,33 @@ class Supplier(BaseModel):
                         "role": "Gerente de Contas",
                         "email": "maria@premiumfoods.com",
                         "phone": "(11) 98765-4321",
-                        "is_primary": True
+                        "is_primary": True,
                     }
                 ],
                 "payment_terms": [
                     {
                         "days": 30,
                         "discount_percentage": 2.0,
-                        "description": "2% de desconto para pagamento em 30 dias"
+                        "description": "2% de desconto para pagamento em 30 dias",
                     },
                     {
                         "days": 15,
                         "discount_percentage": 3.5,
-                        "description": "3.5% de desconto para pagamento em 15 dias"
-                    }
+                        "description": "3.5% de desconto para pagamento em 15 dias",
+                    },
                 ],
                 "website": "https://www.premiumfoods.com",
                 "category": "Alimentos",
                 "rating": 5,
                 "is_active": True,
-                "notes": "Fornecedor preferencial para carnes"
+                "notes": "Fornecedor preferencial para carnes",
             }
         }
 
+
 class SupplierCreate(BaseModel):
     """Model for creating a supplier."""
+
     name: str
     trading_name: Optional[str] = None
     document: str
@@ -221,8 +233,10 @@ class SupplierCreate(BaseModel):
     is_active: bool = True
     notes: Optional[str] = None
 
+
 class SupplierUpdate(BaseModel):
     """Model for updating a supplier."""
+
     name: Optional[str] = None
     trading_name: Optional[str] = None
     document: Optional[str] = None
@@ -236,8 +250,10 @@ class SupplierUpdate(BaseModel):
     is_active: Optional[bool] = None
     notes: Optional[str] = None
 
+
 class PurchaseOrderItem(BaseModel):
     """Model for a purchase order item."""
+
     product_id: str
     product_name: str
     supplier_code: Optional[str] = None
@@ -245,7 +261,7 @@ class PurchaseOrderItem(BaseModel):
     unit_price: float
     total_price: float
     notes: Optional[str] = None
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -255,12 +271,14 @@ class PurchaseOrderItem(BaseModel):
                 "quantity": 100,
                 "unit_price": 2.50,
                 "total_price": 250.00,
-                "notes": "Entregar congelado"
+                "notes": "Entregar congelado",
             }
         }
 
+
 class PurchaseOrderStatus(str, enum.Enum):
     """Enum for purchase order status."""
+
     DRAFT = "draft"
     SENT = "sent"
     CONFIRMED = "confirmed"
@@ -268,8 +286,10 @@ class PurchaseOrderStatus(str, enum.Enum):
     RECEIVED = "received"
     CANCELLED = "cancelled"
 
+
 class PurchaseOrder(BaseModel):
     """Model for a purchase order."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     supplier_id: str
     supplier_name: str
@@ -287,7 +307,7 @@ class PurchaseOrder(BaseModel):
     confirmed_at: Optional[datetime] = None
     received_at: Optional[datetime] = None
     cancelled_at: Optional[datetime] = None
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -302,7 +322,7 @@ class PurchaseOrder(BaseModel):
                         "supplier_code": "HAMB-120",
                         "quantity": 100,
                         "unit_price": 2.50,
-                        "total_price": 250.00
+                        "total_price": 250.00,
                     },
                     {
                         "product_id": "223e4567-e89b-12d3-a456-426614174001",
@@ -310,34 +330,40 @@ class PurchaseOrder(BaseModel):
                         "supplier_code": "PAO-H",
                         "quantity": 200,
                         "unit_price": 0.75,
-                        "total_price": 150.00
-                    }
+                        "total_price": 150.00,
+                    },
                 ],
                 "total_amount": 400.00,
                 "expected_delivery_date": "2025-06-01T10:00:00",
                 "payment_term_days": 30,
                 "notes": "Entregar no período da manhã",
-                "created_by": "user123"
+                "created_by": "user123",
             }
         }
 
+
 class PurchaseOrderCreate(BaseModel):
     """Model for creating a purchase order."""
+
     supplier_id: str
     items: List[PurchaseOrderItem]
     expected_delivery_date: Optional[datetime] = None
     payment_term_days: int = 30
     notes: Optional[str] = None
 
+
 class PurchaseOrderUpdate(BaseModel):
     """Model for updating a purchase order."""
+
     items: Optional[List[PurchaseOrderItem]] = None
     expected_delivery_date: Optional[datetime] = None
     payment_term_days: Optional[int] = None
     notes: Optional[str] = None
 
+
 class SupplierQuery(BaseModel):
     """Model for querying suppliers."""
+
     name: Optional[str] = None
     document: Optional[str] = None
     category: Optional[str] = None
@@ -348,7 +374,7 @@ class SupplierQuery(BaseModel):
     product_id: Optional[str] = None
     limit: int = 100
     offset: int = 0
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -358,6 +384,6 @@ class SupplierQuery(BaseModel):
                 "min_rating": 4,
                 "state": "SP",
                 "limit": 50,
-                "offset": 0
+                "offset": 0,
             }
         }

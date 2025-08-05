@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 class NFCeStatus(str, Enum):
     """Status possíveis para uma NFC-e"""
+
     DRAFT = "draft"  # Rascunho, ainda não enviado
     PENDING = "pending"  # Enviado, aguardando resposta
     AUTHORIZED = "authorized"  # Autorizado pela SEFAZ
@@ -20,6 +21,7 @@ class NFCeStatus(str, Enum):
 
 class TaxType(str, Enum):
     """Tipos de impostos aplicáveis"""
+
     ICMS = "icms"
     PIS = "pis"
     COFINS = "cofins"
@@ -30,6 +32,7 @@ class TaxType(str, Enum):
 
 class NFCeItem(BaseModel):
     """Item de uma NFC-e"""
+
     id: str
     product_id: str
     product_code: str
@@ -47,6 +50,7 @@ class NFCeItem(BaseModel):
 
 class NFCePayment(BaseModel):
     """Informações de pagamento da NFC-e"""
+
     method: str  # Método de pagamento (dinheiro, cartão, etc)
     value: float
     card_info: Optional[Dict[str, Any]] = None  # Informações do cartão, se aplicável
@@ -55,6 +59,7 @@ class NFCePayment(BaseModel):
 
 class NFCeCustomer(BaseModel):
     """Informações do cliente (opcional na NFC-e)"""
+
     id: Optional[str] = None
     name: Optional[str] = None
     document_type: Optional[str] = None  # CPF ou CNPJ
@@ -66,6 +71,7 @@ class NFCeCustomer(BaseModel):
 
 class NFCeIssuer(BaseModel):
     """Informações do emissor da NFC-e"""
+
     id: str
     name: str
     trade_name: str
@@ -78,6 +84,7 @@ class NFCeIssuer(BaseModel):
 
 class NFCeResponse(BaseModel):
     """Resposta da SEFAZ para a NFC-e"""
+
     authorization_date: Optional[datetime] = None
     authorization_protocol: Optional[str] = None
     status_code: str
@@ -90,6 +97,7 @@ class NFCeResponse(BaseModel):
 
 class NFCeDocument(BaseModel):
     """Modelo principal da NFC-e"""
+
     id: str
     number: str
     series: str
@@ -118,6 +126,7 @@ class NFCeDocument(BaseModel):
 
 class NFCeEvent(BaseModel):
     """Eventos relacionados à NFC-e (cancelamento, inutilização, etc)"""
+
     id: str
     nfce_id: str
     event_type: str
@@ -132,6 +141,7 @@ class NFCeEvent(BaseModel):
 
 class NFCeStateRule(BaseModel):
     """Regras específicas por estado para NFC-e"""
+
     state_code: str
     state_name: str
     webservice_url: str

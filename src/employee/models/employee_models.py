@@ -4,16 +4,20 @@ from enum import Enum
 from datetime import datetime, date
 import uuid
 
+
 class EmploymentType(str, Enum):
     """Tipo de vínculo empregatício."""
+
     PERMANENT = "permanent"  # Funcionário fixo (CLT)
     TEMPORARY = "temporary"  # Funcionário temporário
     FREELANCER = "freelancer"  # Autônomo/Freelancer
     INTERN = "intern"  # Estagiário
     APPRENTICE = "apprentice"  # Jovem Aprendiz
 
+
 class EmployeeRole(str, Enum):
     """Função do funcionário."""
+
     MANAGER = "manager"  # Gerente
     CASHIER = "cashier"  # Operador de Caixa
     WAITER = "waiter"  # Garçom
@@ -23,8 +27,10 @@ class EmployeeRole(str, Enum):
     ADMIN = "admin"  # Administrativo
     OTHER = "other"  # Outros
 
+
 class PaymentFrequency(str, Enum):
     """Frequência de pagamento."""
+
     MONTHLY = "monthly"  # Mensal
     BIWEEKLY = "biweekly"  # Quinzenal
     WEEKLY = "weekly"  # Semanal
@@ -32,8 +38,10 @@ class PaymentFrequency(str, Enum):
     PER_DELIVERY = "per_delivery"  # Por entrega (entregadores)
     PER_SHIFT = "per_shift"  # Por turno
 
+
 class DocumentType(str, Enum):
     """Tipo de documento."""
+
     CPF = "cpf"
     RG = "rg"
     CTPS = "ctps"  # Carteira de Trabalho
@@ -41,8 +49,10 @@ class DocumentType(str, Enum):
     PASSPORT = "passport"
     DRIVER_LICENSE = "driver_license"
 
+
 class Address(BaseModel):
     """Endereço do funcionário."""
+
     street: str
     number: str
     complement: Optional[str] = None
@@ -52,8 +62,10 @@ class Address(BaseModel):
     zip_code: str
     country: str = "Brasil"
 
+
 class BankAccount(BaseModel):
     """Dados bancários do funcionário."""
+
     bank_name: str
     bank_code: str
     branch: str
@@ -62,31 +74,39 @@ class BankAccount(BaseModel):
     account_holder: str
     pix_key: Optional[str] = None
 
+
 class Document(BaseModel):
     """Documento do funcionário."""
+
     type: DocumentType
     number: str
     issue_date: Optional[date] = None
     expiry_date: Optional[date] = None
     issuing_authority: Optional[str] = None
 
+
 class EmergencyContact(BaseModel):
     """Contato de emergência."""
+
     name: str
     relationship: str
     phone: str
     alternative_phone: Optional[str] = None
 
+
 class WorkSchedule(BaseModel):
     """Horário de trabalho."""
+
     day_of_week: int  # 0-6 (Domingo-Sábado)
     start_time: str  # formato "HH:MM"
     end_time: str  # formato "HH:MM"
     break_start: Optional[str] = None  # formato "HH:MM"
     break_end: Optional[str] = None  # formato "HH:MM"
 
+
 class SalaryComponent(BaseModel):
     """Componente do salário."""
+
     name: str  # Ex: "Salário Base", "Adicional Noturno", "Vale Transporte"
     type: str  # "earning", "deduction", "benefit"
     amount: float
@@ -94,8 +114,10 @@ class SalaryComponent(BaseModel):
     reference: Optional[str] = None  # Referência para cálculo percentual
     description: Optional[str] = None
 
+
 class Employee(BaseModel):
     """Modelo de funcionário."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     user_id: Optional[str] = None  # ID do usuário no sistema (se tiver acesso)
@@ -117,15 +139,19 @@ class Employee(BaseModel):
     notes: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
-    
-    @validator('termination_date')
+
+    @validator("termination_date")
     def validate_termination_date(cls, v, values):
-        if v and 'hire_date' in values and v < values['hire_date']:
-            raise ValueError('A data de desligamento não pode ser anterior à data de contratação')
+        if v and "hire_date" in values and v < values["hire_date"]:
+            raise ValueError(
+                "A data de desligamento não pode ser anterior à data de contratação"
+            )
         return v
+
 
 class EmployeeCreate(BaseModel):
     """Dados para criação de um novo funcionário."""
+
     name: str
     user_id: Optional[str] = None
     role: EmployeeRole
@@ -143,8 +169,10 @@ class EmployeeCreate(BaseModel):
     work_schedule: List[WorkSchedule] = []
     notes: Optional[str] = None
 
+
 class EmployeeUpdate(BaseModel):
     """Dados para atualização de um funcionário."""
+
     name: Optional[str] = None
     user_id: Optional[str] = None
     role: Optional[EmployeeRole] = None
@@ -163,8 +191,10 @@ class EmployeeUpdate(BaseModel):
     work_schedule: Optional[List[WorkSchedule]] = None
     notes: Optional[str] = None
 
+
 class EmployeeQuery(BaseModel):
     """Parâmetros para consulta de funcionários."""
+
     name: Optional[str] = None
     role: Optional[EmployeeRole] = None
     employment_type: Optional[EmploymentType] = None
@@ -174,8 +204,10 @@ class EmployeeQuery(BaseModel):
     limit: int = 100
     offset: int = 0
 
+
 class DeliveryAssignment(BaseModel):
     """Atribuição de entrega para um entregador."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     employee_id: str
     order_id: str
@@ -188,24 +220,30 @@ class DeliveryAssignment(BaseModel):
     distance_km: Optional[float] = None
     notes: Optional[str] = None
 
+
 class DeliveryAssignmentCreate(BaseModel):
     """Dados para criação de uma atribuição de entrega."""
+
     employee_id: str
     order_id: str
     delivery_fee: float
     distance_km: Optional[float] = None
     notes: Optional[str] = None
 
+
 class DeliveryAssignmentUpdate(BaseModel):
     """Dados para atualização de uma atribuição de entrega."""
+
     status: Optional[str] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     tip_amount: Optional[float] = None
     notes: Optional[str] = None
 
+
 class EmployeeAttendance(BaseModel):
     """Registro de ponto do funcionário."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     employee_id: str
     date: date
@@ -220,14 +258,18 @@ class EmployeeAttendance(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
+
 class EmployeeAttendanceCreate(BaseModel):
     """Dados para criação de um registro de ponto."""
+
     employee_id: str
     clock_in: datetime
     notes: Optional[str] = None
 
+
 class EmployeeAttendanceUpdate(BaseModel):
     """Dados para atualização de um registro de ponto."""
+
     clock_out: Optional[datetime] = None
     break_start: Optional[datetime] = None
     break_end: Optional[datetime] = None
@@ -235,8 +277,10 @@ class EmployeeAttendanceUpdate(BaseModel):
     overtime_hours: Optional[float] = None
     notes: Optional[str] = None
 
+
 class EmployeePerformance(BaseModel):
     """Avaliação de desempenho do funcionário."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     employee_id: str
     evaluation_date: date
@@ -253,8 +297,10 @@ class EmployeePerformance(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
+
 class EmployeePerformanceCreate(BaseModel):
     """Dados para criação de uma avaliação de desempenho."""
+
     employee_id: str
     evaluator_id: str
     evaluation_date: date
@@ -267,8 +313,10 @@ class EmployeePerformanceCreate(BaseModel):
     comments: Optional[str] = None
     overall_rating: float
 
+
 class EmployeePerformanceUpdate(BaseModel):
     """Dados para atualização de uma avaliação de desempenho."""
+
     ratings: Optional[Dict[str, int]] = None
     strengths: Optional[List[str]] = None
     areas_for_improvement: Optional[List[str]] = None
@@ -277,8 +325,10 @@ class EmployeePerformanceUpdate(BaseModel):
     employee_comments: Optional[str] = None
     overall_rating: Optional[float] = None
 
+
 class EmployeeEvent(BaseModel):
     """Evento relacionado a funcionário para o barramento de eventos."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: str  # "employee_created", "employee_updated", "attendance_recorded", etc.
     data: Dict[str, Any]

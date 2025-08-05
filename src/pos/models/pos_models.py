@@ -4,11 +4,13 @@ from enum import Enum
 from datetime import datetime
 import uuid
 
+
 # Enums para o módulo de Frente de Caixa
 class POSSessionStatus(str, Enum):
     OPEN = "open"
     CLOSED = "closed"
     SUSPENDED = "suspended"
+
 
 class PaymentMethod(str, Enum):
     CASH = "cash"
@@ -20,6 +22,7 @@ class PaymentMethod(str, Enum):
     IFOOD = "ifood"
     OTHER = "other"
 
+
 class PaymentStatus(str, Enum):
     PENDING = "pending"
     PAID = "paid"
@@ -27,10 +30,12 @@ class PaymentStatus(str, Enum):
     REFUNDED = "refunded"
     CANCELED = "canceled"
 
+
 class PrinterType(str, Enum):
     RECEIPT = "receipt"
     KITCHEN = "kitchen"
     REPORT = "report"
+
 
 class ReceiptType(str, Enum):
     ORDER = "order"
@@ -39,9 +44,11 @@ class ReceiptType(str, Enum):
     CLOSING = "closing"
     REPORT = "report"
 
+
 # Modelos para o módulo de Frente de Caixa
 class POSConfig(BaseModel):
     """Configuração do terminal POS."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     terminal_id: str
     terminal_name: str
@@ -58,8 +65,10 @@ class POSConfig(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
+
 class POSSession(BaseModel):
     """Sessão de operação do POS (período entre login e logout do operador)."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     terminal_id: str
     cashier_id: str
@@ -85,22 +94,28 @@ class POSSession(BaseModel):
     closed_at: Optional[datetime] = None
     notes: Optional[str] = None
 
+
 class POSSessionCreate(BaseModel):
     """Dados para criação de uma nova sessão POS."""
+
     terminal_id: str
     cashier_id: str
     business_day_id: str
     opening_balance: float = 0.0
     notes: Optional[str] = None
 
+
 class POSSessionUpdate(BaseModel):
     """Dados para atualização de uma sessão POS."""
+
     status: Optional[POSSessionStatus] = None
     closing_balance: Optional[float] = None
     notes: Optional[str] = None
 
+
 class POSSessionSummary(BaseModel):
     """Resumo de uma sessão POS."""
+
     id: str
     terminal_id: str
     cashier_id: str
@@ -110,8 +125,10 @@ class POSSessionSummary(BaseModel):
     order_count: int
     total_sales: float
 
+
 class PaymentTransaction(BaseModel):
     """Transação de pagamento."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     order_id: str
     session_id: str
@@ -127,8 +144,10 @@ class PaymentTransaction(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
     notes: Optional[str] = None
 
+
 class PaymentTransactionCreate(BaseModel):
     """Dados para criação de uma nova transação de pagamento."""
+
     order_id: str
     session_id: str
     amount: float
@@ -140,15 +159,19 @@ class PaymentTransactionCreate(BaseModel):
     installments: Optional[int] = None
     notes: Optional[str] = None
 
+
 class PaymentTransactionUpdate(BaseModel):
     """Dados para atualização de uma transação de pagamento."""
+
     status: Optional[PaymentStatus] = None
     reference: Optional[str] = None
     authorization_code: Optional[str] = None
     notes: Optional[str] = None
 
+
 class Receipt(BaseModel):
     """Recibo impresso."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: ReceiptType
     reference_id: str  # ID do pedido, sessão, etc.
@@ -160,8 +183,10 @@ class Receipt(BaseModel):
     reprint_count: int = 0
     last_reprinted_at: Optional[datetime] = None
 
+
 class ReceiptCreate(BaseModel):
     """Dados para criação de um novo recibo."""
+
     type: ReceiptType
     reference_id: str
     content: str
@@ -169,8 +194,10 @@ class ReceiptCreate(BaseModel):
     user_id: str
     terminal_id: str
 
+
 class CashOperation(BaseModel):
     """Operação de caixa (entrada ou saída de dinheiro)."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     session_id: str
     amount: float
@@ -182,8 +209,10 @@ class CashOperation(BaseModel):
     approved_by: Optional[str] = None  # ID do usuário que aprovou (para saídas)
     notes: Optional[str] = None
 
+
 class CashOperationCreate(BaseModel):
     """Dados para criação de uma nova operação de caixa."""
+
     session_id: str
     amount: float
     is_cash_in: bool
@@ -193,8 +222,10 @@ class CashOperationCreate(BaseModel):
     approved_by: Optional[str] = None
     notes: Optional[str] = None
 
+
 class POSReport(BaseModel):
     """Relatório do POS."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: str  # "X", "Z", "sales", "products", etc.
     start_date: datetime
@@ -206,8 +237,10 @@ class POSReport(BaseModel):
     content: Dict[str, Any]
     created_at: datetime = Field(default_factory=datetime.now)
 
+
 class POSReportCreate(BaseModel):
     """Dados para criação de um novo relatório."""
+
     type: str
     start_date: datetime
     end_date: datetime
@@ -217,8 +250,10 @@ class POSReportCreate(BaseModel):
     user_id: str
     parameters: Optional[Dict[str, Any]] = None
 
+
 class SITEFConfig(BaseModel):
     """Configuração de integração com SiTef."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     terminal_id: str
     ip_address: str
@@ -229,8 +264,10 @@ class SITEFConfig(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
+
 class SATConfig(BaseModel):
     """Configuração de integração com SAT."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     terminal_id: str
     model: str
@@ -242,8 +279,10 @@ class SATConfig(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
+
 class PrinterConfig(BaseModel):
     """Configuração de impressora."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     terminal_id: str
     name: str
@@ -255,8 +294,10 @@ class PrinterConfig(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
+
 class POSEvent(BaseModel):
     """Evento do POS para o barramento de eventos."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: str
     data: Dict[str, Any]

@@ -6,6 +6,7 @@ from datetime import datetime
 
 class SATStatus(str, Enum):
     """Status do equipamento SAT."""
+
     UNKNOWN = "unknown"
     READY = "ready"
     BUSY = "busy"
@@ -16,6 +17,7 @@ class SATStatus(str, Enum):
 
 class SATDriverType(str, Enum):
     """Tipos de drivers SAT suportados."""
+
     SIMULATED = "simulated"
     DIMEP = "dimep"
     BEMATECH = "bematech"
@@ -25,6 +27,7 @@ class SATDriverType(str, Enum):
 
 class ContingencyMode(str, Enum):
     """Modos de contingência para o SAT."""
+
     NONE = "none"
     OFFLINE = "offline"
     MANUAL = "manual"
@@ -32,6 +35,7 @@ class ContingencyMode(str, Enum):
 
 class CFeTaxGroup(BaseModel):
     """Grupo de tributação para itens do CF-e."""
+
     code: str
     description: str
     tax_rate: float
@@ -42,6 +46,7 @@ class CFeTaxGroup(BaseModel):
 
 class CFeTaxation(BaseModel):
     """Configuração de tributação para o CF-e."""
+
     icms_groups: Dict[str, CFeTaxGroup] = Field(default_factory=dict)
     pis_groups: Dict[str, CFeTaxGroup] = Field(default_factory=dict)
     cofins_groups: Dict[str, CFeTaxGroup] = Field(default_factory=dict)
@@ -52,6 +57,7 @@ class CFeTaxation(BaseModel):
 
 class SATConfig(BaseModel):
     """Configuração do equipamento SAT."""
+
     enabled: bool = False
     driver_type: SATDriverType = SATDriverType.SIMULATED
     device_code: str = ""
@@ -66,25 +72,26 @@ class SATConfig(BaseModel):
     retry_attempts: int = 3
     taxation: CFeTaxation = Field(default_factory=CFeTaxation)
 
-    @validator('cnpj')
+    @validator("cnpj")
     def validate_cnpj(cls, v):
         """Valida o formato do CNPJ."""
         if v and not v.isdigit():
-            v = ''.join(filter(str.isdigit, v))
+            v = "".join(filter(str.isdigit, v))
         if v and len(v) != 14:
-            raise ValueError('CNPJ deve ter 14 dígitos')
+            raise ValueError("CNPJ deve ter 14 dígitos")
         return v
 
-    @validator('ie')
+    @validator("ie")
     def validate_ie(cls, v):
         """Valida o formato da Inscrição Estadual."""
         if v and not v.isdigit():
-            v = ''.join(filter(str.isdigit, v))
+            v = "".join(filter(str.isdigit, v))
         return v
 
 
 class CFePagamento(BaseModel):
     """Informações de pagamento do CF-e."""
+
     tipo: str  # Código do meio de pagamento conforme SAT
     valor: float
     credenciadora: Optional[str] = None  # Para cartões
@@ -93,6 +100,7 @@ class CFePagamento(BaseModel):
 
 class CFeItem(BaseModel):
     """Item do CF-e."""
+
     numero: int
     codigo: str
     descricao: str
@@ -109,6 +117,7 @@ class CFeItem(BaseModel):
 
 class CFe(BaseModel):
     """Modelo do Cupom Fiscal Eletrônico."""
+
     id: str
     chave_acesso: Optional[str] = None
     numero_serie: Optional[str] = None
@@ -136,27 +145,28 @@ class CFe(BaseModel):
     error_message: Optional[str] = None
     contingency: bool = False
 
-    @validator('cnpj_emitente', 'cnpj_destinatario')
+    @validator("cnpj_emitente", "cnpj_destinatario")
     def validate_cnpj(cls, v):
         """Valida o formato do CNPJ."""
         if v and not v.isdigit():
-            v = ''.join(filter(str.isdigit, v))
+            v = "".join(filter(str.isdigit, v))
         if v and len(v) != 14:
-            raise ValueError('CNPJ deve ter 14 dígitos')
+            raise ValueError("CNPJ deve ter 14 dígitos")
         return v
 
-    @validator('cpf_destinatario')
+    @validator("cpf_destinatario")
     def validate_cpf(cls, v):
         """Valida o formato do CPF."""
         if v and not v.isdigit():
-            v = ''.join(filter(str.isdigit, v))
+            v = "".join(filter(str.isdigit, v))
         if v and len(v) != 11:
-            raise ValueError('CPF deve ter 11 dígitos')
+            raise ValueError("CPF deve ter 11 dígitos")
         return v
 
 
 class SATLog(BaseModel):
     """Registro de operações e erros do SAT."""
+
     id: str
     terminal_id: str
     operation: str  # emitir, cancelar, consultar, etc.
@@ -169,6 +179,7 @@ class SATLog(BaseModel):
 
 class SATResponse(BaseModel):
     """Resposta de operações do SAT."""
+
     success: bool
     message: str
     cfe: Optional[CFe] = None
@@ -177,6 +188,7 @@ class SATResponse(BaseModel):
 
 class SATStatusResponse(BaseModel):
     """Resposta de consulta de status do SAT."""
+
     status: SATStatus
     message: str
     last_communication: Optional[datetime] = None
@@ -185,6 +197,7 @@ class SATStatusResponse(BaseModel):
 
 class SATEmitRequest(BaseModel):
     """Requisição para emissão de CF-e."""
+
     order_id: str
     terminal_id: str
     customer_document: Optional[str] = None  # CPF/CNPJ do cliente
@@ -193,5 +206,6 @@ class SATEmitRequest(BaseModel):
 
 class SATCancelRequest(BaseModel):
     """Requisição para cancelamento de CF-e."""
+
     cfe_id: str
     reason: str

@@ -12,6 +12,7 @@ from src.business_day.services.business_day_service import get_business_day_serv
 # Configurar cliente de teste
 client = TestClient(app)
 
+
 # Mock para o token de autenticação
 def get_auth_token(client, username="gerente", password="senha123"):
     """Obtém um token de autenticação para testes."""
@@ -29,18 +30,18 @@ def clean_test_data():
     # Caminho para o arquivo de dados de teste
     data_dir = os.path.join("/home/ubuntu/pos-modern/data")
     business_days_file = os.path.join(data_dir, "business_days.json")
-    
+
     # Garantir que o diretório existe
     os.makedirs(data_dir, exist_ok=True)
-    
+
     # Limpar dados antes do teste
-    with open(business_days_file, 'w') as f:
+    with open(business_days_file, "w") as f:
         json.dump([], f)
-    
+
     yield
-    
+
     # Limpar dados após o teste
-    with open(business_days_file, 'w') as f:
+    with open(business_days_file, "w") as f:
         json.dump([], f)
 
 
@@ -50,7 +51,7 @@ async def open_business_day(clean_test_data):
     """Cria um dia de operação aberto para testes."""
     service = get_business_day_service()
     today = date.today().isoformat()
-    
+
     business_day = BusinessDay(
         id="test-day-id",
         date=today,
@@ -63,16 +64,18 @@ async def open_business_day(clean_test_data):
         total_orders=0,
         notes="Dia de teste",
         created_at=datetime.now().isoformat(),
-        updated_at=datetime.now().isoformat()
+        updated_at=datetime.now().isoformat(),
     )
-    
+
     # Salvar diretamente no arquivo de dados
     business_days = []
     business_days.append(business_day.dict())
-    
-    with open(os.path.join("/home/ubuntu/pos-modern/data", "business_days.json"), 'w') as f:
+
+    with open(
+        os.path.join("/home/ubuntu/pos-modern/data", "business_days.json"), "w"
+    ) as f:
         json.dump(business_days, f)
-    
+
     return business_day
 
 
@@ -81,17 +84,17 @@ def test_open_business_day_success(clean_test_data):
     """Testa a abertura de um dia de operação com sucesso."""
     token = get_auth_token(client)
     today = date.today().isoformat()
-    
+
     response = client.post(
         "/api/v1/business-day",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "date": today,
             "opened_by": "gerente_id",
-            "notes": "Dia normal de operação"
-        }
+            "notes": "Dia normal de operação",
+        },
     )
-    
+
     assert response.status_code == 201
     data = response.json()
     assert data["date"] == today
@@ -105,17 +108,17 @@ def test_open_business_day_past_date(clean_test_data):
     """Testa a abertura de um dia de operação com data passada."""
     token = get_auth_token(client)
     past_date = (date.today() - timedelta(days=1)).isoformat()
-    
+
     response = client.post(
         "/api/v1/business-day",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "date": past_date,
             "opened_by": "gerente_id",
-            "notes": "Dia com data passada"
-        }
+            "notes": "Dia com data passada",
+        },
     )
-    
+
     assert response.status_code == 400
     assert "data passada" in response.json()["detail"].lower()
 
@@ -124,31 +127,23 @@ def test_open_business_day_already_open(clean_test_data):
     """Testa a abertura de um dia quando já existe outro aberto."""
     token = get_auth_token(client)
     today = date.today().isoformat()
-    
+
     # Abrir o primeiro dia
     response = client.post(
         "/api/v1/business-day",
         headers={"Authorization": f"Bearer {token}"},
-        json={
-            "date": today,
-            "opened_by": "gerente_id",
-            "notes": "Primeiro dia"
-        }
+        json={"date": today, "opened_by": "gerente_id", "notes": "Primeiro dia"},
     )
     assert response.status_code == 201
-    
+
     # Tentar abrir outro dia
     tomorrow = (date.today() + timedelta(days=1)).isoformat()
     response = client.post(
         "/api/v1/business-day",
         headers={"Authorization": f"Bearer {token}"},
-        json={
-            "date": tomorrow,
-            "opened_by": "gerente_id",
-            "notes": "Segundo dia"
-        }
+        json={"date": tomorrow, "opened_by": "gerente_id", "notes": "Segundo dia"},
     )
-    
+
     assert response.status_code == 400
     assert "já existe um dia aberto" in response.json()["detail"].lower()
 
@@ -156,16 +151,16 @@ def test_open_business_day_already_open(clean_test_data):
 def test_open_business_day_unauthorized():
     """Testa a abertura de um dia sem autenticação."""
     today = date.today().isoformat()
-    
+
     response = client.post(
         "/api/v1/business-day",
         json={
             "date": today,
             "opened_by": "gerente_id",
-            "notes": "Dia sem autenticação"
-        }
+            "notes": "Dia sem autenticação",
+        },
     )
-    
+
     assert response.status_code == 401
 
 
@@ -174,21 +169,20 @@ def test_open_business_day_unauthorized():
 async def test_close_business_day_success(open_business_day):
     """Testa o fechamento de um dia de operação com sucesso."""
     token = get_auth_token(client)
-    
+
     # Mock para simular que não há caixas abertos
-    with patch('src.business_day.services.business_day_service.BusinessDayService.get_open_cashiers', 
-               new_callable=AsyncMock) as mock_get_open_cashiers:
+    with patch(
+        "src.business_day.services.business_day_service.BusinessDayService.get_open_cashiers",
+        new_callable=AsyncMock,
+    ) as mock_get_open_cashiers:
         mock_get_open_cashiers.return_value = []
-        
+
         response = client.put(
             f"/api/v1/business-day/{open_business_day.id}/close",
             headers={"Authorization": f"Bearer {token}"},
-            json={
-                "closed_by": "gerente_id",
-                "notes": "Fechamento normal"
-            }
+            json={"closed_by": "gerente_id", "notes": "Fechamento normal"},
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == open_business_day.id
@@ -201,21 +195,25 @@ async def test_close_business_day_success(open_business_day):
 async def test_close_business_day_with_open_cashiers(open_business_day):
     """Testa o fechamento de um dia com caixas abertos."""
     token = get_auth_token(client)
-    
+
     # Mock para simular caixas abertos
-    with patch('src.business_day.services.business_day_service.BusinessDayService.get_open_cashiers', 
-               new_callable=AsyncMock) as mock_get_open_cashiers:
-        mock_get_open_cashiers.return_value = [{"id": "cashier1", "terminal_id": "term1"}]
-        
+    with patch(
+        "src.business_day.services.business_day_service.BusinessDayService.get_open_cashiers",
+        new_callable=AsyncMock,
+    ) as mock_get_open_cashiers:
+        mock_get_open_cashiers.return_value = [
+            {"id": "cashier1", "terminal_id": "term1"}
+        ]
+
         response = client.put(
             f"/api/v1/business-day/{open_business_day.id}/close",
             headers={"Authorization": f"Bearer {token}"},
             json={
                 "closed_by": "gerente_id",
-                "notes": "Tentativa de fechamento com caixas abertos"
-            }
+                "notes": "Tentativa de fechamento com caixas abertos",
+            },
         )
-        
+
         assert response.status_code == 400
         assert "caixas abertos" in response.json()["detail"].lower()
 
@@ -223,16 +221,13 @@ async def test_close_business_day_with_open_cashiers(open_business_day):
 def test_close_business_day_not_found(clean_test_data):
     """Testa o fechamento de um dia que não existe."""
     token = get_auth_token(client)
-    
+
     response = client.put(
         "/api/v1/business-day/non-existent-id/close",
         headers={"Authorization": f"Bearer {token}"},
-        json={
-            "closed_by": "gerente_id",
-            "notes": "Fechamento de dia inexistente"
-        }
+        json={"closed_by": "gerente_id", "notes": "Fechamento de dia inexistente"},
     )
-    
+
     assert response.status_code == 404
 
 
@@ -241,12 +236,11 @@ def test_close_business_day_not_found(clean_test_data):
 async def test_get_current_business_day(open_business_day):
     """Testa a obtenção do dia de operação atual."""
     token = get_auth_token(client)
-    
+
     response = client.get(
-        "/api/v1/business-day/current",
-        headers={"Authorization": f"Bearer {token}"}
+        "/api/v1/business-day/current", headers={"Authorization": f"Bearer {token}"}
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == open_business_day.id
@@ -256,12 +250,11 @@ async def test_get_current_business_day(open_business_day):
 def test_get_current_business_day_none(clean_test_data):
     """Testa a obtenção do dia atual quando não há dia aberto."""
     token = get_auth_token(client)
-    
+
     response = client.get(
-        "/api/v1/business-day/current",
-        headers={"Authorization": f"Bearer {token}"}
+        "/api/v1/business-day/current", headers={"Authorization": f"Bearer {token}"}
     )
-    
+
     assert response.status_code == 404
     assert "não há um dia" in response.json()["detail"].lower()
 
@@ -270,12 +263,12 @@ def test_get_current_business_day_none(clean_test_data):
 async def test_get_business_day_by_id(open_business_day):
     """Testa a obtenção de um dia específico pelo ID."""
     token = get_auth_token(client)
-    
+
     response = client.get(
         f"/api/v1/business-day/{open_business_day.id}",
-        headers={"Authorization": f"Bearer {token}"}
+        headers={"Authorization": f"Bearer {token}"},
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == open_business_day.id
@@ -284,12 +277,12 @@ async def test_get_business_day_by_id(open_business_day):
 def test_get_business_day_by_id_not_found(clean_test_data):
     """Testa a obtenção de um dia que não existe."""
     token = get_auth_token(client)
-    
+
     response = client.get(
         "/api/v1/business-day/non-existent-id",
-        headers={"Authorization": f"Bearer {token}"}
+        headers={"Authorization": f"Bearer {token}"},
     )
-    
+
     assert response.status_code == 404
 
 
@@ -297,12 +290,11 @@ def test_get_business_day_by_id_not_found(clean_test_data):
 async def test_list_business_days(open_business_day):
     """Testa a listagem de dias de operação."""
     token = get_auth_token(client)
-    
+
     response = client.get(
-        "/api/v1/business-day",
-        headers={"Authorization": f"Bearer {token}"}
+        "/api/v1/business-day", headers={"Authorization": f"Bearer {token}"}
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
@@ -314,24 +306,23 @@ async def test_list_business_days(open_business_day):
 async def test_list_business_days_with_filters(open_business_day):
     """Testa a listagem de dias com filtros."""
     token = get_auth_token(client)
-    
+
     # Filtrar por status
     response = client.get(
-        "/api/v1/business-day?status=open",
-        headers={"Authorization": f"Bearer {token}"}
+        "/api/v1/business-day?status=open", headers={"Authorization": f"Bearer {token}"}
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
-    
+
     # Filtrar por data
     today = date.today().isoformat()
     response = client.get(
         f"/api/v1/business-day?start_date={today}",
-        headers={"Authorization": f"Bearer {token}"}
+        headers={"Authorization": f"Bearer {token}"},
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
@@ -342,12 +333,12 @@ async def test_list_business_days_with_filters(open_business_day):
 async def test_get_business_day_report(open_business_day):
     """Testa a geração de relatório para um dia de operação."""
     token = get_auth_token(client)
-    
+
     response = client.get(
         f"/api/v1/business-day/{open_business_day.id}/report",
-        headers={"Authorization": f"Bearer {token}"}
+        headers={"Authorization": f"Bearer {token}"},
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert data["business_day_id"] == open_business_day.id
@@ -360,12 +351,12 @@ async def test_get_business_day_report(open_business_day):
 def test_get_business_day_report_not_found(clean_test_data):
     """Testa a geração de relatório para um dia que não existe."""
     token = get_auth_token(client)
-    
+
     response = client.get(
         "/api/v1/business-day/non-existent-id/report",
-        headers={"Authorization": f"Bearer {token}"}
+        headers={"Authorization": f"Bearer {token}"},
     )
-    
+
     assert response.status_code == 404
 
 
@@ -374,15 +365,13 @@ def test_get_business_day_report_not_found(clean_test_data):
 async def test_update_business_day(open_business_day):
     """Testa a atualização de um dia de operação."""
     token = get_auth_token(client)
-    
+
     response = client.put(
         f"/api/v1/business-day/{open_business_day.id}",
         headers={"Authorization": f"Bearer {token}"},
-        json={
-            "notes": "Notas atualizadas"
-        }
+        json={"notes": "Notas atualizadas"},
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == open_business_day.id
@@ -392,13 +381,11 @@ async def test_update_business_day(open_business_day):
 def test_update_business_day_not_found(clean_test_data):
     """Testa a atualização de um dia que não existe."""
     token = get_auth_token(client)
-    
+
     response = client.put(
         "/api/v1/business-day/non-existent-id",
         headers={"Authorization": f"Bearer {token}"},
-        json={
-            "notes": "Notas para dia inexistente"
-        }
+        json={"notes": "Notas para dia inexistente"},
     )
-    
+
     assert response.status_code == 404

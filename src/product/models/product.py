@@ -4,21 +4,25 @@ from datetime import datetime
 from enum import Enum
 import uuid
 
+
 # Enums
 class ProductStatus(str, Enum):
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
     OUT_OF_STOCK = "OUT_OF_STOCK"
 
+
 class ProductType(str, Enum):
     SIMPLE = "SIMPLE"
     COMBO = "COMBO"
     COMPOSITE = "COMPOSITE"
 
+
 class PricingStrategy(str, Enum):
     FIXED = "FIXED"
     WEIGHT_BASED = "WEIGHT_BASED"
     DYNAMIC = "DYNAMIC"
+
 
 # Base Models
 class ProductBase(BaseModel):
@@ -34,8 +38,10 @@ class ProductBase(BaseModel):
     weight_based: bool = False
     pricing_strategy: PricingStrategy = PricingStrategy.FIXED
 
+
 class ProductCreate(ProductBase):
     pass
+
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
@@ -50,6 +56,7 @@ class ProductUpdate(BaseModel):
     weight_based: Optional[bool] = None
     pricing_strategy: Optional[PricingStrategy] = None
 
+
 class Product(ProductBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -57,6 +64,7 @@ class Product(ProductBase):
     images: List[str] = []
     ingredients: List[Dict[str, Any]] = []
     combo_items: List[Dict[str, Any]] = []
+
 
 class ProductSummary(BaseModel):
     id: str
@@ -68,6 +76,7 @@ class ProductSummary(BaseModel):
     is_featured: bool
     image_url: Optional[str] = None
 
+
 # Category Models
 class CategoryBase(BaseModel):
     name: str
@@ -76,8 +85,10 @@ class CategoryBase(BaseModel):
     icon: Optional[str] = None
     is_active: bool = True
 
+
 class CategoryCreate(CategoryBase):
     pass
+
 
 class CategoryUpdate(BaseModel):
     name: Optional[str] = None
@@ -86,10 +97,12 @@ class CategoryUpdate(BaseModel):
     icon: Optional[str] = None
     is_active: Optional[bool] = None
 
+
 class ProductCategory(CategoryBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 
 # Image Models
 class ProductImage(BaseModel):
@@ -100,11 +113,13 @@ class ProductImage(BaseModel):
     is_main: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+
 class ImageUploadResponse(BaseModel):
     id: str
     url: str
     filename: str
     message: str
+
 
 # Combo Models
 class ComboItem(BaseModel):
@@ -112,6 +127,7 @@ class ComboItem(BaseModel):
     quantity: int = 1
     is_optional: bool = False
     price_adjustment: float = 0.0
+
 
 # Ingredient Models
 class IngredientBase(BaseModel):
@@ -122,8 +138,10 @@ class IngredientBase(BaseModel):
     supplier: Optional[str] = None
     is_active: bool = True
 
+
 class IngredientCreate(IngredientBase):
     pass
+
 
 class IngredientUpdate(BaseModel):
     name: Optional[str] = None
@@ -133,6 +151,7 @@ class IngredientUpdate(BaseModel):
     supplier: Optional[str] = None
     is_active: Optional[bool] = None
 
+
 class Ingredient(IngredientBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     current_stock: float = 0.0
@@ -140,24 +159,29 @@ class Ingredient(IngredientBase):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+
 # Menu Models
 class MenuBase(BaseModel):
     name: str
     description: Optional[str] = None
     is_active: bool = True
 
+
 class MenuCreate(MenuBase):
     pass
+
 
 class MenuUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     is_active: Optional[bool] = None
 
+
 class Menu(MenuBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 
 # Option Models
 class OptionBase(BaseModel):
@@ -165,12 +189,15 @@ class OptionBase(BaseModel):
     price_adjustment: float = 0.0
     is_active: bool = True
 
+
 class OptionCreate(OptionBase):
     pass
+
 
 class Option(OptionBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     group_id: str
+
 
 class OptionGroupBase(BaseModel):
     name: str
@@ -179,8 +206,10 @@ class OptionGroupBase(BaseModel):
     max_selections: int = 1
     is_active: bool = True
 
+
 class OptionGroupCreate(OptionGroupBase):
     options: List[OptionCreate] = []
+
 
 class OptionGroupUpdate(BaseModel):
     name: Optional[str] = None
@@ -189,11 +218,13 @@ class OptionGroupUpdate(BaseModel):
     max_selections: Optional[int] = None
     is_active: Optional[bool] = None
 
+
 class OptionGroup(OptionGroupBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     options: List[Option] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 
 # Composite Product Models
 class CompositeSectionBase(BaseModel):
@@ -203,18 +234,23 @@ class CompositeSectionBase(BaseModel):
     max_items: Optional[int] = None
     is_required: bool = False
 
+
 class CompositeSectionCreate(CompositeSectionBase):
     pass
+
 
 class CompositeSection(CompositeSectionBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     product_id: str
 
+
 class CompositeProductCreate(ProductBase):
     sections: List[CompositeSectionCreate] = []
 
+
 class CompositeProductUpdate(ProductUpdate):
     sections: Optional[List[CompositeSectionCreate]] = None
+
 
 # Exchange Group Models
 class ExchangeGroup(BaseModel):
@@ -224,6 +260,7 @@ class ExchangeGroup(BaseModel):
     product_ids: List[str] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+
 # Menu Export Models
 class MenuExport(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -231,4 +268,3 @@ class MenuExport(BaseModel):
     format: str
     file_path: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
-

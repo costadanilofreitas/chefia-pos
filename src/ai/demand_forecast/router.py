@@ -4,8 +4,13 @@ from datetime import datetime, timedelta
 import logging
 
 from ..demand_forecast.models import (
-    ForecastRequest, ForecastResult, DemandAlert, 
-    StockRecommendation, TimeGranularity, ForecastDimension, ModelType
+    ForecastRequest,
+    ForecastResult,
+    DemandAlert,
+    StockRecommendation,
+    TimeGranularity,
+    ForecastDimension,
+    ModelType,
 )
 from ..demand_forecast.service import DemandForecastService
 
@@ -20,15 +25,17 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+
 # Dependência para injetar o serviço
 async def get_forecast_service():
     service = DemandForecastService()
     return service
 
+
 @router.post("/create", response_model=ForecastResult)
 async def create_forecast(
     request: ForecastRequest,
-    service: DemandForecastService = Depends(get_forecast_service)
+    service: DemandForecastService = Depends(get_forecast_service),
 ):
     """
     Cria uma nova previsão de demanda com base nos parâmetros fornecidos.
@@ -39,12 +46,14 @@ async def create_forecast(
         return result
     except Exception as e:
         logger.error(f"Error creating forecast: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error creating forecast: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error creating forecast: {str(e)}"
+        )
+
 
 @router.get("/{forecast_id}", response_model=ForecastResult)
 async def get_forecast(
-    forecast_id: str,
-    service: DemandForecastService = Depends(get_forecast_service)
+    forecast_id: str, service: DemandForecastService = Depends(get_forecast_service)
 ):
     """
     Recupera uma previsão existente pelo ID.
@@ -59,6 +68,7 @@ async def get_forecast(
         logger.error(f"Error getting forecast: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error getting forecast: {str(e)}")
 
+
 @router.get("/alerts/{restaurant_id}", response_model=List[DemandAlert])
 async def get_alerts(
     restaurant_id: str,
@@ -66,7 +76,7 @@ async def get_alerts(
     end_date: Optional[datetime] = None,
     alert_type: Optional[str] = None,
     dimension_type: Optional[ForecastDimension] = None,
-    service: DemandForecastService = Depends(get_forecast_service)
+    service: DemandForecastService = Depends(get_forecast_service),
 ):
     """
     Recupera alertas de demanda para um restaurante específico.
@@ -78,18 +88,21 @@ async def get_alerts(
             start_date=start_date,
             end_date=end_date,
             alert_type=alert_type,
-            dimension_type=dimension_type
+            dimension_type=dimension_type,
         )
         return alerts
     except Exception as e:
         logger.error(f"Error getting alerts: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error getting alerts: {str(e)}")
 
-@router.get("/recommendations/{restaurant_id}", response_model=List[StockRecommendation])
+
+@router.get(
+    "/recommendations/{restaurant_id}", response_model=List[StockRecommendation]
+)
 async def get_recommendations(
     restaurant_id: str,
     product_ids: Optional[List[str]] = Query(None),
-    service: DemandForecastService = Depends(get_forecast_service)
+    service: DemandForecastService = Depends(get_forecast_service),
 ):
     """
     Recupera recomendações de estoque para um restaurante específico.
@@ -97,13 +110,15 @@ async def get_recommendations(
     try:
         logger.info(f"Getting recommendations for restaurant {restaurant_id}")
         recommendations = await service.get_recommendations(
-            restaurant_id=restaurant_id,
-            product_ids=product_ids
+            restaurant_id=restaurant_id, product_ids=product_ids
         )
         return recommendations
     except Exception as e:
         logger.error(f"Error getting recommendations: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error getting recommendations: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting recommendations: {str(e)}"
+        )
+
 
 @router.post("/quick-forecast/{restaurant_id}", response_model=ForecastResult)
 async def create_quick_forecast(
@@ -114,18 +129,18 @@ async def create_quick_forecast(
     include_events: bool = True,
     include_holidays: bool = True,
     include_promotions: bool = True,
-    service: DemandForecastService = Depends(get_forecast_service)
+    service: DemandForecastService = Depends(get_forecast_service),
 ):
     """
     Cria uma previsão rápida com configurações padrão para um restaurante específico.
     """
     try:
         logger.info(f"Creating quick forecast for restaurant {restaurant_id}")
-        
+
         # Criar solicitação com valores padrão
         start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = start_date + timedelta(days=days)
-        
+
         request = ForecastRequest(
             restaurant_id=restaurant_id,
             dimensions=[ForecastDimension.RESTAURANT],
@@ -136,11 +151,13 @@ async def create_quick_forecast(
             include_weather=include_weather,
             include_events=include_events,
             include_holidays=include_holidays,
-            include_promotions=include_promotions
+            include_promotions=include_promotions,
         )
-        
+
         result = await service.create_forecast(request)
         return result
     except Exception as e:
         logger.error(f"Error creating quick forecast: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error creating quick forecast: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error creating quick forecast: {str(e)}"
+        )

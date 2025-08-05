@@ -16,7 +16,7 @@ from src.core.models.core_models import (
     OrderItemUpdate,
     ApplyCouponRequest,
     ApplyPointsRequest,
-    DiscountResponse
+    DiscountResponse,
 )
 from src.auth.security import get_current_user
 from src.auth.models import User, Permission
@@ -24,37 +24,37 @@ from src.order.services.order_service import order_service
 
 router = APIRouter(prefix="/api/v1", tags=["orders"])
 
+
 def _check_permissions(user: User, required_permissions: List[str]):
     """Helper function to check user permissions inline."""
     if Permission.ALL in user.permissions:
-        return # User has all permissions
+        return  # User has all permissions
     for perm in required_permissions:
         if perm not in user.permissions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Permissão necessária: {perm}"
+                detail=f"Permissão necessária: {perm}",
             )
+
 
 @router.post("/orders/", response_model=Order)
 async def create_order(
-    order_data: OrderCreate,
-    current_user: User = Depends(get_current_user)
+    order_data: OrderCreate, current_user: User = Depends(get_current_user)
 ):
     """Cria um novo pedido."""
     _check_permissions(current_user, ["orders.create"])
     return await order_service.create_order(order_data, current_user.id)
 
+
 @router.get("/orders/{order_id}", response_model=Order)
-async def get_order(
-    order_id: str,
-    current_user: User = Depends(get_current_user)
-):
+async def get_order(order_id: str, current_user: User = Depends(get_current_user)):
     """Busca um pedido pelo ID."""
     _check_permissions(current_user, ["orders.read"])
     order = await order_service.get_order(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
     return order
+
 
 @router.get("/orders/", response_model=List[Order])
 async def list_orders(
@@ -67,7 +67,7 @@ async def list_orders(
     end_date: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Lista pedidos com filtros."""
     _check_permissions(current_user, ["orders.read"])
@@ -80,14 +80,15 @@ async def list_orders(
         start_date=start_date,
         end_date=end_date,
         limit=limit,
-        offset=offset
+        offset=offset,
     )
+
 
 @router.put("/orders/{order_id}", response_model=Order)
 async def update_order(
     order_id: str,
     update_data: OrderUpdate,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Atualiza um pedido."""
     _check_permissions(current_user, ["orders.update"])
@@ -96,11 +97,12 @@ async def update_order(
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
     return order
 
+
 @router.post("/orders/{order_id}/items/", response_model=OrderItem)
 async def add_order_item(
     order_id: str,
     item_data: OrderItemCreate,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Adiciona um item a um pedido existente."""
     _check_permissions(current_user, ["orders.update"])
@@ -109,11 +111,12 @@ async def add_order_item(
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
     return item
 
+
 @router.put("/orders/items/{item_id}", response_model=OrderItem)
 async def update_order_item(
     item_id: str,
     update_data: OrderItemUpdate,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Atualiza um item de pedido."""
     _check_permissions(current_user, ["orders.update"])
@@ -122,10 +125,10 @@ async def update_order_item(
         raise HTTPException(status_code=404, detail="Item não encontrado")
     return item
 
+
 @router.delete("/orders/items/{item_id}", status_code=204)
 async def remove_order_item(
-    item_id: str,
-    current_user: User = Depends(get_current_user)
+    item_id: str, current_user: User = Depends(get_current_user)
 ):
     """Remove um item de um pedido."""
     _check_permissions(current_user, ["orders.update"])
@@ -134,13 +137,15 @@ async def remove_order_item(
         raise HTTPException(status_code=404, detail="Item não encontrado")
     return None
 
+
 # === New endpoints for coupon and points redemption ===
+
 
 @router.post("/orders/{order_id}/apply-coupon", response_model=DiscountResponse)
 async def apply_coupon_to_order(
     order_id: str,
     coupon_request: ApplyCouponRequest,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Aplica um cupom de desconto a um pedido."""
     _check_permissions(current_user, ["orders.update"])
@@ -154,14 +159,15 @@ async def apply_coupon_to_order(
         print(f"Error applying coupon: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Erro ao aplicar cupom"
+            detail="Erro ao aplicar cupom",
         )
+
 
 @router.post("/orders/{order_id}/apply-points", response_model=DiscountResponse)
 async def apply_points_to_order(
     order_id: str,
     points_request: ApplyPointsRequest,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Aplica pontos de fidelidade a um pedido."""
     _check_permissions(current_user, ["orders.update"])
@@ -175,14 +181,15 @@ async def apply_points_to_order(
         print(f"Error applying points: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Erro ao aplicar pontos"
+            detail="Erro ao aplicar pontos",
         )
+
 
 @router.post("/orders/{order_id}/finalize", response_model=Order)
 async def finalize_order(
     order_id: str,
     payment_method: PaymentMethod,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Finaliza um pedido, processando pagamento e aplicando pontos/cupons."""
     _check_permissions(current_user, ["orders.update"])
@@ -196,5 +203,5 @@ async def finalize_order(
         print(f"Error finalizing order: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Erro ao finalizar pedido"
+            detail="Erro ao finalizar pedido",
         )

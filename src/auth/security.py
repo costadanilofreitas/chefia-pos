@@ -45,21 +45,21 @@ fake_users_db = {
             Permission.DAY_CLOSE,
             Permission.REPORTS_VIEW,
             "coupons.create",
-            "coupons.read", 
+            "coupons.read",
             "coupons.update",
             "coupons.delete",
             "campaigns.create",
             "campaigns.read",
-            "campaigns.update", 
+            "campaigns.update",
             "campaigns.delete",
             "customers.create",
             "customers.read",
             "customers.update",
-            "customers.delete"
+            "customers.delete",
         ],
         "is_active": True,
         "created_at": datetime.now(),
-        "updated_at": datetime.now()
+        "updated_at": datetime.now(),
     },
     "456": {
         "id": "2",
@@ -75,11 +75,11 @@ fake_users_db = {
             Permission.ORDER_UPDATE,
             Permission.CASHIER_OPEN,
             Permission.CASHIER_CLOSE,
-            Permission.REPORTS_VIEW
+            Permission.REPORTS_VIEW,
         ],
         "is_active": True,
         "created_at": datetime.now(),
-        "updated_at": datetime.now()
+        "updated_at": datetime.now(),
     },
     "789": {
         "id": "3",
@@ -92,11 +92,11 @@ fake_users_db = {
             Permission.ORDER_READ,
             Permission.PRODUCT_READ,
             Permission.CASHIER_OPEN,
-            Permission.CASHIER_CLOSE
+            Permission.CASHIER_CLOSE,
         ],
         "is_active": True,
         "created_at": datetime.now(),
-        "updated_at": datetime.now()
+        "updated_at": datetime.now(),
     },
     "111": {
         "id": "4",
@@ -105,13 +105,13 @@ fake_users_db = {
         "role": UserRole.WAITER,
         "hashed_password": pwd_context.hash("222333"),
         "permissions": [
-            Permission.ORDER_CREATE, 
-            Permission.ORDER_READ, 
-            Permission.PRODUCT_READ
+            Permission.ORDER_CREATE,
+            Permission.ORDER_READ,
+            Permission.PRODUCT_READ,
         ],
         "is_active": True,
         "created_at": datetime.now(),
-        "updated_at": datetime.now()
+        "updated_at": datetime.now(),
     },
     "555": {
         "id": "5",
@@ -119,14 +119,11 @@ fake_users_db = {
         "full_name": "Cozinheiro",
         "role": UserRole.KITCHEN,
         "hashed_password": pwd_context.hash("666777"),
-        "permissions": [
-            Permission.ORDER_READ, 
-            Permission.ORDER_UPDATE
-        ],
+        "permissions": [Permission.ORDER_READ, Permission.ORDER_UPDATE],
         "is_active": True,
         "created_at": datetime.now(),
-        "updated_at": datetime.now()
-    }
+        "updated_at": datetime.now(),
+    },
 }
 
 
@@ -183,9 +180,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         if username is None:
             raise credentials_exception
         token_data = TokenData(
-            username=username, 
+            username=username,
             role=payload.get("role"),
-            permissions=payload.get("permissions", [])
+            permissions=payload.get("permissions", []),
         )
     except JWTError:
         raise credentials_exception
@@ -204,23 +201,30 @@ async def get_current_active_user(current_user: UserInDB = Depends(get_current_u
 
 def has_permission(required_permission: str):
     """Verifica se o usuário tem a permissão necessária."""
-    async def permission_dependency(current_user: UserInDB = Depends(get_current_active_user)):
+
+    async def permission_dependency(
+        current_user: UserInDB = Depends(get_current_active_user),
+    ):
         if required_permission in current_user.permissions:
             return current_user
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Permissão insuficiente"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Permissão insuficiente"
         )
+
     return permission_dependency
 
 
 def has_role(required_role: UserRole):
     """Verifica se o usuário tem o papel necessário."""
-    async def role_dependency(current_user: UserInDB = Depends(get_current_active_user)):
+
+    async def role_dependency(
+        current_user: UserInDB = Depends(get_current_active_user),
+    ):
         if current_user.role == required_role or current_user.role == UserRole.MANAGER:
             return current_user
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Papel {required_role} necessário"
+            detail=f"Papel {required_role} necessário",
         )
+
     return role_dependency
