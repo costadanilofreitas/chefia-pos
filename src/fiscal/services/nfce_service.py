@@ -2,16 +2,14 @@
 Serviço para gerenciamento de NFC-e (Nota Fiscal de Consumidor Eletrônica)
 """
 
-import os
 import logging
-import json
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Tuple
 from uuid import uuid4
 
 from src.fiscal.models.nfce_models import (
-    NFCeDocument, NFCeStatus, NFCeItem, NFCeResponse, 
+    NFCeDocument, NFCeStatus, NFCeResponse, 
     NFCeEvent, NFCeStateRule
 )
 

@@ -1,10 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock
 import json
 import os
-from datetime import datetime
-import shutil
 
 from src.api.main import app
 from src.product.models.product import (
@@ -16,7 +13,6 @@ from src.product.models.product import (
 )
 from src.product.services.product_service import get_product_service
 from src.product.services.combo_rules_service import get_combo_rules_service
-from src.auth.security import fake_users_db
 
 # Configurar cliente de teste
 client = TestClient(app)

@@ -1,10 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, Body, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, WebSocket, WebSocketDisconnect
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 import logging
 import asyncio
-import json
-from datetime import datetime
 
 from ..events.event_bus import Event, EventType, get_event_bus
 from ..events.event_monitor import get_event_monitor

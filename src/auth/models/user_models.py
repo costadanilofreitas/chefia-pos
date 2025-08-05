@@ -4,15 +4,6 @@ from enum import Enum
 from datetime import datetime
 
 # Importar modelos existentes
-from .numeric_password_models import (
-    OperatorCredential,
-    OperatorCredentialCreate,
-    OperatorCredentialUpdate,
-    OperatorCredentialReset,
-    LoginRequest,
-    LoginResponse,
-    AuthConfig
-)
 
 class UserRole(str, Enum):
     """Roles de usuário no sistema."""

@@ -1,6 +1,5 @@
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-import uuid
 import json
 import os
 import logging
@@ -18,13 +17,9 @@ from src.cashier.models.cashier import (
     create_operation
 )
 from src.cashier.events.cashier_events import (
-    publish_cashier_opened,
     publish_cashier_closed,
     publish_cashier_operation,
     publish_cashier_updated
-)
-from src.business_day.services.business_day_service import (
-    get_business_day_service
 )
 
 logger = logging.getLogger(__name__)

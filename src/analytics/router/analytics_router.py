@@ -2,20 +2,16 @@
 Router para dashboards analíticos personalizáveis
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, status
+from fastapi import APIRouter, Depends, Query, Path
 from typing import List, Dict, Any, Optional, Union
-from datetime import datetime
 
 from src.analytics.models.dashboard_models import (
-    Dashboard, DashboardItem, DashboardLayout, ChartConfiguration, 
-    DashboardFilter, DataSourceType, ChartType, FilterOperator,
-    DashboardShare, DataSourceConfig, DashboardPreset,
-    UserDashboardPreference, DashboardAlert, DashboardExport,
+    Dashboard, ChartConfiguration, 
+    DashboardFilter, DataSourceType, DashboardShare, DashboardAlert, DashboardExport,
     ScheduledReport
 )
 from src.analytics.services.analytics_service import (
-    AnalyticsService, DashboardService, DataSourceService,
-    AlertService, ExportService, ReportService
+    AnalyticsService
 )
 from src.core.auth.auth_service import get_current_user, User
 from src.core.db.db_service import get_db_service

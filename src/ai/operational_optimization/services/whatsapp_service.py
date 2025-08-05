@@ -11,7 +11,7 @@ import logging
 import uuid
 import os
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any
 from fastapi import HTTPException
 
 from ..models import WhatsAppCampaign

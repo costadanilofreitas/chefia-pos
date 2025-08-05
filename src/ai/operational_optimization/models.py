@@ -1,6 +1,5 @@
-from enum import Enum
 from datetime import datetime
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any
 from pydantic import BaseModel, Field
 
 class StaffingRecommendation(BaseModel):

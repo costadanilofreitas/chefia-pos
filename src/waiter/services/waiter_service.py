@@ -1,9 +1,7 @@
-from typing import List, Dict, Any, Optional, Union
-from datetime import datetime, timedelta
+from typing import List, Dict, Any, Optional
+from datetime import datetime
 import json
 import os
-import uuid
-import asyncio
 
 from src.waiter.models.waiter_models import (
     WaiterOrder, 
@@ -26,7 +24,6 @@ from src.waiter.events.waiter_events import get_waiter_event_publisher
 from src.product.services.product_service import get_product_service
 
 # Simulação de banco de dados com arquivo JSON
-import os
 DATA_DIR = os.path.join("/home/ubuntu/pos-modern/data")
 WAITER_ORDERS_FILE = os.path.join(DATA_DIR, "waiter_orders.json")
 WAITER_SESSIONS_FILE = os.path.join(DATA_DIR, "waiter_sessions.json")

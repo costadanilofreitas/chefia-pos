@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 
@@ -6,9 +6,8 @@ from src.auth.security import get_current_user
 from src.auth.models import User
 from src.delivery.models.delivery_models import (
     DeliveryOrder, DeliveryOrderStatus, DeliveryCourier, CourierStatus, 
-    CourierType, DeliveryRoute, RouteStatus, DeliveryZone, 
-    DeliveryTracking, TrackingEventType,
-    CreateDeliveryOrderRequest, UpdateDeliveryOrderRequest, UpdateDeliveryOrderStatusRequest,
+    CourierType, DeliveryRoute, DeliveryZone, 
+    DeliveryTracking, CreateDeliveryOrderRequest, UpdateDeliveryOrderRequest, UpdateDeliveryOrderStatusRequest,
     AssignCourierRequest, CreateCourierRequest, UpdateCourierStatusRequest,
     UpdateCourierLocationRequest, CreateZoneRequest, CreateTrackingEventRequest,
     CheckAddressRequest

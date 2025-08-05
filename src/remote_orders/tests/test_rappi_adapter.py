@@ -1,6 +1,5 @@
 import unittest
 from unittest.mock import AsyncMock, patch, MagicMock
-import json
 from datetime import datetime
 
 from src.remote_orders.adapters.rappi_adapter import RappiAdapter

@@ -1,6 +1,6 @@
 import os
 import json
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any
 from datetime import datetime, date, timedelta
 import uuid
 
@@ -10,7 +10,6 @@ from ..models.employee_models import (
     EmployeeUpdate,
     EmployeeQuery,
     EmployeeRole,
-    EmploymentType,
     DeliveryAssignment,
     DeliveryAssignmentCreate,
     DeliveryAssignmentUpdate,
@@ -24,7 +23,7 @@ from ..models.employee_models import (
 )
 
 from src.logs_module.services.log_service import log_info, log_error, LogSource
-from src.core.events.event_bus import get_event_bus, Event, EventType
+from src.core.events.event_bus import get_event_bus, Event
 from src.accounts.services.accounts_service import accounts_service
 
 # Configuração
@@ -515,7 +514,7 @@ class EmployeeService:
         employee = await self.get_employee(assignment.employee_id)
         if not employee:
             await log_error(
-                message=f"Erro ao processar pagamento de entrega: Funcionário não encontrado",
+                message="Erro ao processar pagamento de entrega: Funcionário não encontrado",
                 source=LogSource.EMPLOYEE,
                 module="delivery",
                 details={

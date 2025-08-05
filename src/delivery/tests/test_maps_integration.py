@@ -8,7 +8,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from delivery.services.google_maps_service import GoogleMapsService
-from delivery.router.maps_router import router, get_maps_service
+from delivery.router.maps_router import router
 
 class TestGoogleMapsIntegration(unittest.TestCase):
     """Testes de integração para o módulo de Google Maps no sistema de delivery."""

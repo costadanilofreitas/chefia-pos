@@ -9,10 +9,8 @@ Este módulo implementa:
 
 import os
 import logging
-import requests
-import json
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any
 from fastapi import HTTPException
 
 # Configurar logging

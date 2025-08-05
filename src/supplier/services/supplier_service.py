@@ -5,7 +5,6 @@ import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import uuid
-import re
 
 from ..models.supplier_models import (
     Supplier, 
@@ -15,8 +14,7 @@ from ..models.supplier_models import (
     PurchaseOrder,
     PurchaseOrderCreate,
     PurchaseOrderUpdate,
-    PurchaseOrderStatus,
-    PurchaseOrderItem
+    PurchaseOrderStatus
 )
 
 from src.stock.services.stock_service import stock_service

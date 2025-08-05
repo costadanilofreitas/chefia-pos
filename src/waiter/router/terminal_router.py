@@ -1,12 +1,10 @@
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from datetime import datetime
 
 from ..models.terminal_models import (
     TerminalConfig, 
     TerminalSession, 
     OfflineOrder,
-    TerminalType,
     TerminalStatus
 )
 from ..services.terminal_service import TerminalService

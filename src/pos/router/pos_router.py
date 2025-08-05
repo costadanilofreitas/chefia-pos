@@ -1,6 +1,5 @@
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Body, status # Added status
-from datetime import datetime
 import os # Added for path joining
 
 from src.pos.models.pos_models import (
@@ -12,19 +11,14 @@ from src.pos.models.pos_models import (
     PaymentTransaction,
     PaymentTransactionCreate,
     PaymentTransactionUpdate,
-    PaymentMethod,
-    PaymentStatus,
     Receipt,
     ReceiptCreate,
-    ReceiptType,
     CashOperation,
     CashOperationCreate,
-    POSReport,
-    POSReportCreate,
     POSConfig
 )
 from src.pos.services.pos_service import get_pos_service
-from src.auth.security import get_current_user, has_permission 
+from src.auth.security import get_current_user 
 from src.auth.models import User, Permission # Import User and Permission
 from src.core.dependencies import check_instance_license, CONFIG_DIR # Import the dependency and config dir
 

@@ -2,16 +2,14 @@
 Serviço para gerenciamento de MFE (Módulo Fiscal Eletrônico)
 """
 
-import os
 import logging
-import json
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Tuple
 from uuid import uuid4
 
 from src.fiscal.models.mfe_models import (
     MFEEquipment, MFEStatus, MFEOperation, MFEOperationType,
-    MFEConfiguration, MFEStateRule, MFEMaintenanceSchedule
+    MFEConfiguration, MFEStateRule
 )
 
 # Configuração de logging

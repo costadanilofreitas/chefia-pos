@@ -9,7 +9,7 @@ import os
 import json
 import logging
 import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from datetime import datetime
 
 # Configuração de logging

@@ -1,16 +1,12 @@
 import unittest
-import json
 import uuid
 import asyncio
-from datetime import datetime
 from unittest.mock import patch, MagicMock, AsyncMock
 
 from src.remote_orders.models.remote_order_models import (
-    RemoteOrder, RemoteOrderStatus, RemotePlatform, 
-    RemotePlatformConfig, RemoteOrderCreate, RemoteOrderUpdate
+    RemoteOrder, RemoteOrderStatus, RemotePlatform
 )
 from src.remote_orders.services.remote_order_service import RemoteOrderService
-from src.core.events.event_bus import Event, EventType
 
 class TestRemoteOrderService(unittest.TestCase):
     """Testes para o serviço de pedidos remotos."""

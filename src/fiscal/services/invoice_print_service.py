@@ -1,12 +1,11 @@
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, Optional, Any
 import logging
-import json
 from datetime import datetime
 
-from ..models.fiscal_models import ResultadoCalculoFiscal, ItemCalculoFiscal
+from ..models.fiscal_models import ResultadoCalculoFiscal
 from ...peripherals.services.peripheral_service import peripheral_service
 from ...peripherals.services.print_service import print_service
-from ...peripherals.models.peripheral_models import PrinterType, PrintJob, PrintTemplate
+from ...peripherals.models.peripheral_models import PrinterType, PrintJob
 
 logger = logging.getLogger(__name__)
 

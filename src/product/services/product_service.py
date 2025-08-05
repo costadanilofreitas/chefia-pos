@@ -1,11 +1,10 @@
-from typing import List, Dict, Any, Optional, Union, Set
+from typing import List, Dict, Any, Optional
 from fastapi import HTTPException
 import logging
 import json
 import os
 from datetime import datetime
 import uuid
-import shutil
 
 from src.product.models.product import (
     Product,
@@ -22,17 +21,13 @@ from src.product.models.product import (
     Menu,
     MenuCreate,
     MenuUpdate,
-    ExchangeGroup,
     Ingredient,
     IngredientCreate,
     IngredientUpdate,
     OptionGroup,
     OptionGroupCreate,
     OptionGroupUpdate,
-    Option,
-    OptionCreate,
     CompositeSection,
-    CompositeSectionCreate,
     CompositeProductCreate,
     CompositeProductUpdate,
     PricingStrategy,

@@ -1,12 +1,11 @@
-from typing import Dict, Any, Optional, List
+from typing import Optional
 import logging
-import asyncio
 from datetime import datetime
 
-from src.peripherals.events.peripheral_events import PeripheralEventType, KeyboardEventData
+from src.peripherals.events.peripheral_events import PeripheralEventType
 from src.peripherals.models.peripheral_models import CommandType
 from src.core.events.event_bus import EventBus, Event
-from src.kds.models.kds_models import OrderStatus, ItemStatus
+from src.kds.models.kds_models import ItemStatus
 
 logger = logging.getLogger(__name__)
 

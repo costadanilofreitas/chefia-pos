@@ -1,7 +1,3 @@
-from typing import Dict, Any, List, Optional
-import logging
-import os
-from datetime import datetime
 
 class CoreException(Exception):
     """Exceção base para todas as exceções do sistema POS Modern."""

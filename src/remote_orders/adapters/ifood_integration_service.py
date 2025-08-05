@@ -6,21 +6,19 @@ incluindo processamento de pedidos, confirmação, notificações e reembolsos.
 """
 
 import os
-import json
 import logging
 import asyncio
 import uuid
-from typing import Dict, Any, List, Optional, Callable
-from datetime import datetime, timedelta
-from fastapi import FastAPI, Request, Response, HTTPException, Depends, BackgroundTasks, Header
+from typing import Dict, Any
+from datetime import datetime
+from fastapi import Request, BackgroundTasks, Header
 
 from .ifood.auth_manager import IFoodAuthManager
 from .ifood.api_client import IFoodAPIClient
 from .ifood.webhook_handler import IFoodWebhookHandler
 from ..models.remote_order_models import (
-    RemoteOrder, RemoteOrderStatus, RemotePlatform, 
-    RemotePlatformConfig, RemoteOrderItem, RemoteOrderCustomer,
-    RemoteOrderPayment
+    RemoteOrderStatus, RemotePlatform, 
+    RemotePlatformConfig
 )
 
 # Configuração de logging

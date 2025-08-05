@@ -1,9 +1,7 @@
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 import json
 import os
-import uuid
-import asyncio
 
 from src.kds.models.kds_models import (
     KDSOrder, 
@@ -20,7 +18,6 @@ from src.kds.models.kds_models import (
 from src.kds.events.kds_events import get_kds_event_publisher
 
 # Simulação de banco de dados com arquivo JSON
-import os
 DATA_DIR = os.path.join("/home/ubuntu/pos-modern/data")
 KDS_ORDERS_FILE = os.path.join(DATA_DIR, "kds_orders.json")
 KDS_SESSIONS_FILE = os.path.join(DATA_DIR, "kds_sessions.json")

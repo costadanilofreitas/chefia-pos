@@ -1,8 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch, AsyncMock
-import asyncio
 from datetime import datetime
-import json
 
 from src.core.tracing.transaction_tracker import (
     TransactionTracker, TransactionType, TransactionOrigin,

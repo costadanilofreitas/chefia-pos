@@ -5,11 +5,9 @@ Este módulo gerencia a comunicação com a API do Twilio para enviar e receber
 mensagens via WhatsApp, incluindo suporte a comboboxes e mídia.
 """
 
-import os
 import json
 import logging
-import requests
-from typing import Dict, List, Optional, Union, Any
+from typing import Dict, List, Any
 from datetime import datetime
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException

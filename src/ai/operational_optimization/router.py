@@ -12,7 +12,7 @@ Este router expõe endpoints para:
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Dict, Optional, Any
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from ..models import (

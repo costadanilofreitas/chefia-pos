@@ -1,10 +1,8 @@
 import unittest
 from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi.testclient import TestClient
-import json
 
 from src.remote_orders.router.rappi_router import router
-from src.remote_orders.services.rappi_order_service import RappiOrderService
 from src.remote_orders.models.remote_order_models import RemoteOrderStatus, RemoteOrder
 
 class TestRappiRouter(unittest.TestCase):

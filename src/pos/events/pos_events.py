@@ -1,7 +1,5 @@
 from src.core.events.event_bus import get_event_bus, EventBus
-from typing import Dict, Any, List, Optional
-import asyncio
-import json
+from typing import Dict, Any, Optional
 import uuid
 from datetime import datetime
 

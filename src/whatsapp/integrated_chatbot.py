@@ -10,20 +10,17 @@ Este módulo integra todos os componentes do chatbot WhatsApp:
 """
 
 import os
-import json
 import logging
-import uuid
 import asyncio
-from typing import Dict, Any, List, Optional
-from datetime import datetime
-from fastapi import FastAPI, Request, Response, HTTPException, Depends, BackgroundTasks
+from typing import Dict, Any
+from fastapi import FastAPI, Request, Response, HTTPException, BackgroundTasks
 
 from .twilio_integration import TwilioWhatsAppIntegration
 from .sqs.sqs_integration import WhatsAppSQSIntegration
 from .payment_integration import WhatsAppPaymentIntegration
 from .order_confirmation import WhatsAppOrderConfirmation, OrderConfirmationMode, OrderStatus
 from .ai_integration import WhatsAppAIIntegration
-from .chatbot_service import WhatsAppChatbotService, ConversationState, MessageType
+from .chatbot_service import WhatsAppChatbotService
 
 # Configuração de logging
 logger = logging.getLogger(__name__)

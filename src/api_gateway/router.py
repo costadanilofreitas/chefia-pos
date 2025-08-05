@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, Request, Response
+from fastapi import APIRouter, HTTPException, Header, Request
 from typing import Dict, List, Optional, Any
-import json
 
-from src.api_gateway.gateway import get_api_gateway, ApiGateway, RequestMethod
+from src.api_gateway.gateway import get_api_gateway
 
 router = APIRouter(prefix="/api/external", tags=["external"])
 

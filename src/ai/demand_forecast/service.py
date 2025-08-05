@@ -1,7 +1,6 @@
 import os
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any, Union
 from fastapi import HTTPException
 
 # Configurar logging

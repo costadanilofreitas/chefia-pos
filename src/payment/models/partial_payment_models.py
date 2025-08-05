@@ -3,8 +3,7 @@ from typing import List, Dict, Optional, Any, Union
 from enum import Enum
 from datetime import datetime
 import uuid
-from .payment_models import Payment, PaymentStatus, PaymentMethod
-from .split_models import SplitType
+from .payment_models import Payment, PaymentMethod
 
 class PaymentSessionStatus(str, Enum):
     """Status da sessão de pagamento."""

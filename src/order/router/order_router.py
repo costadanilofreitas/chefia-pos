@@ -1,9 +1,5 @@
-from typing import List, Dict, Any, Optional, Union
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, Path, Body, status
-from fastapi.responses import JSONResponse
-from datetime import datetime
-import uuid
-import json
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.core.models.core_models import (
     OrderItem,
@@ -24,7 +20,6 @@ from src.core.models.core_models import (
 )
 from src.auth.security import get_current_user
 from src.auth.models import User, Permission
-from src.core.events.event_bus import get_event_bus, Event, EventType
 from src.order.services.order_service import order_service
 
 router = APIRouter(prefix="/api/v1", tags=["orders"])

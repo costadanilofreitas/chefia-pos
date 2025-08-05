@@ -1,11 +1,8 @@
 from enum import Enum
-from typing import Dict, List, Optional, Any, Callable
-import json
+from typing import Dict, List, Any, Callable
 import uuid
 import time
-import asyncio
 import logging
-import httpx
 from datetime import datetime
 
 from src.core.events.event_bus import get_event_bus, Event, EventType

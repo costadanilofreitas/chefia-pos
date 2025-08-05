@@ -1,16 +1,14 @@
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
-import json
 import os
 import sys
-from datetime import datetime
 
 # Adicionar diretório raiz ao path para importar módulos
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 
 from src.payment.models.payment_models import (
     PaymentProvider, PaymentMethod, PaymentStatus, NotificationType,
-    Payment, PaymentCreate
+    PaymentCreate
 )
 from src.payment.adapters.asaas_adapter import AsaasAdapter
 

@@ -2,12 +2,10 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import json
 import os
-import uuid
 
 from src.payment.models.payment_models import (
-    PaymentProvider, PaymentMethod, PaymentStatus, NotificationType,
-    ProviderConfig, ProviderConfigCreate, ProviderConfigUpdate,
-    Payment, PaymentCreate, PaymentUpdate, PaymentWebhook
+    PaymentProvider, PaymentStatus, ProviderConfig, ProviderConfigCreate, ProviderConfigUpdate,
+    Payment, PaymentCreate
 )
 from src.payment.adapters.asaas_adapter import AsaasAdapter
 from src.core.events.event_bus import get_event_bus, Event, EventType

@@ -1,16 +1,13 @@
-import os
-import json
 import uuid
 from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
-import asyncio
 
 from src.delivery.models.delivery_models import (
     DeliveryOrder, DeliveryOrderStatus, DeliveryCourier, CourierStatus, 
     CourierType, DeliveryRoute, RouteStatus, DeliveryZone, 
     DeliveryTracking, TrackingEventType
 )
-from src.core.events.event_bus import get_event_bus, Event, EventType
+from src.core.events.event_bus import get_event_bus, Event
 
 
 class DeliveryService:

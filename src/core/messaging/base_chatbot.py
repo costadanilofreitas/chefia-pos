@@ -6,13 +6,10 @@ de chatbots em múltiplas plataformas (WhatsApp, Messenger, Instagram),
 permitindo reutilização de código e funcionalidades comuns.
 """
 
-import os
-import json
 import logging
 import uuid
-import asyncio
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime
 
 # Configuração de logging

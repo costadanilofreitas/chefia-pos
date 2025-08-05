@@ -8,9 +8,8 @@ Este módulo implementa:
 """
 
 import logging
-import asyncio
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 # Importar corretamente os módulos
 import sys

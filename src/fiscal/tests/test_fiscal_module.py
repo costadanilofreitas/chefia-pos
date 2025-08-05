@@ -1,6 +1,5 @@
 import unittest
 import asyncio
-import json
 import os
 from datetime import datetime
 from unittest.mock import MagicMock, patch
@@ -14,9 +13,6 @@ from ..models.fiscal_models import (
     OrigemProduto,
     RegraNcm,
     BeneficioFiscal,
-    ImpostoCalculado,
-    ItemCalculoFiscal,
-    ResultadoCalculoFiscal,
     ProductFiscalInfo
 )
 from ..services.fiscal_service import FiscalService

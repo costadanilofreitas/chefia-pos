@@ -1,7 +1,6 @@
 from src.core.events.event_bus import Event, EventType, EventHandler, get_event_bus
 from src.product.services.product_service import get_product_service
 import logging
-from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 

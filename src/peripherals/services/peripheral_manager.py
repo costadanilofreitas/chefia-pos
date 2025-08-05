@@ -1,22 +1,13 @@
-from typing import Dict, List, Any, Optional, Type
+from typing import Dict, List, Any, Optional
 import logging
 import os
 import json
 import importlib
-import inspect
 import asyncio
 
 from src.peripherals.models.peripheral_models import (
     Peripheral,
-    PeripheralConfig,
-    PeripheralStatus,
-    PeripheralException,
-    ThermalPrinter,
-    ConventionalPrinter,
-    BarcodeReader,
-    PixReader,
-    CashDrawer,
-    PaymentTerminal
+    PeripheralConfig
 )
 
 class PeripheralFactory:

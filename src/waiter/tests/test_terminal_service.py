@@ -1,10 +1,8 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import asyncio
-import json
-from datetime import datetime
 
-from ..models.terminal_models import TerminalConfig, TerminalSession, OfflineOrder, TerminalType, TerminalStatus, TerminalCapabilities
+from ..models.terminal_models import TerminalConfig, OfflineOrder, TerminalType, TerminalStatus, TerminalCapabilities
 from ..services.terminal_service import TerminalService
 
 class TestTerminalService(unittest.TestCase):

@@ -5,12 +5,10 @@ Este módulo implementa a lógica de confirmação de pedidos configurável,
 notificações de status e reembolso automático para pedidos não confirmados.
 """
 
-import os
-import json
 import uuid
 import logging
 import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from enum import Enum
 

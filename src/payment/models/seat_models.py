@@ -1,10 +1,8 @@
 from pydantic import BaseModel, Field, validator
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Optional
 from enum import Enum
 from datetime import datetime
 import uuid
-from ..models.payment_models import Payment, PaymentStatus, PaymentMethod
-from ..models.partial_payment_models import PaymentSession, BillSplit, BillSplitPart
 
 class SeatStatus(str, Enum):
     """Status do assento."""

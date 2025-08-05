@@ -1,12 +1,10 @@
 import asyncio
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional
 import os
-import re
 import json
 import time
 import socket
-import threading
 
 from src.peripherals.models.peripheral_models import (
     PaymentTerminal,
@@ -746,7 +744,7 @@ class SimulatedPaymentTerminal(PaymentTerminal):
             
             log_file = os.path.join(log_dir, "payment_receipts.log")
             with open(log_file, "a") as f:
-                f.write(f"\n--- RECIBO DE PAGAMENTO ---\n")
+                f.write("\n--- RECIBO DE PAGAMENTO ---\n")
                 f.write(f"Data: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
                 f.write(f"Transação: {transaction_id}\n")
                 f.write(f"Tipo: {transaction.get('type', 'N/A')}\n")
@@ -754,7 +752,7 @@ class SimulatedPaymentTerminal(PaymentTerminal):
                 f.write(f"Status: {transaction.get('status', 'N/A')}\n")
                 if transaction.get('authorization_code'):
                     f.write(f"Autorização: {transaction.get('authorization_code')}\n")
-                f.write(f"---------------------------\n")
+                f.write("---------------------------\n")
             
             return True
         except Exception as e:

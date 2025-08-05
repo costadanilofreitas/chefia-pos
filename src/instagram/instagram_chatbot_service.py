@@ -5,12 +5,8 @@ Este módulo implementa o serviço de chatbot para Instagram Direct,
 processando mensagens recebidas e gerando respostas apropriadas.
 """
 
-import os
-import json
 import logging
-import asyncio
-from typing import Dict, Any, List, Optional
-from datetime import datetime
+from typing import Dict, Any, List
 
 from ...core.messaging import BaseChatbotService, MessageType, ConversationState, PlatformType
 

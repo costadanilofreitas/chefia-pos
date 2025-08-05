@@ -1,7 +1,7 @@
 from enum import Enum
 from datetime import datetime
-from typing import List, Dict, Optional, Any, Union
-from pydantic import BaseModel, Field
+from typing import List, Dict, Optional, Any
+from pydantic import BaseModel
 
 class TimeGranularity(str, Enum):
     """Granularidade temporal para previsão."""

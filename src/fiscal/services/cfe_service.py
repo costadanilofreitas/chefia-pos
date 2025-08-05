@@ -2,16 +2,14 @@
 Serviço para gerenciamento de CF-e (Cupom Fiscal Eletrônico)
 """
 
-import os
 import logging
-import json
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Tuple
 from uuid import uuid4
 
 from src.fiscal.models.cfe_models import (
-    CFeDocument, CFeStatus, CFeItem, CFeResponse, 
+    CFeDocument, CFeStatus, CFeResponse, 
     CFeEvent, CFeStateRule
 )
 

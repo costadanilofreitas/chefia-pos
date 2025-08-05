@@ -1,8 +1,4 @@
-from typing import Dict, List, Any, Optional, Union
-import os
-import json
-import asyncio
-from datetime import datetime
+from typing import Dict, Any
 import traceback
 
 try:
@@ -17,7 +13,6 @@ from src.peripherals.models.peripheral_models import (
     PrinterConfig,
     PeripheralStatus,
     PeripheralConnectionType,
-    PrinterException,
     ConnectionException
 )
 

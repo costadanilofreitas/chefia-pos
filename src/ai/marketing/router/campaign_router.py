@@ -1,6 +1,5 @@
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, Body
 import logging
 
 from ..marketing.services.campaign_service import MarketingCampaignService

@@ -5,12 +5,11 @@ from typing import List, Optional
 import uuid
 
 from ..models.customer_models import (
-    Customer, CustomerCreate, CustomerUpdate, Address, PurchaseHistoryEntry, Loyalty,
-    PointsRedemption
+    Customer, CustomerCreate, CustomerUpdate, Address, PurchaseHistoryEntry, Loyalty
 )
 from ..services.customer_service import customer_service, CustomerService
 from src.auth.security import get_current_user
-from src.auth.models import User, Permission
+from src.auth.models import User
 
 router = APIRouter(
     prefix="/api/v1/customers",

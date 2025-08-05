@@ -1,16 +1,12 @@
-import asyncio
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any
 import os
-import re
-import json
 import time
 
 from src.peripherals.models.peripheral_models import (
     CashDrawer,
     CashDrawerConfig,
-    PeripheralStatus,
-    PeripheralException
+    PeripheralStatus
 )
 
 class StandaloneCashDrawer(CashDrawer):

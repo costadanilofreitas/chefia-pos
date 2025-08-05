@@ -1,7 +1,6 @@
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body, status
-from fastapi.responses import JSONResponse
-from datetime import datetime, date
+from datetime import date
 
 from ..models.accounts_models import (
     Account,

@@ -7,7 +7,6 @@ import threading
 import time
 
 from src.peripherals.models.peripheral_models import (
-    PeripheralType, PeripheralStatus, KeyboardConfig, 
     CommandType
 )
 from src.peripherals.events.peripheral_events import (

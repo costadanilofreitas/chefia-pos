@@ -15,7 +15,6 @@ from ..models.supplier_models import (
 from ..services.supplier_service import supplier_service
 from src.auth.security import get_current_user
 from src.auth.models import User, Permission
-from src.logs_module.services.log_service import log_info, log_error, LogSource
 
 router = APIRouter(prefix="/api/v1", tags=["suppliers"])
 

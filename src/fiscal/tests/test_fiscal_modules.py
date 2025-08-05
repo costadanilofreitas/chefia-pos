@@ -5,8 +5,7 @@ Módulo de testes para validação dos módulos fiscais avançados
 import unittest
 import os
 import sys
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 # Adiciona o diretório raiz ao path para importação dos módulos
@@ -15,7 +14,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 from src.fiscal.models.nfce_models import NFCeDocument, NFCeStatus
 from src.fiscal.models.cfe_models import CFeDocument, CFeStatus
 from src.fiscal.models.mfe_models import MFEEquipment, MFEStatus
-from src.fiscal.models.accounting_models import AccountingExportBatch, AccountingExportStatus
+from src.fiscal.models.accounting_models import AccountingExportStatus
 
 from src.fiscal.services.nfce_service import NFCeService
 from src.fiscal.services.cfe_service import CFeService

@@ -11,7 +11,7 @@ import json
 import uuid
 import logging
 import boto3
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime
 from botocore.exceptions import ClientError
 

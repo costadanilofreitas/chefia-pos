@@ -1,6 +1,5 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from enum import Enum
-from datetime import datetime
 
 from src.core.events.event_bus import Event, EventHandler, EventType
 

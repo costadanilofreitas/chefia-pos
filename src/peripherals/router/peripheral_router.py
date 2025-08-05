@@ -1,10 +1,9 @@
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any
 import logging
-import asyncio
-from fastapi import APIRouter, Depends, HTTPException, Body, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Body, Path
 
 from src.peripherals.services.peripheral_manager import peripheral_manager, PeripheralFactory
-from src.peripherals.models.peripheral_models import PeripheralConfig, PeripheralStatus
+from src.peripherals.models.peripheral_models import PeripheralConfig
 from src.core.dependencies import get_current_user
 from src.auth.models import User
 

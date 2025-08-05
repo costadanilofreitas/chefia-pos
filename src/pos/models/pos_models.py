@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
-from typing import List, Dict, Optional, Union, Any
+from typing import List, Dict, Optional, Any
 from enum import Enum
-from datetime import datetime, time
+from datetime import datetime
 import uuid
 
 # Enums para o módulo de Frente de Caixa

@@ -1,15 +1,12 @@
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock
 import json
 import os
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 from src.api.main import app
-from src.cashier.models.cashier import Cashier, CashierStatus, OperationType, PaymentMethod
-from src.cashier.services.cashier_service import CashierService, get_cashier_service
+from src.cashier.services.cashier_service import get_cashier_service
 from src.business_day.services.business_day_service import get_business_day_service
-from src.auth.security import fake_users_db
 
 # Configurar cliente de teste
 client = TestClient(app)
@@ -258,7 +255,7 @@ async def test_close_cashier_success(open_cashier):
     token = get_auth_token(client)
     
     response = client.put(
-        f"/api/v1/cashier/test-cashier-id/close",
+        "/api/v1/cashier/test-cashier-id/close",
         headers={"Authorization": f"Bearer {token}"},
         json={
             "operator_id": "operator-123",

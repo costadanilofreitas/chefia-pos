@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, Path, Body, status # Added status
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import FileResponse
 from typing import List, Optional, Dict, Any
 import os
 import shutil
@@ -29,18 +29,14 @@ from src.product.models.product import (
     OptionGroup,
     OptionGroupCreate,
     OptionGroupUpdate,
-    Option,
-    OptionCreate,
     CompositeSection,
-    CompositeSectionCreate,
     CompositeProductCreate,
     CompositeProductUpdate,
-    PricingStrategy,
     MenuExport
 )
 from src.product.services.product_service import get_product_service
 # Removed check_permissions import, added has_permission
-from src.auth.security import get_current_user, has_permission
+from src.auth.security import get_current_user
 from src.auth.models import User, Permission # Import User and Permission
 
 router = APIRouter(prefix="/api/v1", tags=["products"])

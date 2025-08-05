@@ -1,7 +1,5 @@
-from typing import Dict, List, Optional, Any, Union
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body, status
-from fastapi.responses import JSONResponse
-from datetime import datetime
+from typing import Dict, List, Any
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from src.sat.models.sat_models import (
     SATConfig,
@@ -9,8 +7,7 @@ from src.sat.models.sat_models import (
     SATResponse,
     SATStatusResponse,
     SATEmitRequest,
-    SATCancelRequest,
-    CFe
+    SATCancelRequest
 )
 from src.sat.services.sat_service import get_sat_service
 from src.auth.security import get_current_user

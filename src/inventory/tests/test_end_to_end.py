@@ -1,5 +1,4 @@
 import unittest
-import asyncio
 import sys
 import os
 
@@ -13,10 +12,9 @@ from src.inventory.tests.test_inventory_financial_integration import TestInvento
 
 # Import inventory models for end-to-end testing
 from src.inventory.models.inventory_models import (
-    InventoryItem, InventoryItemCreate, InventoryItemUpdate,
-    InventoryTransaction, InventoryTransactionCreate, TransactionType, TransactionStatus,
-    InventoryLoss, InventoryLossCreate, LossReason,
-    FinancialEntry, FinancialEntryType
+    InventoryItemCreate, TransactionType, TransactionStatus,
+    InventoryLossCreate, LossReason,
+    FinancialEntryType
 )
 
 # Import services for end-to-end testing

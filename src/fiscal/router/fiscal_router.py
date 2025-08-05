@@ -9,10 +9,9 @@ from pydantic import BaseModel
 
 from src.fiscal.models.nfce_models import NFCeDocument, NFCeStatus, NFCeResponse, NFCeEvent
 from src.fiscal.models.cfe_models import CFeDocument, CFeStatus, CFeResponse, CFeEvent
-from src.fiscal.models.mfe_models import MFEEquipment, MFEStatus, MFEOperation, MFEConfiguration
+from src.fiscal.models.mfe_models import MFEEquipment, MFEStatus, MFEConfiguration
 from src.fiscal.models.accounting_models import (
-    AccountingExportBatch, AccountingExportStatus, AccountingExportItem,
-    AccountingProvider, AccountingMapping, AccountingSchedule
+    AccountingExportBatch, AccountingProvider, AccountingMapping, AccountingSchedule
 )
 
 from src.fiscal.services.nfce_service import NFCeService

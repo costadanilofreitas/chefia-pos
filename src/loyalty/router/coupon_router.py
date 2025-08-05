@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-from typing import List, Optional, Dict
+from typing import List, Optional
 import uuid
 
 from ..models.coupon_models import Coupon, CouponCreate, CouponUpdate

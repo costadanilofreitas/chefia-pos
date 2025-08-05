@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Any, Union
 from datetime import datetime, timedelta
 import logging
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from .transaction_tracker import TransactionEvent, TransactionStatus, EventType
+from .transaction_tracker import TransactionEvent, EventType
 
 class TraceRepository:
     """

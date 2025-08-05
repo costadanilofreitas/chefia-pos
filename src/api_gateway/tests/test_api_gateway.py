@@ -1,6 +1,4 @@
 import unittest
-import asyncio
-import json
 from unittest.mock import patch, MagicMock
 
 from src.api_gateway.gateway import (

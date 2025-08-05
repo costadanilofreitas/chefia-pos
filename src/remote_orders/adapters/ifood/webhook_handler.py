@@ -9,11 +9,9 @@ e integração com o sistema de pedidos.
 import os
 import json
 import logging
-import asyncio
-from typing import Dict, Any, List, Optional, Callable
-from fastapi import FastAPI, Request, Response, HTTPException, Depends, BackgroundTasks, Header
+from typing import Dict, Any, Callable
+from fastapi import Request, BackgroundTasks, Header
 
-from .auth_manager import IFoodAuthManager
 from .api_client import IFoodAPIClient
 from ...models.remote_order_models import RemoteOrderStatus
 

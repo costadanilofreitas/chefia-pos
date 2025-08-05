@@ -1,16 +1,13 @@
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, Any
 import os
 import json
-import asyncio
 from datetime import datetime
 import tempfile
-from pathlib import Path
 
 from src.peripherals.models.peripheral_models import (
     Printer,
     PrinterConfig,
-    PeripheralStatus,
-    PrinterException
+    PeripheralStatus
 )
 
 
@@ -110,7 +107,7 @@ class SimulatedPrinter(Printer):
             text_filepath = os.path.join(self.output_dir, text_filename)
             
             with open(text_filepath, 'w', encoding='utf-8') as f:
-                f.write(f"=== RECIBO SIMULADO ===\n")
+                f.write("=== RECIBO SIMULADO ===\n")
                 f.write(f"Modelo: {self.model}\n")
                 f.write(f"Data/Hora: {datetime.now().isoformat()}\n")
                 f.write(f"Template: {receipt.get('template_name', 'N/A')}\n")
@@ -230,7 +227,7 @@ class SimulatedPrinter(Printer):
             
             # Escrever informações sobre a imagem
             with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(f"=== IMAGEM SIMULADA ===\n")
+                f.write("=== IMAGEM SIMULADA ===\n")
                 f.write(f"Modelo: {self.model}\n")
                 f.write(f"Data/Hora: {datetime.now().isoformat()}\n")
                 f.write(f"Arquivo de origem: {image_path}\n")
@@ -264,7 +261,7 @@ class SimulatedPrinter(Printer):
             
             # Escrever informações sobre o código de barras
             with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(f"=== CÓDIGO DE BARRAS SIMULADO ===\n")
+                f.write("=== CÓDIGO DE BARRAS SIMULADO ===\n")
                 f.write(f"Modelo: {self.model}\n")
                 f.write(f"Data/Hora: {datetime.now().isoformat()}\n")
                 f.write(f"Tipo: {barcode_type}\n")
@@ -296,7 +293,7 @@ class SimulatedPrinter(Printer):
             
             # Escrever informações sobre o QR code
             with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(f"=== QR CODE SIMULADO ===\n")
+                f.write("=== QR CODE SIMULADO ===\n")
                 f.write(f"Modelo: {self.model}\n")
                 f.write(f"Data/Hora: {datetime.now().isoformat()}\n")
                 f.write(f"Tamanho: {size}\n")

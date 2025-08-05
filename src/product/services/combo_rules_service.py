@@ -1,12 +1,9 @@
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional
 from fastapi import HTTPException
 import logging
 
 from src.product.models.product import (
-    Product,
-    ProductType,
-    ComboItem,
-    ExchangeGroup
+    ProductType
 )
 from src.product.services.product_service import get_product_service
 

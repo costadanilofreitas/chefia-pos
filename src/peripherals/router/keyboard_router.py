@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 import logging
 
 from src.peripherals.services.keyboard_manager import get_keyboard_manager, KeyboardManager

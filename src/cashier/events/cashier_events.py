@@ -1,6 +1,6 @@
 from src.core.events.event_bus import Event, EventType, get_event_bus
-from src.cashier.models.cashier import Cashier, CashierStatus, CashierOperationResponse, OperationType
-from typing import Dict, Any, Optional
+from src.cashier.models.cashier import Cashier, CashierOperationResponse, OperationType
+from typing import Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)

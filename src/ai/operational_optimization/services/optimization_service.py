@@ -11,13 +11,11 @@ Este serviço orquestra todos os serviços de otimização operacional:
 
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any, Union
+from typing import Dict, Optional, Any
 from fastapi import HTTPException
 
 from ..models import (
-    StaffingRecommendation, DeliveryOptimization, 
-    TableDistributionRecommendation, KioskOptimization,
-    WhatsAppCampaign, OperationalOptimizationConfig
+    OperationalOptimizationConfig
 )
 from .staff_service import StaffOptimizationService
 from .delivery_service import DeliveryOptimizationService

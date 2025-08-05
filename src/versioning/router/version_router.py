@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 from ..models.version_models import (
     SystemVersion, 

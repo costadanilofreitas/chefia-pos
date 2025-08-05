@@ -3,22 +3,18 @@ Router para o marketplace de integrações
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Header, Request, Response, status
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 import time
-import uuid
 from datetime import datetime
 
 from src.marketplace.models.marketplace_models import (
-    Partner, PartnerStatus, Integration, IntegrationType, IntegrationStatus,
-    IntegrationConfiguration, ConfigurationStatus, Webhook, WebhookStatus,
-    DeliveryOrder, DeliveryOrderStatus, PaymentTransaction, PaymentStatus,
-    PaymentMethod, CRMCustomer, APIKey, APIUsage
+    Partner, Integration, IntegrationType, IntegrationConfiguration, Webhook, DeliveryOrder, DeliveryOrderStatus, PaymentTransaction, CRMCustomer, APIKey
 )
 from src.marketplace.services.marketplace_service import (
     MarketplaceService, PartnerService, IntegrationService, WebhookService,
     APIKeyService, DeliveryAdapter, PaymentAdapter, CRMAdapter
 )
-from src.core.auth.auth_service import get_current_user, verify_api_key
+from src.core.auth.auth_service import get_current_user
 from src.core.db.db_service import get_db_service
 from src.core.config.config_service import get_config_service
 

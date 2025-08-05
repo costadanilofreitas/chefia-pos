@@ -10,7 +10,7 @@ Este serviço implementa:
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any
 from fastapi import HTTPException
 
 # Importar corretamente os módulos

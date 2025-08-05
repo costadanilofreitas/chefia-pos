@@ -1,7 +1,6 @@
-from typing import List, Dict, Optional, Any, Union
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body, status
-from fastapi.responses import JSONResponse
-from datetime import datetime, date
+from typing import List, Dict, Optional, Any
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
+from datetime import date
 
 from ..models.employee_models import (
     Employee,
@@ -22,7 +21,7 @@ from ..models.employee_models import (
 )
 from ..services.employee_service import employee_service
 from src.auth.security import get_current_user
-from src.auth.models import User, Permission
+from src.auth.models import User
 
 router = APIRouter(prefix="/api/v1", tags=["employees"])
 

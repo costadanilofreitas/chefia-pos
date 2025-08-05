@@ -2,13 +2,12 @@
 Serviços para o marketplace de integrações
 """
 
-import os
 import logging
 import json
 import uuid
 import requests
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Union
+from typing import Dict, List, Optional, Any, Tuple
 from uuid import uuid4
 
 from src.marketplace.models.marketplace_models import (

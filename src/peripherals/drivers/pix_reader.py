@@ -1,9 +1,8 @@
 import asyncio
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional
 import os
 import re
-import json
 import time
 import base64
 from io import BytesIO
@@ -11,8 +10,7 @@ from io import BytesIO
 from src.peripherals.models.peripheral_models import (
     PixReader,
     PixReaderConfig,
-    PeripheralStatus,
-    PeripheralException
+    PeripheralStatus
 )
 
 class CameraPixReader(PixReader):
@@ -147,7 +145,6 @@ class CameraPixReader(PixReader):
     async def _read_loop(self) -> None:
         """Loop de leitura da câmera."""
         try:
-            import cv2
             from pyzbar import pyzbar
             
             last_scan_time = 0
@@ -421,7 +418,6 @@ class SimulatedPixReader(PixReader):
         try:
             # Criar imagem simulada
             from PIL import Image, ImageDraw, ImageFont
-            import numpy as np
             
             # Criar imagem em branco
             img = Image.new('RGB', (640, 480), color=(240, 240, 240))

@@ -1,14 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
-from typing import List
 
-from src.auth.models import User, UserCreate, Token, UserRole, Permission
+from src.auth.models import User, Token, UserRole, Permission
 from src.auth.security import (
     authenticate_user, 
     create_access_token, 
     get_current_active_user,
-    has_permission,
     has_role,
     fake_users_db,
     ACCESS_TOKEN_EXPIRE_MINUTES

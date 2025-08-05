@@ -7,13 +7,11 @@ e processamento de webhooks.
 """
 
 import os
-import json
 import logging
 import hmac
 import hashlib
 import requests
-from typing import Dict, Any, List, Optional
-from datetime import datetime
+from typing import Dict, Any, List
 
 from ...core.messaging import BasePlatformIntegration, MessageType
 

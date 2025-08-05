@@ -4,15 +4,14 @@ import os
 import sys
 import json
 import logging
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Adicionar diretório raiz ao path para importações
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 
 from src.peripherals.models.peripheral_models import (
     PeripheralConfig,
-    PeripheralStatus,
-    PeripheralException
+    PeripheralStatus
 )
 from src.peripherals.services.peripheral_manager import PeripheralManager, PeripheralFactory
 from src.peripherals.drivers.simulated_printer import SimulatedThermalPrinter

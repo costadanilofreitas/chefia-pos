@@ -2,21 +2,18 @@
 Serviços para dashboards analíticos personalizáveis
 """
 
-import os
-import json
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any, Union, Tuple
+from typing import List, Dict, Any, Union, Tuple
 import uuid
 import pandas as pd
 import numpy as np
 from fastapi import HTTPException, status
 
 from src.analytics.models.dashboard_models import (
-    Dashboard, DashboardItem, DashboardLayout, ChartConfiguration, 
-    DashboardFilter, DataSourceType, ChartType, FilterOperator,
-    DashboardShare, DataSourceConfig, DashboardPreset,
-    UserDashboardPreference, DashboardAlert, DashboardExport,
+    Dashboard, DashboardLayout, ChartConfiguration, 
+    DashboardFilter, DataSourceType, FilterOperator,
+    DashboardShare, DashboardAlert, DashboardExport,
     ScheduledReport
 )
 from src.core.config.config_service import ConfigService

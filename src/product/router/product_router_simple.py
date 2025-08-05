@@ -1,8 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, Path, Body, status
-from fastapi.responses import JSONResponse, FileResponse
-from typing import List, Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Query, Path
+from typing import List, Optional, Dict
 import os
-import shutil
 import uuid
 from datetime import datetime
 
@@ -16,27 +14,9 @@ from src.product.models.product import (
     CategoryUpdate,
     ProductStatus,
     ProductType,
-    ProductImage,
-    ImageUploadResponse,
-    ComboItem,
-    Menu,
-    MenuCreate,
-    MenuUpdate,
-    ExchangeGroup,
     Ingredient,
     IngredientCreate,
-    IngredientUpdate,
-    OptionGroup,
-    OptionGroupCreate,
-    OptionGroupUpdate,
-    Option,
-    OptionCreate,
-    CompositeSection,
-    CompositeSectionCreate,
-    CompositeProductCreate,
-    CompositeProductUpdate,
-    PricingStrategy,
-    MenuExport
+    IngredientUpdate
 )
 
 router = APIRouter(prefix="/api/v1", tags=["products"])

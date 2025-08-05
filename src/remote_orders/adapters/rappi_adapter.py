@@ -1,9 +1,7 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 import aiohttp
-import json
 import logging
 from datetime import datetime
-from pydantic import BaseModel
 
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder, RemoteOrderItem, RemoteOrderStatus, RemoteOrderCustomer,

@@ -12,8 +12,8 @@ import hmac
 import hashlib
 import requests
 import asyncio
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
+from typing import Dict, Any, List
+from datetime import datetime
 
 from .auth_manager import IFoodAuthManager
 from ...models.remote_order_models import (

@@ -1,28 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
-import json
-import os
-import uuid
-from datetime import datetime
 
 from src.api.main import app
-from src.product.models.product import (
-    Product, 
-    ProductCreate, 
-    ProductType,
-    ProductStatus,
-    Ingredient,
-    IngredientCreate,
-    OptionGroup,
-    OptionGroupCreate,
-    Option,
-    OptionCreate,
-    CompositeSection,
-    CompositeSectionCreate,
-    CompositeProductCreate,
-    PricingStrategy
-)
-from src.product.services.product_service import get_product_service
 from src.auth.security import get_current_user, check_permissions
 
 # Mock de autenticação para testes

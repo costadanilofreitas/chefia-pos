@@ -1,13 +1,10 @@
 import unittest
 from unittest.mock import patch, MagicMock
-import json
 import asyncio
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 from ..models.seat_models import (
-    Seat, SeatStatus, SeatOrderItem, SeatPayment, SeatGroup,
-    SeatCreate, SeatUpdate, SeatOrderItemCreate, SeatPaymentCreate
+    Seat, SeatStatus, SeatCreate, SeatUpdate, SeatOrderItemCreate, SeatPaymentCreate
 )
 from ..services.seat_service import SeatService, SeatOrderService, SeatPaymentService
 from ..services.partial_payment_service import PaymentSessionService, BillSplitService

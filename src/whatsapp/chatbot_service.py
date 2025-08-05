@@ -15,9 +15,9 @@ import json
 import logging
 import uuid
 from enum import Enum
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime, timedelta
-from fastapi import HTTPException, Depends, Request, Response
+from typing import Dict, List, Optional, Any
+from datetime import datetime
+from fastapi import Request
 from pydantic import BaseModel, Field
 
 # Configurar logging

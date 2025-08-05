@@ -1,9 +1,7 @@
 from typing import Dict, Any, Optional
 from src.core.events.event_bus import Event, EventType, EventHandler, get_event_bus
-from src.kds.models.kds_models import KDSOrder, KDSOrderItem, KDSOrderStatus
+from src.kds.models.kds_models import KDSOrder, KDSOrderStatus
 from datetime import datetime
-import json
-import asyncio
 from enum import Enum # Import Enum
 
 # Definição de novos tipos de eventos para o KDS

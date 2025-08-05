@@ -1,19 +1,15 @@
 from typing import Dict, Any, Optional, List, Union
 import os
 import json
-import uuid
 from datetime import datetime
-import aiohttp
-import asyncio
 from fastapi import HTTPException
 
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder, RemoteOrderStatus, RemotePlatform, 
-    RemotePlatformConfig, RemoteOrderCreate, RemoteOrderUpdate,
-    RemoteOrderResponse
+    RemotePlatformConfig, RemoteOrderUpdate
 )
 from src.core.events.event_bus import get_event_bus, Event, EventType
-from src.product.models.product import Order, OrderCreate, OrderStatus, PaymentStatus, PaymentMethod
+from src.product.models.product import OrderCreate, OrderStatus
 from src.order.services.order_service import order_service
 
 # Diretório para armazenamento de dados

@@ -1,10 +1,7 @@
 from typing import List, Dict, Any, Optional, Tuple
 import logging
-import asyncio
-from datetime import datetime, timedelta
-from uuid import UUID, uuid4
+from datetime import datetime
 
-from src.product.models.product import Product
 from src.order.services.order_service import OrderService
 from src.core.events.event_bus import EventBus, Event
 

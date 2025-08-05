@@ -7,13 +7,11 @@ bem como reembolsos automáticos para pedidos não confirmados.
 """
 
 import os
-import json
-import uuid
 import logging
 import requests
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 # Configuração de logging
 logger = logging.getLogger(__name__)

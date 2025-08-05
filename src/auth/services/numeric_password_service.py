@@ -1,10 +1,9 @@
 import bcrypt
-import secrets
 import random
 import uuid
 import os
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
+from typing import Dict, Any
 import jwt
 
 from ..models.numeric_password_models import (

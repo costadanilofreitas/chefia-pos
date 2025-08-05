@@ -10,7 +10,7 @@ Este serviço implementa funcionalidades para:
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Optional
 from fastapi import HTTPException
 
 from ..models import DeliveryOptimization

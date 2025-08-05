@@ -1,10 +1,9 @@
-from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, HTTPException, Depends, Request, status
+from typing import List
+from fastapi import APIRouter, HTTPException, Depends, Request
 
 from src.payment.models.payment_models import (
-    PaymentProvider, PaymentMethod, PaymentStatus, NotificationType,
-    ProviderConfig, ProviderConfigCreate, ProviderConfigUpdate,
-    Payment, PaymentCreate, PaymentUpdate
+    PaymentProvider, ProviderConfig, ProviderConfigCreate, ProviderConfigUpdate,
+    Payment, PaymentCreate
 )
 from src.payment.services.payment_service import get_payment_service
 from src.auth.auth import get_current_user  # Updated import path

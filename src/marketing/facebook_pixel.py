@@ -6,10 +6,9 @@ de eventos e otimização de campanhas de marketing.
 """
 
 import os
-import json
 import logging
 import requests
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from datetime import datetime
 
 # Configuração de logging

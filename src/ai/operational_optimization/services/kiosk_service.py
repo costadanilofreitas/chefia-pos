@@ -9,8 +9,8 @@ Este serviço implementa funcionalidades para:
 
 import logging
 import uuid
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any, Union
+from datetime import datetime
+from typing import List, Dict, Optional, Any
 from fastapi import HTTPException
 
 from ..models import KioskOptimization
@@ -311,7 +311,7 @@ class KioskOptimizationService:
                 "highlight": True,
                 "position": position,
                 "relevance_score": relevance_score,
-                "reason": f"Item popular com alta taxa de conversão"
+                "reason": "Item popular com alta taxa de conversão"
             })
         
         return recommended_items
@@ -482,8 +482,8 @@ class KioskOptimizationService:
             explanation += f"As promoções {promo_names} podem aumentar o ticket médio e reduzir o abandono. "
         
         explanation += (
-            f"Estas mudanças simplificam o processo de pedido e incentivam a conclusão, "
-            f"especialmente nas etapas com maior abandono."
+            "Estas mudanças simplificam o processo de pedido e incentivam a conclusão, "
+            "especialmente nas etapas com maior abandono."
         )
         
         return explanation

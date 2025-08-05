@@ -1,8 +1,5 @@
-import os
 import sys
 import unittest
-import asyncio
-from datetime import datetime
 
 # Adicionar o diretório raiz ao path para importações
 sys.path.append('/home/ubuntu/pos-modern')

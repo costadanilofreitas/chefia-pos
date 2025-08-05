@@ -1,10 +1,8 @@
-import pytest
 from fastapi.testclient import TestClient
 from jose import jwt
-import os
 
 from src.api.main import app
-from src.auth.security import fake_users_db, SECRET_KEY, ALGORITHM
+from src.auth.security import SECRET_KEY, ALGORITHM
 
 client = TestClient(app)
 

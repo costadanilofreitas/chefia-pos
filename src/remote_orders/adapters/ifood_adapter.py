@@ -1,10 +1,7 @@
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
 import json
 import uuid
 from datetime import datetime
-import aiohttp
-import asyncio
-from fastapi import HTTPException
 
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder, RemoteOrderStatus, RemotePlatform, 

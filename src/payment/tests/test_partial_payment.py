@@ -1,6 +1,5 @@
 import unittest
 from unittest.mock import patch, MagicMock
-import json
 import asyncio
 from fastapi.testclient import TestClient
 from datetime import datetime

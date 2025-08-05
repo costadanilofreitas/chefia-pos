@@ -1,6 +1,5 @@
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
-import json
 import os
 import sys
 from datetime import datetime
@@ -10,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 
 from src.payment.models.payment_models import (
     PaymentProvider, PaymentMethod, PaymentStatus, NotificationType,
-    Payment, PaymentCreate
+    Payment
 )
 from src.payment.router.payment_router import router
 from fastapi.testclient import TestClient

@@ -2,7 +2,6 @@ import unittest
 import asyncio
 import json
 import os
-from datetime import datetime
 
 from src.sat.models.sat_models import (
     SATConfig,

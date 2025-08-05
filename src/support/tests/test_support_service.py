@@ -11,11 +11,8 @@ Este módulo implementa testes automatizados para validar:
 
 import unittest
 import asyncio
-import json
 from datetime import datetime, timedelta
-import uuid
 import logging
-from unittest.mock import MagicMock, patch
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)

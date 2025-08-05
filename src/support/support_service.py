@@ -9,8 +9,8 @@ Este módulo implementa um sistema de suporte completo com:
 - Análise de sentimento e priorização automática
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, status, BackgroundTasks
-from typing import List, Dict, Any, Optional, Union
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, BackgroundTasks
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 import uuid
 import json

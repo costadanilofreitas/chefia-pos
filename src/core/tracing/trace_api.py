@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import Dict, List, Optional, Any
+from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
 from datetime import datetime
-import logging
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from ..database.mongodb import get_database
 from .trace_repository import TraceRepository

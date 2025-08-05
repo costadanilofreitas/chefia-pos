@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import uuid
-import semver
 
 class VersionInfo(BaseModel):
     """Model for system version information."""

@@ -1,14 +1,13 @@
 import os
 import json
 import logging
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 import uuid
 
 from ..models.fiscal_models import (
     ConfiguracaoRegional,
     GrupoFiscal,
-    RegimeTributario,
     TipoImposto,
     TipoItem,
     OrigemProduto,

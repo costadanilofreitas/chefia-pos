@@ -8,7 +8,6 @@ from typing import List, Dict, Any, Optional, Union
 from datetime import datetime, timedelta
 import uuid
 import re
-import asyncio
 from collections import Counter, defaultdict
 
 from ..models.log_models import LogEntry, LogQuery, LogStats, LogConfig, LogLevel, LogSource

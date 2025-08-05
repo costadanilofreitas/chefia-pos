@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Dict, Any, Optional
-from datetime import datetime
 
-from ..models.log_models import LogEntry, LogQuery, LogStats, LogConfig, LogLevel, LogSource
+from ..models.log_models import LogEntry, LogQuery, LogStats, LogConfig, LogSource
 from ..services.log_service import log_service, log_info, log_error
 from src.auth.security import get_current_user
 from src.auth.models import User, Permission

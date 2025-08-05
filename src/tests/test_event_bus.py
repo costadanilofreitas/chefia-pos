@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from src.core.events.event_bus import Event, EventType, EventHandler, get_event_bus
 from src.core.events.auth_events import AuthEventHandler, SystemEventHandler
 from src.auth.models import User, UserRole

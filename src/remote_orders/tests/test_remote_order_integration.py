@@ -1,14 +1,11 @@
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
-import json
 import uuid
-from datetime import datetime
 
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder, RemoteOrderStatus, RemotePlatform
 )
 from src.product.models.product import Order, OrderStatus
-from src.order.services.order_service import order_service
 from src.remote_orders.services.remote_order_service import remote_order_service
 
 class TestRemoteOrderIntegration(unittest.TestCase):

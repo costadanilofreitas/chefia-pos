@@ -1,14 +1,10 @@
 from typing import Dict, Any, List, Optional
-import json
 import logging
-from datetime import datetime
-import uuid
 import aiohttp
-import asyncio
 
 from src.payment.models.payment_models import (
     PaymentMethod, PaymentStatus, SplitConfig, 
-    SplitRecipient, PaymentTransaction, AsaasConfig
+    AsaasConfig
 )
 
 logger = logging.getLogger(__name__)

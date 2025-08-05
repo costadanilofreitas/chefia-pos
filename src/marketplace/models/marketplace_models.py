@@ -4,8 +4,8 @@ Modelos de dados para o marketplace de integrações
 
 from enum import Enum
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Union
-from pydantic import BaseModel, Field, HttpUrl, validator
+from typing import Dict, List, Optional, Any
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class PartnerStatus(str, Enum):

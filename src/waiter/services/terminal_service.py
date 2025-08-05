@@ -1,9 +1,6 @@
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import uuid
-import json
-import asyncio
-from fastapi import HTTPException
 
 from ..models.terminal_models import (
     TerminalConfig, 

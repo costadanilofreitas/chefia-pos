@@ -7,8 +7,7 @@ from datetime import date, datetime, timedelta
 
 from src.api.main import app
 from src.business_day.models.business_day import BusinessDay, DayStatus
-from src.business_day.services.business_day_service import BusinessDayService, get_business_day_service
-from src.auth.security import fake_users_db
+from src.business_day.services.business_day_service import get_business_day_service
 
 # Configurar cliente de teste
 client = TestClient(app)

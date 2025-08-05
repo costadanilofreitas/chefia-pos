@@ -1,12 +1,8 @@
-from typing import Dict, List, Any, Optional, Union
-import os
+from typing import Dict, List, Any, Optional
 import json
-import asyncio
-from datetime import datetime
 
 from src.peripherals.models.peripheral_models import (
     Peripheral,
-    PeripheralConfig,
     PeripheralType,
     PeripheralStatus,
     Printer,

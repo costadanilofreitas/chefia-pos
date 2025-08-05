@@ -6,11 +6,9 @@ gerenciamento de tokens de acesso e renovação automática.
 """
 
 import os
-import json
-import time
 import logging
 import requests
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from datetime import datetime, timedelta
 
 # Configuração de logging

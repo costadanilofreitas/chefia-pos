@@ -1,6 +1,5 @@
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
-import json
 import os
 import sys
 from datetime import datetime, timedelta

@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Body, Query, Path
-from typing import List, Dict, Optional, Any, Union
+from fastapi import APIRouter, Depends, HTTPException, Path
+from typing import Dict, Any
 import logging
 
 from ..models.seat_models import (
-    SeatStatus, SeatCreate, SeatUpdate, SeatOrderItemCreate, 
+    SeatCreate, SeatUpdate, SeatOrderItemCreate, 
     SeatPaymentCreate, SeatGroupCreate, SeatBillSplitRequest
 )
 from ..services.seat_service import SeatService, SeatOrderService, SeatPaymentService

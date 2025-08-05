@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
-from datetime import datetime, date
+from datetime import date
 
 from src.auth.security import get_current_active_user, has_permission
 from src.auth.models import User, Permission
@@ -102,7 +102,7 @@ async def close_business_day(
     if business_day.status != DayStatus.OPEN:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"O dia de operação já está fechado."
+            detail="O dia de operação já está fechado."
         )
     
     # Verificar se todos os caixas estão fechados

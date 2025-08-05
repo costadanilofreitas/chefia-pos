@@ -1,10 +1,9 @@
 # /home/ubuntu/pos-modern/src/customer/models/customer_models.py
 
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, List, Literal
-from datetime import datetime, date
+from typing import Optional, List
+from datetime import datetime
 import uuid
-from enum import Enum
 
 # === Address Model ===
 class Address(BaseModel):

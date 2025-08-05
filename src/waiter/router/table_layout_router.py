@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from pydantic import BaseModel
 
 from src.waiter.models.table_layout_models import (
-    TableModel, TableLayout, LayoutSection, TableStatus, 
-    TablePosition, TableShape, TableLayoutConfig
+    TableLayout, TableStatus, 
+    TableLayoutConfig
 )
 from src.waiter.services.table_layout_service import TableLayoutService
 from src.auth.auth import get_current_user

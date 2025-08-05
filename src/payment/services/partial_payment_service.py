@@ -4,7 +4,7 @@ from datetime import datetime
 import uuid
 from fastapi import HTTPException
 
-from ..models.payment_models import Payment, PaymentStatus, PaymentMethod
+from ..models.payment_models import PaymentStatus, PaymentMethod
 from ..models.partial_payment_models import (
     PaymentSession, PaymentSessionStatus, PartialPayment,
     BillSplit, BillSplitMethod, BillSplitPart, SeatPayment
@@ -213,7 +213,7 @@ class PaymentSessionService:
             logger.error(f"Valor de pagamento inválido: {amount}")
             raise HTTPException(
                 status_code=400, 
-                detail=f"Valor de pagamento deve ser maior que zero"
+                detail="Valor de pagamento deve ser maior que zero"
             )
             
         if amount > session.remaining_amount:
@@ -321,7 +321,7 @@ class BillSplitService:
             logger.error(f"Já existe uma divisão para a sessão: {session_id}")
             raise HTTPException(
                 status_code=400, 
-                detail=f"Já existe uma divisão para esta sessão"
+                detail="Já existe uma divisão para esta sessão"
             )
             
         # Criar divisão
@@ -392,7 +392,7 @@ class BillSplitService:
             logger.error(f"Valor da parte inválido: {amount}")
             raise HTTPException(
                 status_code=400, 
-                detail=f"Valor da parte deve ser maior que zero"
+                detail="Valor da parte deve ser maior que zero"
             )
             
         # Verificar se o total das partes não excede o valor da sessão
@@ -462,7 +462,7 @@ class BillSplitService:
             logger.error(f"Número de partes inválido: {number_of_parts}")
             raise HTTPException(
                 status_code=400, 
-                detail=f"Número de partes deve ser pelo menos 1"
+                detail="Número de partes deve ser pelo menos 1"
             )
             
         # Criar divisão
@@ -594,7 +594,7 @@ class BillSplitService:
             
         if part.is_paid:
             logger.error(f"Parte já está paga: {part_id}")
-            raise HTTPException(status_code=400, detail=f"Esta parte já está paga")
+            raise HTTPException(status_code=400, detail="Esta parte já está paga")
             
         # Obter divisão e sessão
         split = await self.get_split(split_id)

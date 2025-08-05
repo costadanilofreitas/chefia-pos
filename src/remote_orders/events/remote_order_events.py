@@ -1,8 +1,6 @@
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
 from enum import Enum
 from datetime import datetime
-import json
-import uuid
 
 from src.core.events.event_bus import get_event_bus, Event, EventType
 from src.remote_orders.models.remote_order_models import RemoteOrderStatus, RemotePlatform

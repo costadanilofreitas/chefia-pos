@@ -1,14 +1,9 @@
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, Any
 import os
 import json
-import asyncio
 from datetime import datetime
-import tempfile
-from pathlib import Path
 
 from src.peripherals.models.peripheral_models import (
-    Printer,
-    PrinterConfig,
     ReceiptTemplate,
     PrinterException
 )

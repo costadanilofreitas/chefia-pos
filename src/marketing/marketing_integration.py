@@ -5,11 +5,8 @@ Este módulo implementa a integração com campanhas de marketing,
 incluindo Facebook Pixel e outras plataformas.
 """
 
-import os
-import json
 import logging
-from typing import Dict, Any, List, Optional
-from datetime import datetime
+from typing import Dict, Any
 
 from .facebook_pixel import FacebookPixelIntegration
 

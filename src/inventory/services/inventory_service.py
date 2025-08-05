@@ -1,5 +1,5 @@
-from fastapi import HTTPException, status, Depends
-from typing import List, Optional, Dict, Any
+from fastapi import HTTPException, status
+from typing import List, Optional, Dict
 import uuid
 from datetime import datetime
 import logging

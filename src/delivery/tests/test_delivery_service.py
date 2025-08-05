@@ -1,12 +1,9 @@
 import unittest
 import asyncio
-import uuid
-from datetime import datetime
 
 from src.delivery.models.delivery_models import (
-    DeliveryOrder, DeliveryOrderStatus, DeliveryCourier, CourierStatus, 
-    CourierType, DeliveryRoute, RouteStatus, DeliveryZone, 
-    DeliveryTracking, TrackingEventType
+    DeliveryOrderStatus, CourierStatus, 
+    CourierType, TrackingEventType
 )
 from src.delivery.services.delivery_service import (
     delivery_service, courier_service, zone_service

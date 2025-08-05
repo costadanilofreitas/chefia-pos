@@ -1,12 +1,11 @@
 import unittest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, AsyncMock
 import uuid
 from datetime import datetime
 
 from src.inventory.models.inventory_models import (
-    InventoryItem, InventoryItemCreate, InventoryItemUpdate,
-    InventoryTransaction, InventoryTransactionCreate, TransactionType, TransactionStatus,
-    InventoryLoss, InventoryLossCreate, LossReason
+    InventoryItem, TransactionStatus,
+    InventoryLoss, LossReason
 )
 from src.inventory.router.inventory_router import router
 from fastapi.testclient import TestClient

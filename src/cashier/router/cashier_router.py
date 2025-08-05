@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
-from datetime import datetime
 import logging
 
 from src.auth.security import get_current_active_user, has_permission
@@ -14,7 +13,6 @@ from src.cashier.models.cashier import (
     CashierWithdrawal,
     CashierSummary,
     CashierOperationResponse,
-    CashierReport,
     CashierStatus,
     OperationType,
     create_cashier
@@ -115,14 +113,14 @@ async def close_cashier(
     if cashier.status != CashierStatus.OPEN:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"O caixa já está fechado."
+            detail="O caixa já está fechado."
         )
     
     # Verificar se o operador é o mesmo que abriu o caixa ou se é um gerente
     if cashier.current_operator_id != close_data.operator_id and current_user.role != "gerente":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Apenas o operador atual do caixa ou um gerente pode fechá-lo."
+            detail="Apenas o operador atual do caixa ou um gerente pode fechá-lo."
         )
     
     # Fechar o caixa
@@ -165,21 +163,21 @@ async def register_cashier_operation(
     if cashier.status != CashierStatus.OPEN:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"O caixa está fechado. Não é possível registrar operações."
+            detail="O caixa está fechado. Não é possível registrar operações."
         )
     
     # Verificar se o operador é o mesmo que está operando o caixa ou se é um gerente
     if cashier.current_operator_id != operation.operator_id and current_user.role != "gerente":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Apenas o operador atual do caixa ou um gerente pode registrar operações."
+            detail="Apenas o operador atual do caixa ou um gerente pode registrar operações."
         )
     
     # Verificar permissões específicas para cada tipo de operação
     if operation.operation_type == OperationType.WITHDRAWAL and "cashier:withdrawal" not in current_user.permissions:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Você não tem permissão para realizar retiradas do caixa."
+            detail="Você não tem permissão para realizar retiradas do caixa."
         )
     
     # Registrar a operação
@@ -217,7 +215,7 @@ async def register_cashier_withdrawal(
     if cashier.status != CashierStatus.OPEN:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"O caixa está fechado. Não é possível realizar retiradas."
+            detail="O caixa está fechado. Não é possível realizar retiradas."
         )
     
     # Verificar se o valor da retirada não excede o saldo atual

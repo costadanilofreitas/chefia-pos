@@ -1,12 +1,11 @@
 import unittest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch
 import uuid
-from datetime import datetime
 
 from src.inventory.models.inventory_models import (
-    InventoryItem, InventoryItemCreate, InventoryItemUpdate,
-    InventoryTransaction, InventoryTransactionCreate, TransactionType, TransactionStatus,
-    InventoryLoss, InventoryLossCreate, LossReason
+    InventoryItemCreate, InventoryItemUpdate,
+    InventoryTransactionCreate, TransactionType, TransactionStatus,
+    InventoryLossCreate, LossReason
 )
 from src.inventory.services.inventory_service import InventoryService
 

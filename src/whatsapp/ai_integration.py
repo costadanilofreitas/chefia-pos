@@ -9,8 +9,7 @@ import os
 import json
 import logging
 import boto3
-from typing import Dict, Any, List, Optional
-from datetime import datetime
+from typing import Dict, Any, List
 
 # Configuração de logging
 logger = logging.getLogger(__name__)
@@ -115,7 +114,7 @@ class WhatsAppAIIntegration:
             
         except Exception as e:
             logger.error(f"Erro ao gerar resposta com Bedrock: {str(e)}")
-            return f"Desculpe, tive um problema ao processar sua solicitação. Por favor, tente novamente mais tarde."
+            return "Desculpe, tive um problema ao processar sua solicitação. Por favor, tente novamente mais tarde."
     
     async def generate_campaign_message(self, 
                                       customer_data: Dict[str, Any],

@@ -1,11 +1,10 @@
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Header, Body, Query, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Header, Body, status
 from fastapi.responses import JSONResponse
 
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder, RemoteOrderStatus, RemotePlatform, 
-    RemotePlatformConfig, RemoteOrderCreate, RemoteOrderUpdate,
-    RemoteOrderResponse
+    RemotePlatformConfig, RemoteOrderCreate, RemoteOrderResponse
 )
 from src.remote_orders.services.remote_order_service import remote_order_service
 from src.auth.security import get_current_user

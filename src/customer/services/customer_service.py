@@ -1,12 +1,9 @@
-from fastapi import HTTPException, status
 from typing import List, Optional, Dict
 import uuid
-from datetime import datetime, date
-from enum import Enum
+from datetime import datetime
 
 from ..models.customer_models import (
-    Customer, CustomerCreate, CustomerUpdate, Address, PurchaseHistoryEntry, Loyalty,
-    PointsRedemption
+    Customer, CustomerCreate, CustomerUpdate, Address, PurchaseHistoryEntry, PointsRedemption
 )
 
 # In-memory storage (replace with database interaction)

@@ -1,6 +1,6 @@
 from src.core.events.event_bus import Event, EventType, get_event_bus
-from src.business_day.models.business_day import BusinessDay, DayStatus
-from typing import Dict, Any, Optional
+from src.business_day.models.business_day import BusinessDay
+from typing import Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)

@@ -1,15 +1,10 @@
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 import logging
-import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from pydantic import BaseModel
 
 from ..services.google_maps_service import GoogleMapsService
-from ..models.delivery_models import (
-    DeliveryOrder, DeliveryRoute, DeliveryCourier, 
-    DeliveryZone, DeliveryTracking, RouteStatus
-)
 
 # Configurar logging
 logger = logging.getLogger(__name__)

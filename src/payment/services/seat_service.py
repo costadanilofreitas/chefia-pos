@@ -1,14 +1,13 @@
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Any
 import logging
 from datetime import datetime
 import uuid
 from fastapi import HTTPException
 
 from ..models.seat_models import (
-    Seat, SeatStatus, SeatOrderItem, SeatPayment, SeatGroup,
+    Seat, SeatOrderItem, SeatPayment, SeatGroup,
     SeatCreate, SeatUpdate, SeatOrderItemCreate, SeatPaymentCreate, SeatGroupCreate
 )
-from ..models.partial_payment_models import PaymentSession, BillSplit, BillSplitMethod
 from ..services.partial_payment_service import PaymentSessionService, BillSplitService
 
 logger = logging.getLogger(__name__)

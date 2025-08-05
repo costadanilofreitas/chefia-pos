@@ -1,5 +1,5 @@
 import os
-from fastapi import Depends, HTTPException, Query
+from fastapi import HTTPException, Query
 
 CONFIG_DIR = "/home/ubuntu/pos-modern/config"
 
