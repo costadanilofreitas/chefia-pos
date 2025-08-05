@@ -56,7 +56,7 @@ class LogEntry(BaseModel):
     tags: List[str] = []
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "timestamp": "2025-05-24T12:34:56",
                 "level": "info",
@@ -98,7 +98,7 @@ class LogQuery(BaseModel):
     sort_order: str = "desc"
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "start_date": "2025-05-24T00:00:00",
                 "end_date": "2025-05-24T23:59:59",
@@ -128,7 +128,7 @@ class LogStats(BaseModel):
     most_common_errors: List[Dict[str, Any]]
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "total_entries": 1250,
                 "entries_by_level": {
@@ -186,7 +186,7 @@ class LogConfig(BaseModel):
     excluded_levels: List[LogLevel] = []
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "enabled": True,
                 "retention_days": 30,

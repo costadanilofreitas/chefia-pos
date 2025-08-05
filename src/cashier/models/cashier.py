@@ -140,7 +140,7 @@ class Cashier(CashierBase):
     notes: Optional[str] = Field(None, description="Observações sobre o caixa")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "terminal_id": "POS-001",
@@ -174,7 +174,7 @@ class CashierSummary(BaseModel):
     closed_at: Optional[str]
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "terminal_id": "POS-001",
@@ -204,7 +204,7 @@ class CashierOperationResponse(BaseModel):
     notes: Optional[str]
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "op-123",
                 "cashier_id": "123e4567-e89b-12d3-a456-426614174000",
@@ -243,7 +243,7 @@ class CashierReport(BaseModel):
     duration_minutes: Optional[int]
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "cashier_id": "123e4567-e89b-12d3-a456-426614174000",
                 "terminal_id": "POS-001",

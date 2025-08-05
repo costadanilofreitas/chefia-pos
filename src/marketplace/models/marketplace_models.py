@@ -108,7 +108,7 @@ class Partner(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "partner-123",
                 "name": "iFood",
@@ -152,7 +152,7 @@ class Integration(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "integration-123",
                 "partner_id": "partner-123",
@@ -195,7 +195,7 @@ class IntegrationConfiguration(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "config-123",
                 "integration_id": "integration-123",
@@ -228,7 +228,7 @@ class Webhook(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "webhook-123",
                 "integration_id": "integration-123",
@@ -290,7 +290,7 @@ class DeliveryOrder(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "order-123",
                 "external_id": "ifood-order-123",
@@ -356,7 +356,7 @@ class PaymentTransaction(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "transaction-123",
                 "integration_id": "integration-123",
@@ -411,7 +411,7 @@ class CRMCustomer(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "customer-123",
                 "integration_id": "integration-123",
@@ -465,7 +465,7 @@ class APIKey(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "apikey-123",
                 "partner_id": "partner-123",
@@ -499,7 +499,7 @@ class APIUsage(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "usage-123",
                 "partner_id": "partner-123",

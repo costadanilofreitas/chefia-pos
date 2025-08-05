@@ -27,7 +27,7 @@ class KioskConfig(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "Kiosk 01",
                 "location": "Entrada Principal",
@@ -61,7 +61,7 @@ class KioskSession(BaseModel):
     )  # For analytics (pages viewed, time spent, etc.)
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "kiosk_id": "550e8400-e29b-41d4-a716-446655440000",
                 "started_at": "2025-05-24T12:34:56",
@@ -91,7 +91,7 @@ class KioskOrderItem(BaseModel):
     notes: Optional[str] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "product_id": "123e4567-e89b-12d3-a456-426614174000",
                 "product_name": "Hambúrguer Clássico",
@@ -118,7 +118,7 @@ class KioskOrder(BaseModel):
     total: float = 0.0
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "items": [
                     {
@@ -164,7 +164,7 @@ class KioskAnalytics(BaseModel):
     total_revenue: float = 0.0
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "kiosk_id": "550e8400-e29b-41d4-a716-446655440000",
                 "date": "2025-05-24",

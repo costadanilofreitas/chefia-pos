@@ -44,7 +44,7 @@ class StockItem(StockItemBase):
     )
 
     class Config:
-        orm_mode = True  # Or from_attributes = True for Pydantic v2
+        from_attributes = True
 
 
 class StockMovementBase(BaseModel):
@@ -83,7 +83,7 @@ class StockMovement(StockMovementBase):
     )
 
     class Config:
-        orm_mode = True  # Or from_attributes = True for Pydantic v2
+        from_attributes = True
 
 
 class StockLevel(BaseModel):

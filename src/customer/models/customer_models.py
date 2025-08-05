@@ -79,7 +79,7 @@ class Customer(CustomerBase):
     last_updated: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
-        orm_mode = True  # Or from_attributes = True for Pydantic v2
+        from_attributes = True
 
 
 class CustomerUpdate(BaseModel):

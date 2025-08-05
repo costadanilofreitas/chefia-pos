@@ -32,7 +32,7 @@ class Address(BaseModel):
         return f"{v[:5]}-{v[5:]}"
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "street": "Avenida Paulista",
                 "number": "1000",
@@ -72,7 +72,7 @@ class Contact(BaseModel):
             return f"({v[:2]}) {v[2:6]}-{v[6:]}"
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "João Silva",
                 "role": "Gerente de Vendas",
@@ -92,7 +92,7 @@ class PaymentTerm(BaseModel):
     description: Optional[str] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "days": 30,
                 "discount_percentage": 2.5,
@@ -115,7 +115,7 @@ class SupplierProduct(BaseModel):
     last_purchase_price: Optional[float] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "product_id": "123e4567-e89b-12d3-a456-426614174000",
                 "product_name": "Hambúrguer Congelado 120g",
@@ -171,7 +171,7 @@ class Supplier(BaseModel):
             return f"{v[:3]}.{v[3:6]}.{v[6:9]}-{v[9:]}"
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "Alimentos Premium Ltda",
                 "trading_name": "Premium Foods",
@@ -263,7 +263,7 @@ class PurchaseOrderItem(BaseModel):
     notes: Optional[str] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "product_id": "123e4567-e89b-12d3-a456-426614174000",
                 "product_name": "Hambúrguer Congelado 120g",
@@ -309,7 +309,7 @@ class PurchaseOrder(BaseModel):
     cancelled_at: Optional[datetime] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "supplier_id": "123e4567-e89b-12d3-a456-426614174000",
                 "supplier_name": "Alimentos Premium Ltda",
@@ -376,7 +376,7 @@ class SupplierQuery(BaseModel):
     offset: int = 0
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "Premium",
                 "category": "Alimentos",

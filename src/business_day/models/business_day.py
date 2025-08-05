@@ -63,7 +63,7 @@ class BusinessDay(BusinessDayBase):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "date": "2025-05-23",
@@ -93,7 +93,7 @@ class BusinessDaySummary(BaseModel):
     total_orders: int
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "date": "2025-05-23",
@@ -119,7 +119,7 @@ class DailySalesReport(BaseModel):
     average_ticket: float
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "business_day_id": "123e4567-e89b-12d3-a456-426614174000",
                 "date": "2025-05-23",

@@ -73,7 +73,7 @@ class InventoryItem(InventoryItemBase):
     last_stock_update: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class InventoryItemUpdate(BaseModel):
@@ -147,7 +147,7 @@ class InventoryTransaction(InventoryTransactionBase):
     approved_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # === Inventory Loss Models ===
@@ -193,7 +193,7 @@ class InventoryLoss(InventoryLossBase):
     approved_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # === Inventory Count Models ===
@@ -224,7 +224,7 @@ class InventoryCountItem(InventoryCountItemBase):
     value_variance: float  # variance * cost_per_unit
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class InventoryCountBase(BaseModel):
@@ -257,7 +257,7 @@ class InventoryCount(InventoryCountBase):
     approved_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # === Financial Integration Models ===
@@ -285,4 +285,4 @@ class FinancialEntry(BaseModel):
     is_posted: bool = False
 
     class Config:
-        orm_mode = True
+        from_attributes = True

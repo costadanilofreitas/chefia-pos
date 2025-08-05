@@ -27,7 +27,7 @@ class VersionInfo(BaseModel):
     )  # Steps to rollback the update if it fails
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "version": "1.0.0",
                 "release_date": "2025-05-24T12:00:00",
@@ -74,7 +74,7 @@ class SystemVersion(BaseModel):
     update_history: List[Dict[str, Any]] = []
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "current_version": "1.0.0",
                 "last_update_check": "2025-05-24T12:00:00",
@@ -108,7 +108,7 @@ class UpdateRequest(BaseModel):
     force: bool = False  # Force update even if not recommended
 
     class Config:
-        schema_extra = {"example": {"target_version": "1.1.0", "force": False}}
+        json_schema_extra = {"example": {"target_version": "1.1.0", "force": False}}
 
 
 class UpdateResult(BaseModel):
@@ -122,7 +122,7 @@ class UpdateResult(BaseModel):
     details: Optional[Dict[str, Any]] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "success": True,
                 "message": "Update completed successfully",
@@ -150,7 +150,7 @@ class UpdateCheckResult(BaseModel):
     changelog: Optional[List[str]] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "update_available": True,
                 "current_version": "1.0.0",
