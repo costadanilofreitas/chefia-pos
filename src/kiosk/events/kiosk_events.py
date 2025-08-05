@@ -1,4 +1,4 @@
-// /home/ubuntu/pos-modern/src/kiosk/events/kiosk_events.py
+# /home/ubuntu/pos-modern/src/kiosk/events/kiosk_events.py
 
 from enum import Enum
 from src.core.events.event_bus import EventType
