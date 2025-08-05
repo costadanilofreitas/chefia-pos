@@ -11,34 +11,40 @@ class UserRole(str, Enum):
 
 
 class Permission(str, Enum):
-    # Vendas
-    SALE_CREATE = "venda:criar"
-    SALE_READ = "venda:ler"
-    SALE_UPDATE = "venda:atualizar"
-    SALE_DELETE = "venda:deletar"
-    
     # Produtos
-    PRODUCT_CREATE = "produto:criar"
-    PRODUCT_READ = "produto:ler"
-    PRODUCT_UPDATE = "produto:atualizar"
-    PRODUCT_DELETE = "produto:deletar"
+    PRODUCT_CREATE = "product:create"
+    PRODUCT_READ = "product:read"
+    PRODUCT_UPDATE = "product:update"
+    PRODUCT_DELETE = "product:delete"
     
-    # Caixa
-    CASHIER_OPEN = "caixa:abrir"
-    CASHIER_CLOSE = "caixa:fechar"
-    CASHIER_WITHDRAW = "caixa:retirar"
-    
-    # Dia
-    DAY_OPEN = "dia:abrir"
-    DAY_CLOSE = "dia:fechar"
+    # Categorias
+    CATEGORY_CREATE = "category:create"
+    CATEGORY_READ = "category:read"
+    CATEGORY_UPDATE = "category:update"
+    CATEGORY_DELETE = "category:delete"
     
     # Pedidos
-    ORDER_CREATE = "pedido:criar"
-    ORDER_READ = "pedido:ler"
-    ORDER_UPDATE = "pedido:atualizar"
+    ORDER_CREATE = "order:create"
+    ORDER_READ = "order:read"
+    ORDER_UPDATE = "order:update"
+    ORDER_DELETE = "order:delete"
     
-    # Relatórios
-    REPORT_READ = "relatorio:ler"
+    # Caixa
+    CASHIER_OPEN = "cashier:open"
+    CASHIER_CLOSE = "cashier:close"
+    CASHIER_WITHDRAW = "cashier:withdraw"
+    
+    # Dia
+    DAY_OPEN = "day:open"
+    DAY_CLOSE = "day:close"
+    
+    # Relatorios
+    REPORTS_VIEW = "reports:view"
+    REPORTS_EXPORT = "reports:export"
+    
+    # Administracao
+    ADMIN_USERS = "admin:users"
+    ADMIN_SETTINGS = "admin:settings"
     
     # Cupons
     COUPONS_CREATE = "coupons.create"
@@ -58,13 +64,7 @@ class Permission(str, Enum):
     CUSTOMERS_UPDATE = "customers.update"
     CUSTOMERS_DELETE = "customers.delete"
     
-    # Usuários
-    USER_CREATE = "usuario:criar"
-    USER_READ = "usuario:ler"
-    USER_UPDATE = "usuario:atualizar"
-    USER_DELETE = "usuario:deletar"
-    
-    # Permissão especial
+    # Permissao especial
     ALL = "all"
 
 
@@ -101,3 +101,4 @@ class TokenData(BaseModel):
     username: Optional[str] = None
     role: Optional[UserRole] = None
     permissions: List[str] = []
+

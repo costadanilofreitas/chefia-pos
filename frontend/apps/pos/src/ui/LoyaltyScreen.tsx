@@ -273,6 +273,61 @@ const LoyaltyScreen: React.FC = () => {
     scheduledAt: ''
   });
 
+  // Função para criar cupom com token de autenticação
+  const handleCreateCoupon = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+      
+      const newCoupon = {
+        code: couponForm.code,
+        discount_type: couponForm.discount_type,
+        discount_value: parseFloat(couponForm.discount_value),
+        minimum_purchase: couponForm.minimum_purchase ? parseFloat(couponForm.minimum_purchase) : 0,
+        description: couponForm.description,
+        valid_from: couponForm.valid_from || new Date().toISOString().split('T')[0],
+        valid_until: couponForm.valid_until || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
+        usage_limit: couponForm.usage_limit ? parseInt(couponForm.usage_limit) : 100,
+        is_active: couponForm.is_active
+      };
+      
+      const response = await fetch('http://localhost:8001/api/v1/coupons/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newCoupon)
+      });
+      
+      if (response.ok) {
+        setCouponDialogOpen(false);
+        showSnackbar('Cupom criado com sucesso!', 'success');
+        
+        // Recarregar cupons
+        const couponsResponse = await fetch('http://localhost:8001/api/v1/coupons/', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (couponsResponse.ok) {
+          const couponsData = await couponsResponse.json();
+          setCoupons(couponsData);
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Erro desconhecido');
+      }
+    } catch (error) {
+      showSnackbar(`Erro ao criar cupom: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadLoyaltyData();
   }, []);
@@ -562,142 +617,84 @@ const LoyaltyScreen: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Filtros */}
       <Box mb={3}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              placeholder="Buscar clientes..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="body2" color="textSecondary">
-              {customers.length} clientes encontrados
-            </Typography>
-          </Grid>
-        </Grid>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Buscar clientes..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+          }}
+        />
       </Box>
 
-      {/* Lista de clientes */}
-      <Grid container spacing={2}>
-        {customers
-          .filter(customer => 
-            customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            customer.phone.includes(searchTerm)
-          )
-          .map((customer) => (
-            <Grid item xs={12} md={6} lg={4} key={customer.id}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent>
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Avatar sx={{ bgcolor: getTierColor(customer.tier) }}>
-                        {customer.name.charAt(0)}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="h6">{customer.name}</Typography>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          {getTierIcon(customer.tier)}
+      {customersLoading ? (
+        <LinearProgress />
+      ) : customersError ? (
+        <Alert severity="error">Erro ao carregar clientes: {customersError}</Alert>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Nome</TableCell>
+                <TableCell>Contato</TableCell>
+                <TableCell>Segmento</TableCell>
+                <TableCell>Pontos</TableCell>
+                <TableCell>Total Gasto</TableCell>
+                <TableCell>Ações</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {customers
+                .filter(customer => 
+                  customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  customer.phone.includes(searchTerm)
+                )
+                .map(customer => (
+                  <TableRow key={customer.id}>
+                    <TableCell>
+                      <Box display="flex" alignItems="center">
+                        <Avatar sx={{ mr: 2, bgcolor: getTierColor(customer.tier) }}>
+                          {customer.name.charAt(0)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body1">{customer.name}</Typography>
                           <Typography variant="caption" color="textSecondary">
-                            {customer.tier.toUpperCase()}
+                            {getTierIcon(customer.tier)} {customer.tier.charAt(0).toUpperCase() + customer.tier.slice(1)}
                           </Typography>
                         </Box>
                       </Box>
-                    </Box>
-                    <Chip 
-                      label={getSegmentText(customer.segment || 'regular')}
-                      color={getSegmentColor(customer.segment || 'regular') as any}
-                      size="small"
-                    />
-                  </Box>
-
-                  <Box mb={2}>
-                    <Typography variant="body2" color="textSecondary">
-                      <Phone sx={{ fontSize: 16, mr: 1 }} />
-                      {customer.phone}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      <Email sx={{ fontSize: 16, mr: 1 }} />
-                      {customer.email}
-                    </Typography>
-                    {customer.birthDate && (
-                      <Typography variant="body2" color="textSecondary">
-                        <Cake sx={{ fontSize: 16, mr: 1 }} />
-                        {new Date(customer.birthDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{customer.email}</Typography>
+                      <Typography variant="body2">{customer.phone}</Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={getSegmentText(customer.segment || 'new')} 
+                        color={getSegmentColor(customer.segment || 'new') as any}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        <strong>{customer.totalPoints - customer.usedPoints}</strong> disponíveis
                       </Typography>
-                    )}
-                  </Box>
-
-                  <Grid container spacing={1} mb={2}>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="textSecondary">Pontos</Typography>
-                      <Typography variant="body2" fontWeight="bold">
-                        {customer.totalPoints.toLocaleString()}
+                      <Typography variant="caption" color="textSecondary">
+                        {customer.totalPoints} acumulados
                       </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="textSecondary">Gasto Total</Typography>
-                      <Typography variant="body2" fontWeight="bold">
-                        {formatCurrency(customer.totalSpent)}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="textSecondary">Visitas</Typography>
-                      <Typography variant="body2" fontWeight="bold">
-                        {customer.visitCount}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="caption" color="textSecondary">CLV</Typography>
-                      <Typography variant="body2" fontWeight="bold">
-                        {formatCurrency(customer.clv || 0)}
-                      </Typography>
-                    </Grid>
-                  </Grid>
-
-                  {customer.satisfaction && (
-                    <Box mb={2}>
-                      <Typography variant="caption" color="textSecondary">Satisfação</Typography>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Rating value={customer.satisfaction} readOnly size="small" />
-                        <Typography variant="body2">
-                          {customer.satisfaction.toFixed(1)}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  )}
-
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Box display="flex" gap={1}>
-                      {customer.communication?.whatsapp && (
-                        <Tooltip title="WhatsApp ativo">
-                          <WhatsApp sx={{ fontSize: 16, color: '#25D366' }} />
-                        </Tooltip>
-                      )}
-                      {customer.communication?.email && (
-                        <Tooltip title="Email ativo">
-                          <Email sx={{ fontSize: 16, color: 'primary.main' }} />
-                        </Tooltip>
-                      )}
-                      {customer.communication?.sms && (
-                        <Tooltip title="SMS ativo">
-                          <Sms sx={{ fontSize: 16, color: 'warning.main' }} />
-                        </Tooltip>
-                      )}
-                    </Box>
-                    <Box>
-                      <IconButton
+                    </TableCell>
+                    <TableCell>{formatCurrency(customer.totalSpent)}</TableCell>
+                    <TableCell>
+                      <IconButton 
                         size="small"
                         onClick={() => {
                           setSelectedCustomer(customer);
@@ -706,7 +703,7 @@ const LoyaltyScreen: React.FC = () => {
                       >
                         <Visibility />
                       </IconButton>
-                      <IconButton
+                      <IconButton 
                         size="small"
                         onClick={() => {
                           setEditingCustomer(customer);
@@ -728,13 +725,22 @@ const LoyaltyScreen: React.FC = () => {
                       >
                         <Edit />
                       </IconButton>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-      </Grid>
+                      <IconButton 
+                        size="small"
+                        onClick={() => {
+                          setSelectedCustomer(customer);
+                          setPointsDialogOpen(true);
+                        }}
+                      >
+                        <CardGiftcard />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </Box>
   );
 
@@ -746,90 +752,144 @@ const LoyaltyScreen: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<Campaign />}
-          onClick={() => setCampaignDialogOpen(true)}
+          onClick={() => {
+            setCampaignForm({
+              name: '',
+              type: 'whatsapp',
+              targetSegment: 'all',
+              message: '',
+              scheduledAt: ''
+            });
+            setCampaignDialogOpen(true);
+          }}
         >
           Nova Campanha
         </Button>
       </Box>
 
-      <Grid container spacing={3}>
-        {campaigns.map((campaign) => (
-          <Grid item xs={12} md={6} key={campaign.id}>
-            <Card>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                  <Box>
+      {campaigns.length === 0 ? (
+        <Card>
+          <CardContent>
+            <Box textAlign="center" py={4}>
+              <Campaign sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Nenhuma campanha encontrada
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mb={3}>
+                Crie sua primeira campanha para engajar seus clientes
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<Campaign />}
+                onClick={() => setCampaignDialogOpen(true)}
+              >
+                Nova Campanha
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      ) : (
+        <Grid container spacing={3}>
+          {campaigns.map(campaign => (
+            <Grid item xs={12} md={6} lg={4} key={campaign.id}>
+              <Card>
+                <CardContent>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                     <Typography variant="h6">{campaign.name}</Typography>
-                    <Box display="flex" alignItems="center" gap={1} mt={1}>
-                      {campaign.type === 'whatsapp' && <WhatsApp sx={{ color: '#25D366' }} />}
-                      {campaign.type === 'email' && <Email sx={{ color: 'primary.main' }} />}
-                      {campaign.type === 'sms' && <Sms sx={{ color: 'warning.main' }} />}
-                      <Typography variant="body2" color="textSecondary">
-                        {campaign.type.toUpperCase()}
+                    <Chip 
+                      label={campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)} 
+                      color={
+                        campaign.status === 'active' ? 'success' :
+                        campaign.status === 'draft' ? 'default' :
+                        campaign.status === 'paused' ? 'warning' : 'primary'
+                      }
+                      size="small"
+                    />
+                  </Box>
+                  
+                  <Box mb={2}>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Tipo de Campanha
+                    </Typography>
+                    <Box display="flex" alignItems="center">
+                      {campaign.type === 'whatsapp' ? <WhatsApp color="success" /> :
+                       campaign.type === 'email' ? <Email color="primary" /> :
+                       <Sms color="secondary" />}
+                      <Typography variant="body1" ml={1}>
+                        {campaign.type === 'whatsapp' ? 'WhatsApp' :
+                         campaign.type === 'email' ? 'Email' : 'SMS'}
                       </Typography>
                     </Box>
                   </Box>
-                  <Chip 
-                    label={campaign.status.toUpperCase()}
-                    color={campaign.status === 'active' ? 'success' : 
-                           campaign.status === 'completed' ? 'primary' : 'default'}
-                    size="small"
-                  />
-                </Box>
-
-                <Typography variant="body2" color="textSecondary" mb={2}>
-                  {campaign.message}
-                </Typography>
-
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="textSecondary">Enviados</Typography>
-                    <Typography variant="body2" fontWeight="bold">
-                      {campaign.sentCount.toLocaleString()}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="textSecondary">Taxa de Abertura</Typography>
-                    <Typography variant="body2" fontWeight="bold">
-                      {campaign.openRate.toFixed(1)}%
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="textSecondary">Taxa de Clique</Typography>
-                    <Typography variant="body2" fontWeight="bold">
-                      {campaign.clickRate.toFixed(1)}%
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="textSecondary">Conversão</Typography>
-                    <Typography variant="body2" fontWeight="bold">
-                      {campaign.conversionRate.toFixed(1)}%
-                    </Typography>
-                  </Grid>
-                </Grid>
-
-                <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography variant="caption" color="textSecondary">
-                    Criada em {new Date(campaign.createdAt).toLocaleDateString()}
+                  
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Segmento Alvo
                   </Typography>
-                  <Box>
-                    <IconButton size="small">
-                      <BarChart />
-                    </IconButton>
+                  <Typography variant="body1" mb={2}>
+                    {campaign.targetSegment}
+                  </Typography>
+                  
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Mensagem
+                  </Typography>
+                  <Typography variant="body1" mb={2} sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                  }}>
+                    {campaign.message}
+                  </Typography>
+                  
+                  <Grid container spacing={2} mb={2}>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Enviados
+                      </Typography>
+                      <Typography variant="body2">
+                        {campaign.sentCount}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Taxa de Abertura
+                      </Typography>
+                      <Typography variant="body2">
+                        {campaign.openRate}%
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="caption" color="text.secondary">
+                        Conversão
+                      </Typography>
+                      <Typography variant="body2">
+                        {campaign.conversionRate}%
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                  
+                  <Box display="flex" justifyContent="flex-end">
                     <IconButton size="small">
                       <Edit />
                     </IconButton>
+                    <IconButton size="small">
+                      <Delete />
+                    </IconButton>
+                    <IconButton size="small">
+                      <Send />
+                    </IconButton>
                   </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
     </Box>
   );
 
-  // Renderizar cupons
+  // Renderizar cupons de desconto
   const renderCoupons = () => (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -837,128 +897,186 @@ const LoyaltyScreen: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<LocalOffer />}
-          onClick={() => setCouponDialogOpen(true)}
+          onClick={() => {
+            setEditingCoupon(null);
+            setCouponForm({
+              code: '',
+              discount_type: 'percentage',
+              discount_value: '',
+              minimum_purchase: '',
+              description: '',
+              valid_from: '',
+              valid_until: '',
+              usage_limit: '',
+              is_active: true
+            });
+            setCouponDialogOpen(true);
+          }}
         >
           Novo Cupom
         </Button>
       </Box>
 
-      <Grid container spacing={3}>
-        {coupons.map((coupon) => (
-          <Grid item xs={12} md={6} lg={4} key={coupon.id}>
-            <Card>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                  <Box>
-                    <Typography variant="h6">{coupon.code}</Typography>
-                    <Typography variant="body2" color="textSecondary">
+      {coupons.length === 0 ? (
+        <Card>
+          <CardContent>
+            <Box textAlign="center" py={4}>
+              <LocalOffer sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Nenhum cupom encontrado
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mb={3}>
+                Crie seu primeiro cupom de desconto
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<LocalOffer />}
+                onClick={() => setCouponDialogOpen(true)}
+              >
+                Novo Cupom
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Código</TableCell>
+                <TableCell>Desconto</TableCell>
+                <TableCell>Descrição</TableCell>
+                <TableCell>Validade</TableCell>
+                <TableCell>Uso</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Ações</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {coupons.map(coupon => (
+                <TableRow key={coupon.id}>
+                  <TableCell>
+                    <Typography variant="body1" fontWeight="bold">
+                      {coupon.code}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    {coupon.type === 'percentage' ? `${coupon.value}%` :
+                     coupon.type === 'fixed' ? formatCurrency(coupon.value) :
+                     `${coupon.value} pontos`}
+                    {coupon.minPurchase && (
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        Min: {formatCurrency(coupon.minPurchase)}
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
                       {coupon.description}
                     </Typography>
-                  </Box>
-                  <Chip 
-                    label={coupon.isActive ? 'Ativo' : 'Inativo'}
-                    color={coupon.isActive ? 'success' : 'default'}
-                    size="small"
-                  />
-                </Box>
-
-                <Box mb={2}>
-                  <Typography variant="body2">
-                    <strong>Tipo:</strong> {coupon.type === 'percentage' ? 'Percentual' : 
-                                           coupon.type === 'fixed' ? 'Valor Fixo' : 'Pontos'}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Valor:</strong> {coupon.type === 'percentage' ? `${coupon.value}%` :
-                                           coupon.type === 'fixed' ? `R$ ${coupon.value.toFixed(2)}` :
-                                           `${coupon.value} pontos`}
-                  </Typography>
-                  {coupon.minPurchase && (
+                  </TableCell>
+                  <TableCell>
                     <Typography variant="body2">
-                      <strong>Compra mínima:</strong> R$ {coupon.minPurchase.toFixed(2)}
+                      {new Date(coupon.validFrom).toLocaleDateString()} - {new Date(coupon.validUntil).toLocaleDateString()}
                     </Typography>
-                  )}
-                </Box>
-
-                <Box mb={2}>
-                  <Typography variant="body2">
-                    <strong>Válido:</strong> {new Date(coupon.validFrom).toLocaleDateString()} até {new Date(coupon.validUntil).toLocaleDateString()}
-                  </Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={(coupon.usedCount / coupon.usageLimit) * 100}
-                    sx={{ mt: 1 }}
-                  />
-                  <Typography variant="caption" color="textSecondary">
-                    {coupon.usedCount} de {coupon.usageLimit} usos
-                  </Typography>
-                </Box>
-
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Button
-                    size="small"
-                    startIcon={<Edit />}
-                    onClick={() => {
-                      // Implementar edição de cupom
-                      showSnackbar('Funcionalidade em desenvolvimento', 'info');
-                    }}
-                  >
-                    Editar
-                  </Button>
-                  <Switch
-                    checked={coupon.isActive}
-                    onChange={() => {
-                      // Implementar toggle de cupom
-                      showSnackbar('Status do cupom alterado', 'success');
-                    }}
-                    size="small"
-                  />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {coupon.usedCount}/{coupon.usageLimit}
+                    </Typography>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={(coupon.usedCount / coupon.usageLimit) * 100}
+                      sx={{ mt: 1, height: 4, borderRadius: 2 }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={coupon.isActive ? 'Ativo' : 'Inativo'} 
+                      color={coupon.isActive ? 'success' : 'default'}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <IconButton 
+                      size="small"
+                      onClick={() => {
+                        setEditingCoupon(coupon);
+                        setCouponForm({
+                          code: coupon.code,
+                          discount_type: coupon.type as any,
+                          discount_value: coupon.value.toString(),
+                          minimum_purchase: coupon.minPurchase?.toString() || '',
+                          description: coupon.description,
+                          valid_from: coupon.validFrom,
+                          valid_until: coupon.validUntil,
+                          usage_limit: coupon.usageLimit.toString(),
+                          is_active: coupon.isActive
+                        });
+                        setCouponDialogOpen(true);
+                      }}
+                    >
+                      <Edit />
+                    </IconButton>
+                    <IconButton size="small">
+                      <Delete />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </Box>
   );
 
-  // Renderizar transações
+  // Renderizar transações de pontos
   const renderTransactions = () => (
     <Box>
-      <Typography variant="h5" mb={3}>Histórico de Transações</Typography>
-      
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Data</TableCell>
-              <TableCell>Cliente</TableCell>
-              <TableCell>Tipo</TableCell>
-              <TableCell>Pontos</TableCell>
-              <TableCell>Descrição</TableCell>
-              <TableCell>Pedido</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {transactions.map((transaction) => {
-              const customer = customers.find(c => c.id === transaction.customerId);
-              return (
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h5">Transações de Pontos</Typography>
+      </Box>
+
+      {transactions.length === 0 ? (
+        <Card>
+          <CardContent>
+            <Box textAlign="center" py={4}>
+              <History sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Nenhuma transação encontrada
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                As transações de pontos aparecerão aqui
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Data</TableCell>
+                <TableCell>Cliente</TableCell>
+                <TableCell>Tipo</TableCell>
+                <TableCell>Pontos</TableCell>
+                <TableCell>Descrição</TableCell>
+                <TableCell>Pedido</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {transactions.map(transaction => (
                 <TableRow key={transaction.id}>
                   <TableCell>
                     {new Date(transaction.date).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Avatar sx={{ width: 32, height: 32 }}>
-                        {customer?.name.charAt(0) || '?'}
-                      </Avatar>
-                      <Typography variant="body2">
-                        {customer?.name || 'Cliente não encontrado'}
-                      </Typography>
-                    </Box>
+                    {customers.find(c => c.id === transaction.customerId)?.name || 'Cliente não encontrado'}
                   </TableCell>
                   <TableCell>
                     <Chip 
-                      label={transaction.type === 'earn' ? 'Ganho' : 'Resgate'}
+                      label={transaction.type === 'earn' ? 'Ganho' : 'Resgate'} 
                       color={transaction.type === 'earn' ? 'success' : 'primary'}
                       size="small"
                     />
@@ -967,32 +1085,26 @@ const LoyaltyScreen: React.FC = () => {
                     <Typography 
                       variant="body2" 
                       color={transaction.type === 'earn' ? 'success.main' : 'primary.main'}
-                      fontWeight="bold"
                     >
                       {transaction.type === 'earn' ? '+' : '-'}{transaction.points}
                     </Typography>
                   </TableCell>
-                  <TableCell>{transaction.description}</TableCell>
                   <TableCell>
-                    {transaction.orderId && (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => {
-                          // Implementar visualização do pedido
-                          showSnackbar('Funcionalidade em desenvolvimento', 'info');
-                        }}
-                      >
-                        #{transaction.orderId}
+                    {transaction.description}
+                  </TableCell>
+                  <TableCell>
+                    {transaction.orderId ? (
+                      <Button size="small" variant="outlined">
+                        Ver Pedido
                       </Button>
-                    )}
+                    ) : '-'}
                   </TableCell>
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </Box>
   );
 
@@ -1048,58 +1160,63 @@ const LoyaltyScreen: React.FC = () => {
       <Dialog open={campaignDialogOpen} onClose={() => setCampaignDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Nova Campanha de Marketing</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid container spacing={3} sx={{ mt: 0 }}>
             <Grid item xs={12}>
               <TextField
-                fullWidth
                 label="Nome da Campanha"
-                placeholder="Ex: Promoção de Verão 2024"
+                fullWidth
+                value={campaignForm.name}
+                onChange={(e) => setCampaignForm({...campaignForm, name: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Tipo de Campanha</InputLabel>
-                <Select defaultValue="">
+                <Select
+                  value={campaignForm.type}
+                  label="Tipo de Campanha"
+                  onChange={(e) => setCampaignForm({...campaignForm, type: e.target.value as any})}
+                >
                   <MenuItem value="whatsapp">WhatsApp</MenuItem>
-                  <MenuItem value="email">E-mail</MenuItem>
+                  <MenuItem value="email">Email</MenuItem>
                   <MenuItem value="sms">SMS</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Segmento de Clientes</InputLabel>
-                <Select defaultValue="">
+                <Select
+                  value={campaignForm.targetSegment}
+                  label="Segmento de Clientes"
+                  onChange={(e) => setCampaignForm({...campaignForm, targetSegment: e.target.value})}
+                >
                   <MenuItem value="all">Todos os Clientes</MenuItem>
                   <MenuItem value="vip">Clientes VIP</MenuItem>
                   <MenuItem value="regular">Clientes Regulares</MenuItem>
+                  <MenuItem value="new">Novos Clientes</MenuItem>
                   <MenuItem value="inactive">Clientes Inativos</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12}>
               <TextField
+                label="Mensagem"
                 fullWidth
                 multiline
                 rows={4}
-                label="Mensagem da Campanha"
-                placeholder="Digite a mensagem que será enviada aos clientes..."
+                value={campaignForm.message}
+                onChange={(e) => setCampaignForm({...campaignForm, message: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
+                label="Data de Envio"
+                type="date"
                 fullWidth
-                type="datetime-local"
-                label="Data de Início"
                 InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                type="datetime-local"
-                label="Data de Fim"
-                InputLabelProps={{ shrink: true }}
+                value={campaignForm.scheduledAt}
+                onChange={(e) => setCampaignForm({...campaignForm, scheduledAt: e.target.value})}
               />
             </Grid>
           </Grid>
@@ -1108,14 +1225,11 @@ const LoyaltyScreen: React.FC = () => {
           <Button onClick={() => setCampaignDialogOpen(false)}>Cancelar</Button>
           <Button 
             variant="contained" 
+            color="primary"
             onClick={() => {
               // Implementar criação de campanha
               setCampaignDialogOpen(false);
-              setSnackbar({
-                open: true,
-                message: 'Campanha criada com sucesso!',
-                severity: 'success'
-              });
+              showSnackbar('Campanha criada com sucesso!', 'success');
             }}
           >
             Criar Campanha
@@ -1127,94 +1241,92 @@ const LoyaltyScreen: React.FC = () => {
       <Dialog open={couponDialogOpen} onClose={() => setCouponDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Novo Cupom de Desconto</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
+          <Grid container spacing={3} sx={{ mt: 0 }}>
+            <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
                 label="Código do Cupom"
+                fullWidth
                 placeholder="Ex: DESCONTO10"
                 value={couponForm.code}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, code: e.target.value }))}
+                onChange={(e) => setCouponForm({...couponForm, code: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
                 <InputLabel>Tipo de Desconto</InputLabel>
-                <Select 
+                <Select
                   value={couponForm.discount_type}
-                  onChange={(e) => setCouponForm(prev => ({ ...prev, discount_type: e.target.value as 'percentage' | 'fixed' | 'points' }))}
+                  label="Tipo de Desconto"
+                  onChange={(e) => setCouponForm({...couponForm, discount_type: e.target.value as any})}
                 >
                   <MenuItem value="percentage">Porcentagem (%)</MenuItem>
                   <MenuItem value="fixed">Valor Fixo (R$)</MenuItem>
-                  <MenuItem value="points">Pontos de Fidelidade</MenuItem>
+                  <MenuItem value="points">Pontos</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
-                type="number"
                 label="Valor do Desconto"
-                placeholder="Ex: 10"
+                fullWidth
+                placeholder={couponForm.discount_type === 'percentage' ? "Ex: 10" : "Ex: 50.00"}
                 value={couponForm.discount_value}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, discount_value: e.target.value }))}
+                onChange={(e) => setCouponForm({...couponForm, discount_value: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
-                type="number"
                 label="Compra Mínima (R$)"
+                fullWidth
                 placeholder="Ex: 50.00"
                 value={couponForm.minimum_purchase}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, minimum_purchase: e.target.value }))}
+                onChange={(e) => setCouponForm({...couponForm, minimum_purchase: e.target.value})}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
-                fullWidth
                 label="Descrição"
+                fullWidth
                 placeholder="Ex: 10% de desconto em pedidos acima de R$ 50"
                 value={couponForm.description}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) => setCouponForm({...couponForm, description: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
-                type="date"
                 label="Válido de"
+                type="date"
+                fullWidth
                 InputLabelProps={{ shrink: true }}
                 value={couponForm.valid_from}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, valid_from: e.target.value }))}
+                onChange={(e) => setCouponForm({...couponForm, valid_from: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
-                type="date"
                 label="Válido até"
+                type="date"
+                fullWidth
                 InputLabelProps={{ shrink: true }}
                 value={couponForm.valid_until}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, valid_until: e.target.value }))}
+                onChange={(e) => setCouponForm({...couponForm, valid_until: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
-                type="number"
                 label="Limite de Uso"
+                fullWidth
                 placeholder="Ex: 100"
                 value={couponForm.usage_limit}
-                onChange={(e) => setCouponForm(prev => ({ ...prev, usage_limit: e.target.value }))}
+                onChange={(e) => setCouponForm({...couponForm, usage_limit: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <FormControlLabel
                 control={
                   <Switch 
                     checked={couponForm.is_active}
-                    onChange={(e) => setCouponForm(prev => ({ ...prev, is_active: e.target.checked }))}
+                    onChange={(e) => setCouponForm({...couponForm, is_active: e.target.checked})}
                   />
                 }
                 label="Cupom Ativo"
@@ -1226,131 +1338,59 @@ const LoyaltyScreen: React.FC = () => {
           <Button onClick={() => setCouponDialogOpen(false)}>Cancelar</Button>
           <Button 
             variant="contained" 
-            onClick={async () => {
-              try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                  setSnackbar({
-                    open: true,
-                    message: 'Token de autenticação não encontrado',
-                    severity: 'error'
-                  });
-                  return;
-                }
-
-                const couponData = {
-                  code: couponForm.code,
-                  discount_type: couponForm.discount_type || 'percentage',
-                  discount_value: parseFloat(couponForm.discount_value) || 0,
-                  minimum_purchase: parseFloat(couponForm.minimum_purchase) || 0,
-                  description: couponForm.description,
-                  valid_from: couponForm.valid_from,
-                  valid_until: couponForm.valid_until,
-                  usage_limit: parseInt(couponForm.usage_limit) || 0,
-                  is_active: couponForm.is_active
-                };
-
-                const response = await fetch('http://localhost:8001/api/v1/coupons/', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                    'Origin': 'http://localhost:3000'
-                  },
-                  body: JSON.stringify(couponData)
-                });
-
-                if (response.ok) {
-                  const newCoupon = await response.json();
-                  setCoupons(prev => [...prev, newCoupon]);
-                  setCouponDialogOpen(false);
-                  setCouponForm({
-                    code: '',
-                    discount_type: 'percentage',
-                    discount_value: '',
-                    minimum_purchase: '',
-                    description: '',
-                    valid_from: '',
-                    valid_until: '',
-                    usage_limit: '',
-                    is_active: true
-                  });
-                  setSnackbar({
-                    open: true,
-                    message: 'Cupom criado com sucesso!',
-                    severity: 'success'
-                  });
-                } else {
-                  const errorData = await response.json();
-                  setSnackbar({
-                    open: true,
-                    message: `Erro ao criar cupom: ${errorData.detail || 'Erro desconhecido'}`,
-                    severity: 'error'
-                  });
-                }
-              } catch (error) {
-                console.error('Erro ao criar cupom:', error);
-                setSnackbar({
-                  open: true,
-                  message: 'Erro ao criar cupom',
-                  severity: 'error'
-                });
-              }
-            }}
+            color="primary"
+            onClick={handleCreateCoupon}
+            disabled={loading}
           >
-            Criar Cupom
+            {loading ? <CircularProgress size={20} /> : 'Criar Cupom'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Dialog de Novo Cliente */}
+      {/* Dialog de Cliente */}
       <Dialog open={customerDialogOpen} onClose={() => setCustomerDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Novo Cliente</DialogTitle>
+        <DialogTitle>{editingCustomer ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
+          <Grid container spacing={3} sx={{ mt: 0 }}>
+            <Grid item xs={12}>
               <TextField
-                fullWidth
                 label="Nome Completo"
-                placeholder="Ex: João Silva"
+                fullWidth
                 value={customerForm.name}
                 onChange={(e) => setCustomerForm({...customerForm, name: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
+                label="Email"
                 fullWidth
-                label="E-mail"
                 type="email"
-                placeholder="Ex: joao@email.com"
                 value={customerForm.email}
                 onChange={(e) => setCustomerForm({...customerForm, email: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
                 label="Telefone"
-                placeholder="Ex: (11) 99999-9999"
+                fullWidth
                 value={customerForm.phone}
                 onChange={(e) => setCustomerForm({...customerForm, phone: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
                 label="Data de Nascimento"
                 type="date"
+                fullWidth
                 InputLabelProps={{ shrink: true }}
                 value={customerForm.birthDate}
                 onChange={(e) => setCustomerForm({...customerForm, birthDate: e.target.value})}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
                 label="Endereço"
-                placeholder="Ex: Rua das Flores, 123 - Centro"
+                fullWidth
                 value={customerForm.address}
                 onChange={(e) => setCustomerForm({...customerForm, address: e.target.value})}
               />
@@ -1375,7 +1415,7 @@ const LoyaltyScreen: React.FC = () => {
                     onChange={(e) => setCustomerForm({...customerForm, emailEnabled: e.target.checked})}
                   />
                 }
-                label="E-mail"
+                label="Email"
               />
               <FormControlLabel
                 control={
@@ -1393,10 +1433,11 @@ const LoyaltyScreen: React.FC = () => {
           <Button onClick={() => setCustomerDialogOpen(false)}>Cancelar</Button>
           <Button 
             variant="contained" 
+            color="primary"
             onClick={async () => {
               try {
                 setLoading(true);
-                // Criar cliente via API
+                
                 const newCustomer = {
                   name: customerForm.name,
                   email: customerForm.email,
