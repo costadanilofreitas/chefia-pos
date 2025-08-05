@@ -47,17 +47,38 @@ class Permission(str, Enum):
     CASHIER_CLOSE = "cashier:close"
     CASHIER_WITHDRAW = "cashier:withdraw"
     
-    # Dia operacional
+    # Dia
     DAY_OPEN = "day:open"
     DAY_CLOSE = "day:close"
     
-    # Relatórios
+    # Relatorios
     REPORTS_VIEW = "reports:view"
     REPORTS_EXPORT = "reports:export"
     
-    # Administração
+    # Administracao
     ADMIN_USERS = "admin:users"
     ADMIN_SETTINGS = "admin:settings"
+    
+    # Cupons
+    COUPONS_CREATE = "coupons.create"
+    COUPONS_READ = "coupons.read"
+    COUPONS_UPDATE = "coupons.update"
+    COUPONS_DELETE = "coupons.delete"
+    
+    # Campanhas
+    CAMPAIGNS_CREATE = "campaigns.create"
+    CAMPAIGNS_READ = "campaigns.read"
+    CAMPAIGNS_UPDATE = "campaigns.update"
+    CAMPAIGNS_DELETE = "campaigns.delete"
+    
+    # Clientes
+    CUSTOMERS_CREATE = "customers.create"
+    CUSTOMERS_READ = "customers.read"
+    CUSTOMERS_UPDATE = "customers.update"
+    CUSTOMERS_DELETE = "customers.delete"
+    
+    # Permissao especial
+    ALL = "all"
 
 class User(BaseModel):
     """Modelo base de usuário."""
