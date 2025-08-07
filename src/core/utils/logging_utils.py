@@ -33,11 +33,13 @@ class StructuredLogFormatter(logging.Formatter):
 
         # Adicionar informações de exceção se disponíveis
         if record.exc_info:
-            log_data["exception"] = {
-                "type": record.exc_info[0].__name__,
-                "message": str(record.exc_info[1]),
-                "traceback": self.formatException(record.exc_info),
-            }
+            exc_type, exc_value, exc_traceback = record.exc_info
+            if exc_type is not None:
+                log_data["exception"] = {
+                    "type": exc_type.__name__,
+                    "message": str(exc_value) if exc_value else "",
+                    "traceback": self.formatException(record.exc_info),
+                }
 
         # Adicionar detalhes extras se disponíveis
         if hasattr(record, "details") and record.details:

@@ -236,8 +236,8 @@ class CashierReport(BaseModel):
     total_refunds: float
     total_withdrawals: float
     total_deposits: float
-    sales_by_payment_method: Dict[str, float]
-    operations_count: Dict[str, int]
+    sales_by_payment_method: Dict[PaymentMethod, float]
+    operations_count: Dict[OperationType, int]
     opened_at: str
     closed_at: Optional[str]
     duration_minutes: Optional[int]

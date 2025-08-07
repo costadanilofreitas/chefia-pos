@@ -113,9 +113,9 @@ class DailySalesReport(BaseModel):
     date: str
     total_sales: float
     total_orders: int
-    sales_by_payment_method: dict
-    sales_by_hour: dict
-    top_selling_products: List[dict]
+    sales_by_payment_method: Dict[str, float]
+    sales_by_hour: Dict[str, float]
+    top_selling_products: List[Dict[str, Any]]
     average_ticket: float
 
     class Config:

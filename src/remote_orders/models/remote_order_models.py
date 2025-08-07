@@ -58,6 +58,7 @@ class RemoteOrderPayment(BaseModel):
     total: float
     change: Optional[float] = None
     prepaid: bool = False
+    online: bool = False  # Indica se é pagamento online
 
 
 class RemoteOrder(BaseModel):
@@ -81,6 +82,11 @@ class RemoteOrder(BaseModel):
     raw_data: Dict[str, Any]  # Dados originais da plataforma
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
+    # Atributos adicionais para compatibilidade
+    source: Optional[str] = None
+    restaurant_id: Optional[str] = None
+    store_id: Optional[str] = None
+    external_id: Optional[str] = None  # Alias para external_order_id
 
 
 class RemotePlatformConfig(BaseModel):

@@ -198,7 +198,7 @@ class Receivable(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
 
     @validator("payment_amount")
-    def validate_payment_amount(cls, v, values):
+    def validate_payment_amount(cls, v: Optional[float], values: Dict[str, Any]) -> Optional[float]:
         if v is not None and "amount" in values and v > values["amount"]:
             raise ValueError(
                 "O valor do pagamento não pode ser maior que o valor da duplicata"
@@ -206,7 +206,7 @@ class Receivable(BaseModel):
         return v
 
     @validator("payment_date")
-    def validate_payment_date(cls, v, values):
+    def validate_payment_date(cls, v: Optional[date], values: Dict[str, Any]) -> Optional[date]:
         if v is not None and "issue_date" in values and v < values["issue_date"]:
             raise ValueError(
                 "A data de pagamento não pode ser anterior à data de emissão"
@@ -269,7 +269,7 @@ class Payable(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
 
     @validator("payment_amount")
-    def validate_payment_amount(cls, v, values):
+    def validate_payment_amount(cls, v: Optional[float], values: Dict[str, Any]) -> Optional[float]:
         if v is not None and "amount" in values and v > values["amount"]:
             raise ValueError(
                 "O valor do pagamento não pode ser maior que o valor da conta"
@@ -277,7 +277,7 @@ class Payable(BaseModel):
         return v
 
     @validator("payment_date")
-    def validate_payment_date(cls, v, values):
+    def validate_payment_date(cls, v: Optional[date], values: Dict[str, Any]) -> Optional[date]:
         if v is not None and "issue_date" in values and v < values["issue_date"]:
             raise ValueError(
                 "A data de pagamento não pode ser anterior à data de emissão"

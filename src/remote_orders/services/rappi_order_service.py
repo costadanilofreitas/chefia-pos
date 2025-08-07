@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict, Any, Optional
 import logging
 from datetime import datetime
@@ -10,7 +12,7 @@ from src.remote_orders.models.remote_order_models import (
     RemoteOrderItem,
 )
 from src.remote_orders.adapters.rappi_adapter import RappiAdapter
-from src.core.events.event_bus import EventBus, Event
+from src.core.events.event_bus import EventBus, Event, EventType
 from src.payment.services.payment_service import PaymentService
 
 logger = logging.getLogger(__name__)
@@ -50,7 +52,7 @@ class RappiProductMapping(BaseModel):
 class RappiOrderService:
     """Serviço para gerenciamento de pedidos do Rappi."""
 
-    def __init__(self, event_bus: EventBus, payment_service: PaymentService):
+    def __init__(self, event_bus: EventBus, payment_service: PaymentService) -> None:
         """
         Inicializa o serviço com as dependências necessárias.
 
@@ -62,13 +64,13 @@ class RappiOrderService:
         self.payment_service = payment_service
         self.register_event_handlers()
 
-    def register_event_handlers(self):
+    def register_event_handlers(self) -> None:
         """Registra handlers para eventos relevantes."""
         self.event_bus.subscribe(
-            "remote_order.status_changed", self.handle_order_status_change
+            EventType.ORDER_STATUS_CHANGED, self.handle_order_status_change
         )
         self.event_bus.subscribe(
-            "remote_order.confirmation_timeout", self.handle_confirmation_timeout
+            EventType.ORDER_CANCELLED, self.handle_confirmation_timeout
         )
 
     async def get_rappi_configuration(
@@ -157,8 +159,8 @@ class RappiOrderService:
 
                 # Publicar evento
                 await self.event_bus.publish(
-                    "remote_order.received",
                     Event(
+                        event_type=EventType.ORDER_CREATED,
                         data={
                             "order_id": saved_order.id,
                             "source": "rappi",
@@ -233,25 +235,25 @@ class RappiOrderService:
         # Atualizar status na API Rappi
         async with RappiAdapter(config) as adapter:
             success = await adapter.update_order_status(
-                order.external_id, RemoteOrderStatus.CONFIRMED
+                order.external_id, RemoteOrderStatus.ACCEPTED
             )
 
             if success:
                 # Atualizar status no banco de dados
-                order.status = RemoteOrderStatus.CONFIRMED
+                order.status = RemoteOrderStatus.ACCEPTED
                 order.updated_at = datetime.now()
                 await self.update_remote_order(order)
 
                 # Publicar evento
                 await self.event_bus.publish(
-                    "remote_order.status_changed",
                     Event(
+                        event_type=EventType.ORDER_STATUS_CHANGED,
                         data={
                             "order_id": order.id,
                             "source": "rappi",
                             "restaurant_id": order.restaurant_id,
                             "store_id": order.store_id,
-                            "status": RemoteOrderStatus.CONFIRMED.value,
+                            "status": RemoteOrderStatus.ACCEPTED.value,
                             "previous_status": RemoteOrderStatus.PENDING.value,
                         }
                     ),
@@ -259,7 +261,7 @@ class RappiOrderService:
 
                 # Notificar cliente
                 await self.notify_customer_status_change(
-                    order, RemoteOrderStatus.CONFIRMED
+                    order, RemoteOrderStatus.ACCEPTED
                 )
 
                 return True
@@ -309,8 +311,8 @@ class RappiOrderService:
 
                 # Publicar evento
                 await self.event_bus.publish(
-                    "remote_order.status_changed",
                     Event(
+                        event_type=EventType.ORDER_STATUS_CHANGED,
                         data={
                             "order_id": order.id,
                             "source": "rappi",
@@ -378,27 +380,9 @@ class RappiOrderService:
         if order_id.startswith("rappi_"):
             return RemoteOrder(
                 id=order_id,
-                external_id=order_id.replace("rappi_", ""),
-                source="rappi",
-                restaurant_id="restaurant_123",
-                store_id="store_123",
-                order_number="R12345",
+                platform=RemotePlatform.RAPPI,
+                external_order_id=order_id.replace("rappi_", ""),
                 status=RemoteOrderStatus.PENDING,
-                customer={
-                    "id": "customer_123",
-                    "name": "Cliente Teste",
-                    "email": "cliente@teste.com",
-                    "phone": "+5511999999999",
-                    "address": {
-                        "street": "Rua Teste",
-                        "number": "123",
-                        "complement": "Apto 45",
-                        "neighborhood": "Bairro Teste",
-                        "city": "São Paulo",
-                        "state": "SP",
-                        "zipcode": "01234-567",
-                    },
-                },
                 items=[
                     RemoteOrderItem(
                         id="item_1",
@@ -407,7 +391,6 @@ class RappiOrderService:
                         unit_price=25.90,
                         total_price=25.90,
                         notes="Sem cebola",
-                        options=[],
                     ),
                     RemoteOrderItem(
                         id="item_2",
@@ -416,19 +399,13 @@ class RappiOrderService:
                         unit_price=12.90,
                         total_price=12.90,
                         notes="",
-                        options=[],
                     ),
                 ],
-                payment={
-                    "method": "credit_card",
-                    "status": "approved",
-                    "total": 38.80,
-                    "currency": "BRL",
-                    "online": True,
-                },
-                delivery={
-                    "type": "delivery",
-                    "address": {
+                customer=RemoteOrderCustomer(
+                    name="Cliente Teste",
+                    email="cliente@teste.com",
+                    phone="+5511999999999",
+                    address={
                         "street": "Rua Teste",
                         "number": "123",
                         "complement": "Apto 45",
@@ -437,12 +414,19 @@ class RappiOrderService:
                         "state": "SP",
                         "zipcode": "01234-567",
                     },
-                    "notes": "",
-                    "estimated_time": 30,
-                },
-                total_amount=38.80,
-                created_at=datetime.now(),
-                updated_at=datetime.now(),
+                ),
+                payment=RemoteOrderPayment(
+                    method="credit_card",
+                    status="approved",
+                    total=38.80,
+                    online=True,
+                ),
+                subtotal=38.80,
+                total=38.80,
+                source="rappi",
+                restaurant_id="restaurant_123",
+                store_id="store_123",
+                external_id=order_id.replace("rappi_", ""),
                 raw_data={},
             )
 
@@ -496,8 +480,8 @@ class RappiOrderService:
 
                 # Publicar evento
                 await self.event_bus.publish(
-                    "remote_order.status_changed",
                     Event(
+                        event_type=EventType.ORDER_STATUS_CHANGED,
                         data={
                             "order_id": order.id,
                             "source": "rappi",
@@ -550,17 +534,18 @@ class RappiOrderService:
 
             if success:
                 # Registrar reembolso no sistema de pagamento
-                await self.payment_service.register_refund(
-                    order_id=order.id,
-                    amount=order.payment.total,
-                    reason=reason,
-                    source="rappi",
-                )
+                # TODO: Implementar método register_refund no PaymentService
+                # await self.payment_service.register_refund(
+                #     order_id=order.id,
+                #     amount=order.payment.total,
+                #     reason=reason,
+                #     source="rappi",
+                # )
 
                 # Publicar evento
                 await self.event_bus.publish(
-                    "remote_order.refunded",
                     Event(
+                        event_type=EventType.PAYMENT_FAILED,
                         data={
                             "order_id": order.id,
                             "source": "rappi",
@@ -762,7 +747,7 @@ class RappiOrderService:
 _rappi_order_service = None
 
 
-def get_rappi_order_service(event_bus=None, payment_service=None) -> RappiOrderService:
+def get_rappi_order_service(event_bus: Optional[EventBus] = None, payment_service: Optional[PaymentService] = None) -> RappiOrderService:
     """
     Obtém uma instância do serviço de pedidos Rappi.
 

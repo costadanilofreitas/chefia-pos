@@ -74,14 +74,16 @@ class DeliveryService:
         )
 
         # Publicar evento
+        from src.core.events.event_bus import Event, EventType
+        
         await self.event_bus.publish(
-            "DELIVERY_EVENT",
             Event(
+                event_type=EventType.ORDER_CREATED,
                 data={
                     "delivery_order": delivery_order.dict(),
                     "source": "delivery_service",
                 },
-                metadata={"event_type": "ORDER_CREATED", "module": "delivery"},
+                metadata={"module": "delivery"},
             ),
         )
 
@@ -122,15 +124,15 @@ class DeliveryService:
 
         # Publicar evento
         await self.event_bus.publish(
-            "DELIVERY_EVENT",
             Event(
+                event_type=EventType.ORDER_STATUS_CHANGED,
                 data={
                     "delivery_order_id": delivery_order.id,
                     "status": delivery_order.status,
                     "courier_id": courier_id,
                     "source": "delivery_service",
                 },
-                metadata={"event_type": "ORDER_STATUS_CHANGED", "module": "delivery"},
+                metadata={"module": "delivery"},
             ),
         )
 
@@ -203,8 +205,8 @@ class DeliveryService:
 
         # Publicar evento
         await self.event_bus.publish(
-            "DELIVERY_EVENT",
             Event(
+                event_type=EventType.ORDER_STATUS_CHANGED,
                 data={
                     "delivery_order_id": delivery_order.id,
                     "old_status": old_status,
@@ -212,7 +214,7 @@ class DeliveryService:
                     "notes": notes,
                     "source": "delivery_service",
                 },
-                metadata={"event_type": "ORDER_STATUS_CHANGED", "module": "delivery"},
+                metadata={"module": "delivery"},
             ),
         )
 
@@ -565,14 +567,14 @@ class CourierService:
 
         # Publicar evento
         await self.event_bus.publish(
-            "DELIVERY_EVENT",
             Event(
+                event_type=EventType.ORDER_CREATED,
                 data={
                     "courier": courier.dict(),
                     "action": "created",
                     "source": "courier_service",
                 },
-                metadata={"event_type": "COURIER_CREATED", "module": "delivery"},
+                metadata={"module": "delivery"},
             ),
         )
 
@@ -607,8 +609,8 @@ class CourierService:
 
         # Publicar evento
         await self.event_bus.publish(
-            "DELIVERY_EVENT",
             Event(
+                event_type=EventType.ORDER_UPDATED,
                 data={
                     "courier_id": courier_id,
                     "updates": data,
@@ -639,8 +641,8 @@ class CourierService:
 
         # Publicar evento
         await self.event_bus.publish(
-            "DELIVERY_EVENT",
             Event(
+                event_type=EventType.ORDER_STATUS_CHANGED,
                 data={
                     "courier_id": courier_id,
                     "old_status": old_status,
