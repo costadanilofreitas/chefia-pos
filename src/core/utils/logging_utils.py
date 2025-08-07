@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import json
 import os
@@ -9,7 +11,7 @@ from typing import Dict, Any, Optional
 class StructuredLogFormatter(logging.Formatter):
     """Formatador para logs estruturados em JSON."""
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         """
         Formata o registro de log como JSON estruturado.
 
@@ -19,7 +21,7 @@ class StructuredLogFormatter(logging.Formatter):
         Returns:
             str: Log formatado como JSON
         """
-        log_data = {
+        log_data: Dict[str, Any] = {
             "timestamp": datetime.utcfromtimestamp(record.created).isoformat(),
             "level": record.levelname,
             "logger": record.name,
@@ -44,7 +46,7 @@ class StructuredLogFormatter(logging.Formatter):
         return json.dumps(log_data)
 
 
-def configure_logging(log_level: str = "INFO", log_file: Optional[str] = None):
+def configure_logging(log_level: str = "INFO", log_file: Optional[str] = None) -> None:
     """
     Configura o sistema de logging.
 
@@ -63,7 +65,7 @@ def configure_logging(log_level: str = "INFO", log_file: Optional[str] = None):
     console_handler.setFormatter(formatter)
 
     # Configurar handlers
-    handlers = [console_handler]
+    handlers: list[logging.Handler] = [console_handler]
 
     # Adicionar handler para arquivo se especificado
     if log_file:
@@ -82,7 +84,7 @@ def configure_logging(log_level: str = "INFO", log_file: Optional[str] = None):
     logging.getLogger("fastapi").setLevel(logging.WARNING)
 
 
-def log_with_context(logger, level: str, message: str, details: Dict[str, Any] = None):
+def log_with_context(logger: logging.Logger, level: str, message: str, details: Optional[Dict[str, Any]] = None) -> None:
     """
     Registra uma mensagem de log com contexto adicional.
 

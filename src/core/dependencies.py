@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 import os
 from fastapi import HTTPException, Query
+from typing import Callable, Any
 
 CONFIG_DIR = "/home/ubuntu/pos-modern/config"
 
 
-def check_instance_license(module_name: str):
+def check_instance_license(module_name: str) -> Callable[[int], int]:
     """FastAPI dependency factory to check if an instance is licensed based on config file existence.
 
     Args:

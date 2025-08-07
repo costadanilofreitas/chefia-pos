@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from src.core.events.event_bus import Event, EventType, get_event_bus
 from src.cashier.models.cashier import Cashier, CashierOperationResponse, OperationType
 from typing import Dict, Any
@@ -21,7 +23,6 @@ async def publish_cashier_opened(cashier: Cashier) -> None:
                 "opening_balance": cashier.opening_balance,
                 "opened_at": cashier.opened_at,
             },
-            "timestamp": Event.timestamp,
         },
     )
     await event_bus.publish(event)
@@ -48,7 +49,6 @@ async def publish_cashier_closed(cashier: Cashier) -> None:
                 "opened_at": cashier.opened_at,
                 "closed_at": cashier.closed_at,
             },
-            "timestamp": Event.timestamp,
         },
     )
     await event_bus.publish(event)
@@ -97,7 +97,6 @@ async def publish_cashier_operation(
                 "business_day_id": cashier.business_day_id,
                 "current_balance": cashier.current_balance,
             },
-            "timestamp": Event.timestamp,
         },
     )
     await event_bus.publish(event)
@@ -122,7 +121,6 @@ async def publish_cashier_updated(
                 "current_balance": cashier.current_balance,
             },
             "updated_fields": updated_fields,
-            "timestamp": Event.timestamp,
         },
     )
     await event_bus.publish(event)

@@ -1,4 +1,6 @@
-from typing import Dict, Any, List
+from __future__ import annotations
+
+from typing import Dict, Any, List, Optional
 import logging
 from enum import Enum
 from datetime import datetime
@@ -68,18 +70,32 @@ class EventType(str, Enum):
     # Eventos do sistema
     SYSTEM_CONFIG_CHANGED = "system.config_changed"
 
+    # Eventos do módulo de caixa
+    CASHIER_OPENED = "cashier.opened"
+    CASHIER_CLOSED = "cashier.closed"
+    CASHIER_OPERATION = "cashier.operation"
+    CASHIER_UPDATED = "cashier.updated"
+    CASHIER_WITHDRAWAL = "cashier.withdrawal"
+    CASHIER_DEPOSIT = "cashier.deposit"
+
+    # Eventos de vendas
+    SALE_COMPLETED = "sale.completed"
+    REFUND_COMPLETED = "refund.completed"
+
 
 class Event:
     """Representa um evento no sistema."""
 
-    def __init__(self, data: Dict[str, Any] = None, metadata: Dict[str, Any] = None):
+    def __init__(self, event_type: EventType, data: Optional[Dict[str, Any]] = None, metadata: Optional[Dict[str, Any]] = None) -> None:
         """
         Inicializa um evento.
 
         Args:
+            event_type: Tipo do evento
             data: Dados do evento
             metadata: Metadados do evento
         """
+        self.event_type = event_type
         self.data = data or {}
         self.metadata = metadata or {}
         self.timestamp = datetime.now().isoformat()
@@ -95,6 +111,7 @@ class Event:
         """Converte o evento para um dicionário."""
         return {
             "id": self.id,
+            "event_type": self.event_type,
             "timestamp": self.timestamp,
             "data": self.data,
             "metadata": self.metadata,
@@ -103,7 +120,11 @@ class Event:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Event":
         """Cria um evento a partir de um dicionário."""
-        event = cls(data.get("data", {}), data.get("metadata", {}))
+        event = cls(
+            event_type=EventType(data.get("event_type", "")),
+            data=data.get("data", {}),
+            metadata=data.get("metadata", {})
+        )
         event.id = data.get("id", event.id)
         event.timestamp = data.get("timestamp", event.timestamp)
         return event
@@ -112,7 +133,7 @@ class Event:
 class EventHandler:
     """Manipulador de eventos."""
 
-    def __init__(self, callback, filters: Dict[str, Any] = None):
+    def __init__(self, callback: Any, filters: Optional[Dict[str, Any]] = None) -> None:
         """
         Inicializa um manipulador de eventos.
 
@@ -186,25 +207,22 @@ class EventHandler:
 class EventBus:
     """Barramento de eventos do sistema."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Inicializa o barramento de eventos."""
-        self.subscribers = {}
+        self.subscribers: Dict[str, List[EventHandler]] = {}
         self.logger = logging.getLogger(__name__)
 
-    async def publish(self, event_type: str, event: Event) -> None:
+    async def publish(self, event: Event) -> None:
         """
         Publica um evento no barramento.
 
         Args:
-            event_type: Tipo do evento
             event: Evento a ser publicado
         """
-        self.logger.debug(f"Publicando evento {event_type}: {event.id}")
-
-        # Adicionar tipo do evento aos metadados
-        event.metadata["event_type"] = event_type
+        self.logger.debug(f"Publicando evento {event.event_type}: {event.id}")
 
         # Verificar se há subscribers para este tipo de evento
+        event_type = event.event_type.value
         if event_type not in self.subscribers:
             self.logger.debug(f"Nenhum subscriber para o evento {event_type}")
             return
@@ -219,7 +237,7 @@ class EventBus:
                 )
 
     def subscribe(
-        self, event_type: str, callback, filters: Dict[str, Any] = None
+        self, event_type: EventType, callback: Any, filters: Optional[Dict[str, Any]] = None
     ) -> None:
         """
         Inscreve um callback para receber eventos de um determinado tipo.
@@ -235,12 +253,13 @@ class EventBus:
         handler = EventHandler(callback, filters)
 
         # Adicionar à lista de subscribers
-        if event_type not in self.subscribers:
-            self.subscribers[event_type] = []
+        event_type_str = event_type.value
+        if event_type_str not in self.subscribers:
+            self.subscribers[event_type_str] = []
 
-        self.subscribers[event_type].append(handler)
+        self.subscribers[event_type_str].append(handler)
 
-    def unsubscribe(self, event_type: str, callback) -> bool:
+    def unsubscribe(self, event_type: EventType, callback: Any) -> bool:
         """
         Remove a inscrição de um callback para um determinado tipo de evento.
 
@@ -254,18 +273,19 @@ class EventBus:
         self.logger.debug(f"Removendo inscrição para evento {event_type}")
 
         # Verificar se há subscribers para este tipo de evento
-        if event_type not in self.subscribers:
+        event_type_str = event_type.value
+        if event_type_str not in self.subscribers:
             return False
 
         # Encontrar e remover o handler
-        for i, handler in enumerate(self.subscribers[event_type]):
+        for i, handler in enumerate(self.subscribers[event_type_str]):
             if handler.callback == callback:
-                self.subscribers[event_type].pop(i)
+                self.subscribers[event_type_str].pop(i)
                 return True
 
         return False
 
-    def get_subscribers(self, event_type: str = None) -> Dict[str, List[EventHandler]]:
+    def get_subscribers(self, event_type: Optional[EventType] = None) -> Dict[str, List[EventHandler]]:
         """
         Obtém os subscribers do barramento.
 
@@ -276,13 +296,14 @@ class EventBus:
             Dict: Dicionário de subscribers
         """
         if event_type:
-            return {event_type: self.subscribers.get(event_type, [])}
+            event_type_str = event_type.value
+            return {event_type_str: self.subscribers.get(event_type_str, [])}
 
         return self.subscribers
 
 
 # Singleton para o barramento de eventos
-_event_bus = None
+_event_bus: Optional[EventBus] = None
 
 
 def get_event_bus() -> EventBus:

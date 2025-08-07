@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
 from datetime import datetime
+from typing import Any
 
 from src.core.middleware.error_handling import (
     register_exception_handlers,
@@ -80,7 +83,7 @@ app.include_router(order_router)
 
 
 @app.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     """Evento executado na inicialização da aplicação."""
     logger.info("Aplicação POS Modern iniciada")
 
@@ -94,7 +97,7 @@ async def startup_event():
 
 
 @app.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     """Evento executado no encerramento da aplicação."""
     logger.info("Encerrando aplicação POS Modern")
 
@@ -108,13 +111,13 @@ async def shutdown_event():
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, Any]:
     """Endpoint raiz da API."""
     return {"name": "POS Modern API", "version": "1.0.0", "status": "online"}
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, Any]:
     """Endpoint para verificação de saúde da API."""
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 

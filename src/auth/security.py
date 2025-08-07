@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Dict, Any, Callable
 import os
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -20,7 +22,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
 
 # Simulação de banco de dados de usuários (em produção, usar banco de dados real)
-fake_users_db = {
+fake_users_db: Dict[str, Dict[str, Any]] = {
     "123": {
         "id": "1",
         "username": "123",
@@ -127,17 +129,17 @@ fake_users_db = {
 }
 
 
-def verify_password(plain_password, hashed_password):
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica se a senha em texto plano corresponde ao hash."""
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def get_password_hash(password):
+def get_password_hash(password: str) -> str:
     """Gera um hash para a senha."""
     return pwd_context.hash(password)
 
 
-def get_user(db, username: str):
+def get_user(db: Dict[str, Dict[str, Any]], username: str) -> Optional[UserInDB]:
     """Busca um usuário pelo nome de usuário."""
     if username in db:
         user_dict = db[username]
@@ -145,17 +147,17 @@ def get_user(db, username: str):
     return None
 
 
-def authenticate_user(db, username: str, password: str):
+def authenticate_user(db: Dict[str, Dict[str, Any]], username: str, password: str) -> Optional[UserInDB]:
     """Autentica um usuário verificando nome de usuário e senha."""
     user = get_user(db, username)
     if not user:
-        return False
+        return None
     if not verify_password(password, user.hashed_password):
-        return False
+        return None
     return user
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> tuple[str, int]:
     """Cria um token JWT com os dados fornecidos e tempo de expiração."""
     to_encode = data.copy()
     if expires_delta:
@@ -167,7 +169,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt, int(expire.timestamp())
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
     """Obtém o usuário atual a partir do token JWT."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -192,19 +194,19 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return user
 
 
-async def get_current_active_user(current_user: UserInDB = Depends(get_current_user)):
+async def get_current_active_user(current_user: UserInDB = Depends(get_current_user)) -> UserInDB:
     """Verifica se o usuário atual está ativo."""
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Usuário inativo")
     return current_user
 
 
-def has_permission(required_permission: str):
+def has_permission(required_permission: str) -> Callable[[UserInDB], UserInDB]:
     """Verifica se o usuário tem a permissão necessária."""
 
     async def permission_dependency(
         current_user: UserInDB = Depends(get_current_active_user),
-    ):
+    ) -> UserInDB:
         if required_permission in current_user.permissions:
             return current_user
         raise HTTPException(
@@ -214,12 +216,12 @@ def has_permission(required_permission: str):
     return permission_dependency
 
 
-def has_role(required_role: UserRole):
+def has_role(required_role: UserRole) -> Callable[[UserInDB], UserInDB]:
     """Verifica se o usuário tem o papel necessário."""
 
     async def role_dependency(
         current_user: UserInDB = Depends(get_current_active_user),
-    ):
+    ) -> UserInDB:
         if current_user.role == required_role or current_user.role == UserRole.MANAGER:
             return current_user
         raise HTTPException(
