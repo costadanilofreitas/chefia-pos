@@ -91,6 +91,7 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
     if (path.includes('/manager')) return 'Gestão Gerencial';
     if (path.includes('/tables')) return 'Layout das Mesas';
     if (path.includes('/delivery')) return 'Delivery';
+    if (path.includes('/remote-orders')) return 'Pedidos Remotos';
     if (path.includes('/loyalty')) return 'Fidelidade';
     if (path.includes('/fiscal')) return 'Módulo Fiscal';
     if (path.includes('/cashier')) return 'Caixa';
@@ -215,6 +216,11 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
         <MenuItem onClick={() => navigateTo('/delivery')}>
           <LocalShipping sx={{ mr: 2 }} />
           Delivery
+        </MenuItem>
+
+        <MenuItem onClick={() => navigateTo('/remote-orders')}>
+          <Notifications sx={{ mr: 2 }} />
+          Pedidos Remotos
         </MenuItem>
 
         <MenuItem onClick={() => navigateTo('/loyalty')}>

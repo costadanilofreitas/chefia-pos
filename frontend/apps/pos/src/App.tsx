@@ -20,6 +20,7 @@ const CashWithdrawalPage = lazy(() => import('./ui/CashWithdrawalPage'));
 const CashierOpeningClosingPage = lazy(() => import('./ui/CashierOpeningClosingPage'));
 const TableLayoutScreen = lazy(() => import('./ui/TableLayoutScreen'));
 const DeliveryScreen = lazy(() => import('./ui/DeliveryScreen'));
+const RemoteOrdersScreen = lazy(() => import('./ui/RemoteOrdersScreen'));
 const WaiterScreen = lazy(() => import('./ui/WaiterScreen'));
 const LoyaltyScreen = lazy(() => import('./ui/LoyaltyScreen'));
 const FiscalScreen = lazy(() => import('./ui/FiscalScreen'));
@@ -257,6 +258,16 @@ function App() {
                       <Suspense fallback={<LoadingFallback message="Carregando delivery..." />}>
                         <LayoutRoute title="Delivery">
                           <DeliveryScreen />
+                        </LayoutRoute>
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  <Route path="/pos/:terminalId/remote-orders" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando pedidos remotos..." />}>
+                        <LayoutRoute title="Pedidos Remotos" requireAuth={true}>
+                          <RemoteOrdersScreen />
                         </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>

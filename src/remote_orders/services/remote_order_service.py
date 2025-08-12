@@ -13,7 +13,7 @@ from src.remote_orders.models.remote_order_models import (
     RemoteOrderResponse
 )
 from src.core.events.event_bus import get_event_bus, Event, EventType
-from src.product.models.product import Order, OrderCreate, OrderStatus, PaymentStatus, PaymentMethod
+from src.core.models.core_models import Order, OrderCreate, OrderStatus, PaymentStatus, PaymentMethod
 from src.order.services.order_service import order_service
 
 # Diretório para armazenamento de dados
@@ -405,6 +405,222 @@ class RemoteOrderService:
             remote_order.id,
             RemoteOrderUpdate(status=remote_status)
         )
+
+    async def dispatch_remote_order(self, order_id: str) -> RemoteOrder:
+        """Despacha um pedido remoto (marca como enviado para entrega)."""
+        remote_order = await self.get_remote_order(order_id)
+        if not remote_order:
+            raise HTTPException(status_code=404, detail="Pedido remoto não encontrado")
+            
+        if remote_order.status not in [RemoteOrderStatus.READY, RemoteOrderStatus.PREPARING]:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Pedido deve estar pronto ou em preparação para ser despachado. Status atual: {remote_order.status}"
+            )
+            
+        # Atualizar status
+        updated_order = await self.update_remote_order(
+            order_id, 
+            RemoteOrderUpdate(status=RemoteOrderStatus.DELIVERING)
+        )
+        
+        # Publicar evento
+        await self.event_bus.publish(Event(
+            event_type=EventType.REMOTE_ORDER_DISPATCHED,
+            data=updated_order.dict()
+        ))
+        
+        # Notificar plataforma externa se necessário
+        adapter = self._adapters.get(remote_order.platform)
+        if adapter and hasattr(adapter, 'notify_dispatch'):
+            try:
+                await adapter.notify_dispatch(remote_order.external_order_id)
+            except Exception as e:
+                # Log do erro mas não falha a operação
+                print(f"Erro ao notificar plataforma sobre despacho: {e}")
+        
+        return updated_order
+    
+    async def cancel_remote_order(self, order_id: str, reason: str) -> RemoteOrder:
+        """Cancela um pedido remoto já aceito."""
+        remote_order = await self.get_remote_order(order_id)
+        if not remote_order:
+            raise HTTPException(status_code=404, detail="Pedido remoto não encontrado")
+            
+        if remote_order.status in [RemoteOrderStatus.DELIVERED, RemoteOrderStatus.CANCELLED]:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Não é possível cancelar pedido com status: {remote_order.status}"
+            )
+            
+        # Atualizar status e adicionar motivo
+        updated_order = await self.update_remote_order(
+            order_id, 
+            RemoteOrderUpdate(
+                status=RemoteOrderStatus.CANCELLED,
+                notes=f"{remote_order.notes or ''}\nCancelado: {reason}".strip()
+            )
+        )
+        
+        # Publicar evento
+        await self.event_bus.publish(Event(
+            event_type=EventType.REMOTE_ORDER_CANCELLED,
+            data={"order": updated_order.dict(), "reason": reason}
+        ))
+        
+        # Notificar plataforma externa
+        adapter = self._adapters.get(remote_order.platform)
+        if adapter and hasattr(adapter, 'notify_cancellation'):
+            try:
+                await adapter.notify_cancellation(remote_order.external_order_id, reason)
+            except Exception as e:
+                print(f"Erro ao notificar plataforma sobre cancelamento: {e}")
+        
+        return updated_order
+    
+    async def mark_order_ready(self, order_id: str) -> RemoteOrder:
+        """Marca um pedido como pronto para entrega."""
+        remote_order = await self.get_remote_order(order_id)
+        if not remote_order:
+            raise HTTPException(status_code=404, detail="Pedido remoto não encontrado")
+            
+        if remote_order.status != RemoteOrderStatus.PREPARING:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Pedido deve estar em preparação para ser marcado como pronto. Status atual: {remote_order.status}"
+            )
+            
+        # Atualizar status
+        updated_order = await self.update_remote_order(
+            order_id, 
+            RemoteOrderUpdate(status=RemoteOrderStatus.READY)
+        )
+        
+        # Publicar evento
+        await self.event_bus.publish(Event(
+            event_type=EventType.REMOTE_ORDER_READY,
+            data=updated_order.dict()
+        ))
+        
+        # Notificar plataforma externa
+        adapter = self._adapters.get(remote_order.platform)
+        if adapter and hasattr(adapter, 'notify_ready'):
+            try:
+                await adapter.notify_ready(remote_order.external_order_id)
+            except Exception as e:
+                print(f"Erro ao notificar plataforma que pedido está pronto: {e}")
+        
+        return updated_order
+    
+    async def get_orders_summary(self) -> Dict[str, Any]:
+        """Obtém resumo estatístico dos pedidos remotos."""
+        remote_orders = self._load_remote_orders()
+        
+        # Contar por status
+        status_counts = {}
+        for status in RemoteOrderStatus:
+            status_counts[status.value] = len([o for o in remote_orders if o.get("status") == status.value])
+        
+        # Contar por plataforma
+        platform_counts = {}
+        for platform in RemotePlatform:
+            platform_counts[platform.value] = len([o for o in remote_orders if o.get("platform") == platform.value])
+        
+        # Calcular totais
+        today = datetime.now().date()
+        today_orders = [o for o in remote_orders 
+                       if datetime.fromisoformat(o.get("created_at", "")).date() == today]
+        
+        total_today = len(today_orders)
+        revenue_today = sum(o.get("total", 0) for o in today_orders 
+                           if o.get("status") not in [RemoteOrderStatus.REJECTED.value, RemoteOrderStatus.CANCELLED.value])
+        
+        return {
+            "status_counts": status_counts,
+            "platform_counts": platform_counts,
+            "total_orders": len(remote_orders),
+            "total_today": total_today,
+            "revenue_today": revenue_today,
+            "pending_orders": status_counts.get(RemoteOrderStatus.PENDING.value, 0),
+            "active_orders": (
+                status_counts.get(RemoteOrderStatus.ACCEPTED.value, 0) +
+                status_counts.get(RemoteOrderStatus.PREPARING.value, 0) +
+                status_counts.get(RemoteOrderStatus.READY.value, 0)
+            )
+        }
+    
+    async def get_stats_by_platform(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> Dict[str, Any]:
+        """Obtém estatísticas por plataforma."""
+        remote_orders = self._load_remote_orders()
+        
+        # Filtrar por data se especificado
+        if start_date or end_date:
+            filtered_orders = []
+            for order in remote_orders:
+                order_date = datetime.fromisoformat(order.get("created_at", "")).date()
+                
+                if start_date and order_date < datetime.fromisoformat(start_date).date():
+                    continue
+                if end_date and order_date > datetime.fromisoformat(end_date).date():
+                    continue
+                    
+                filtered_orders.append(order)
+            remote_orders = filtered_orders
+        
+        # Agrupar por plataforma
+        platform_stats = {}
+        for platform in RemotePlatform:
+            platform_orders = [o for o in remote_orders if o.get("platform") == platform.value]
+            
+            completed_orders = [o for o in platform_orders 
+                              if o.get("status") in [RemoteOrderStatus.DELIVERED.value]]
+            
+            platform_stats[platform.value] = {
+                "total_orders": len(platform_orders),
+                "completed_orders": len(completed_orders),
+                "total_revenue": sum(o.get("total", 0) for o in completed_orders),
+                "average_order_value": (
+                    sum(o.get("total", 0) for o in completed_orders) / len(completed_orders)
+                    if completed_orders else 0
+                ),
+                "acceptance_rate": (
+                    len([o for o in platform_orders if o.get("status") != RemoteOrderStatus.REJECTED.value]) / len(platform_orders)
+                    if platform_orders else 0
+                ) * 100
+            }
+        
+        return platform_stats
+    
+    async def bulk_action_orders(self, action: str, order_ids: List[str], reason: Optional[str] = None) -> Dict[str, Any]:
+        """Executa ação em lote em múltiplos pedidos."""
+        results = {
+            "success": [],
+            "failed": [],
+            "total": len(order_ids)
+        }
+        
+        for order_id in order_ids:
+            try:
+                if action == "accept":
+                    await self.accept_remote_order(order_id)
+                elif action == "reject":
+                    await self.reject_remote_order(order_id, reason or "Rejeitado em lote")
+                elif action == "cancel":
+                    await self.cancel_remote_order(order_id, reason or "Cancelado em lote")
+                elif action == "dispatch":
+                    await self.dispatch_remote_order(order_id)
+                elif action == "ready":
+                    await self.mark_order_ready(order_id)
+                
+                results["success"].append(order_id)
+                
+            except Exception as e:
+                results["failed"].append({
+                    "order_id": order_id,
+                    "error": str(e)
+                })
+        
+        return results
 
 # Instância singleton do serviço
 remote_order_service = RemoteOrderService()

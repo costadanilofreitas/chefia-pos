@@ -54,7 +54,7 @@ from src.loyalty.router.coupon_router import router as coupon_router
 # from src.analytics.router.analytics_router import router as analytics_router  # Comentado temporariamente
 # from src.payment.router.payment_router import router as payment_router
 # from src.payment.router.split_payment_router import router as split_payment_router
-# from src.remote_orders.router.remote_order_router import router as remote_order_router
+from src.remote_orders.router.remote_order_router import router as remote_order_router
 # from src.remote_orders.router.rappi_router import router as rappi_router
 # from src.waiter.router.table_layout_router import router as table_layout_router
 # from src.peripherals.router.keyboard_router import router as keyboard_router
@@ -70,12 +70,12 @@ app.include_router(employee_router)
 app.include_router(business_day_router)
 app.include_router(campaign_router)
 app.include_router(coupon_router)
+app.include_router(remote_order_router)
+# app.include_router(rappi_router)
 app.include_router(order_router)
 # app.include_router(analytics_router)  # Comentado temporariamente
 # app.include_router(payment_router)
 # app.include_router(split_payment_router)
-# app.include_router(remote_order_router)
-# app.include_router(rappi_router)
 # app.include_router(table_layout_router)
 # app.include_router(keyboard_router)
 
