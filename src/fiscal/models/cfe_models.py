@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 class CFeStatus(str, Enum):
     """Status possíveis para um CF-e"""
+
     DRAFT = "draft"  # Rascunho, ainda não enviado
     PENDING = "pending"  # Enviado, aguardando resposta
     AUTHORIZED = "authorized"  # Autorizado pelo SAT/MFE
@@ -20,6 +21,7 @@ class CFeStatus(str, Enum):
 
 class CFeItem(BaseModel):
     """Item de um CF-e"""
+
     id: str
     product_id: str
     product_code: str
@@ -37,6 +39,7 @@ class CFeItem(BaseModel):
 
 class CFePayment(BaseModel):
     """Informações de pagamento do CF-e"""
+
     method: str  # Método de pagamento (dinheiro, cartão, etc)
     value: float
     card_info: Optional[Dict[str, Any]] = None  # Informações do cartão, se aplicável
@@ -45,6 +48,7 @@ class CFePayment(BaseModel):
 
 class CFeCustomer(BaseModel):
     """Informações do cliente (opcional no CF-e)"""
+
     id: Optional[str] = None
     name: Optional[str] = None
     document_type: Optional[str] = None  # CPF ou CNPJ
@@ -56,6 +60,7 @@ class CFeCustomer(BaseModel):
 
 class CFeIssuer(BaseModel):
     """Informações do emissor do CF-e"""
+
     id: str
     name: str
     trade_name: str
@@ -68,6 +73,7 @@ class CFeIssuer(BaseModel):
 
 class CFeResponse(BaseModel):
     """Resposta do SAT/MFE para o CF-e"""
+
     authorization_date: Optional[datetime] = None
     authorization_protocol: Optional[str] = None
     status_code: str
@@ -81,6 +87,7 @@ class CFeResponse(BaseModel):
 
 class CFeDocument(BaseModel):
     """Modelo principal do CF-e"""
+
     id: str
     number: str
     issue_date: datetime
@@ -108,6 +115,7 @@ class CFeDocument(BaseModel):
 
 class CFeEvent(BaseModel):
     """Eventos relacionados ao CF-e (cancelamento, etc)"""
+
     id: str
     cfe_id: str
     event_type: str
@@ -122,6 +130,7 @@ class CFeEvent(BaseModel):
 
 class CFeStateRule(BaseModel):
     """Regras específicas por estado para CF-e"""
+
     state_code: str
     state_name: str
     requires_mfe: bool = False  # Indica se o estado requer MFE em vez de SAT

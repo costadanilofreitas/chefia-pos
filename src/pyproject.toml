@@ -1,0 +1,85 @@
+[tool.poetry]
+name = "chefia-pos"
+version = "0.1.0"
+description = "Sistema POS com FastAPI e integrações diversas"
+authors = ["Seu Nome <seuemail@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+
+# Core
+fastapi = "^0.116.1"
+uvicorn = { extras = ["standard"], version = "^0.35.0" }
+pydantic = "^2.11.7"
+python-multipart = "^0.0.9"
+python-jose = "^3.3.0"
+passlib = "^1.7.4"
+bcrypt = "<4.0.1"
+requests = "^2.32.3"
+
+# Banco / ORM / Mongo
+motor = "^3.7.1"
+
+# AWS
+boto3 = "^1.40.0"
+botocore = "^1.40.0"
+
+# Utilitários
+numpy = "^2.3.0"
+pandas = "^2.3.1"
+pillow = "^11.0.0"
+pyserial = "^3.5"
+pyusb = "^1.3.0"
+pyzbar = "^0.1.9"
+reportlab = "^4.4.0"
+semver = "^3.0.0"
+twilio = "^9.7.0"
+aiohttp = "^3.12.0"
+httpx = "^0.28.0"
+pyjwt = "^2.10.0"
+
+# Evitar pacotes suspeitos que apareceram no seu reqs ("database", "auto_mix_prep")
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+ruff = "^0.6.9"
+mypy = "^1.10.1"
+pytest = "^8.3.2"
+types-requests = "^2.32.0.20240712"
+types-python-jose = "^3.3.4.20240106"
+types-passlib = "^1.7.7.20240819"
+pandas-stubs = "^2.2.2.240807"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# ----------------------
+# Configurações extras
+# ----------------------
+
+[tool.black]
+line-length = 88
+target-version = ["py313"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+select = ["E", "F", "W", "B", "I"]
+ignore = ["E501"] # ignorar linha muito longa por padrão
+fix = true
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+ignore_missing_imports = true
+
+# ----------------------
+# Scripts
+# ----------------------
+
+[tool.poetry.scripts]
+lint = "ruff check ."
+format = "black ."
+typecheck = "mypy ."

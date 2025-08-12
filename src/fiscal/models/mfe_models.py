@@ -3,13 +3,14 @@ Modelos de dados para MFE (Módulo Fiscal Eletrônico)
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any
 from enum import Enum
 from pydantic import BaseModel, Field
 
 
 class MFEStatus(str, Enum):
     """Status possíveis para um equipamento MFE"""
+
     ACTIVE = "active"  # Equipamento ativo e operacional
     INACTIVE = "inactive"  # Equipamento inativo
     MAINTENANCE = "maintenance"  # Em manutenção
@@ -19,6 +20,7 @@ class MFEStatus(str, Enum):
 
 class MFEOperationType(str, Enum):
     """Tipos de operação do MFE"""
+
     EMISSION = "emission"  # Emissão de documento fiscal
     CANCELLATION = "cancellation"  # Cancelamento de documento
     CONFIGURATION = "configuration"  # Configuração do equipamento
@@ -28,6 +30,7 @@ class MFEOperationType(str, Enum):
 
 class MFEEquipment(BaseModel):
     """Informações do equipamento MFE"""
+
     id: str
     serial_number: str
     model: str
@@ -47,6 +50,7 @@ class MFEEquipment(BaseModel):
 
 class MFEOperation(BaseModel):
     """Registro de operações realizadas no MFE"""
+
     id: str
     equipment_id: str
     operation_type: MFEOperationType
@@ -61,6 +65,7 @@ class MFEOperation(BaseModel):
 
 class MFEConfiguration(BaseModel):
     """Configurações do MFE"""
+
     id: str
     equipment_id: str
     parameter_name: str
@@ -72,6 +77,7 @@ class MFEConfiguration(BaseModel):
 
 class MFEStateRule(BaseModel):
     """Regras específicas por estado para MFE"""
+
     state_code: str
     state_name: str
     webservice_url: str
@@ -84,6 +90,7 @@ class MFEStateRule(BaseModel):
 
 class MFEMaintenanceSchedule(BaseModel):
     """Agendamento de manutenção para equipamentos MFE"""
+
     id: str
     equipment_id: str
     scheduled_date: datetime

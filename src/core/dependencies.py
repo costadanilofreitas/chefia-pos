@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import os
-from fastapi import Depends, HTTPException, Query
+from fastapi import HTTPException, Query
+from typing import Callable, Any
 
 CONFIG_DIR = "/home/ubuntu/pos-modern/config"
 
-def check_instance_license(module_name: str):
+
+def check_instance_license(module_name: str) -> Callable[[int], int]:
     """FastAPI dependency factory to check if an instance is licensed based on config file existence.
 
     Args:
@@ -16,21 +20,24 @@ def check_instance_license(module_name: str):
     param_name = f"{module_name}_id"
 
     async def _check_license(
-        instance_id: int = Query(..., alias=param_name, description=f"Licensed instance ID for the {module_name} module")
+        instance_id: int = Query(
+            ...,
+            alias=param_name,
+            description=f"Licensed instance ID for the {module_name} module",
+        )
     ) -> int:
         """Checks for the existence of the instance configuration file using the alias."""
         config_file_path = os.path.join(CONFIG_DIR, module_name, f"{instance_id}.json")
-        
+
         if not os.path.exists(config_file_path):
             raise HTTPException(
                 status_code=403,
                 detail=f"Instance ID {instance_id} for module {module_name} is not licensed or configured.",
             )
-            
+
         # You could potentially load and return the config content here if needed
         # For now, just checking existence is enough for licensing
-        
-        return instance_id
-        
-    return _check_license
 
+        return instance_id
+
+    return _check_license

@@ -1,12 +1,13 @@
 import unittest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, AsyncMock
 import uuid
 from datetime import datetime
 
 from src.inventory.models.inventory_models import (
-    InventoryItem, InventoryItemCreate, InventoryItemUpdate,
-    InventoryTransaction, InventoryTransactionCreate, TransactionType, TransactionStatus,
-    InventoryLoss, InventoryLossCreate, LossReason
+    InventoryItem,
+    TransactionStatus,
+    InventoryLoss,
+    LossReason,
 )
 from src.inventory.router.inventory_router import router
 from fastapi.testclient import TestClient
@@ -17,10 +18,11 @@ app = FastAPI()
 app.include_router(router)
 client = TestClient(app)
 
+
 class TestInventoryRouter(unittest.TestCase):
     """Test cases for the inventory router endpoints."""
-    
-    @patch('src.inventory.router.inventory_router.get_inventory_service')
+
+    @patch("src.inventory.router.inventory_router.get_inventory_service")
     def test_create_inventory_item(self, mock_get_service):
         """Test creating an inventory item via API."""
         # Setup mock
@@ -38,10 +40,10 @@ class TestInventoryRouter(unittest.TestCase):
             reorder_point=20,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
-            last_stock_update=datetime.utcnow()
+            last_stock_update=datetime.utcnow(),
         )
         mock_get_service.return_value = mock_service
-        
+
         # Test request
         response = client.post(
             "/inventory/items",
@@ -53,17 +55,17 @@ class TestInventoryRouter(unittest.TestCase):
                 "initial_stock": 100,
                 "cost_per_unit": 10.0,
                 "minimum_stock": 10,
-                "reorder_point": 20
-            }
+                "reorder_point": 20,
+            },
         )
-        
+
         # Assertions
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["name"], "Test Item")
         self.assertEqual(response.json()["current_stock"], 100)
         self.assertEqual(response.json()["value"], 1000.0)
-    
-    @patch('src.inventory.router.inventory_router.get_inventory_service')
+
+    @patch("src.inventory.router.inventory_router.get_inventory_service")
     def test_list_inventory_items(self, mock_get_service):
         """Test listing inventory items via API."""
         # Setup mock
@@ -82,7 +84,7 @@ class TestInventoryRouter(unittest.TestCase):
                 reorder_point=20,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
-                last_stock_update=datetime.utcnow()
+                last_stock_update=datetime.utcnow(),
             ),
             InventoryItem(
                 id=uuid.uuid4(),
@@ -97,21 +99,21 @@ class TestInventoryRouter(unittest.TestCase):
                 reorder_point=10,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
-                last_stock_update=datetime.utcnow()
-            )
+                last_stock_update=datetime.utcnow(),
+            ),
         ]
         mock_get_service.return_value = mock_service
-        
+
         # Test request
         response = client.get("/inventory/items")
-        
+
         # Assertions
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 2)
         self.assertEqual(response.json()[0]["name"], "Test Item 1")
         self.assertEqual(response.json()[1]["name"], "Test Item 2")
-    
-    @patch('src.inventory.router.inventory_router.get_inventory_service')
+
+    @patch("src.inventory.router.inventory_router.get_inventory_service")
     def test_report_loss(self, mock_get_service):
         """Test reporting an inventory loss via API."""
         # Setup mock
@@ -120,7 +122,7 @@ class TestInventoryRouter(unittest.TestCase):
         loss_id = uuid.uuid4()
         transaction_id = uuid.uuid4()
         reporter_id = uuid.uuid4()
-        
+
         mock_service.report_loss.return_value = InventoryLoss(
             id=loss_id,
             item_id=item_id,
@@ -132,10 +134,10 @@ class TestInventoryRouter(unittest.TestCase):
             value=200.0,
             status=TransactionStatus.PENDING,
             created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            updated_at=datetime.utcnow(),
         )
         mock_get_service.return_value = mock_service
-        
+
         # Test request
         response = client.post(
             "/inventory/losses",
@@ -144,10 +146,10 @@ class TestInventoryRouter(unittest.TestCase):
                 "quantity": 20,
                 "reason": "spoilage",
                 "notes": "Test loss",
-                "reported_by": str(reporter_id)
-            }
+                "reported_by": str(reporter_id),
+            },
         )
-        
+
         # Assertions
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()["item_id"], str(item_id))
@@ -155,8 +157,8 @@ class TestInventoryRouter(unittest.TestCase):
         self.assertEqual(response.json()["reason"], "spoilage")
         self.assertEqual(response.json()["value"], 200.0)
         self.assertEqual(response.json()["status"], "pending")
-    
-    @patch('src.inventory.router.inventory_router.get_inventory_service')
+
+    @patch("src.inventory.router.inventory_router.get_inventory_service")
     def test_approve_loss(self, mock_get_service):
         """Test approving an inventory loss via API."""
         # Setup mock
@@ -167,7 +169,7 @@ class TestInventoryRouter(unittest.TestCase):
         reporter_id = uuid.uuid4()
         approver_id = uuid.uuid4()
         financial_entry_id = uuid.uuid4()
-        
+
         mock_service.approve_loss.return_value = InventoryLoss(
             id=loss_id,
             item_id=item_id,
@@ -182,13 +184,13 @@ class TestInventoryRouter(unittest.TestCase):
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
             approved_by=approver_id,
-            approved_at=datetime.utcnow()
+            approved_at=datetime.utcnow(),
         )
         mock_get_service.return_value = mock_service
-        
+
         # Test request
         response = client.post(f"/inventory/losses/{loss_id}/approve")
-        
+
         # Assertions
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["id"], str(loss_id))
@@ -197,5 +199,6 @@ class TestInventoryRouter(unittest.TestCase):
         self.assertIsNotNone(response.json()["approved_by"])
         self.assertIsNotNone(response.json()["approved_at"])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

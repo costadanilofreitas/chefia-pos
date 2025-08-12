@@ -7,4 +7,4 @@ Este módulo inicializa o pacote de marketing e exporta as classes e funções r
 from .facebook_pixel import FacebookPixelIntegration
 from .marketing_integration import MarketingIntegration
 
-__all__ = ['FacebookPixelIntegration', 'MarketingIntegration']
+__all__ = ["FacebookPixelIntegration", "MarketingIntegration"]

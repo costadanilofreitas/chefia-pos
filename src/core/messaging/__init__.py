@@ -6,21 +6,21 @@ o pacote de mensagens, que inclui chatbots para diferentes plataformas.
 """
 
 from .base_chatbot import (
-    MessageType, 
-    ConversationState, 
+    MessageType,
+    ConversationState,
     PlatformType,
     BasePlatformIntegration,
     BaseEventIntegration,
     BaseChatbotService,
-    BaseIntegratedChatbot
+    BaseIntegratedChatbot,
 )
 
 __all__ = [
-    'MessageType',
-    'ConversationState',
-    'PlatformType',
-    'BasePlatformIntegration',
-    'BaseEventIntegration',
-    'BaseChatbotService',
-    'BaseIntegratedChatbot'
+    "MessageType",
+    "ConversationState",
+    "PlatformType",
+    "BasePlatformIntegration",
+    "BaseEventIntegration",
+    "BaseChatbotService",
+    "BaseIntegratedChatbot",
 ]

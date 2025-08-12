@@ -9,15 +9,15 @@ from .models import (
     ModelType,
     ForecastPoint,
     ForecastRequest,
-    ForecastResult
+    ForecastResult,
 )
 
 # Exportar classes e funções relevantes
 __all__ = [
-    'TimeGranularity',
-    'ForecastDimension',
-    'ModelType',
-    'ForecastPoint',
-    'ForecastRequest',
-    'ForecastResult'
+    "TimeGranularity",
+    "ForecastDimension",
+    "ModelType",
+    "ForecastPoint",
+    "ForecastRequest",
+    "ForecastResult",
 ]

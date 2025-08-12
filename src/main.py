@@ -1,28 +1,29 @@
-from fastapi import FastAPI, Depends
+from __future__ import annotations
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
 from datetime import datetime
+from typing import Any
 
-from src.core.middleware.error_handling import register_exception_handlers, error_handling_middleware
+from src.core.middleware.error_handling import (
+    register_exception_handlers,
+    error_handling_middleware,
+)
 from src.core.utils.logging_utils import configure_logging
 
 # Configurar logging
 log_file = os.environ.get("LOG_FILE", "/var/log/pos-modern/app.log")
 log_level = os.environ.get("LOG_LEVEL", "INFO")
 
-configure_logging(
-    log_level=log_level,
-    log_file=log_file
-)
+configure_logging(log_level=log_level, log_file=log_file)
 
 logger = logging.getLogger(__name__)
 
 # Criar aplicação
 app = FastAPI(
-    title="POS Modern API",
-    description="API para o sistema POS Modern",
-    version="1.0.0"
+    title="POS Modern API", description="API para o sistema POS Modern", version="1.0.0"
 )
 
 # Configurar CORS
@@ -51,6 +52,7 @@ from src.order.router.order_router import router as order_router
 from src.business_day.router.business_day_router import router as business_day_router
 from src.loyalty.router.campaign_router import router as campaign_router
 from src.loyalty.router.coupon_router import router as coupon_router
+
 # from src.analytics.router.analytics_router import router as analytics_router  # Comentado temporariamente
 # from src.payment.router.payment_router import router as payment_router
 # from src.payment.router.split_payment_router import router as split_payment_router
@@ -79,47 +81,48 @@ app.include_router(order_router)
 # app.include_router(table_layout_router)
 # app.include_router(keyboard_router)
 
+
 @app.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     """Evento executado na inicialização da aplicação."""
     logger.info("Aplicação POS Modern iniciada")
-    
+
     # Inicializar serviços que precisam ser iniciados na startup
     from src.peripherals.services.keyboard_manager import get_keyboard_manager
+
     keyboard_manager = get_keyboard_manager()
     keyboard_manager.start()
-    
+
     logger.info("Serviços inicializados com sucesso")
 
+
 @app.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     """Evento executado no encerramento da aplicação."""
     logger.info("Encerrando aplicação POS Modern")
-    
+
     # Parar serviços que precisam ser encerrados
     from src.peripherals.services.keyboard_manager import get_keyboard_manager
+
     keyboard_manager = get_keyboard_manager()
     keyboard_manager.stop()
-    
+
     logger.info("Serviços encerrados com sucesso")
 
+
 @app.get("/")
-async def root():
+async def root() -> dict[str, Any]:
     """Endpoint raiz da API."""
-    return {
-        "name": "POS Modern API",
-        "version": "1.0.0",
-        "status": "online"
-    }
+    return {"name": "POS Modern API", "version": "1.0.0", "status": "online"}
+
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, Any]:
     """Endpoint para verificação de saúde da API."""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat()
-    }
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8001)

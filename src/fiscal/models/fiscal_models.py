@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Optional, Any, Union, Literal
+from typing import Dict, List, Optional, Any
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
 import uuid
@@ -7,6 +7,7 @@ import uuid
 
 class RegimeTributario(str, Enum):
     """Regimes tributários suportados."""
+
     SIMPLES = "simples"
     LUCRO_PRESUMIDO = "lucro_presumido"
     LUCRO_REAL = "lucro_real"
@@ -15,6 +16,7 @@ class RegimeTributario(str, Enum):
 
 class TipoImposto(str, Enum):
     """Tipos de impostos suportados."""
+
     ICMS = "icms"
     PIS = "pis"
     COFINS = "cofins"
@@ -25,6 +27,7 @@ class TipoImposto(str, Enum):
 
 class TipoItem(str, Enum):
     """Tipos de itens para classificação fiscal."""
+
     PRODUTO = "produto"
     SERVICO = "servico"
     PRODUTO_SERVICO = "produto_servico"
@@ -32,6 +35,7 @@ class TipoItem(str, Enum):
 
 class OrigemProduto(str, Enum):
     """Códigos de origem do produto conforme legislação fiscal."""
+
     NACIONAL = "0"
     ESTRANGEIRA_IMPORTACAO_DIRETA = "1"
     ESTRANGEIRA_ADQUIRIDA_MERCADO_INTERNO = "2"
@@ -45,6 +49,7 @@ class OrigemProduto(str, Enum):
 
 class ImpostoConfig(BaseModel):
     """Configuração base para um imposto."""
+
     cst: str
     aliquota: float
     base_calculo: float = 100.0  # Percentual da base de cálculo (100% = valor total)
@@ -52,6 +57,7 @@ class ImpostoConfig(BaseModel):
 
 class ICMSConfig(ImpostoConfig):
     """Configuração específica para ICMS."""
+
     modalidade_base_calculo: Optional[str] = None
     percentual_reducao_base_calculo: float = 0.0
     percentual_margem_valor_adicionado: float = 0.0
@@ -60,16 +66,19 @@ class ICMSConfig(ImpostoConfig):
 
 class PISConfig(ImpostoConfig):
     """Configuração específica para PIS."""
+
     pass
 
 
 class COFINSConfig(ImpostoConfig):
     """Configuração específica para COFINS."""
+
     pass
 
 
 class ISSConfig(BaseModel):
     """Configuração específica para ISS."""
+
     aliquota: float
     base_calculo: float = 100.0
     codigo_servico: Optional[str] = None
@@ -78,11 +87,13 @@ class ISSConfig(BaseModel):
 
 class IPIConfig(ImpostoConfig):
     """Configuração específica para IPI."""
+
     codigo_enquadramento: Optional[str] = None
 
 
 class GrupoFiscal(BaseModel):
     """Grupo fiscal para produtos ou serviços."""
+
     id: str
     descricao: str
     codigo_ncm: Optional[str] = None
@@ -102,6 +113,7 @@ class GrupoFiscal(BaseModel):
 
 class RegraNcm(BaseModel):
     """Regra fiscal específica para um código NCM."""
+
     codigo_ncm: str
     descricao: str
     aliquota_icms: float
@@ -117,6 +129,7 @@ class RegraNcm(BaseModel):
 
 class BeneficioFiscal(BaseModel):
     """Benefício fiscal aplicável a determinados produtos ou operações."""
+
     codigo: str
     descricao: str
     tipo_imposto: TipoImposto
@@ -132,6 +145,7 @@ class BeneficioFiscal(BaseModel):
 
 class ConfiguracaoRegional(BaseModel):
     """Configuração fiscal para uma região específica (UF ou município)."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     uf: str
     municipio: Optional[str] = None
@@ -146,16 +160,17 @@ class ConfiguracaoRegional(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
-    @validator('uf')
+    @validator("uf")
     def validate_uf(cls, v):
         """Valida o formato da UF."""
         if v and len(v) != 2:
-            raise ValueError('UF deve ter 2 caracteres')
+            raise ValueError("UF deve ter 2 caracteres")
         return v.upper()
 
 
 class ImpostoCalculado(BaseModel):
     """Resultado do cálculo de um imposto específico."""
+
     tipo: TipoImposto
     cst: str
     aliquota: float
@@ -166,6 +181,7 @@ class ImpostoCalculado(BaseModel):
 
 class ItemCalculoFiscal(BaseModel):
     """Resultado do cálculo fiscal para um item."""
+
     item_id: str
     valor_bruto: float
     valor_liquido: float
@@ -182,6 +198,7 @@ class ItemCalculoFiscal(BaseModel):
 
 class ResultadoCalculoFiscal(BaseModel):
     """Resultado completo do cálculo fiscal para um pedido."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     order_id: str
     subtotal: float
@@ -196,6 +213,7 @@ class ResultadoCalculoFiscal(BaseModel):
 
 class CalculoFiscalRequest(BaseModel):
     """Requisição para cálculo fiscal."""
+
     order_id: str
     region_id: Optional[str] = None
     uf: Optional[str] = None
@@ -204,6 +222,7 @@ class CalculoFiscalRequest(BaseModel):
 
 class ProductFiscalInfo(BaseModel):
     """Informações fiscais de um produto."""
+
     fiscal_group_id: str
     ncm: Optional[str] = None
     cest: Optional[str] = None
@@ -212,6 +231,7 @@ class ProductFiscalInfo(BaseModel):
 
 class FiscalLog(BaseModel):
     """Registro de operações fiscais para auditoria."""
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     operation: str  # calculate, update_config, etc.
     order_id: Optional[str] = None

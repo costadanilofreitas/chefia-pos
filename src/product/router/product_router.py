@@ -1,5 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, Path, Body, status # Added status
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    UploadFile,
+    File,
+    Form,
+    Query,
+    Path,
+    Body,
+    status,
+)  # Added status
+from fastapi.responses import FileResponse
 from typing import List, Optional, Dict, Any
 import os
 import shutil
@@ -29,19 +40,16 @@ from src.product.models.product import (
     OptionGroup,
     OptionGroupCreate,
     OptionGroupUpdate,
-    Option,
-    OptionCreate,
     CompositeSection,
-    CompositeSectionCreate,
     CompositeProductCreate,
     CompositeProductUpdate,
-    PricingStrategy,
-    MenuExport
+    MenuExport,
 )
 from src.product.services.product_service import get_product_service
+
 # Removed check_permissions import, added has_permission
-from src.auth.security import get_current_user, has_permission
-from src.auth.models import User, Permission # Import User and Permission
+from src.auth.security import get_current_user
+from src.auth.models import User, Permission  # Import User and Permission
 
 router = APIRouter(prefix="/api/v1", tags=["products"])
 
@@ -53,6 +61,7 @@ os.makedirs(IMAGES_DIR, exist_ok=True)
 MENU_EXPORTS_DIR = os.path.join("/home/ubuntu/pos-modern/data/menu_exports")
 os.makedirs(MENU_EXPORTS_DIR, exist_ok=True)
 
+
 # Helper function for inline permission check (similar to other routers)
 def _check_permissions(user: User, required_permissions: List[str]):
     """Helper function to check user permissions inline."""
@@ -60,8 +69,9 @@ def _check_permissions(user: User, required_permissions: List[str]):
         if perm not in user.permissions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Permissão necessária: {perm}"
+                detail=f"Permissão necessária: {perm}",
             )
+
 
 # Endpoints para Produtos
 @router.post("/products", response_model=Product)
@@ -78,10 +88,11 @@ async def create_product(
     product_service = get_product_service()
     return await product_service.create_product(product)
 
+
 @router.get("/products/{product_id}", response_model=Product)
 async def get_product(
     product_id: str = Path(..., description="ID do produto"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Busca um produto pelo ID.
@@ -90,11 +101,12 @@ async def get_product(
     _check_permissions(current_user, [Permission.PRODUCT_READ])
     product_service = get_product_service()
     product = await product_service.get_product(product_id)
-    
+
     if not product:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
-    
+
     return product
+
 
 @router.get("/products", response_model=List[ProductSummary])
 async def list_products(
@@ -102,12 +114,18 @@ async def list_products(
     status: Optional[ProductStatus] = Query(None, description="Filtrar por status"),
     type: Optional[ProductType] = Query(None, description="Filtrar por tipo"),
     is_featured: Optional[bool] = Query(None, description="Filtrar por destaque"),
-    search: Optional[str] = Query(None, description="Buscar por nome, descrição, SKU ou código de barras"),
-    has_ingredients: Optional[bool] = Query(None, description="Filtrar produtos com ingredientes"),
-    weight_based: Optional[bool] = Query(None, description="Filtrar produtos vendidos por peso"),
+    search: Optional[str] = Query(
+        None, description="Buscar por nome, descrição, SKU ou código de barras"
+    ),
+    has_ingredients: Optional[bool] = Query(
+        None, description="Filtrar produtos com ingredientes"
+    ),
+    weight_based: Optional[bool] = Query(
+        None, description="Filtrar produtos vendidos por peso"
+    ),
     limit: int = Query(50, description="Limite de resultados"),
     offset: int = Query(0, description="Deslocamento para paginação"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Lista produtos com filtros.
@@ -124,8 +142,9 @@ async def list_products(
         has_ingredients=has_ingredients,
         weight_based=weight_based,
         limit=limit,
-        offset=offset
+        offset=offset,
     )
+
 
 @router.put("/products/{product_id}", response_model=Product)
 async def update_product(
@@ -141,11 +160,12 @@ async def update_product(
     _check_permissions(current_user, [Permission.PRODUCT_UPDATE])
     product_service = get_product_service()
     product = await product_service.update_product(product_id, product_update)
-    
+
     if not product:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
-    
+
     return product
+
 
 @router.delete("/products/{product_id}", response_model=Dict[str, bool])
 async def delete_product(
@@ -160,11 +180,12 @@ async def delete_product(
     _check_permissions(current_user, [Permission.PRODUCT_DELETE])
     product_service = get_product_service()
     success = await product_service.delete_product(product_id)
-    
+
     if not success:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
-    
+
     return {"success": True}
+
 
 # Endpoints para Combos
 @router.post("/combos", response_model=Product)
@@ -182,10 +203,13 @@ async def create_combo(
     product_service = get_product_service()
     return await product_service.create_combo(product, items)
 
+
 @router.put("/combos/{combo_id}", response_model=Product)
 async def update_combo(
     combo_id: str = Path(..., description="ID do combo"),
-    product_update: Optional[ProductUpdate] = Body(None, description="Dados do produto base do combo"),
+    product_update: Optional[ProductUpdate] = Body(
+        None, description="Dados do produto base do combo"
+    ),
     items: Optional[List[ComboItem]] = Body(None, description="Itens do combo"),
     current_user: User = Depends(get_current_user),
     # permissions: bool = Depends(check_permissions(["product:update"])) # Replaced with inline check
@@ -197,16 +221,17 @@ async def update_combo(
     _check_permissions(current_user, [Permission.PRODUCT_UPDATE])
     product_service = get_product_service()
     product = await product_service.update_combo(combo_id, product_update, items)
-    
+
     if not product:
         raise HTTPException(status_code=404, detail="Combo não encontrado")
-    
+
     return product
+
 
 @router.get("/combos/{combo_id}/items", response_model=List[Dict[str, Any]])
 async def get_combo_items(
     combo_id: str = Path(..., description="ID do combo"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Busca os itens de um combo.
@@ -215,6 +240,7 @@ async def get_combo_items(
     _check_permissions(current_user, [Permission.PRODUCT_READ])
     product_service = get_product_service()
     return await product_service.get_combo_items(combo_id)
+
 
 # Endpoints para Produtos Compostos (ex: pizza meio-a-meio)
 @router.post("/composite-products", response_model=Product)
@@ -231,6 +257,7 @@ async def create_composite_product(
     product_service = get_product_service()
     return await product_service.create_composite_product(data)
 
+
 @router.put("/composite-products/{product_id}", response_model=Product)
 async def update_composite_product(
     data: CompositeProductUpdate,
@@ -245,16 +272,19 @@ async def update_composite_product(
     _check_permissions(current_user, [Permission.PRODUCT_UPDATE])
     product_service = get_product_service()
     product = await product_service.update_composite_product(product_id, data)
-    
+
     if not product:
         raise HTTPException(status_code=404, detail="Produto composto não encontrado")
-    
+
     return product
 
-@router.get("/composite-products/{product_id}/sections", response_model=List[CompositeSection])
+
+@router.get(
+    "/composite-products/{product_id}/sections", response_model=List[CompositeSection]
+)
 async def get_composite_sections(
     product_id: str = Path(..., description="ID do produto composto"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Busca as seções de um produto composto.
@@ -264,11 +294,14 @@ async def get_composite_sections(
     product_service = get_product_service()
     return await product_service.get_composite_sections(product_id)
 
+
 @router.post("/composite-products/calculate-price", response_model=Dict[str, float])
 async def calculate_composite_product_price(
     product_id: str = Body(..., description="ID do produto composto"),
-    section_product_ids: Dict[str, str] = Body(..., description="Dicionário com IDs de seção e IDs de produtos selecionados"),
-    current_user: User = Depends(get_current_user)
+    section_product_ids: Dict[str, str] = Body(
+        ..., description="Dicionário com IDs de seção e IDs de produtos selecionados"
+    ),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Calcula o preço de um produto composto com base nas seções e estratégia de precificação.
@@ -277,10 +310,13 @@ async def calculate_composite_product_price(
     _check_permissions(current_user, [Permission.PRODUCT_READ])
     product_service = get_product_service()
     try:
-        price = await product_service.calculate_composite_product_price(product_id, section_product_ids)
+        price = await product_service.calculate_composite_product_price(
+            product_id, section_product_ids
+        )
         return {"price": price}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 # Endpoints para Categorias
 @router.post("/categories", response_model=ProductCategory)
@@ -297,10 +333,11 @@ async def create_category(
     product_service = get_product_service()
     return await product_service.create_category(category)
 
+
 @router.get("/categories/{category_id}", response_model=ProductCategory)
 async def get_category(
     category_id: str = Path(..., description="ID da categoria"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Busca uma categoria pelo ID.
@@ -309,17 +346,21 @@ async def get_category(
     _check_permissions(current_user, [Permission.CATEGORY_READ])
     product_service = get_product_service()
     category = await product_service.get_category(category_id)
-    
+
     if not category:
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
-    
+
     return category
+
 
 @router.get("/categories", response_model=List[ProductCategory])
 async def list_categories(
-    parent_id: Optional[str] = Query(None, description="Filtrar por categoria pai (vazio para categorias de nível superior)"),
+    parent_id: Optional[str] = Query(
+        None,
+        description="Filtrar por categoria pai (vazio para categorias de nível superior)",
+    ),
     type: Optional[str] = Query(None, description="Filtrar por tipo"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Lista categorias com filtros.
@@ -327,10 +368,8 @@ async def list_categories(
     """
     _check_permissions(current_user, [Permission.CATEGORY_READ])
     product_service = get_product_service()
-    return await product_service.list_categories(
-        parent_id=parent_id,
-        type=type
-    )
+    return await product_service.list_categories(parent_id=parent_id, type=type)
+
 
 @router.put("/categories/{category_id}", response_model=ProductCategory)
 async def update_category(
@@ -346,11 +385,12 @@ async def update_category(
     _check_permissions(current_user, [Permission.CATEGORY_UPDATE])
     product_service = get_product_service()
     category = await product_service.update_category(category_id, category_update)
-    
+
     if not category:
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
-    
+
     return category
+
 
 @router.delete("/categories/{category_id}", response_model=Dict[str, bool])
 async def delete_category(
@@ -365,11 +405,12 @@ async def delete_category(
     _check_permissions(current_user, [Permission.CATEGORY_DELETE])
     product_service = get_product_service()
     success = await product_service.delete_category(category_id)
-    
+
     if not success:
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
-    
+
     return {"success": True}
+
 
 # Endpoints para Imagens
 @router.post("/products/{product_id}/images", response_model=ImageUploadResponse)
@@ -386,43 +427,41 @@ async def upload_product_image(
     """
     _check_permissions(current_user, [Permission.PRODUCT_UPDATE])
     product_service = get_product_service()
-    
+
     # Verificar se o produto existe
     product = await product_service.get_product(product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
-    
+
     # Verificar extensão do arquivo
     file_ext = os.path.splitext(file.filename)[1].lower()
     if file_ext not in [".jpg", ".jpeg", ".png", ".webp", ".gif"]:
         raise HTTPException(status_code=400, detail="Formato de arquivo não suportado")
-    
+
     # Gerar nome de arquivo único
     filename = f"{uuid.uuid4()}{file_ext}"
     filepath = os.path.join(IMAGES_DIR, filename)
-    
+
     # Salvar arquivo
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    
+
     # Adicionar imagem ao produto
     image = await product_service.add_product_image(
         product_id=product_id,
         file_path=f"/api/v1/images/{filename}",
         file_name=filename,
-        is_main=is_main
+        is_main=is_main,
     )
-    
+
     # Retornar resposta com URL
-    return ImageUploadResponse(
-        **image.dict(),
-        url=f"/api/v1/images/{filename}"
-    )
+    return ImageUploadResponse(**image.dict(), url=f"/api/v1/images/{filename}")
+
 
 @router.get("/products/{product_id}/images", response_model=List[ProductImage])
 async def get_product_images(
     product_id: str = Path(..., description="ID do produto"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Busca as imagens de um produto.
@@ -431,6 +470,7 @@ async def get_product_images(
     _check_permissions(current_user, [Permission.PRODUCT_READ])
     product_service = get_product_service()
     return await product_service.get_product_images(product_id)
+
 
 @router.put("/images/{image_id}/main", response_model=ProductImage)
 async def set_main_image(
@@ -445,11 +485,12 @@ async def set_main_image(
     _check_permissions(current_user, [Permission.PRODUCT_UPDATE])
     product_service = get_product_service()
     image = await product_service.set_main_image(image_id)
-    
+
     if not image:
         raise HTTPException(status_code=404, detail="Imagem não encontrada")
-    
+
     return image
+
 
 @router.delete("/images/{image_id}", response_model=Dict[str, bool])
 async def delete_image(
@@ -464,25 +505,25 @@ async def delete_image(
     _check_permissions(current_user, [Permission.PRODUCT_UPDATE])
     product_service = get_product_service()
     success = await product_service.delete_image(image_id)
-    
+
     if not success:
         raise HTTPException(status_code=404, detail="Imagem não encontrada")
-    
+
     return {"success": True}
 
+
 @router.get("/images/{filename}")
-async def get_image(
-    filename: str = Path(..., description="Nome do arquivo de imagem")
-):
+async def get_image(filename: str = Path(..., description="Nome do arquivo de imagem")):
     """
     Retorna uma imagem pelo nome do arquivo.
     """
     filepath = os.path.join(IMAGES_DIR, filename)
-    
+
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Imagem não encontrada")
-    
+
     return FileResponse(filepath)
+
 
 # Endpoints para Grupos de Troca
 @router.post("/exchange-groups", response_model=ExchangeGroup)
@@ -501,10 +542,9 @@ async def create_exchange_group(
     product_service = get_product_service()
     return await product_service.create_exchange_group(name, description, products)
 
+
 @router.get("/exchange-groups", response_model=List[ExchangeGroup])
-async def list_exchange_groups(
-    current_user: User = Depends(get_current_user)
-):
+async def list_exchange_groups(current_user: User = Depends(get_current_user)):
     """
     Lista todos os grupos de troca.
     Requer permissão: PRODUCT_READ
@@ -513,12 +553,15 @@ async def list_exchange_groups(
     product_service = get_product_service()
     return await product_service.list_exchange_groups()
 
+
 @router.put("/exchange-groups/{group_id}", response_model=ExchangeGroup)
 async def update_exchange_group(
     group_id: str = Path(..., description="ID do grupo de troca"),
     name: Optional[str] = Body(None, embed=True, description="Nome do grupo de troca"),
     description: Optional[str] = Body(None, embed=True, description="Descrição"),
-    products: Optional[List[str]] = Body(None, embed=True, description="Lista de IDs de produtos"),
+    products: Optional[List[str]] = Body(
+        None, embed=True, description="Lista de IDs de produtos"
+    ),
     current_user: User = Depends(get_current_user),
     # permissions: bool = Depends(check_permissions(["product:update"])) # Replaced with inline check
 ):
@@ -528,10 +571,13 @@ async def update_exchange_group(
     """
     _check_permissions(current_user, [Permission.PRODUCT_UPDATE])
     product_service = get_product_service()
-    group = await product_service.update_exchange_group(group_id, name, description, products)
+    group = await product_service.update_exchange_group(
+        group_id, name, description, products
+    )
     if not group:
         raise HTTPException(status_code=404, detail="Grupo de troca não encontrado")
     return group
+
 
 @router.delete("/exchange-groups/{group_id}", response_model=Dict[str, bool])
 async def delete_exchange_group(
@@ -550,6 +596,7 @@ async def delete_exchange_group(
         raise HTTPException(status_code=404, detail="Grupo de troca não encontrado")
     return {"success": True}
 
+
 # Endpoints para Ingredientes
 @router.post("/ingredients", response_model=Ingredient)
 async def create_ingredient(
@@ -565,13 +612,14 @@ async def create_ingredient(
     product_service = get_product_service()
     return await product_service.create_ingredient(ingredient)
 
+
 @router.get("/ingredients", response_model=List[Ingredient])
 async def list_ingredients(
     search: Optional[str] = Query(None, description="Buscar por nome"),
     is_active: Optional[bool] = Query(None, description="Filtrar por status ativo"),
     limit: int = Query(100, description="Limite de resultados"),
     offset: int = Query(0, description="Deslocamento para paginação"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Lista ingredientes com filtros.
@@ -579,7 +627,10 @@ async def list_ingredients(
     """
     _check_permissions(current_user, [Permission.PRODUCT_READ])
     product_service = get_product_service()
-    return await product_service.list_ingredients(search=search, is_active=is_active, limit=limit, offset=offset)
+    return await product_service.list_ingredients(
+        search=search, is_active=is_active, limit=limit, offset=offset
+    )
+
 
 @router.put("/ingredients/{ingredient_id}", response_model=Ingredient)
 async def update_ingredient(
@@ -594,10 +645,13 @@ async def update_ingredient(
     """
     _check_permissions(current_user, [Permission.PRODUCT_UPDATE])
     product_service = get_product_service()
-    ingredient = await product_service.update_ingredient(ingredient_id, ingredient_update)
+    ingredient = await product_service.update_ingredient(
+        ingredient_id, ingredient_update
+    )
     if not ingredient:
         raise HTTPException(status_code=404, detail="Ingrediente não encontrado")
     return ingredient
+
 
 @router.delete("/ingredients/{ingredient_id}", response_model=Dict[str, bool])
 async def delete_ingredient(
@@ -616,6 +670,7 @@ async def delete_ingredient(
         raise HTTPException(status_code=404, detail="Ingrediente não encontrado")
     return {"success": True}
 
+
 # Endpoints para Grupos de Opções
 @router.post("/option-groups", response_model=OptionGroup)
 async def create_option_group(
@@ -631,12 +686,13 @@ async def create_option_group(
     product_service = get_product_service()
     return await product_service.create_option_group(option_group)
 
+
 @router.get("/option-groups", response_model=List[OptionGroup])
 async def list_option_groups(
     search: Optional[str] = Query(None, description="Buscar por nome"),
     limit: int = Query(100, description="Limite de resultados"),
     offset: int = Query(0, description="Deslocamento para paginação"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Lista grupos de opções com filtros.
@@ -644,7 +700,10 @@ async def list_option_groups(
     """
     _check_permissions(current_user, [Permission.PRODUCT_READ])
     product_service = get_product_service()
-    return await product_service.list_option_groups(search=search, limit=limit, offset=offset)
+    return await product_service.list_option_groups(
+        search=search, limit=limit, offset=offset
+    )
+
 
 @router.put("/option-groups/{group_id}", response_model=OptionGroup)
 async def update_option_group(
@@ -664,6 +723,7 @@ async def update_option_group(
         raise HTTPException(status_code=404, detail="Grupo de opções não encontrado")
     return group
 
+
 @router.delete("/option-groups/{group_id}", response_model=Dict[str, bool])
 async def delete_option_group(
     group_id: str = Path(..., description="ID do grupo de opções"),
@@ -681,6 +741,7 @@ async def delete_option_group(
         raise HTTPException(status_code=404, detail="Grupo de opções não encontrado")
     return {"success": True}
 
+
 # Endpoints para Cardápios
 @router.post("/menus", response_model=Menu)
 async def create_menu(
@@ -696,10 +757,11 @@ async def create_menu(
     product_service = get_product_service()
     return await product_service.create_menu(menu)
 
+
 @router.get("/menus/{menu_id}", response_model=Menu)
 async def get_menu(
     menu_id: str = Path(..., description="ID do cardápio"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Busca um cardápio pelo ID.
@@ -712,12 +774,13 @@ async def get_menu(
         raise HTTPException(status_code=404, detail="Cardápio não encontrado")
     return menu
 
+
 @router.get("/menus", response_model=List[Menu])
 async def list_menus(
     is_active: Optional[bool] = Query(None, description="Filtrar por status ativo"),
     limit: int = Query(50, description="Limite de resultados"),
     offset: int = Query(0, description="Deslocamento para paginação"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Lista cardápios com filtros.
@@ -725,7 +788,10 @@ async def list_menus(
     """
     _check_permissions(current_user, [Permission.MENU_READ])
     product_service = get_product_service()
-    return await product_service.list_menus(is_active=is_active, limit=limit, offset=offset)
+    return await product_service.list_menus(
+        is_active=is_active, limit=limit, offset=offset
+    )
+
 
 @router.put("/menus/{menu_id}", response_model=Menu)
 async def update_menu(
@@ -745,6 +811,7 @@ async def update_menu(
         raise HTTPException(status_code=404, detail="Cardápio não encontrado")
     return menu
 
+
 @router.delete("/menus/{menu_id}", response_model=Dict[str, bool])
 async def delete_menu(
     menu_id: str = Path(..., description="ID do cardápio"),
@@ -761,6 +828,7 @@ async def delete_menu(
     if not success:
         raise HTTPException(status_code=404, detail="Cardápio não encontrado")
     return {"success": True}
+
 
 @router.post("/menus/{menu_id}/export", response_model=Dict[str, str])
 async def export_menu(
@@ -780,9 +848,13 @@ async def export_menu(
         filepath = os.path.join(MENU_EXPORTS_DIR, filename)
         with open(filepath, "w") as f:
             f.write(export_data.json(indent=4))
-        return {"export_file": filename, "download_url": f"/api/v1/menus/exports/{filename}"}
+        return {
+            "export_file": filename,
+            "download_url": f"/api/v1/menus/exports/{filename}",
+        }
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
 
 @router.get("/menus/exports/{filename}")
 async def download_menu_export(
@@ -793,8 +865,11 @@ async def download_menu_export(
     """
     filepath = os.path.join(MENU_EXPORTS_DIR, filename)
     if not os.path.exists(filepath):
-        raise HTTPException(status_code=404, detail="Arquivo de exportação não encontrado")
+        raise HTTPException(
+            status_code=404, detail="Arquivo de exportação não encontrado"
+        )
     return FileResponse(filepath, filename=filename)
+
 
 @router.post("/menus/import")
 async def import_menu(
@@ -808,20 +883,29 @@ async def import_menu(
     """
     _check_permissions(current_user, [Permission.MENU_CREATE, Permission.MENU_UPDATE])
     if not file.filename.endswith(".json"):
-        raise HTTPException(status_code=400, detail="Formato de arquivo inválido. Apenas JSON é suportado.")
-    
+        raise HTTPException(
+            status_code=400,
+            detail="Formato de arquivo inválido. Apenas JSON é suportado.",
+        )
+
     try:
         content = await file.read()
         import_data = MenuExport.parse_raw(content)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Erro ao processar o arquivo JSON: {e}")
-    
+        raise HTTPException(
+            status_code=400, detail=f"Erro ao processar o arquivo JSON: {e}"
+        )
+
     product_service = get_product_service()
     try:
         imported_menu = await product_service.import_menu(import_data)
-        return {"message": "Cardápio importado com sucesso", "menu_id": imported_menu.id}
+        return {
+            "message": "Cardápio importado com sucesso",
+            "menu_id": imported_menu.id,
+        }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro interno durante a importação: {e}")
-
+        raise HTTPException(
+            status_code=500, detail=f"Erro interno durante a importação: {e}"
+        )

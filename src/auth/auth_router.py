@@ -1,17 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
-from typing import List
 
-from src.auth.models import User, UserCreate, Token, UserRole, Permission
+from src.auth.models import User, Token, UserRole, Permission
 from src.auth.security import (
-    authenticate_user, 
-    create_access_token, 
+    authenticate_user,
+    create_access_token,
     get_current_active_user,
-    has_permission,
     has_role,
     fake_users_db,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 
 router = APIRouter(
@@ -25,10 +23,10 @@ router = APIRouter(
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     """
     Endpoint para autenticação e obtenção de token JWT.
-    
+
     - **username**: Nome de usuário
     - **password**: Senha
-    
+
     Retorna um token JWT válido para autenticação nas APIs.
     """
     user = authenticate_user(fake_users_db, form_data.username, form_data.password)
@@ -40,22 +38,18 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token, expires_timestamp = create_access_token(
-        data={
-            "sub": user.username, 
-            "role": user.role, 
-            "permissions": user.permissions
-        },
-        expires_delta=access_token_expires
+        data={"sub": user.username, "role": user.role, "permissions": user.permissions},
+        expires_delta=access_token_expires,
     )
     return {
-        "access_token": access_token, 
+        "access_token": access_token,
         "token_type": "bearer",
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         "operator_id": user.username,
         "operator_name": user.full_name,
         "roles": [user.role],
         "permissions": user.permissions,
-        "require_password_change": False
+        "require_password_change": False,
     }
 
 
@@ -63,7 +57,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 async def verify_token(current_user: User = Depends(get_current_active_user)):
     """
     Verifica se o token JWT ainda é válido.
-    
+
     Retorna informações do usuário se o token for válido.
     Usado para verificar persistência de login após reload.
     """
@@ -73,7 +67,7 @@ async def verify_token(current_user: User = Depends(get_current_active_user)):
         "operator_name": current_user.full_name,
         "role": current_user.role,
         "permissions": current_user.permissions,
-        "message": "Token válido"
+        "message": "Token válido",
     }
 
 
@@ -81,7 +75,7 @@ async def verify_token(current_user: User = Depends(get_current_active_user)):
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     """
     Retorna informações do usuário autenticado.
-    
+
     Requer autenticação via token JWT.
     """
     return current_user
@@ -89,41 +83,42 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 
 @router.get("/verify-permission/{permission}")
 async def verify_user_permission(
-    permission: str,
-    current_user: User = Depends(get_current_active_user)
+    permission: str, current_user: User = Depends(get_current_active_user)
 ):
     """
     Verifica se o usuário atual possui uma permissão específica.
-    
+
     - **permission**: Permissão a ser verificada
-    
+
     Retorna status 200 se o usuário tem a permissão, ou 403 se não tem.
     """
-    if Permission.ALL in current_user.permissions or permission in current_user.permissions:
+    if (
+        Permission.ALL in current_user.permissions
+        or permission in current_user.permissions
+    ):
         return {"has_permission": True, "permission": permission}
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail=f"Usuário não possui a permissão: {permission}"
+        detail=f"Usuário não possui a permissão: {permission}",
     )
 
 
 @router.get("/verify-role/{role}")
 async def verify_user_role(
-    role: UserRole,
-    current_user: User = Depends(get_current_active_user)
+    role: UserRole, current_user: User = Depends(get_current_active_user)
 ):
     """
     Verifica se o usuário atual possui um papel específico.
-    
+
     - **role**: Papel a ser verificado
-    
+
     Retorna status 200 se o usuário tem o papel, ou 403 se não tem.
     """
     if current_user.role == role or current_user.role == UserRole.MANAGER:
         return {"has_role": True, "role": role}
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail=f"Usuário não possui o papel: {role}"
+        detail=f"Usuário não possui o papel: {role}",
     )
 
 
@@ -134,7 +129,7 @@ async def verify_user_role(
 # ):
 #     """
 #     Exemplo de endpoint protegido por permissão específica.
-#     
+#
 #     Requer a permissão REPORT_READ.
 #     """
 #     return {"message": "Você tem acesso a este recurso protegido por permissão"}
@@ -142,12 +137,10 @@ async def verify_user_role(
 
 # Exemplo de rota protegida por papel
 @router.get("/protected-by-role")
-async def protected_by_role(
-    current_user: User = Depends(has_role(UserRole.MANAGER))
-):
+async def protected_by_role(current_user: User = Depends(has_role(UserRole.MANAGER))):
     """
     Exemplo de endpoint protegido por papel específico.
-    
+
     Requer o papel de MANAGER.
     """
     return {"message": "Você tem acesso a este recurso protegido por papel"}

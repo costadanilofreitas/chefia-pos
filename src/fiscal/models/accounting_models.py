@@ -3,13 +3,14 @@ Modelos de dados para integração contábil
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any
 from enum import Enum
 from pydantic import BaseModel, Field
 
 
 class AccountingExportStatus(str, Enum):
     """Status possíveis para exportação contábil"""
+
     PENDING = "pending"  # Pendente de exportação
     PROCESSING = "processing"  # Em processamento
     COMPLETED = "completed"  # Exportação concluída com sucesso
@@ -19,6 +20,7 @@ class AccountingExportStatus(str, Enum):
 
 class DocumentType(str, Enum):
     """Tipos de documentos fiscais suportados"""
+
     NFCE = "nfce"  # Nota Fiscal de Consumidor Eletrônica
     CFE = "cfe"  # Cupom Fiscal Eletrônico
     SAT = "sat"  # Sistema Autenticador e Transmissor
@@ -27,6 +29,7 @@ class DocumentType(str, Enum):
 
 class AccountingExportBatch(BaseModel):
     """Lote de exportação contábil"""
+
     id: str
     reference_period: str  # Período de referência (YYYY-MM)
     status: AccountingExportStatus
@@ -44,6 +47,7 @@ class AccountingExportBatch(BaseModel):
 
 class AccountingExportItem(BaseModel):
     """Item individual de exportação contábil"""
+
     id: str
     batch_id: str
     document_type: DocumentType
@@ -60,6 +64,7 @@ class AccountingExportItem(BaseModel):
 
 class AccountingMapping(BaseModel):
     """Mapeamento de contas contábeis"""
+
     id: str
     source_code: str  # Código no sistema POS
     target_code: str  # Código no sistema contábil
@@ -72,6 +77,7 @@ class AccountingMapping(BaseModel):
 
 class AccountingProvider(BaseModel):
     """Configuração de provedor de serviços contábeis"""
+
     id: str
     name: str
     provider_type: str  # Tipo de provedor (ex: "contabilizei")
@@ -88,6 +94,7 @@ class AccountingProvider(BaseModel):
 
 class AccountingSchedule(BaseModel):
     """Agendamento de exportação contábil"""
+
     id: str
     frequency: str  # daily, weekly, monthly
     day_of_week: Optional[int] = None  # 0-6 (segunda a domingo)

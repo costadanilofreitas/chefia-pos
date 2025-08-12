@@ -1,6 +1,5 @@
 # /home/ubuntu/pos-modern/src/kiosk/events/kiosk_events.py
 
-from enum import Enum
 from src.core.events.event_bus import EventType
 
 # Add kiosk-related event types to the global EventType enum

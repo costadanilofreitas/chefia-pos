@@ -1,10 +1,11 @@
-from enum import Enum
 from datetime import datetime
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any
 from pydantic import BaseModel, Field
+
 
 class StaffingRecommendation(BaseModel):
     """Recomendação de escala de funcionários."""
+
     recommendation_id: str
     restaurant_id: str
     created_at: datetime
@@ -18,8 +19,10 @@ class StaffingRecommendation(BaseModel):
     reason: str
     forecast_id: Optional[str] = None
 
+
 class DeliveryOptimization(BaseModel):
     """Otimização de operações de delivery."""
+
     optimization_id: str
     restaurant_id: str
     created_at: datetime
@@ -32,8 +35,10 @@ class DeliveryOptimization(BaseModel):
     reason: str
     forecast_id: Optional[str] = None
 
+
 class TableDistributionRecommendation(BaseModel):
     """Recomendação de distribuição de mesas."""
+
     recommendation_id: str
     restaurant_id: str
     created_at: datetime
@@ -45,8 +50,10 @@ class TableDistributionRecommendation(BaseModel):
     reason: str
     forecast_id: Optional[str] = None
 
+
 class KioskOptimization(BaseModel):
     """Otimização de totem de autoatendimento."""
+
     optimization_id: str
     restaurant_id: str
     created_at: datetime
@@ -57,8 +64,10 @@ class KioskOptimization(BaseModel):
     confidence: float
     reason: str
 
+
 class WhatsAppCampaign(BaseModel):
     """Campanha de marketing via WhatsApp."""
+
     campaign_id: str
     restaurant_id: str
     name: str
@@ -76,8 +85,10 @@ class WhatsAppCampaign(BaseModel):
     confidence: float = 0.85
     reason: str
 
+
 class OperationalOptimizationConfig(BaseModel):
     """Configuração para otimização operacional."""
+
     restaurant_id: str
     staffing_optimization_enabled: bool = True
     delivery_optimization_enabled: bool = True
