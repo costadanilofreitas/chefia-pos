@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
-from ..models.log_models import LogEntry, LogQuery, LogStats, LogConfig, LogSource
-from ..services.log_service import log_service, log_info, log_error
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from src.auth.models import Permission, User
 from src.auth.security import get_current_user
-from src.auth.models import User, Permission
+
+from ..models.log_models import LogConfig, LogEntry, LogQuery, LogSource, LogStats
+from ..services.log_service import log_error, log_info, log_service, log_warning
 
 router = APIRouter(prefix="/api/v1", tags=["logging"])
 
@@ -167,4 +169,4 @@ async def export_logs(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export logs: {str(e)}",
-        )
+        ) from e

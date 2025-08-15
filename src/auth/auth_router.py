@@ -1,15 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 
-from src.auth.models import User, Token, UserRole, Permission
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+
+from src.auth.models import Permission, Token, User, UserRole
 from src.auth.security import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
     authenticate_user,
     create_access_token,
+    fake_users_db,
     get_current_active_user,
     has_role,
-    fake_users_db,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 
 router = APIRouter(

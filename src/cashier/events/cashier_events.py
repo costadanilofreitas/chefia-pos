@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from src.core.events.event_bus import Event, EventType, get_event_bus
-from src.cashier.models.cashier import Cashier, CashierOperationResponse, OperationType
-from typing import Dict, Any
 import logging
+from typing import Any, Dict
+
+from src.cashier.models.cashier import Cashier, CashierOperationResponse, OperationType
+from src.core.events.event_bus import Event, EventType, get_event_bus
 
 logger = logging.getLogger(__name__)
 

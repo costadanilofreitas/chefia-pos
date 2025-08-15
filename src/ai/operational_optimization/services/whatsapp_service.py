@@ -8,10 +8,11 @@ Este serviço implementa funcionalidades para:
 """
 
 import logging
-import uuid
 import os
+import uuid
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any
+from typing import Any, Dict, List, Optional
+
 from fastapi import HTTPException
 
 from ..models import WhatsAppCampaign
@@ -111,7 +112,7 @@ class WhatsAppCampaignService:
             raise HTTPException(
                 status_code=500,
                 detail=f"Error generating campaign recommendations: {str(e)}",
-            )
+            ) from e
 
     async def schedule_campaign(
         self, campaign_id: str, scheduled_time: datetime
@@ -170,7 +171,7 @@ class WhatsAppCampaignService:
             logger.error(f"Error scheduling campaign: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"Error scheduling campaign: {str(e)}"
-            )
+            ) from e
 
     async def _generate_default_segment(
         self, restaurant_id: str, campaign_type: str
@@ -321,7 +322,6 @@ class WhatsAppCampaignService:
         # Campanha 1: Feedback e desconto
         campaign_id = f"campaign-{restaurant_id}-{uuid.uuid4().hex[:8]}"
         discount = 10
-        valid_days = 14
 
         campaign = WhatsAppCampaign(
             campaign_id=campaign_id,

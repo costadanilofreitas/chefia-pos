@@ -1,55 +1,55 @@
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    UploadFile,
-    File,
-    Form,
-    Query,
-    Path,
-    Body,
-    status,
-)  # Added status
-from fastapi.responses import FileResponse
-from typing import List, Optional, Dict, Any
 import os
 import shutil
 import uuid
-from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from src.product.models.product import (
-    Product,
-    ProductCreate,
-    ProductUpdate,
-    ProductSummary,
-    ProductCategory,
-    CategoryCreate,
-    CategoryUpdate,
-    ProductStatus,
-    ProductType,
-    ProductImage,
-    ImageUploadResponse,
-    ComboItem,
-    Menu,
-    MenuCreate,
-    MenuUpdate,
-    ExchangeGroup,
-    Ingredient,
-    IngredientCreate,
-    IngredientUpdate,
-    OptionGroup,
-    OptionGroupCreate,
-    OptionGroupUpdate,
-    CompositeSection,
-    CompositeProductCreate,
-    CompositeProductUpdate,
-    MenuExport,
-)
-from src.product.services.product_service import get_product_service
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Path,
+    Query,
+    UploadFile,
+    status,
+)  # Added status
+from fastapi.responses import FileResponse
+
+from src.auth.models import Permission, User  # Import User and Permission
 
 # Removed check_permissions import, added has_permission
 from src.auth.security import get_current_user
-from src.auth.models import User, Permission  # Import User and Permission
+from src.product.models.product import (
+    CategoryCreate,
+    CategoryUpdate,
+    ComboItem,
+    CompositeProductCreate,
+    CompositeProductUpdate,
+    CompositeSection,
+    ExchangeGroup,
+    ImageUploadResponse,
+    Ingredient,
+    IngredientCreate,
+    IngredientUpdate,
+    Menu,
+    MenuCreate,
+    MenuExport,
+    MenuUpdate,
+    OptionGroup,
+    OptionGroupCreate,
+    OptionGroupUpdate,
+    Product,
+    ProductCategory,
+    ProductCreate,
+    ProductImage,
+    ProductStatus,
+    ProductSummary,
+    ProductType,
+    ProductUpdate,
+)
+from src.product.services.product_service import get_product_service
 
 router = APIRouter(prefix="/api/v1", tags=["products"])
 
@@ -315,7 +315,7 @@ async def calculate_composite_product_price(
         )
         return {"price": price}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # Endpoints para Categorias
@@ -434,6 +434,8 @@ async def upload_product_image(
         raise HTTPException(status_code=404, detail="Produto não encontrado")
 
     # Verificar extensão do arquivo
+    if file.filename is None:
+        raise HTTPException(status_code=400, detail="Nome do arquivo não fornecido")
     file_ext = os.path.splitext(file.filename)[1].lower()
     if file_ext not in [".jpg", ".jpeg", ".png", ".webp", ".gif"]:
         raise HTTPException(status_code=400, detail="Formato de arquivo não suportado")
@@ -540,7 +542,9 @@ async def create_exchange_group(
     """
     _check_permissions(current_user, [Permission.PRODUCT_UPDATE])
     product_service = get_product_service()
-    return await product_service.create_exchange_group(name, description, products)
+    return await product_service.create_exchange_group(
+        name, description or "", products
+    )
 
 
 @router.get("/exchange-groups", response_model=List[ExchangeGroup])
@@ -572,7 +576,7 @@ async def update_exchange_group(
     _check_permissions(current_user, [Permission.PRODUCT_UPDATE])
     product_service = get_product_service()
     group = await product_service.update_exchange_group(
-        group_id, name, description, products
+        group_id, name=name, description=description, product_ids=products
     )
     if not group:
         raise HTTPException(status_code=404, detail="Grupo de troca não encontrado")
@@ -843,17 +847,17 @@ async def export_menu(
     _check_permissions(current_user, [Permission.MENU_READ])
     product_service = get_product_service()
     try:
-        export_data = await product_service.export_menu(menu_id)
-        filename = f"menu_export_{menu_id}_v{export_data.version}_{datetime.now().strftime('%Y%m%d%H%M%S')}.json"
-        filepath = os.path.join(MENU_EXPORTS_DIR, filename)
-        with open(filepath, "w") as f:
-            f.write(export_data.json(indent=4))
+        file_path = await product_service.export_menu(menu_id)
+        if not file_path:
+            raise HTTPException(status_code=500, detail="Erro ao exportar menu")
+
+        filename = os.path.basename(file_path)
         return {
             "export_file": filename,
             "download_url": f"/api/v1/menus/exports/{filename}",
         }
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @router.get("/menus/exports/{filename}")
@@ -882,7 +886,7 @@ async def import_menu(
     Requer permissões: MENU_CREATE, MENU_UPDATE
     """
     _check_permissions(current_user, [Permission.MENU_CREATE, Permission.MENU_UPDATE])
-    if not file.filename.endswith(".json"):
+    if file.filename is None or not file.filename.endswith(".json"):
         raise HTTPException(
             status_code=400,
             detail="Formato de arquivo inválido. Apenas JSON é suportado.",
@@ -894,18 +898,19 @@ async def import_menu(
     except Exception as e:
         raise HTTPException(
             status_code=400, detail=f"Erro ao processar o arquivo JSON: {e}"
-        )
+        ) from e
 
     product_service = get_product_service()
     try:
-        imported_menu = await product_service.import_menu(import_data)
+        result = await product_service.import_menu(import_data)
         return {
-            "message": "Cardápio importado com sucesso",
-            "menu_id": imported_menu.id,
+            "message": result["message"],
+            "menu_id": result.get("menu_id"),
+            "success": result["success"],
         }
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro interno durante a importação: {e}"
-        )
+        ) from e

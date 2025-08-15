@@ -1,21 +1,22 @@
-from typing import List, Dict, Any
 import logging
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Union
+
 from fastapi import HTTPException
 
 from ..models.seat_models import (
     Seat,
-    SeatOrderItem,
-    SeatPayment,
-    SeatGroup,
     SeatCreate,
-    SeatUpdate,
-    SeatOrderItemCreate,
-    SeatPaymentCreate,
+    SeatGroup,
     SeatGroupCreate,
+    SeatOrderItem,
+    SeatOrderItemCreate,
+    SeatPayment,
+    SeatPaymentCreate,
+    SeatUpdate,
 )
-from ..services.partial_payment_service import PaymentSessionService, BillSplitService
+from ..services.partial_payment_service import BillSplitService, PaymentSessionService
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +147,7 @@ class SeatService:
             )
 
         # Remover assento de grupos
-        for group_id, group in self.seat_groups.items():
+        for _group_id, group in self.seat_groups.items():
             if seat_id in group.seat_ids:
                 logger.error(
                     f"Não é possível remover assento que pertence a um grupo: {seat_id}"
@@ -506,17 +507,29 @@ class SeatPaymentService:
             )
 
         # Criar divisão personalizada
+        formatted_parts: List[Dict[str, Union[str, float]]] = []
+        for p in parts:
+            name = p["name"]
+            amount = p["amount"]
+            # Cast explicitamente para os tipos esperados
+            formatted_parts.append(
+                {
+                    "name": str(name),
+                    "amount": amount,  # Use the original typed variable
+                }
+            )
+
         result = await self.split_service.create_custom_split(
             session_id=session_id,
-            parts=[{"name": p["name"], "amount": p["amount"]} for p in parts],
+            parts=formatted_parts,
         )
 
         # Associar partes a assentos
         split = result["split"]
         created_parts = result["parts"]
 
-        for i, part in enumerate(created_parts):
-            seat_id = parts[i]["seat_id"]
+        for i, _part in enumerate(created_parts):
+            seat_id = str(parts[i]["seat_id"])
             # Aqui seria necessário persistir a associação entre parte e assento
             # em um banco de dados real
 

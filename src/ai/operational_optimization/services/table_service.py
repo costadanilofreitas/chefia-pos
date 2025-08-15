@@ -10,12 +10,13 @@ Este serviço implementa funcionalidades para:
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any
+from typing import Any, Dict, List, Optional
+
 from fastapi import HTTPException
 
-from ..models import TableDistributionRecommendation
 from ...demand_forecast.models import ForecastResult
 from ...demand_forecast.service import DemandForecastService
+from ..models import TableDistributionRecommendation
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -139,7 +140,7 @@ class TableOptimizationService:
             )
             raise HTTPException(
                 status_code=500, detail=f"Error optimizing table distribution: {str(e)}"
-            )
+            ) from e
 
     async def _get_demand_forecast(
         self, restaurant_id: str, start_date: datetime, end_date: datetime

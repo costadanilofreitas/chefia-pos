@@ -1,39 +1,40 @@
-from typing import List, Optional, Dict, Any
+import os  # Added for path joining
+from typing import Any, Dict, List, Optional
+
 from fastapi import (
     APIRouter,
+    Body,
     Depends,
     HTTPException,
-    Query,
     Path,
-    Body,
+    Query,
     status,
 )  # Added status
-import os  # Added for path joining
 
+from src.auth.models import Permission, User  # Import User and Permission
+from src.auth.security import get_current_user
+from src.core.dependencies import (
+    CONFIG_DIR,
+    check_instance_license,
+)  # Import license check dependency
 from src.waiter.models.waiter_models import (
     WaiterOrder,
-    WaiterOrderItem,
-    WaiterOrderStatus,
-    WaiterOrderType,
     WaiterOrderCreate,
-    WaiterOrderUpdate,
+    WaiterOrderItem,
     WaiterOrderItemCreate,
     WaiterOrderItemUpdate,
+    WaiterOrderStatus,
+    WaiterOrderType,
+    WaiterOrderUpdate,
     WaiterSession,
     WaiterSessionCreate,
     WaiterSessionUpdate,
+    WaiterStats,
     WaiterTable,
     WaiterTableCreate,
     WaiterTableUpdate,
-    WaiterStats,
 )
 from src.waiter.services.waiter_service import get_waiter_service
-from src.auth.security import get_current_user
-from src.auth.models import User, Permission  # Import User and Permission
-from src.core.dependencies import (
-    check_instance_license,
-    CONFIG_DIR,
-)  # Import license check dependency
 
 router = APIRouter(prefix="/api/v1", tags=["waiter"])
 
@@ -66,7 +67,7 @@ async def create_order(
     """
     _check_permissions(current_user, [Permission.ORDER_CREATE])
     waiter_service = get_waiter_service()
-    order = await waiter_service.create_order(order_data, waiter_id=waiter_id)
+    order = await waiter_service.create_order(order_data)
     return order
 
 
@@ -102,7 +103,7 @@ async def list_orders(
     orders = await waiter_service.get_all_orders(
         status=status,
         order_type=order_type,
-        waiter_id=waiter_id_filter,
+        waiter_id=str(waiter_id_filter) if waiter_id_filter is not None else None,
         table_number=table_number,
         limit=limit,
         offset=offset,
@@ -332,7 +333,7 @@ async def create_session(
     """
     _check_permissions(current_user, [Permission.USER_UPDATE])  # Corrected permission
     waiter_service = get_waiter_service()
-    session = await waiter_service.create_session(session_data, waiter_id=waiter_id)
+    session = await waiter_service.create_session(session_data)
     return session
 
 
@@ -359,9 +360,7 @@ async def list_sessions(
                 detail=f"Instance ID {waiter_id_filter} for module waiter is not licensed.",
             )
     waiter_service = get_waiter_service()
-    sessions = await waiter_service.get_all_sessions(
-        active_only=active_only, waiter_id=waiter_id_filter
-    )
+    sessions = await waiter_service.get_all_sessions(active_only=active_only)
     return sessions
 
 
@@ -497,7 +496,7 @@ async def get_stats(
     """
     _check_permissions(current_user, [Permission.REPORT_READ])  # Corrected permission
     waiter_service = get_waiter_service()
-    stats = await waiter_service.get_stats(waiter_id=waiter_id)
+    stats = await waiter_service.get_stats()
     return stats
 
 

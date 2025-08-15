@@ -1,19 +1,20 @@
-from typing import List, Dict, Optional, Any, Union
 import logging
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
+
 from fastapi import HTTPException
 
-from ..models.payment_models import PaymentStatus, PaymentMethod
 from ..models.partial_payment_models import (
-    PaymentSession,
-    PaymentSessionStatus,
-    PartialPayment,
     BillSplit,
     BillSplitMethod,
     BillSplitPart,
+    PartialPayment,
+    PaymentSession,
+    PaymentSessionStatus,
     SeatPayment,
 )
+from ..models.payment_models import PaymentCreate, PaymentMethod, PaymentStatus
 from ..services.payment_service import PaymentService
 
 logger = logging.getLogger(__name__)
@@ -189,8 +190,8 @@ class PaymentSessionService:
         # Cancelar pagamentos pendentes
         for payment in self.partial_payments.get(session_id, []):
             if payment.status == PaymentStatus.PENDING:
-                await self.payment_service.update_payment(
-                    payment.id, status=PaymentStatus.CANCELLED
+                await self.payment_service.update_payment_status(
+                    payment.id, PaymentStatus.CANCELLED
                 )
 
         return await self.update_session(
@@ -206,7 +207,7 @@ class PaymentSessionService:
         customer_email: Optional[str] = None,
         customer_phone: Optional[str] = None,
         description: Optional[str] = None,
-        metadata: Dict[str, Any] = {},
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> PartialPayment:
         """
         Adiciona um pagamento parcial a uma sessão.
@@ -227,6 +228,9 @@ class PaymentSessionService:
         Raises:
             HTTPException: Se a sessão não for encontrada ou o pagamento for inválido
         """
+        if metadata is None:
+            metadata = {}
+
         session = await self.get_session(session_id)
 
         if session.status != PaymentSessionStatus.OPEN:
@@ -253,20 +257,17 @@ class PaymentSessionService:
                 detail=f"Valor de pagamento excede valor restante ({amount} > {session.remaining_amount})",
             )
 
-        # Criar pagamento parcial
-        payment_data = {
-            "order_id": session.order_id,
-            "method": method,
-            "amount": amount,
-            "customer_name": customer_name,
-            "customer_email": customer_email,
-            "customer_phone": customer_phone,
-            "description": description or f"Pagamento parcial - Sessão {session_id}",
-            "metadata": {**metadata, "session_id": session_id, "is_partial": True},
-        }
-
-        # Usar o serviço de pagamento existente para criar o pagamento base
-        payment = await self.payment_service.create_payment(**payment_data)
+        payment_create = PaymentCreate(
+            order_id=session.order_id,
+            method=method,
+            amount=amount,
+            customer_name=customer_name,
+            customer_email=customer_email,
+            customer_phone=customer_phone,
+            description=description or f"Pagamento parcial - Sessão {session_id}",
+            metadata={**metadata, "session_id": session_id, "is_partial": True},
+        )
+        payment = await self.payment_service.create_payment(payment_create)
 
         # Converter para pagamento parcial
         partial_payment = PartialPayment(
@@ -574,7 +575,8 @@ class BillSplitService:
         # Criar partes
         created_parts = []
         for part_data in parts:
-            name = part_data.get("name", "")
+            name_value = part_data.get("name", "")
+            name: Optional[str] = str(name_value) if name_value else None
             amount = float(part_data["amount"])
 
             part = await self.add_split_part(
@@ -621,7 +623,7 @@ class BillSplitService:
             if part:
                 break
 
-        if not part:
+        if not part or split_id is None:
             logger.error(f"Parte não encontrada: {part_id}")
             raise HTTPException(
                 status_code=404, detail=f"Parte não encontrada: {part_id}"
@@ -653,10 +655,11 @@ class BillSplitService:
         part.updated_at = datetime.utcnow()
 
         # Atualizar lista de partes
-        for i, p in enumerate(self.split_parts[split_id]):
-            if p.id == part_id:
-                self.split_parts[split_id][i] = part
-                break
+        if split_id in self.split_parts:
+            for i, p in enumerate(self.split_parts[split_id]):
+                if p.id == part_id:
+                    self.split_parts[split_id][i] = part
+                    break
 
         return {
             "part": part,

@@ -733,7 +733,7 @@ const POSOrderPage: React.FC = () => {
     </Box>
   );
 
-  if (!currentCashier || currentCashier.status !== 'open') {
+  if (!currentCashier || currentCashier.status !== 'OPEN') {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Alert severity="warning">

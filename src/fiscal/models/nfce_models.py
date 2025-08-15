@@ -3,8 +3,9 @@ Modelos de dados para documentos fiscais NFC-e (Nota Fiscal de Consumidor Eletr√
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 

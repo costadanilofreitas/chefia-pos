@@ -1,14 +1,15 @@
-from typing import Dict, Any
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Body, Path
+from typing import Any, Dict
 
-from src.peripherals.services.peripheral_manager import (
-    peripheral_manager,
-    PeripheralFactory,
-)
-from src.peripherals.models.peripheral_models import PeripheralConfig
-from src.core.dependencies import get_current_user
+from fastapi import APIRouter, Body, Depends, HTTPException, Path
+
 from src.auth.models import User
+from src.auth.security import get_current_user
+from src.peripherals.models.peripheral_models import PeripheralConfig
+from src.peripherals.services.peripheral_manager import (
+    PeripheralFactory,
+    peripheral_manager,
+)
 
 router = APIRouter(
     prefix="/peripherals",
@@ -39,7 +40,7 @@ async def get_all_peripherals(current_user: User = Depends(get_current_user)):
         logging.error(f"Erro ao obter periféricos: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter periféricos: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/types")
@@ -52,7 +53,7 @@ async def get_peripheral_types(current_user: User = Depends(get_current_user)):
         logging.error(f"Erro ao obter tipos de periféricos: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter tipos de periféricos: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/{peripheral_id}")
@@ -87,7 +88,7 @@ async def get_peripheral(
         logging.error(f"Erro ao obter periférico {peripheral_id}: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter periférico: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/")
@@ -151,7 +152,7 @@ async def add_peripheral(
         logging.error(f"Erro ao adicionar periférico: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao adicionar periférico: {str(e)}"
-        )
+        ) from e
 
 
 @router.delete("/{peripheral_id}")
@@ -185,7 +186,7 @@ async def remove_peripheral(
         logging.error(f"Erro ao remover periférico {peripheral_id}: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao remover periférico: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/{peripheral_id}/initialize")
@@ -216,7 +217,7 @@ async def initialize_peripheral(
         logging.error(f"Erro ao inicializar periférico {peripheral_id}: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao inicializar periférico: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/{peripheral_id}/shutdown")
@@ -245,7 +246,7 @@ async def shutdown_peripheral(
         logging.error(f"Erro ao finalizar periférico {peripheral_id}: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao finalizar periférico: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/{peripheral_id}/print")
@@ -287,7 +288,9 @@ async def print_document(
         raise
     except Exception as e:
         logging.error(f"Erro ao imprimir em {peripheral_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao imprimir: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao imprimir: {str(e)}"
+        ) from e
 
 
 @router.post("/{peripheral_id}/open_drawer")
@@ -322,7 +325,9 @@ async def open_cash_drawer(
         raise
     except Exception as e:
         logging.error(f"Erro ao abrir gaveta {peripheral_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao abrir gaveta: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao abrir gaveta: {str(e)}"
+        ) from e
 
 
 @router.post("/{peripheral_id}/process_payment")
@@ -363,7 +368,7 @@ async def process_payment(
         logging.error(f"Erro ao processar pagamento em {peripheral_id}: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao processar pagamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/{peripheral_id}/cancel_payment")
@@ -398,7 +403,7 @@ async def cancel_payment(
         logging.error(f"Erro ao cancelar pagamento em {peripheral_id}: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao cancelar pagamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/{peripheral_id}/read_barcode")
@@ -437,7 +442,7 @@ async def read_barcode(
         logging.error(f"Erro ao ler código de barras em {peripheral_id}: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao ler código de barras: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/{peripheral_id}/read_pix")
@@ -474,7 +479,7 @@ async def read_pix(
         raise
     except Exception as e:
         logging.error(f"Erro ao ler PIX em {peripheral_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao ler PIX: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao ler PIX: {str(e)}") from e
 
 
 @router.post("/initialize_all")
@@ -487,7 +492,7 @@ async def initialize_all_peripherals(current_user: User = Depends(get_current_us
         logging.error(f"Erro ao inicializar periféricos: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao inicializar periféricos: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/shutdown_all")
@@ -500,4 +505,4 @@ async def shutdown_all_peripherals(current_user: User = Depends(get_current_user
         logging.error(f"Erro ao finalizar periféricos: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao finalizar periféricos: {str(e)}"
-        )
+        ) from e

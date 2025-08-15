@@ -1,15 +1,15 @@
 import unittest
-from unittest.mock import patch
 import uuid
+from unittest.mock import patch
 
 from src.inventory.models.inventory_models import (
     InventoryItemCreate,
     InventoryItemUpdate,
-    InventoryTransactionCreate,
-    TransactionType,
-    TransactionStatus,
     InventoryLossCreate,
+    InventoryTransactionCreate,
     LossReason,
+    TransactionStatus,
+    TransactionType,
 )
 from src.inventory.services.inventory_service import InventoryService
 
@@ -91,7 +91,7 @@ class TestInventoryService(unittest.TestCase):
     async def test_list_inventory_items(self):
         """Test listing inventory items with filters."""
         # Create multiple items
-        item1 = await self.create_test_item()
+        await self.create_test_item()
 
         item2_create = InventoryItemCreate(
             name="Another Item",

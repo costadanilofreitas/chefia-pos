@@ -1,15 +1,15 @@
-import unittest
 import asyncio
+import unittest
 
 from src.delivery.models.delivery_models import (
-    DeliveryOrderStatus,
     CourierStatus,
     CourierType,
+    DeliveryOrderStatus,
     TrackingEventType,
 )
 from src.delivery.services.delivery_service import (
-    delivery_service,
     courier_service,
+    delivery_service,
     zone_service,
 )
 
@@ -491,7 +491,7 @@ class TestZoneService(unittest.TestCase):
     def test_check_address_deliverable(self):
         """Testa a verificação se um endereço está em uma zona de entrega."""
         # Criar zona
-        zone = asyncio.run(
+        asyncio.run(
             zone_service.create_zone(
                 name="Zona Teste",
                 base_fee=5.0,

@@ -1,85 +1,191 @@
 [tool.poetry]
 name = "chefia-pos"
-version = "0.1.0"
-description = "Sistema POS com FastAPI e integrações diversas"
-authors = ["Seu Nome <seuemail@example.com>"]
+version = "1.0.0"
+description = "Sistema POS completo para restaurantes com FastAPI e integrações diversas"
+authors = ["Chefia POS Team <team@chefia-pos.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.8"
 
-# Core
+# Core FastAPI
 fastapi = "^0.116.1"
 uvicorn = { extras = ["standard"], version = "^0.35.0" }
 pydantic = "^2.11.7"
 python-multipart = "^0.0.9"
-python-jose = "^3.3.0"
-passlib = "^1.7.4"
-bcrypt = "<4.0.1"
-requests = "^2.32.3"
 
-# Banco / ORM / Mongo
+# Authentication & Security
+python-jose = { extras = ["cryptography"], version = "^3.3.0" }
+passlib = { extras = ["bcrypt"], version = "^1.7.4" }
+bcrypt = "<4.0.1"
+
+# HTTP & Requests
+requests = "^2.32.3"
+aiohttp = "^3.12.0"
+httpx = "^0.28.0"
+aiofiles = "^0.7.0"
+
+# Database & ORM
 motor = "^3.7.1"
+sqlalchemy = "^1.4.23"
+asyncpg = "^0.24.0"
+psycopg2-binary = "^2.9.1"
+
+# Cache
+redis = "^3.5.3"
 
 # AWS
 boto3 = "^1.40.0"
 botocore = "^1.40.0"
 
-# Utilitários
+# Environment & Config
+python-dotenv = "^0.19.0"
+
+# Data Processing
 numpy = "^2.3.0"
 pandas = "^2.3.1"
-pillow = "^11.0.0"
+
+# Hardware & Peripherals
 pyserial = "^3.5"
 pyusb = "^1.3.0"
 pyzbar = "^0.1.9"
+
+# PDF & Reports
 reportlab = "^4.4.0"
-semver = "^3.0.0"
+pillow = "^11.0.0"
+
+# Communications
 twilio = "^9.7.0"
-aiohttp = "^3.12.0"
-httpx = "^0.28.0"
+
+# Utilities
+semver = "^3.0.0"
 pyjwt = "^2.10.0"
 
-# Evitar pacotes suspeitos que apareceram no seu reqs ("database", "auto_mix_prep")
-
 [tool.poetry.group.dev.dependencies]
+# Code Quality
 black = "^24.4.2"
 ruff = "^0.6.9"
 mypy = "^1.10.1"
+
+# Testing
 pytest = "^8.3.2"
+pytest-asyncio = "^0.15.1"
+pytest-cov = "^2.12.1"
+
+# Type stubs
 types-requests = "^2.32.0.20240712"
 types-python-jose = "^3.3.4.20240106"
 types-passlib = "^1.7.7.20240819"
 pandas-stubs = "^2.2.2.240807"
+
+# Pre-commit
+pre-commit = "^2.15.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 # ----------------------
-# Configurações extras
+# Tool Configurations
 # ----------------------
 
 [tool.black]
 line-length = 88
-target-version = ["py313"]
+target-version = ["py38", "py39", "py310", "py311"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | venv
+)/
+'''
 
 [tool.ruff]
 line-length = 88
-target-version = "py313"
-select = ["E", "F", "W", "B", "I"]
-ignore = ["E501"] # ignorar linha muito longa por padrão
+target-version = "py38"
 fix = true
 
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I"]
+ignore = [
+    "E501",  # linha muito longa (tratado pelo black)
+    "B008",  # function calls em defaults (necessário para FastAPI)
+]
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
 [tool.mypy]
-python_version = "3.13"
-strict = true
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = false
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
 ignore_missing_imports = true
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config", 
+    "--verbose",
+    "--cov=.",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError", 
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
 # ----------------------
-# Scripts
+# Poetry Scripts
 # ----------------------
 
 [tool.poetry.scripts]
-lint = "ruff check ."
-format = "black ."
-typecheck = "mypy ."
+dev = "uvicorn main:app --host 0.0.0.0 --port 8001 --reload"
+start = "uvicorn main:app --host 0.0.0.0 --port 8001"

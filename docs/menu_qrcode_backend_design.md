@@ -9,17 +9,20 @@ Este documento detalha o design do backend para o cardápio online acessível vi
 ### Componentes Principais
 
 1. **Serviço de Menu**
+
    - Gerenciamento de cardápios, categorias e itens
    - Persistência em PostgreSQL
    - Cache dinâmico com Redis
    - Endpoints RESTful para acesso e gerenciamento
 
 2. **Serviço de QR Code**
+
    - Geração e gerenciamento de QR codes
    - Personalização visual por restaurante
    - Rastreamento de acessos e análise de uso
 
 3. **Serviço de Pedidos Online**
+
    - Processamento de pedidos feitos via cardápio online
    - Integração com o módulo de pedidos existente
    - Suporte a diferentes métodos de pagamento
@@ -38,6 +41,7 @@ Este documento detalha o design do backend para o cardápio online acessível vi
 Os modelos existentes (`Menu`, `MenuItem`, `MenuCategory`, `QRCodeConfig`) serão mantidos, com as seguintes extensões:
 
 1. **MenuAccess**
+
    ```python
    class MenuAccess(BaseModel):
        id: UUID = Field(default_factory=uuid4)
@@ -49,6 +53,7 @@ Os modelos existentes (`Menu`, `MenuItem`, `MenuCategory`, `QRCodeConfig`) serã
    ```
 
 2. **MenuOrder**
+
    ```python
    class MenuOrderStatus(str, Enum):
        PENDING = "pending"
@@ -133,6 +138,7 @@ CREATE TABLE menu_items (
 Implementaremos um sistema de cache usando Redis para melhorar a performance e reduzir a carga no banco de dados:
 
 1. **Cache de Cardápio Público**
+
    - Chave: `menu:public:{restaurant_id}`
    - TTL: 15 minutos (configurável)
    - Invalidação: Quando o cardápio for atualizado
@@ -196,15 +202,15 @@ Configuraremos um ambiente Elastic Beanstalk para hospedar a aplicação:
 # .ebextensions/01_environment.config
 option_settings:
   aws:elasticbeanstalk:application:environment:
-    REDIS_HOST: '#{RedisEndpoint}'
-    REDIS_PORT: '#{RedisPort}'
-    DB_HOST: '#{RDSEndpoint}'
-    DB_PORT: '#{RDSPort}'
+    REDIS_HOST: "#{RedisEndpoint}"
+    REDIS_PORT: "#{RedisPort}"
+    DB_HOST: "#{RDSEndpoint}"
+    DB_PORT: "#{RDSPort}"
     DB_NAME: posmodern
-    DB_USER: '#{DBUser}'
-    DB_PASSWORD: '#{DBPassword}'
+    DB_USER: "#{DBUser}"
+    DB_PASSWORD: "#{DBPassword}"
     S3_BUCKET: posmodern-menu-assets
-    CLOUDFRONT_DOMAIN: '#{CloudFrontDomain}'
+    CLOUDFRONT_DOMAIN: "#{CloudFrontDomain}"
 ```
 
 ### S3 e CloudFront
@@ -216,14 +222,14 @@ def upload_image_to_s3(image_data, file_name, content_type='image/jpeg'):
     """Upload an image to S3 and return the CloudFront URL"""
     s3_client = boto3.client('s3')
     bucket_name = os.environ.get('S3_BUCKET')
-    
+
     s3_client.put_object(
         Bucket=bucket_name,
         Key=file_name,
         Body=image_data,
         ContentType=content_type
     )
-    
+
     cloudfront_domain = os.environ.get('CLOUDFRONT_DOMAIN')
     return f"https://{cloudfront_domain}/{file_name}"
 ```
@@ -252,8 +258,8 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
-    except JWTError:
-        raise credentials_exception
+    except JWTError as e:
+        raise credentials_exception from e
     user = get_user(username=token_data.username)
     if user is None:
         raise credentials_exception
@@ -265,10 +271,12 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 Implementaremos medidas de segurança como:
 
 1. **Rate Limiting**
+
    - Limitar o número de requisições por IP
    - Proteção contra ataques de força bruta
 
 2. **Validação de Entrada**
+
    - Validação rigorosa de todos os parâmetros de entrada
    - Proteção contra injeção SQL e XSS
 
@@ -281,6 +289,7 @@ Implementaremos medidas de segurança como:
 ### Estratégia de Cache
 
 1. **Cache de Primeiro Nível (Redis)**
+
    - Cardápios completos
    - Itens populares
    - Configurações de QR code
@@ -292,10 +301,12 @@ Implementaremos medidas de segurança como:
 ### Otimização de Performance
 
 1. **Consultas Otimizadas**
+
    - Índices adequados no PostgreSQL
    - Consultas eficientes com joins otimizados
 
 2. **Compressão de Resposta**
+
    - Compressão GZIP para respostas HTTP
    - Redução do tamanho das payloads
 
@@ -313,16 +324,16 @@ Configuraremos métricas e alarmes no CloudWatch:
 def log_metric(metric_name, value, unit="Count", dimensions=None):
     """Log a custom metric to CloudWatch"""
     cloudwatch = boto3.client('cloudwatch')
-    
+
     metric_data = {
         'MetricName': metric_name,
         'Value': value,
         'Unit': unit
     }
-    
+
     if dimensions:
         metric_data['Dimensions'] = dimensions
-    
+
     cloudwatch.put_metric_data(
         Namespace='PosModern/Menu',
         MetricData=[metric_data]
@@ -338,7 +349,7 @@ def setup_logger():
     """Configure structured JSON logging"""
     logger = logging.getLogger("menu_service")
     handler = logging.StreamHandler()
-    
+
     class JsonFormatter(logging.Formatter):
         def format(self, record):
             log_record = {
@@ -349,16 +360,16 @@ def setup_logger():
                 "function": record.funcName,
                 "line": record.lineno
             }
-            
+
             if hasattr(record, 'request_id'):
                 log_record["request_id"] = record.request_id
-                
+
             return json.dumps(log_record)
-    
+
     handler.setFormatter(JsonFormatter())
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
-    
+
     return logger
 ```
 

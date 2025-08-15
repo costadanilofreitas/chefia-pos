@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
+from fastapi import APIRouter, Body, Depends, HTTPException, status, Query, Path
 from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
 
@@ -234,7 +234,7 @@ async def get_benefits_by_restaurant(
 @router.put("/benefit/{benefit_id}", response_model=dict)
 async def update_benefit(
     benefit_id: str = Path(..., description="ID do benefício"),
-    benefit_data: dict,
+    benefit_data: dict = Body(..., description="Dados do benefício"),
     benefit_service: BenefitService = Depends(get_benefit_service)
 ):
     """Atualiza um benefício existente."""

@@ -9,25 +9,25 @@ Este módulo implementa testes automatizados para validar:
 - Análise de sentimento e priorização
 """
 
-import unittest
 import asyncio
-from datetime import datetime, timedelta
 import logging
+import unittest
+from datetime import datetime, timedelta
+
+# Importar módulos a serem testados
+from src.support.support_service import (
+    BedrockService,
+    ChatbotService,
+    KnowledgeBaseService,
+    SupportAnalyticsService,
+    SupportService,
+    TicketService,
+    TwilioService,
+)
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Importar módulos a serem testados
-from src.support.support_service import (
-    SupportService,
-    TicketService,
-    ChatbotService,
-    KnowledgeBaseService,
-    SupportAnalyticsService,
-    TwilioService,
-    BedrockService,
-)
 
 
 class MockDBService:
@@ -152,7 +152,7 @@ class MockDBService:
 
             # Pesquisar em campos de texto
             found = False
-            for key, value in doc.items():
+            for _key, value in doc.items():
                 if isinstance(value, str) and query_lower in value.lower():
                     found = True
                     break

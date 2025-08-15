@@ -1,18 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, Path
-from typing import Dict, Any
 import logging
+from typing import Any, Dict
+
+from fastapi import APIRouter, Depends, HTTPException, Path
 
 from ..models.seat_models import (
+    SeatBillSplitRequest,
     SeatCreate,
-    SeatUpdate,
+    SeatGroupCreate,
     SeatOrderItemCreate,
     SeatPaymentCreate,
-    SeatGroupCreate,
-    SeatBillSplitRequest,
+    SeatUpdate,
 )
-from ..services.seat_service import SeatService, SeatOrderService, SeatPaymentService
-from ..services.partial_payment_service import PaymentSessionService, BillSplitService
+from ..services.partial_payment_service import BillSplitService, PaymentSessionService
 from ..services.payment_service import PaymentService
+from ..services.seat_service import SeatOrderService, SeatPaymentService, SeatService
 
 router = APIRouter(
     prefix="/payment/seats",
@@ -67,7 +68,9 @@ async def create_seat(
         return {"seat": seat.dict()}
     except Exception as e:
         logger.error(f"Erro ao criar assento: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao criar assento: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao criar assento: {str(e)}"
+        ) from e
 
 
 @router.get("/{seat_id}", response_model=Dict[str, Any])
@@ -85,7 +88,9 @@ async def get_seat(
         raise
     except Exception as e:
         logger.error(f"Erro ao obter assento: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao obter assento: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao obter assento: {str(e)}"
+        ) from e
 
 
 @router.get("/table/{table_id}", response_model=Dict[str, Any])
@@ -101,7 +106,9 @@ async def get_seats_by_table(
         return {"seats": [s.dict() for s in seats]}
     except Exception as e:
         logger.error(f"Erro ao obter assentos: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao obter assentos: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao obter assentos: {str(e)}"
+        ) from e
 
 
 @router.patch("/{seat_id}", response_model=Dict[str, Any])
@@ -122,7 +129,7 @@ async def update_seat(
         logger.error(f"Erro ao atualizar assento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar assento: {str(e)}"
-        )
+        ) from e
 
 
 @router.delete("/{seat_id}", response_model=Dict[str, Any])
@@ -142,7 +149,7 @@ async def delete_seat(
         logger.error(f"Erro ao remover assento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao remover assento: {str(e)}"
-        )
+        ) from e
 
 
 # Rotas para associação de itens a assentos
@@ -163,7 +170,7 @@ async def assign_item_to_seat(
         logger.error(f"Erro ao associar item ao assento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao associar item ao assento: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/{seat_id}/items", response_model=Dict[str, Any])
@@ -183,7 +190,7 @@ async def get_items_by_seat(
         logger.error(f"Erro ao obter itens do assento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter itens do assento: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/items/{order_item_id}", response_model=Dict[str, Any])
@@ -201,7 +208,7 @@ async def get_seats_by_item(
         logger.error(f"Erro ao obter assentos do item: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter assentos do item: {str(e)}"
-        )
+        ) from e
 
 
 @router.delete("/{seat_id}/items/{order_item_id}", response_model=Dict[str, Any])
@@ -222,7 +229,7 @@ async def remove_item_from_seat(
         logger.error(f"Erro ao remover item do assento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao remover item do assento: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/{seat_id}/order/{order_id}", response_model=Dict[str, Any])
@@ -243,7 +250,7 @@ async def get_items_by_order_and_seat(
         logger.error(f"Erro ao obter itens do pedido e assento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter itens do pedido e assento: {str(e)}"
-        )
+        ) from e
 
 
 # Rotas para pagamentos por assento
@@ -264,7 +271,7 @@ async def create_seat_payment(
         logger.error(f"Erro ao associar pagamento ao assento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao associar pagamento ao assento: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/{seat_id}/payments", response_model=Dict[str, Any])
@@ -284,7 +291,7 @@ async def get_payments_by_seat(
         logger.error(f"Erro ao obter pagamentos do assento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter pagamentos do assento: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/payments/{payment_id}", response_model=Dict[str, Any])
@@ -302,7 +309,7 @@ async def get_seats_by_payment(
         logger.error(f"Erro ao obter assentos do pagamento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter assentos do pagamento: {str(e)}"
-        )
+        ) from e
 
 
 # Rotas para grupos de assentos
@@ -323,7 +330,7 @@ async def create_seat_group(
         logger.error(f"Erro ao criar grupo de assentos: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar grupo de assentos: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/groups/{group_id}", response_model=Dict[str, Any])
@@ -343,7 +350,7 @@ async def get_seat_group(
         logger.error(f"Erro ao obter grupo de assentos: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter grupo de assentos: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/{seat_id}/groups", response_model=Dict[str, Any])
@@ -363,7 +370,7 @@ async def get_groups_by_seat(
         logger.error(f"Erro ao obter grupos do assento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter grupos do assento: {str(e)}"
-        )
+        ) from e
 
 
 # Rota para divisão de conta por assentos
@@ -392,4 +399,4 @@ async def create_seat_bill_split(
         logger.error(f"Erro ao criar divisão por assentos: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar divisão por assentos: {str(e)}"
-        )
+        ) from e

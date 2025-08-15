@@ -1,14 +1,14 @@
-from typing import Dict, List, Any, Optional
 import json
+from typing import Any, Dict, List, Optional
 
 from src.peripherals.models.peripheral_models import (
+    ConfigurationException,
     Peripheral,
-    PeripheralType,
+    PeripheralException,
     PeripheralStatus,
+    PeripheralType,
     Printer,
     PrinterConfig,
-    PeripheralException,
-    ConfigurationException,
 )
 
 
@@ -67,7 +67,9 @@ class PeripheralManager:
             with open(config_path, "r") as f:
                 self.config = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            raise ConfigurationException(f"Erro ao carregar configuração: {str(e)}")
+            raise ConfigurationException(
+                f"Erro ao carregar configuração: {str(e)}"
+            ) from e
 
         # Inicializar periféricos configurados
         for peripheral_id, peripheral_config in self.config.get(
@@ -106,7 +108,7 @@ class PeripheralManager:
         except Exception as e:
             raise PeripheralException(
                 f"Erro ao adicionar periférico {peripheral_id}: {str(e)}"
-            )
+            ) from e
 
     async def get_peripheral(self, peripheral_id: str) -> Optional[Peripheral]:
         """Obtém um periférico pelo ID."""

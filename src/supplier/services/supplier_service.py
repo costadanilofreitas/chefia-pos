@@ -1,24 +1,24 @@
 # /home/ubuntu/pos-modern/src/supplier/services/supplier_service.py
 
-import os
 import json
-from typing import List, Dict, Any, Optional
-from datetime import datetime
+import os
 import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from src.logs_module.services.log_service import LogSource, log_error, log_info
+from src.stock.services.stock_service import stock_service
 
 from ..models.supplier_models import (
-    Supplier,
-    SupplierCreate,
-    SupplierUpdate,
-    SupplierQuery,
     PurchaseOrder,
     PurchaseOrderCreate,
-    PurchaseOrderUpdate,
     PurchaseOrderStatus,
+    PurchaseOrderUpdate,
+    Supplier,
+    SupplierCreate,
+    SupplierQuery,
+    SupplierUpdate,
 )
-
-from src.stock.services.stock_service import stock_service
-from src.logs_module.services.log_service import log_info, log_error, LogSource
 
 # Configuration
 SUPPLIERS_DATA_FILE = os.path.join("/home/ubuntu/pos-modern/data", "suppliers.json")
@@ -294,11 +294,10 @@ class SupplierService:
             return False
 
         # Check rating
-        if query.min_rating is not None and (
-            supplier_data.get("rating") is None
-            or supplier_data.get("rating") < query.min_rating
-        ):
-            return False
+        if query.min_rating is not None:
+            rating = supplier_data.get("rating")
+            if rating is None or rating < query.min_rating:
+                return False
 
         # Check city
         if (
@@ -449,7 +448,7 @@ class SupplierService:
                 update_data = order_data.dict(exclude_unset=True)
 
                 # Recalculate total amount if items changed
-                if "items" in update_data:
+                if "items" in update_data and order_data.items:
                     update_data["total_amount"] = sum(
                         item.quantity * item.unit_price for item in order_data.items
                     )
@@ -522,7 +521,7 @@ class SupplierService:
                     return None
 
                 # Update status and timestamp
-                update_data = {"status": new_status}
+                update_data: Dict[str, Any] = {"status": new_status}
 
                 if new_status == PurchaseOrderStatus.SENT:
                     update_data["sent_at"] = datetime.utcnow()
@@ -623,14 +622,17 @@ class SupplierService:
         """
         for item in order.items:
             # Create stock movement for each item
-            await stock_service.add_stock_entry(
-                product_id=item.product_id,
+            import uuid
+
+            from src.stock.models.stock_models import StockMovementCreate
+
+            movement_create = StockMovementCreate(
+                stock_item_id=uuid.UUID(item.product_id),
                 quantity=item.quantity,
-                unit_price=item.unit_price,
-                source="purchase_order",
-                source_id=order.id,
-                notes=f"Received from PO: {order.order_number}",
+                movement_type="entry",
+                reason=f"Received from PO: {order.order_number}",
             )
+            await stock_service.record_movement(movement_create)
 
     async def query_purchase_orders(
         self,
@@ -701,17 +703,19 @@ class SupplierService:
             return False
 
         # Check creation date
-        created_at = (
-            datetime.fromisoformat(order_data.get("created_at"))
-            if isinstance(order_data.get("created_at"), str)
-            else order_data.get("created_at")
-        )
+        created_at_str = order_data.get("created_at")
+        if created_at_str:
+            created_at = (
+                datetime.fromisoformat(created_at_str)
+                if isinstance(created_at_str, str)
+                else created_at_str
+            )
 
-        if start_date and created_at < start_date:
-            return False
+            if start_date and created_at and created_at < start_date:
+                return False
 
-        if end_date and created_at > end_date:
-            return False
+            if end_date and created_at and created_at > end_date:
+                return False
 
         return True
 
@@ -726,14 +730,14 @@ class SupplierService:
         active_suppliers = sum(1 for s in self.suppliers if s.get("is_active", True))
 
         # Count by category
-        categories = {}
+        categories: Dict[str, int] = {}
         for supplier in self.suppliers:
             category = supplier.get("category")
             if category:
                 categories[category] = categories.get(category, 0) + 1
 
         # Count by state
-        states = {}
+        states: Dict[str, int] = {}
         for supplier in self.suppliers:
             state = supplier.get("address", {}).get("state")
             if state:

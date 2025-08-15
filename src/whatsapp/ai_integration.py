@@ -5,11 +5,12 @@ Este módulo implementa a integração com Amazon Bedrock (Claude) para
 geração de respostas inteligentes e personalizadas no chatbot WhatsApp.
 """
 
-import os
 import json
 import logging
+import os
+from typing import Any, Dict, List
+
 import boto3
-from typing import Dict, Any, List
 
 # Configuração de logging
 logger = logging.getLogger(__name__)
@@ -138,7 +139,7 @@ class WhatsAppAIIntegration:
         # Construir prompt baseado no tipo de campanha
         if campaign_type == "reactivation":
             system_prompt = """
-            Você é um assistente de marketing especializado em restaurantes. 
+            Você é um assistente de marketing especializado em restaurantes.
             Sua tarefa é criar mensagens personalizadas para clientes que não compram há algum tempo.
             Seja amigável, pessoal e convincente. Mencione pratos específicos que o cliente gostou no passado.
             Inclua uma oferta especial ou cupom para incentivar o retorno.
@@ -161,7 +162,7 @@ class WhatsAppAIIntegration:
 
         elif campaign_type == "loyalty":
             system_prompt = """
-            Você é um assistente de marketing especializado em restaurantes. 
+            Você é um assistente de marketing especializado em restaurantes.
             Sua tarefa é criar mensagens personalizadas para clientes fiéis, agradecendo sua preferência.
             Seja caloroso, grato e pessoal. Mencione a frequência de visitas ou valor gasto quando relevante.
             Ofereça uma recompensa especial como agradecimento.
@@ -182,7 +183,7 @@ class WhatsAppAIIntegration:
 
         else:
             system_prompt = """
-            Você é um assistente de marketing especializado em restaurantes. 
+            Você é um assistente de marketing especializado em restaurantes.
             Sua tarefa é criar mensagens promocionais personalizadas para clientes.
             Seja direto, atraente e persuasivo. Destaque os benefícios da oferta.
             Limite a mensagem a 3-4 frases curtas, adequadas para WhatsApp.
@@ -226,15 +227,15 @@ class WhatsAppAIIntegration:
         3. Principais tópicos mencionados (comida, atendimento, entrega, preço, etc.)
         4. Sugestões de melhoria
         5. Se requer resposta urgente
-        
+
         Forneça sua análise em formato JSON.
         """
 
         prompt = f"""
         Analise o seguinte feedback de um cliente:
-        
+
         "{feedback_text}"
-        
+
         Forneça sua análise em formato JSON com os seguintes campos:
         - sentiment: "positive", "negative" ou "neutral"
         - sentiment_score: número de 0 a 10
@@ -312,19 +313,19 @@ class WhatsAppAIIntegration:
         # Construir prompt específico
         prompt = f"""
         Recomende até {max_recommendations} itens do cardápio para o cliente {name}.
-        
+
         Histórico de pedidos:
         {json.dumps(order_history, indent=2)}
-        
+
         Itens favoritos:
         {json.dumps(favorite_items, indent=2)}
-        
+
         Restrições alimentares:
         {json.dumps(dietary_restrictions, indent=2)}
-        
+
         Itens disponíveis no cardápio:
         {json.dumps(menu_items, indent=2)}
-        
+
         Forneça suas recomendações em formato JSON com os seguintes campos:
         - recommendations: lista de objetos com os campos "id" e "reason"
         """

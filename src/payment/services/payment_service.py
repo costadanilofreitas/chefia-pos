@@ -1,20 +1,21 @@
-from typing import List, Dict, Any, Optional
-from datetime import datetime
 import json
 import os
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from src.core.events.event_bus import Event, EventType, get_event_bus
+from src.core.models.core_models import OrderUpdate
+from src.core.models.core_models import PaymentStatus as OrderPaymentStatus
+from src.payment.adapters.asaas_adapter import AsaasAdapter
 from src.payment.models.payment_models import (
+    Payment,
+    PaymentCreate,
     PaymentProvider,
     PaymentStatus,
     ProviderConfig,
     ProviderConfigCreate,
     ProviderConfigUpdate,
-    Payment,
-    PaymentCreate,
 )
-from src.payment.adapters.asaas_adapter import AsaasAdapter
-from src.core.events.event_bus import get_event_bus, Event, EventType
-from src.product.models.product import OrderUpdate, PaymentStatus as OrderPaymentStatus
 
 # Simulação de banco de dados com arquivo JSON
 DATA_DIR = os.path.join("/home/ubuntu/pos-modern/data")

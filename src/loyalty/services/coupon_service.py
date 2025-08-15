@@ -1,17 +1,18 @@
-from fastapi import HTTPException, status
-from typing import List, Optional, Dict
-import uuid
-from datetime import datetime, date
 import json
 import os
+import uuid
+from datetime import date, datetime
+from typing import Dict, List, Optional
+
+from fastapi import HTTPException, status
 
 from ..models.coupon_models import (
     Coupon,
     CouponCreate,
-    CouponUpdate,
     CouponRedemption,
-    CouponType,
     CouponScope,
+    CouponType,
+    CouponUpdate,
 )
 
 # File-based storage
@@ -33,7 +34,7 @@ def load_coupons() -> List[Dict]:
     try:
         with open(COUPONS_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    except:
+    except (FileNotFoundError, json.JSONDecodeError, Exception):
         return []
 
 
@@ -52,7 +53,7 @@ def load_redemptions() -> List[Dict]:
     try:
         with open(REDEMPTIONS_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    except:
+    except (FileNotFoundError, json.JSONDecodeError, Exception):
         return []
 
 

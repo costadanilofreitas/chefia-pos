@@ -2,9 +2,10 @@
 Modelos de dados para dashboards analíticos personalizáveis
 """
 
-from enum import Enum
 from datetime import datetime
-from typing import List, Dict, Optional, Any, Union
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
 from pydantic import BaseModel, Field
 
 

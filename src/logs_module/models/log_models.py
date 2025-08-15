@@ -1,10 +1,11 @@
 # /home/ubuntu/pos-modern/src/logging/models/log_models.py
 
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
-from datetime import datetime
-import uuid
 import enum
+import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class LogLevel(str, enum.Enum):
@@ -35,6 +36,7 @@ class LogSource(str, enum.Enum):
     EMPLOYEE = "employee"
     SUPPLIER = "supplier"
     PAYMENT = "payment"
+    ACCOUNTS = "accounts"
     INTEGRATION = "integration"
 
 

@@ -1,47 +1,49 @@
-from typing import List, Dict, Any, Optional
-from fastapi import HTTPException
-import logging
 import json
+import logging
 import os
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from src.product.models.product import (
-    Product,
-    ProductCreate,
-    ProductUpdate,
-    ProductSummary,
-    ProductCategory,
-    CategoryCreate,
-    CategoryUpdate,
-    ProductStatus,
-    ProductType,
-    ProductImage,
-    ComboItem,
-    Menu,
-    MenuCreate,
-    MenuUpdate,
-    Ingredient,
-    IngredientCreate,
-    IngredientUpdate,
-    OptionGroup,
-    OptionGroupCreate,
-    OptionGroupUpdate,
-    CompositeSection,
-    CompositeProductCreate,
-    CompositeProductUpdate,
-    PricingStrategy,
-    MenuExport,
-)
+from fastapi import HTTPException
+
+from src.core.events.event_bus import Event, EventType, get_event_bus
 from src.product.events.product_events import (
-    publish_product_created,
-    publish_product_updated,
-    publish_product_status_changed,
     publish_category_created,
     publish_category_updated,
     publish_menu_updated,
     # Removed: publish_ingredient_updated,
     # Removed: publish_option_group_updated
+    publish_product_created,
+    publish_product_status_changed,
+    publish_product_updated,
+)
+from src.product.models.product import (
+    CategoryCreate,
+    CategoryUpdate,
+    ComboItem,
+    CompositeProductCreate,
+    CompositeProductUpdate,
+    CompositeSection,
+    Ingredient,
+    IngredientCreate,
+    IngredientUpdate,
+    Menu,
+    MenuCreate,
+    MenuExport,
+    MenuUpdate,
+    OptionGroup,
+    OptionGroupCreate,
+    OptionGroupUpdate,
+    PricingStrategy,
+    Product,
+    ProductCategory,
+    ProductCreate,
+    ProductImage,
+    ProductStatus,
+    ProductSummary,
+    ProductType,
+    ProductUpdate,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,6 +86,10 @@ for file_path in [
 
 class ProductService:
     """Serviço para gerenciamento de produtos."""
+
+    def __init__(self):
+        """Inicializa o serviço de produtos."""
+        self.event_bus = get_event_bus()
 
     def _load_data(self, file_path: str) -> List[Dict[str, Any]]:
         """Carrega dados de um arquivo JSON."""
@@ -217,15 +223,11 @@ class ProductService:
         if weight_based is not None:
             if weight_based:
                 filtered_products = [
-                    p
-                    for p in filtered_products
-                    if p.get("type") == ProductType.WEIGHT_BASED
+                    p for p in filtered_products if p.get("weight_based", False)
                 ]
             else:
                 filtered_products = [
-                    p
-                    for p in filtered_products
-                    if p.get("type") != ProductType.WEIGHT_BASED
+                    p for p in filtered_products if not p.get("weight_based", False)
                 ]
         if search:
             search = search.lower()
@@ -258,8 +260,8 @@ class ProductService:
                 price=p["price"],
                 type=p["type"],
                 status=p["status"],
-                main_image=main_images.get(p["id"]),
-                categories=p.get("categories", []),
+                category_id=p.get("category_id"),
+                image_url=main_images.get(p["id"]),
                 is_featured=p.get("is_featured", False),
             )
             summaries.append(summary)
@@ -314,7 +316,7 @@ class ProductService:
                 await publish_product_status_changed(updated_product, old_status)
             return True  # Marked as inactive
         else:
-            removed_product = products.pop(product_index)
+            products.pop(product_index)
             self._save_products(products)
 
             images = self._load_images()
@@ -329,8 +331,8 @@ class ProductService:
 
             # Publicar evento de produto deletado
             await self.event_bus.publish(
-                "product.deleted",
                 Event(
+                    event_type=EventType.PRODUCT_DELETED,
                     data={"product_id": product_id},
                     metadata={"event_type": "product.deleted", "module": "product"},
                 ),
@@ -386,9 +388,8 @@ class ProductService:
 
     async def create_composite_product(self, data: CompositeProductCreate) -> Product:
         """Cria um novo produto composto."""
-        product_data_dict = data.product.dict()
+        product_data_dict = data.dict(exclude={"sections"})
         product_data_dict["type"] = ProductType.COMPOSITE
-        product_data_dict["pricing_strategy"] = data.pricing_strategy
         product = await self.create_product(ProductCreate(**product_data_dict))
 
         composite_sections = self._load_composite_sections()
@@ -408,15 +409,14 @@ class ProductService:
         if not product or product.type != ProductType.COMPOSITE:
             return None
 
-        if data.product:
-            product = await self.update_product(product_id, data.product)
+        # Atualizar dados do produto base
+        product_update_data = data.dict(exclude={"sections"}, exclude_unset=True)
+        if product_update_data:
+            product = await self.update_product(
+                product_id, ProductUpdate(**product_update_data)
+            )
             if not product:
                 return None
-
-        if data.pricing_strategy:
-            product = await self.update_product(
-                product_id, ProductUpdate(pricing_strategy=data.pricing_strategy)
-            )
 
         if data.sections is not None:
             composite_sections = self._load_composite_sections()
@@ -571,8 +571,8 @@ class ProductService:
         self._save_categories(categories)
         # Publicar evento de categoria deletada
         await self.event_bus.publish(
-            "category.deleted",
             Event(
+                event_type=EventType.CATEGORY_UPDATED,
                 data={"category_id": category_id},
                 metadata={"event_type": "category.deleted", "module": "product"},
             ),
@@ -595,17 +595,17 @@ class ProductService:
         image = ProductImage(
             id=str(uuid.uuid4()),
             product_id=product_id,
-            file_name=file_name,
-            file_path=file_path,
+            filename=file_name,
+            url=file_path,
             is_main=is_main,
         )
         images.append(image.dict())
         self._save_images(images)
         # Publicar evento de imagem adicionada
         await self.event_bus.publish(
-            "image.added",
             Event(
-                data={"product_id": product_id, "image_id": image_id},
+                event_type=EventType.PRODUCT_UPDATED,
+                data={"product_id": product_id, "image_id": image.id},
                 metadata={"event_type": "image.added", "module": "product"},
             ),
         )
@@ -681,7 +681,9 @@ class ProductService:
             return None
         return Menu(**menu_dict)
 
-    async def list_menus(self, is_active: Optional[bool] = None) -> List[Menu]:
+    async def list_menus(
+        self, is_active: Optional[bool] = None, limit: int = 50, offset: int = 0
+    ) -> List[Menu]:
         """Lista cardápios."""
         menus = self._load_menus()
         filtered_menus = menus
@@ -689,7 +691,10 @@ class ProductService:
             filtered_menus = [
                 m for m in filtered_menus if m.get("is_active") == is_active
             ]
-        return [Menu(**m) for m in filtered_menus]
+
+        # Paginação
+        paginated_menus = filtered_menus[offset : offset + limit]
+        return [Menu(**m) for m in paginated_menus]
 
     async def update_menu(
         self, menu_id: str, update_data: MenuUpdate
@@ -739,7 +744,10 @@ class ProductService:
         menu_categories = [c for c in categories if c["id"] in menu.categories]
 
         export_data = MenuExport(
-            menu=menu,
+            name=f"export_{menu.name}",
+            format=format,
+            file_path="",  # Será definido depois
+            menu=menu.dict(),
             products=menu_products,
             categories=menu_categories,
             images=[img for img in images if img["product_id"] in menu.products],
@@ -793,18 +801,43 @@ class ProductService:
         return Ingredient(**ingredient_dict)
 
     async def list_ingredients(
-        self, product_id: Optional[str] = None
+        self,
+        product_id: Optional[str] = None,
+        search: Optional[str] = None,
+        is_active: Optional[bool] = None,
+        limit: int = 50,
+        offset: int = 0,
     ) -> List[Ingredient]:
         """Lista ingredientes."""
         ingredients = self._load_ingredients()
         filtered_ingredients = ingredients
+
         if product_id:
             filtered_ingredients = [
                 ing
                 for ing in filtered_ingredients
                 if ing.get("product_id") == product_id
             ]
-        return [Ingredient(**ing) for ing in filtered_ingredients]
+
+        if search:
+            search_lower = search.lower()
+            filtered_ingredients = [
+                ing
+                for ing in filtered_ingredients
+                if search_lower in ing.get("name", "").lower()
+                or search_lower in ing.get("description", "").lower()
+            ]
+
+        if is_active is not None:
+            filtered_ingredients = [
+                ing
+                for ing in filtered_ingredients
+                if ing.get("is_active", True) == is_active
+            ]
+
+        # Paginação
+        paginated_ingredients = filtered_ingredients[offset : offset + limit]
+        return [Ingredient(**ing) for ing in paginated_ingredients]
 
     async def update_ingredient(
         self, ingredient_id: str, update_data: IngredientUpdate
@@ -862,16 +895,33 @@ class ProductService:
         return OptionGroup(**group_dict)
 
     async def list_option_groups(
-        self, product_id: Optional[str] = None
+        self,
+        product_id: Optional[str] = None,
+        search: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
     ) -> List[OptionGroup]:
         """Lista grupos de opções."""
         option_groups = self._load_option_groups()
         filtered_groups = option_groups
+
         if product_id:
             filtered_groups = [
                 og for og in filtered_groups if og.get("product_id") == product_id
             ]
-        return [OptionGroup(**og) for og in filtered_groups]
+
+        if search:
+            search_lower = search.lower()
+            filtered_groups = [
+                og
+                for og in filtered_groups
+                if search_lower in og.get("name", "").lower()
+                or search_lower in og.get("description", "").lower()
+            ]
+
+        # Paginação
+        paginated_groups = filtered_groups[offset : offset + limit]
+        return [OptionGroup(**og) for og in paginated_groups]
 
     async def update_option_group(
         self, group_id: str, update_data: OptionGroupUpdate
@@ -913,6 +963,149 @@ class ProductService:
         self._save_option_groups(option_groups)
         # Evento option group deleted será implementado quando necessário
         return True
+
+    # --- Exchange Groups ---
+
+    async def create_exchange_group(
+        self, name: str, description: str = "", product_ids: List[str] = None
+    ) -> Dict[str, Any]:
+        """Cria um novo grupo de troca."""
+        exchange_groups = self._load_exchange_groups()
+        new_group = {
+            "id": str(uuid.uuid4()),
+            "name": name,
+            "description": description,
+            "product_ids": product_ids or [],
+            "created_at": datetime.utcnow().isoformat(),
+        }
+        exchange_groups.append(new_group)
+        self._save_exchange_groups(exchange_groups)
+        return new_group
+
+    async def list_exchange_groups(self) -> List[Dict[str, Any]]:
+        """Lista todos os grupos de troca."""
+        return self._load_exchange_groups()
+
+    async def get_exchange_group(self, group_id: str) -> Optional[Dict[str, Any]]:
+        """Busca um grupo de troca por ID."""
+        exchange_groups = self._load_exchange_groups()
+        return next(
+            (group for group in exchange_groups if group["id"] == group_id), None
+        )
+
+    async def update_exchange_group(
+        self, group_id: str, **kwargs
+    ) -> Optional[Dict[str, Any]]:
+        """Atualiza um grupo de troca."""
+        exchange_groups = self._load_exchange_groups()
+        group_index = next(
+            (i for i, group in enumerate(exchange_groups) if group["id"] == group_id),
+            None,
+        )
+        if group_index is None:
+            return None
+
+        for key, value in kwargs.items():
+            if key in ["name", "description", "product_ids"]:
+                exchange_groups[group_index][key] = value
+
+        exchange_groups[group_index]["updated_at"] = datetime.utcnow().isoformat()
+        self._save_exchange_groups(exchange_groups)
+        return exchange_groups[group_index]
+
+    async def delete_exchange_group(self, group_id: str) -> bool:
+        """Exclui um grupo de troca."""
+        exchange_groups = self._load_exchange_groups()
+        group_index = next(
+            (i for i, group in enumerate(exchange_groups) if group["id"] == group_id),
+            None,
+        )
+        if group_index is None:
+            return False
+
+        del exchange_groups[group_index]
+        self._save_exchange_groups(exchange_groups)
+        return True
+
+    # --- Image Management ---
+    async def set_main_image(self, image_id: str) -> Optional[ProductImage]:
+        """Define uma imagem como principal para um produto."""
+        images = self._load_images()
+
+        # Encontrar a imagem
+        image_index = next(
+            (i for i, img in enumerate(images) if img["id"] == image_id), None
+        )
+        if image_index is None:
+            return None
+
+        product_id = images[image_index]["product_id"]
+
+        # Remover flag de principal de todas as imagens do produto
+        for img in images:
+            if img["product_id"] == product_id:
+                img["is_main"] = False
+
+        # Definir nova imagem principal
+        images[image_index]["is_main"] = True
+        self._save_images(images)
+
+        return ProductImage(**images[image_index])
+
+    async def delete_image(self, image_id: str) -> bool:
+        """Exclui uma imagem de produto."""
+        images = self._load_images()
+        image_index = next(
+            (i for i, img in enumerate(images) if img["id"] == image_id), None
+        )
+        if image_index is None:
+            return False
+
+        # Remover arquivo físico se existir
+        try:
+            file_path = images[image_index].get("url", "")
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            logger.error(f"Erro ao remover arquivo de imagem: {e}")
+
+        del images[image_index]
+        self._save_images(images)
+        return True
+
+    # --- Menu Import ---
+    async def import_menu(self, import_data: MenuExport) -> Dict[str, Any]:
+        """Importa um menu de dados de exportação."""
+        try:
+            menu_data = import_data.menu
+
+            # Validar estrutura básica
+            if not isinstance(menu_data, dict) or "name" not in menu_data:
+                raise ValueError("Dados de menu inválidos")
+
+            # Criar menu
+            menu_create = MenuCreate(
+                name=menu_data["name"],
+                description=menu_data.get("description", ""),
+                is_active=menu_data.get("is_active", True),
+                products=menu_data.get("products", []),
+                categories=menu_data.get("categories", []),
+            )
+
+            menu = await self.create_menu(menu_create)
+
+            return {
+                "success": True,
+                "menu_id": menu.id,
+                "message": f"Menu '{menu.name}' importado com sucesso",
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Erro ao importar menu",
+            }
 
 
 # Singleton para o serviço de produtos

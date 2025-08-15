@@ -1,7 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import List, Optional
 import logging
+from typing import List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from src.auth.auth import get_current_user
+from src.payment.models.payment_models import PaymentCreate
 from src.payment.models.split_models import (
     SplitConfig,
     SplitConfigCreate,
@@ -9,8 +12,6 @@ from src.payment.models.split_models import (
     SplitPaymentRecord,
 )
 from src.payment.services.split_payment_service import get_split_payment_service
-from src.payment.models.payment_models import PaymentCreate
-from src.auth.auth import get_current_user
 
 router = APIRouter(prefix="/api/payment/split", tags=["split-payment"])
 logger = logging.getLogger(__name__)
@@ -28,12 +29,12 @@ async def create_split_config(
         return await split_service.create_split_config(config_data)
     except ValueError as e:
         logger.error(f"Erro ao criar configuração de rateio: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Erro interno ao criar configuração de rateio: {str(e)}")
         raise HTTPException(
             status_code=500, detail="Erro interno ao criar configuração de rateio"
-        )
+        ) from e
 
 
 @router.get("/configs/{config_id}", response_model=SplitConfig)
@@ -86,12 +87,12 @@ async def update_split_config(
         return config
     except ValueError as e:
         logger.error(f"Erro ao atualizar configuração de rateio: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Erro interno ao atualizar configuração de rateio: {str(e)}")
         raise HTTPException(
             status_code=500, detail="Erro interno ao atualizar configuração de rateio"
-        )
+        ) from e
 
 
 @router.delete("/configs/{config_id}", response_model=dict)
@@ -127,12 +128,12 @@ async def create_payment_with_split(
         return result
     except ValueError as e:
         logger.error(f"Erro ao criar pagamento com rateio: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Erro interno ao criar pagamento com rateio: {str(e)}")
         raise HTTPException(
             status_code=500, detail="Erro interno ao criar pagamento com rateio"
-        )
+        ) from e
 
 
 @router.get("/payments/{payment_id}", response_model=SplitPaymentRecord)

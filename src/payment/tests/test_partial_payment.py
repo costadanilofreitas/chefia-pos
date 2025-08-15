@@ -1,21 +1,27 @@
-import unittest
-from unittest.mock import patch, MagicMock
 import asyncio
-from fastapi.testclient import TestClient
+import unittest
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
-from ..models.payment_models import PaymentMethod, PaymentStatus
+from fastapi.testclient import TestClient
+
 from ..models.partial_payment_models import (
-    PaymentSession,
-    PaymentSessionStatus,
-    PartialPayment,
     BillSplit,
     BillSplitMethod,
     BillSplitPart,
+    PartialPayment,
+    PaymentSession,
+    PaymentSessionStatus,
 )
-from ..services.partial_payment_service import PaymentSessionService, BillSplitService
+from ..models.payment_models import PaymentMethod, PaymentStatus
+from ..router.partial_payment_router import (
+    get_payment_service,
+    get_session_service,
+    get_split_service,
+    router,
+)
+from ..services.partial_payment_service import BillSplitService, PaymentSessionService
 from ..services.payment_service import PaymentService
-from ..router.partial_payment_router import router
 
 
 class TestPartialPaymentService(unittest.TestCase):

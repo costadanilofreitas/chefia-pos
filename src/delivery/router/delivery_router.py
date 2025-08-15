@@ -1,32 +1,33 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import List, Dict, Optional, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from src.auth.security import get_current_user
+from fastapi import APIRouter, Depends, HTTPException
+
 from src.auth.models import User
+from src.auth.security import get_current_user
 from src.delivery.models.delivery_models import (
-    DeliveryOrder,
-    DeliveryOrderStatus,
-    DeliveryCourier,
+    AssignCourierRequest,
+    CheckAddressRequest,
     CourierStatus,
     CourierType,
-    DeliveryRoute,
-    DeliveryZone,
-    DeliveryTracking,
+    CreateCourierRequest,
     CreateDeliveryOrderRequest,
+    CreateTrackingEventRequest,
+    CreateZoneRequest,
+    DeliveryCourier,
+    DeliveryOrder,
+    DeliveryOrderStatus,
+    DeliveryRoute,
+    DeliveryTracking,
+    DeliveryZone,
+    UpdateCourierLocationRequest,
+    UpdateCourierStatusRequest,
     UpdateDeliveryOrderRequest,
     UpdateDeliveryOrderStatusRequest,
-    AssignCourierRequest,
-    CreateCourierRequest,
-    UpdateCourierStatusRequest,
-    UpdateCourierLocationRequest,
-    CreateZoneRequest,
-    CreateTrackingEventRequest,
-    CheckAddressRequest,
 )
 from src.delivery.services.delivery_service import (
-    delivery_service,
     courier_service,
+    delivery_service,
     zone_service,
 )
 
@@ -54,11 +55,11 @@ async def create_delivery_order(
         )
         return delivery_order
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar pedido de delivery: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/delivery/orders/{order_id}", response_model=DeliveryOrder)
@@ -89,11 +90,11 @@ async def update_delivery_order_status(
         )
         return delivery_order
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar status do pedido: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/delivery/orders/{order_id}/assign", response_model=DeliveryOrder)
@@ -109,11 +110,11 @@ async def assign_courier_to_order(
         )
         return delivery_order
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atribuir entregador: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/delivery/orders/", response_model=List[DeliveryOrder])
@@ -141,9 +142,11 @@ async def list_delivery_orders(
         )
         return orders
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao listar pedidos: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao listar pedidos: {str(e)}"
+        ) from e
 
 
 @router.put("/delivery/orders/{order_id}", response_model=DeliveryOrder)
@@ -175,11 +178,11 @@ async def update_delivery_order(
 
         return delivery_order
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar pedido: {str(e)}"
-        )
+        ) from e
 
 
 @router.delete("/delivery/orders/{order_id}")
@@ -196,7 +199,7 @@ async def delete_delivery_order(
             )
 
         # Cancelar o pedido em vez de excluir
-        cancelled_order = await delivery_service.update_order_status(
+        await delivery_service.update_order_status(
             delivery_order_id=order_id,
             status=DeliveryOrderStatus.CANCELLED,
             notes="Pedido cancelado via API",
@@ -207,11 +210,11 @@ async def delete_delivery_order(
             "status": "cancelled",
         }
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao cancelar pedido: {str(e)}"
-        )
+        ) from e
 
 
 # Endpoints para entregadores
@@ -234,11 +237,11 @@ async def create_courier(
         )
         return courier
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar entregador: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/delivery/couriers/{courier_id}", response_model=DeliveryCourier)
@@ -265,11 +268,11 @@ async def update_courier_status(
         )
         return courier
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar status do entregador: {str(e)}"
-        )
+        ) from e
 
 
 @router.put("/delivery/couriers/{courier_id}/location", response_model=DeliveryCourier)
@@ -286,12 +289,12 @@ async def update_courier_location(
         )
         return courier
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Erro ao atualizar localização do entregador: {str(e)}",
-        )
+        ) from e
 
 
 @router.get("/delivery/couriers/", response_model=List[DeliveryCourier])
@@ -312,11 +315,11 @@ async def list_couriers(
         )
         return couriers
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao listar entregadores: {str(e)}"
-        )
+        ) from e
 
 
 @router.get(
@@ -330,11 +333,11 @@ async def get_courier_deliveries(
         deliveries = await courier_service.get_courier_current_deliveries(courier_id)
         return deliveries
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter entregas do entregador: {str(e)}"
-        )
+        ) from e
 
 
 @router.get(
@@ -357,11 +360,11 @@ async def get_courier_performance(
         )
         return performance
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter desempenho do entregador: {str(e)}"
-        )
+        ) from e
 
 
 # Endpoints para zonas de entrega
@@ -383,11 +386,11 @@ async def create_zone(
         )
         return zone
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar zona de entrega: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/delivery/zones/{zone_id}", response_model=DeliveryZone)
@@ -412,7 +415,7 @@ async def list_zones(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao listar zonas de entrega: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/delivery/check-address", response_model=Dict[str, Any])
@@ -446,11 +449,11 @@ async def check_address_deliverable(
 
         return result
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao verificar endereço: {str(e)}"
-        )
+        ) from e
 
 
 # Endpoints para rastreamento
@@ -463,11 +466,11 @@ async def get_tracking_history(
         tracking_history = await delivery_service.get_tracking_history(order_id)
         return tracking_history
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter histórico de rastreamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/delivery/tracking/{order_id}", response_model=DeliveryTracking)
@@ -490,11 +493,11 @@ async def create_tracking_event(
         )
         return tracking_event
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar evento de rastreamento: {str(e)}"
-        )
+        ) from e
 
 
 # Endpoints públicos (sem autenticação)
@@ -540,11 +543,11 @@ async def public_track_order(tracking_code: str):
 
         return response
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao rastrear pedido: {str(e)}"
-        )
+        ) from e
 
 
 # Rotas para otimização de rotas
@@ -555,4 +558,6 @@ async def optimize_routes(current_user: User = Depends(get_current_user)):
         routes = await delivery_service.optimize_routes()
         return routes
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao otimizar rotas: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao otimizar rotas: {str(e)}"
+        ) from e

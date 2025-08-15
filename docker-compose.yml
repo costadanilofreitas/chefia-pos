@@ -62,52 +62,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # API Gateway
-  api-gateway:
-    build:
-      context: ./src/api-gateway
-      dockerfile: Dockerfile
-    container_name: pos_api_gateway
-    restart: always
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    environment:
-      NODE_ENV: ${NODE_ENV:-development}
-      PORT: 3000
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: ${POSTGRES_USER:-posmodern}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-posmodern123}
-      DB_NAME: ${POSTGRES_DB:-posmodern}
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${RABBITMQ_USER:-posmodern}
-      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-posmodern123}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-posmodern123}
-    ports:
-      - "${API_GATEWAY_PORT:-3000}:3000"
-    networks:
-      - pos_network
-
-  # Dashboard de Serviços
-  dashboard:
-    build:
-      context: ./src/dashboard
-      dockerfile: Dockerfile
-    container_name: pos_dashboard
-    restart: always
-    ports:
-      - "${DASHBOARD_PORT:-8080}:8080"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - pos_network
-
 networks:
   pos_network:
     driver: bridge

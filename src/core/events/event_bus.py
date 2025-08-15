@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict, Any, List, Optional
 import logging
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class EventBusException(Exception):
@@ -22,10 +22,13 @@ class EventType(str, Enum):
     ORDER_ITEM_ADDED = "order.item_added"
     ORDER_ITEM_REMOVED = "order.item_removed"
     ORDER_ITEM_UPDATED = "order.item_updated"
+    ORDER_FINALIZED = "order.finalized"
+    ORDER_CANCELLED = "order.cancelled"
 
     # Eventos do módulo de produtos
     PRODUCT_CREATED = "product.created"
     PRODUCT_UPDATED = "product.updated"
+    PRODUCT_DELETED = "product.deleted"
     PRODUCT_STATUS_CHANGED = "product.status_changed"
     CATEGORY_CREATED = "category.created"
     CATEGORY_UPDATED = "category.updated"
@@ -36,17 +39,36 @@ class EventType(str, Enum):
     PAYMENT_UPDATED = "payment.updated"
     PAYMENT_STATUS_CHANGED = "payment.status_changed"
     PAYMENT_REFUNDED = "payment.refunded"
+    PAYMENT_FAILED = "payment.failed"
+    SPLIT_CONFIG_CREATED = "split_config.created"
+    SPLIT_CONFIG_UPDATED = "split_config.updated"
+    SPLIT_CONFIG_DELETED = "split_config.deleted"
+    SPLIT_PAYMENT_CREATED = "split_payment.created"
+    SPLIT_PAYMENT_STATUS_UPDATED = "split_payment.status_updated"
 
     # Eventos do módulo de pedidos remotos
     REMOTE_ORDER_RECEIVED = "remote_order.received"
     REMOTE_ORDER_STATUS_CHANGED = "remote_order.status_changed"
     REMOTE_ORDER_REFUNDED = "remote_order.refunded"
+    REMOTE_ORDER_ERROR = "remote_order.error"
+    REMOTE_ORDER_ACCEPTED = "remote_order.accepted"
+    REMOTE_ORDER_REJECTED = "remote_order.rejected"
+    REMOTE_ORDER_DISPATCHED = "remote_order.dispatched"
+    REMOTE_ORDER_CANCELLED = "remote_order.cancelled"
+    REMOTE_ORDER_READY = "remote_order.ready"
 
     # Eventos do módulo KDS
     KDS_ORDER_ADDED = "kds.order_added"
     KDS_ORDER_UPDATED = "kds.order_updated"
     KDS_ITEM_STATUS_CHANGED = "kds.item_status_changed"
     KDS_ORDERS_UPDATED = "kds.orders_updated"
+
+    # Eventos do módulo de funcionários
+    EMPLOYEE_CREATED = "employee.created"
+    EMPLOYEE_UPDATED = "employee.updated"
+    EMPLOYEE_DELETED = "employee.deleted"
+    EMPLOYEE_ATTENDANCE_RECORDED = "employee.attendance_recorded"
+    EMPLOYEE_PERFORMANCE_EVALUATED = "employee.performance_evaluated"
     KDS_PRINT_ORDER = "kds.print_order"
     KDS_HIGHLIGHT_SELECTION = "kds.highlight_selection"
 
@@ -82,11 +104,27 @@ class EventType(str, Enum):
     SALE_COMPLETED = "sale.completed"
     REFUND_COMPLETED = "refund.completed"
 
+    # Eventos de contas (accounts)
+    ACCOUNTS_TRANSACTION_CREATED = "accounts.transaction_created"
+    ACCOUNTS_ACCOUNT_CREATED = "accounts.account_created"
+    ACCOUNTS_BALANCE_UPDATED = "accounts.balance_updated"
+
+    # Eventos de delivery
+    DELIVERY_EVENT = "delivery.event"
+    DELIVERY_ORDER_CREATED = "delivery.order_created"
+    DELIVERY_ORDER_UPDATED = "delivery.order_updated"
+    DELIVERY_COURIER_UPDATED = "delivery.courier_updated"
+
 
 class Event:
     """Representa um evento no sistema."""
 
-    def __init__(self, event_type: EventType, data: Optional[Dict[str, Any]] = None, metadata: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self,
+        event_type: EventType,
+        data: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """
         Inicializa um evento.
 
@@ -123,7 +161,7 @@ class Event:
         event = cls(
             event_type=EventType(data.get("event_type", "")),
             data=data.get("data", {}),
-            metadata=data.get("metadata", {})
+            metadata=data.get("metadata", {}),
         )
         event.id = data.get("id", event.id)
         event.timestamp = data.get("timestamp", event.timestamp)
@@ -237,7 +275,10 @@ class EventBus:
                 )
 
     def subscribe(
-        self, event_type: EventType, callback: Any, filters: Optional[Dict[str, Any]] = None
+        self,
+        event_type: EventType,
+        callback: Any,
+        filters: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Inscreve um callback para receber eventos de um determinado tipo.
@@ -285,7 +326,9 @@ class EventBus:
 
         return False
 
-    def get_subscribers(self, event_type: Optional[EventType] = None) -> Dict[str, List[EventHandler]]:
+    def get_subscribers(
+        self, event_type: Optional[EventType] = None
+    ) -> Dict[str, List[EventHandler]]:
         """
         Obtém os subscribers do barramento.
 

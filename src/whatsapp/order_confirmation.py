@@ -5,12 +5,12 @@ Este módulo implementa a lógica de confirmação de pedidos configurável,
 notificações de status e reembolso automático para pedidos não confirmados.
 """
 
-import uuid
-import logging
 import asyncio
-from typing import Dict, Any, Optional
+import logging
+import uuid
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Dict, Optional
 
 # Configuração de logging
 logger = logging.getLogger(__name__)

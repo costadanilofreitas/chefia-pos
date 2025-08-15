@@ -1,27 +1,29 @@
-from typing import List, Dict, Optional, Any
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from datetime import date
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+
+from src.auth.models import User
+from src.auth.security import get_current_user
 
 from ..models.employee_models import (
-    Employee,
-    EmployeeCreate,
-    EmployeeUpdate,
-    EmployeeQuery,
-    EmployeeRole,
-    EmploymentType,
     DeliveryAssignment,
     DeliveryAssignmentCreate,
     DeliveryAssignmentUpdate,
+    Employee,
     EmployeeAttendance,
     EmployeeAttendanceCreate,
     EmployeeAttendanceUpdate,
+    EmployeeCreate,
     EmployeePerformance,
     EmployeePerformanceCreate,
     EmployeePerformanceUpdate,
+    EmployeeQuery,
+    EmployeeRole,
+    EmployeeUpdate,
+    EmploymentType,
 )
 from ..services.employee_service import employee_service
-from src.auth.security import get_current_user
-from src.auth.models import User
 
 router = APIRouter(prefix="/api/v1", tags=["employees"])
 
@@ -45,14 +47,14 @@ async def create_employee(
         return await employee_service.create_employee(
             employee_data=employee_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar funcionário: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/employees/{employee_id}", response_model=Employee)
@@ -81,17 +83,17 @@ async def update_employee(
             employee_id=employee_id,
             employee_data=employee_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
         if not employee:
             raise HTTPException(status_code=404, detail="Funcionário não encontrado")
         return employee
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar funcionário: {str(e)}"
-        )
+        ) from e
 
 
 @router.delete("/employees/{employee_id}", status_code=204)
@@ -104,7 +106,7 @@ async def delete_employee(
     success = await employee_service.delete_employee(
         employee_id=employee_id,
         user_id=current_user.id,
-        user_name=current_user.full_name,
+        user_name=current_user.full_name or current_user.username,
     )
     if not success:
         raise HTTPException(status_code=404, detail="Funcionário não encontrado")
@@ -158,14 +160,14 @@ async def create_delivery_assignment(
         return await employee_service.create_delivery_assignment(
             assignment_data=assignment_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar atribuição de entrega: {str(e)}"
-        )
+        ) from e
 
 
 @router.put("/delivery-assignments/{assignment_id}", response_model=DeliveryAssignment)
@@ -181,7 +183,7 @@ async def update_delivery_assignment(
             assignment_id=assignment_id,
             update_data=update_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
         if not assignment:
             raise HTTPException(
@@ -189,11 +191,11 @@ async def update_delivery_assignment(
             )
         return assignment
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar atribuição de entrega: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/delivery-assignments/{assignment_id}", response_model=DeliveryAssignment)
@@ -239,14 +241,14 @@ async def record_attendance(
         return await employee_service.record_attendance(
             attendance_data=attendance_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao registrar ponto: {str(e)}"
-        )
+        ) from e
 
 
 @router.put("/attendance/{attendance_id}", response_model=EmployeeAttendance)
@@ -262,7 +264,7 @@ async def update_attendance(
             attendance_id=attendance_id,
             update_data=update_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
         if not attendance:
             raise HTTPException(
@@ -270,11 +272,11 @@ async def update_attendance(
             )
         return attendance
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar registro de ponto: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/attendance/{attendance_id}", response_model=EmployeeAttendance)
@@ -320,14 +322,14 @@ async def create_performance_evaluation(
         return await employee_service.create_performance_evaluation(
             evaluation_data=evaluation_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar avaliação de desempenho: {str(e)}"
-        )
+        ) from e
 
 
 @router.put("/performance/{evaluation_id}", response_model=EmployeePerformance)
@@ -343,7 +345,7 @@ async def update_performance_evaluation(
             evaluation_id=evaluation_id,
             update_data=update_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
         if not evaluation:
             raise HTTPException(
@@ -351,12 +353,12 @@ async def update_performance_evaluation(
             )
         return evaluation
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Erro ao atualizar avaliação de desempenho: {str(e)}",
-        )
+        ) from e
 
 
 @router.get("/performance/{evaluation_id}", response_model=EmployeePerformance)
@@ -400,13 +402,13 @@ async def generate_salary_payables(
         return await employee_service.generate_salary_payables(
             payment_date=payment_date,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Erro ao gerar contas a pagar de salários: {str(e)}",
-        )
+        ) from e
 
 
 # === Endpoints para Estatísticas ===
@@ -421,4 +423,4 @@ async def get_employee_statistics(current_user: User = Depends(get_current_user)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter estatísticas: {str(e)}"
-        )
+        ) from e

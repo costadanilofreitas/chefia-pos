@@ -1,7 +1,8 @@
-from pydantic import BaseModel
-from typing import List, Dict, Optional
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Optional
+
+from pydantic import BaseModel
 
 
 class DeliveryOrderStatus(str, Enum):

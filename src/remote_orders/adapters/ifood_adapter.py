@@ -1,16 +1,16 @@
-from typing import Dict, Any
 import json
 import uuid
 from datetime import datetime
+from typing import Any, Dict
 
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder,
+    RemoteOrderCustomer,
+    RemoteOrderItem,
+    RemoteOrderPayment,
     RemoteOrderStatus,
     RemotePlatform,
     RemotePlatformConfig,
-    RemoteOrderItem,
-    RemoteOrderCustomer,
-    RemoteOrderPayment,
 )
 
 
@@ -81,8 +81,8 @@ class IFoodAdapter:
                 total=float(order_data.get("totalPrice", 0)),
                 notes=order_data.get("notes"),
                 scheduled_for=(
-                    datetime.fromisoformat(order_data.get("scheduledFor"))
-                    if order_data.get("scheduledFor")
+                    datetime.fromisoformat(scheduled_for_str)
+                    if (scheduled_for_str := order_data.get("scheduledFor"))
                     else None
                 ),
                 raw_data=order_data,
@@ -94,7 +94,7 @@ class IFoodAdapter:
             # Registrar erro detalhado
             print(f"Erro ao converter pedido iFood: {str(e)}")
             print(f"Dados do pedido: {json.dumps(order_data, indent=2)}")
-            raise ValueError(f"Erro ao converter pedido iFood: {str(e)}")
+            raise ValueError(f"Erro ao converter pedido iFood: {str(e)}") from e
 
     async def update_order_status(
         self, remote_order: RemoteOrder, config: RemotePlatformConfig

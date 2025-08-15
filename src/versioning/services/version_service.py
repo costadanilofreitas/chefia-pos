@@ -1,19 +1,20 @@
 # /home/ubuntu/pos-modern/src/versioning/services/version_service.py
 
-import os
-import json
-import shutil
 import hashlib
-from typing import List, Dict, Any, Optional, Tuple
+import json
+import os
+import shutil
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
+
 import semver
 
 from ..models.version_models import (
-    VersionInfo,
     SystemVersion,
+    UpdateCheckResult,
     UpdateRequest,
     UpdateResult,
-    UpdateCheckResult,
+    VersionInfo,
 )
 
 # Configuration

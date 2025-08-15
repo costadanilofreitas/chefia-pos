@@ -5,15 +5,15 @@ Serviço para gerenciamento de CF-e (Cupom Fiscal Eletrônico)
 import logging
 import xml.etree.ElementTree as ET
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from src.fiscal.models.cfe_models import (
     CFeDocument,
-    CFeStatus,
-    CFeResponse,
     CFeEvent,
+    CFeResponse,
     CFeStateRule,
+    CFeStatus,
 )
 
 # Configuração de logging
@@ -680,7 +680,7 @@ class CFeService:
             return (
                 response_data["success"],
                 response_data["status_message"],
-                CFeEvent(**event_data),
+                CFeEvent(**event_data),  # type: ignore
             )
 
         except Exception as e:

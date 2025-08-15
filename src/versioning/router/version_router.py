@@ -1,15 +1,17 @@
+from typing import Any, Dict, List
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Dict, Any
+
+from src.auth.models import Permission, User
+from src.auth.security import get_current_user
 
 from ..models.version_models import (
     SystemVersion,
+    UpdateCheckResult,
     UpdateRequest,
     UpdateResult,
-    UpdateCheckResult,
 )
 from ..services.version_service import version_service
-from src.auth.security import get_current_user
-from src.auth.models import User, Permission
 
 router = APIRouter(prefix="/api/v1", tags=["versioning"])
 

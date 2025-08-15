@@ -1,16 +1,17 @@
 # /home/ubuntu/pos-modern/src/stock/services/stock_service.py
 
-from fastapi import HTTPException, status
-from typing import List, Optional
 import uuid
 from datetime import datetime
+from typing import List, Optional
+
+from fastapi import HTTPException, status
 
 from ..models.stock_models import (
     StockItem,
     StockItemCreate,
+    StockLevel,
     StockMovement,
     StockMovementCreate,
-    StockLevel,
 )
 
 # In-memory storage (replace with database interaction)

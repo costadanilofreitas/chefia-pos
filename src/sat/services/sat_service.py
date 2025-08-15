@@ -1,22 +1,22 @@
-from abc import ABC, abstractmethod
-from typing import Dict, List, Any
-import os
 import json
-from datetime import datetime
-import uuid
 import logging
+import os
+import uuid
+from abc import ABC, abstractmethod
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from src.sat.models.sat_models import (
-    SATConfig,
-    SATStatus,
-    SATDriverType,
-    ContingencyMode,
     CFe,
     CFeItem,
     CFePagamento,
-    SATResponse,
-    SATStatusResponse,
+    ContingencyMode,
+    SATConfig,
+    SATDriverType,
     SATLog,
+    SATResponse,
+    SATStatus,
+    SATStatusResponse,
 )
 
 
@@ -26,8 +26,8 @@ class SATDriver(ABC):
     def __init__(self, config: SATConfig):
         self.config = config
         self.status = SATStatus.UNKNOWN
-        self.last_error = None
-        self.last_communication = None
+        self.last_error: Optional[str] = None
+        self.last_communication: Optional[datetime] = None
 
     @abstractmethod
     async def initialize(self) -> bool:
@@ -440,7 +440,7 @@ class SATService:
 
     async def process_pending_cfes(self) -> Dict[str, Any]:
         """Processa CF-e pendentes em modo de contingência."""
-        results = {
+        results: Dict[str, Any] = {
             "total": len(self.pending_cfes),
             "success": 0,
             "error": 0,
@@ -599,7 +599,7 @@ class SATService:
 
         try:
             # Finalizar drivers
-            for terminal_id, driver in self.drivers.items():
+            for _terminal_id, driver in self.drivers.items():
                 if not isinstance(driver, SATConfig):
                     await driver.shutdown()
 

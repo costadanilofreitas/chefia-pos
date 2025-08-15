@@ -1,17 +1,18 @@
 import unittest
-from unittest.mock import patch, AsyncMock
 import uuid
 from datetime import datetime
+from unittest.mock import AsyncMock, patch
+
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from src.inventory.models.inventory_models import (
     InventoryItem,
-    TransactionStatus,
     InventoryLoss,
     LossReason,
+    TransactionStatus,
 )
 from src.inventory.router.inventory_router import router
-from fastapi.testclient import TestClient
-from fastapi import FastAPI
 
 # Create a test app
 app = FastAPI()

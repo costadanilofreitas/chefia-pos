@@ -1,14 +1,14 @@
 import logging
-from typing import Dict, Any, Optional
 import os
 import subprocess
 import tempfile
+from typing import Any, Dict, Optional
 
 from src.peripherals.models.peripheral_models import (
     ConventionalPrinter,
     ConventionalPrinterConfig,
-    PeripheralStatus,
     PeripheralException,
+    PeripheralStatus,
 )
 
 
@@ -300,16 +300,16 @@ class CupsPrinter(ConventionalPrinter):
     ) -> Optional[str]:
         """Gera um PDF a partir dos dados do relatório."""
         try:
-            from reportlab.lib.pagesizes import A4
             from reportlab.lib import colors
+            from reportlab.lib.pagesizes import A4
+            from reportlab.lib.styles import getSampleStyleSheet
             from reportlab.platypus import (
+                Paragraph,
                 SimpleDocTemplate,
+                Spacer,
                 Table,
                 TableStyle,
-                Paragraph,
-                Spacer,
             )
-            from reportlab.lib.styles import getSampleStyleSheet
 
             # Criar arquivo temporário para o PDF
             temp_pdf = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)

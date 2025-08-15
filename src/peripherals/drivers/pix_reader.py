@@ -1,28 +1,40 @@
 import asyncio
+import base64
 import logging
-from typing import Dict, Any, Optional
 import os
 import re
 import time
-import base64
 from io import BytesIO
+from typing import Any, Dict, Optional
 
 from src.peripherals.models.peripheral_models import (
+    BasePeripheralDriver,
+    PeripheralStatus,
     PixReader,
     PixReaderConfig,
-    PeripheralStatus,
 )
 
 
-class CameraPixReader(PixReader):
+class CameraPixReader(BasePeripheralDriver):
     """Driver para leitura de PIX via câmera."""
 
     def __init__(self, config: PixReaderConfig):
-        super().__init__(config)
+        # Convert PixReaderConfig to PeripheralConfig for BasePeripheralDriver
+        from src.peripherals.models.peripheral_models import PeripheralConfig
+
+        peripheral_config = PeripheralConfig(
+            id=config.id,
+            type="pix_reader",
+            driver="camera_pix_reader",
+            name=config.name,
+            device_path=config.device_path,
+            options=config.options,
+        )
+        super().__init__(peripheral_config)
         self.device_path = config.device_path
         self.initialized = False
         self.device = None
-        self.read_thread = None
+        self.read_thread: Optional[asyncio.Task] = None
         self.running = False
         self.callback = None
         self.frame_width = config.options.get("frame_width", 640)
@@ -33,10 +45,13 @@ class CameraPixReader(PixReader):
         """Inicializa o leitor de PIX."""
         try:
             import cv2
-            from pyzbar import pyzbar
 
             # Verificar se o dispositivo existe
-            if not os.path.exists(self.device_path) and self.device_path != "0":
+            if (
+                self.device_path
+                and not os.path.exists(self.device_path)
+                and self.device_path != "0"
+            ):
                 logging.error(
                     f"Dispositivo de câmera não encontrado: {self.device_path}"
                 )
@@ -51,11 +66,12 @@ class CameraPixReader(PixReader):
             self.device = cv2.VideoCapture(device_id)
 
             # Configurar resolução
-            self.device.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
-            self.device.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
+            if self.device is not None:
+                self.device.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_width)
+                self.device.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_height)
 
             # Verificar se a câmera foi aberta corretamente
-            if not self.device.isOpened():
+            if self.device is None or not self.device.isOpened():
                 logging.error(f"Não foi possível abrir a câmera: {self.device_path}")
                 await self.update_status(
                     PeripheralStatus.ERROR,
@@ -92,7 +108,7 @@ class CameraPixReader(PixReader):
                 try:
                     self.read_thread.cancel()
                     await asyncio.sleep(0.1)
-                except:
+                except Exception:
                     pass
                 self.read_thread = None
 
@@ -168,7 +184,10 @@ class CameraPixReader(PixReader):
                 # Verificar intervalo de leitura
                 if current_time - last_scan_time >= self.scan_interval:
                     # Capturar frame
-                    ret, frame = self.device.read()
+                    if self.device is not None:
+                        ret, frame = self.device.read()
+                    else:
+                        break
 
                     if ret:
                         # Decodificar QR codes no frame
@@ -283,6 +302,10 @@ class CameraPixReader(PixReader):
             import cv2
 
             # Capturar frame
+            if self.device is None:
+                logging.error("Dispositivo não inicializado")
+                return None
+
             ret, frame = self.device.read()
 
             if not ret:
@@ -434,7 +457,7 @@ class SimulatedPixReader(PixReader):
             # Adicionar texto
             try:
                 font = ImageFont.truetype("Arial", 20)
-            except:
+            except (OSError, Exception):
                 font = ImageFont.load_default()
 
             draw.text((200, 200), "Simulador de PIX", fill=(0, 0, 0), font=font)

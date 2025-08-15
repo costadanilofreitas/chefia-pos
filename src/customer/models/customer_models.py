@@ -1,9 +1,10 @@
 # /home/ubuntu/pos-modern/src/customer/models/customer_models.py
 
-from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, List
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, EmailStr, Field
 
 
 # === Address Model ===

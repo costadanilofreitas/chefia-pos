@@ -1,7 +1,8 @@
-from pydantic import BaseModel
-from typing import Optional, List
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel
 
 # Importar modelos existentes
 
@@ -31,6 +32,12 @@ class Permission(str, Enum):
     CATEGORY_UPDATE = "category:update"
     CATEGORY_DELETE = "category:delete"
 
+    # Menus/Cardápios
+    MENU_CREATE = "menu:create"
+    MENU_READ = "menu:read"
+    MENU_UPDATE = "menu:update"
+    MENU_DELETE = "menu:delete"
+
     # Pedidos
     ORDER_CREATE = "order:create"
     ORDER_READ = "order:read"
@@ -49,6 +56,7 @@ class Permission(str, Enum):
     # Relatorios
     REPORTS_VIEW = "reports:view"
     REPORTS_EXPORT = "reports:export"
+    REPORT_READ = "report:read"
 
     # Administracao
     ADMIN_USERS = "admin:users"
@@ -71,6 +79,18 @@ class Permission(str, Enum):
     CUSTOMERS_READ = "customers.read"
     CUSTOMERS_UPDATE = "customers.update"
     CUSTOMERS_DELETE = "customers.delete"
+
+    # Usuarios
+    USER_CREATE = "user:create"
+    USER_READ = "user:read"
+    USER_UPDATE = "user:update"
+    USER_DELETE = "user:delete"
+
+    # Vendas
+    SALE_CREATE = "sale:create"
+    SALE_READ = "sale:read"
+    SALE_UPDATE = "sale:update"
+    SALE_DELETE = "sale:delete"
 
     # Permissao especial
     ALL = "all"
@@ -115,6 +135,7 @@ class UserUpdate(BaseModel):
     role: Optional[UserRole] = None
     permissions: Optional[List[Permission]] = None
     is_active: Optional[bool] = None
+    password: Optional[str] = None
 
 
 class TokenData(BaseModel):

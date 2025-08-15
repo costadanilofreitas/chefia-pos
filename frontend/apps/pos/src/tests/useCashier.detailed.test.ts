@@ -6,7 +6,13 @@ describe('useCashier Hook - Detailed Tests', () => {
     const { result } = renderHook(() => useCashier());
     
     await act(async () => {
-      const openResult = await result.current.openCashier(100, 'Initial amount');
+      const openResult = await result.current.openCashier({
+        terminal_id: 'terminal-1',
+        operator_id: 'operator-1',
+        opening_balance: 100,
+        business_day_id: 'business-day-1',
+        notes: 'Initial amount'
+      });
       expect(openResult).toBeDefined();
     });
   });
@@ -15,7 +21,7 @@ describe('useCashier Hook - Detailed Tests', () => {
     const { result } = renderHook(() => useCashier());
     
     await act(async () => {
-      const closeResult = await result.current.closeCashier('cashier-1');
+      const closeResult = await result.current.closeCashier(100);
       expect(closeResult).toBeDefined();
     });
   });
@@ -24,7 +30,11 @@ describe('useCashier Hook - Detailed Tests', () => {
     const { result } = renderHook(() => useCashier());
     
     await act(async () => {
-      const withdrawResult = await result.current.registerCashOut({ amount: 50, reason: 'Test withdrawal' });
+      const withdrawResult = await result.current.registerWithdrawal('cashier-1', {
+        operator_id: 'operator-1',
+        amount: 50,
+        reason: 'Test withdrawal'
+      });
       expect(withdrawResult).toBeDefined();
     });
   });
@@ -32,10 +42,7 @@ describe('useCashier Hook - Detailed Tests', () => {
   it('should get current cashier', async () => {
     const { result } = renderHook(() => useCashier());
     
-    await act(async () => {
-      const currentCashier = await result.current.getCurrentCashier();
-      expect(currentCashier).toBeDefined();
-    });
+    expect(result.current.currentCashier).toBeDefined();
   });
 
   it('should handle loading states properly', () => {

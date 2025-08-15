@@ -1,7 +1,7 @@
 import asyncio
 import logging
-from typing import Dict, Any
 import os
+from typing import Any, Dict
 
 from src.peripherals.models.peripheral_models import (
     BarcodeReader,
@@ -59,7 +59,7 @@ class GenericBarcodeReader(BarcodeReader):
                 try:
                     self.read_thread.cancel()
                     await asyncio.sleep(0.1)
-                except:
+                except Exception:
                     pass
                 self.read_thread = None
 

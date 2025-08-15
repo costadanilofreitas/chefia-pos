@@ -1,6 +1,6 @@
 from src.order.services.order_service import order_service as original_order_service
-from src.sat.services.sat_service import get_sat_service
 from src.sat.events.sat_events import get_sat_event_publisher
+from src.sat.services.sat_service import get_sat_service
 
 
 # Estender o serviço de pedidos para integrar com SAT

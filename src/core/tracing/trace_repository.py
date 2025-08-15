@@ -1,8 +1,10 @@
-from typing import Dict, List, Optional, Any, Union
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from .transaction_tracker import TransactionEvent, EventType
+
+from .transaction_tracker import EventType, TransactionEvent
 
 
 class TraceRepository:

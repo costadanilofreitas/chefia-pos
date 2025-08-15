@@ -5,11 +5,12 @@ Este módulo implementa a integração com o Facebook Pixel para rastreamento
 de eventos e otimização de campanhas de marketing.
 """
 
-import os
 import logging
-import requests
-from typing import Dict, Any
+import os
 from datetime import datetime
+from typing import Any, Dict
+
+import requests
 
 # Configuração de logging
 logger = logging.getLogger(__name__)

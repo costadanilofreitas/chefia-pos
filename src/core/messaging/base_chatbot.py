@@ -9,8 +9,8 @@ permitindo reutilização de código e funcionalidades comuns.
 import logging
 import uuid
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List
 
 # Configuração de logging
 logger = logging.getLogger(__name__)
@@ -179,7 +179,7 @@ class BaseChatbotService(ABC):
             platform_type: Tipo de plataforma
         """
         self.platform_type = platform_type
-        self.conversations = {}  # Armazenamento de conversas ativas
+        self.conversations: Dict[str, Any] = {}  # Armazenamento de conversas ativas
         logger.info(f"Serviço de chatbot para {platform_type} inicializado")
 
     @abstractmethod

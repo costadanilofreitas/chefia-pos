@@ -1,9 +1,10 @@
 # /home/ubuntu/pos-modern/src/kiosk/models/kiosk_models.py
 
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class KioskConfig(BaseModel):

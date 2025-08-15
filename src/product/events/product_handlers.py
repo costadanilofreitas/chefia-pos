@@ -1,6 +1,7 @@
-from src.core.events.event_bus import Event, EventType, EventHandler, get_event_bus
-from src.product.services.product_service import get_product_service
 import logging
+
+from src.core.events.event_bus import Event, EventHandler, EventType, get_event_bus
+from src.product.services.product_service import get_product_service
 
 logger = logging.getLogger(__name__)
 

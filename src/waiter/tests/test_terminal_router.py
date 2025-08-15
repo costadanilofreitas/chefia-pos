@@ -1,21 +1,22 @@
-import unittest
-from unittest.mock import MagicMock, patch
 import asyncio
 import json
+import unittest
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
-from ..router.terminal_router import router
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
 from ..models.terminal_models import (
+    OfflineOrder,
+    TerminalCapabilities,
     TerminalConfig,
     TerminalSession,
-    OfflineOrder,
-    TerminalType,
     TerminalStatus,
-    TerminalCapabilities,
+    TerminalType,
 )
+from ..router.terminal_router import router
 from ..services.terminal_service import TerminalService
-from fastapi.testclient import TestClient
-from fastapi import FastAPI
 
 app = FastAPI()
 app.include_router(router)

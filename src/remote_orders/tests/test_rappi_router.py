@@ -1,9 +1,10 @@
 import unittest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from fastapi.testclient import TestClient
 
+from src.remote_orders.models.remote_order_models import RemoteOrder, RemoteOrderStatus
 from src.remote_orders.router.rappi_router import router
-from src.remote_orders.models.remote_order_models import RemoteOrderStatus, RemoteOrder
 
 
 class TestRappiRouter(unittest.TestCase):

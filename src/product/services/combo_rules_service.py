@@ -1,6 +1,7 @@
-from typing import List, Dict, Any, Optional
-from fastapi import HTTPException
 import logging
+from typing import Any, Dict, List, Optional
+
+from fastapi import HTTPException
 
 from src.product.models.product import ProductType
 from src.product.services.product_service import get_product_service
@@ -165,15 +166,20 @@ class ComboRulesService:
                 )
 
             # Verificar se o produto de substituição está no grupo de troca
-            if replacement_product_id not in exchange_group.products:
+            if replacement_product_id not in exchange_group.get("product_ids", []):
                 raise HTTPException(
                     status_code=400,
                     detail=f"Produto de substituição não permitido para este item: {replacement_product_id}",
                 )
 
             # Buscar produto de substituição
+            if replacement_product_id is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="ID do produto de substituição não fornecido",
+                )
             replacement_product = await product_service.get_product(
-                replacement_product_id
+                str(replacement_product_id)
             )
             if not replacement_product:
                 raise HTTPException(
@@ -182,7 +188,11 @@ class ComboRulesService:
                 )
 
             # Buscar produto original
-            original_product = await product_service.get_product(original_item_id)
+            if original_item_id is None:
+                raise HTTPException(
+                    status_code=400, detail="ID do produto original não fornecido"
+                )
+            original_product = await product_service.get_product(str(original_item_id))
             if not original_product:
                 raise HTTPException(
                     status_code=404,

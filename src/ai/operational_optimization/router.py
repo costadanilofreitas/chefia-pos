@@ -10,24 +10,25 @@ Este router expõe endpoints para:
 6. Gerar todas as recomendações de otimização
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import List, Dict, Optional, Any
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..models import (
-    StaffingRecommendation,
     DeliveryOptimization,
-    TableDistributionRecommendation,
     KioskOptimization,
-    WhatsAppCampaign,
     OperationalOptimizationConfig,
+    StaffingRecommendation,
+    TableDistributionRecommendation,
+    WhatsAppCampaign,
 )
+from ..services.delivery_service import DeliveryOptimizationService
+from ..services.kiosk_service import KioskOptimizationService
 from ..services.optimization_service import OperationalOptimizationService
 from ..services.staff_service import StaffOptimizationService
-from ..services.delivery_service import DeliveryOptimizationService
 from ..services.table_service import TableOptimizationService
-from ..services.kiosk_service import KioskOptimizationService
 from ..services.whatsapp_service import WhatsAppCampaignService
 
 # Configurar logging
@@ -97,7 +98,7 @@ async def generate_staff_recommendations(
         logger.error(f"Error generating staff recommendations: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error generating staff recommendations: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/delivery/optimize", response_model=List[DeliveryOptimization])
@@ -120,7 +121,7 @@ async def optimize_delivery_operations(
         logger.error(f"Error optimizing delivery operations: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error optimizing delivery operations: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/tables/optimize", response_model=List[TableDistributionRecommendation])
@@ -143,7 +144,7 @@ async def optimize_table_distribution(
         logger.error(f"Error optimizing table distribution: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error optimizing table distribution: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/kiosk/optimize", response_model=List[KioskOptimization])
@@ -165,7 +166,7 @@ async def optimize_kiosk_experience(
         logger.error(f"Error optimizing kiosk experience: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error optimizing kiosk experience: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/whatsapp/campaigns/recommend", response_model=List[WhatsAppCampaign])
@@ -190,7 +191,7 @@ async def recommend_whatsapp_campaigns(
         logger.error(f"Error recommending WhatsApp campaigns: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error recommending WhatsApp campaigns: {str(e)}"
-        )
+        ) from e
 
 
 @router.post(
@@ -214,7 +215,7 @@ async def schedule_whatsapp_campaign(
         logger.error(f"Error scheduling WhatsApp campaign: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error scheduling WhatsApp campaign: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/all", response_model=Dict[str, Any])
@@ -247,4 +248,4 @@ async def generate_all_recommendations(
         raise HTTPException(
             status_code=500,
             detail=f"Error generating all optimization recommendations: {str(e)}",
-        )
+        ) from e

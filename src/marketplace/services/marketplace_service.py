@@ -2,32 +2,33 @@
 Serviços para o marketplace de integrações
 """
 
-import logging
 import json
+import logging
 import uuid
-import requests
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
+import requests
+
 from src.marketplace.models.marketplace_models import (
-    Partner,
-    PartnerStatus,
-    Integration,
-    IntegrationType,
-    IntegrationStatus,
-    IntegrationConfiguration,
-    ConfigurationStatus,
-    Webhook,
-    WebhookStatus,
-    DeliveryOrder,
-    DeliveryOrderStatus,
-    PaymentTransaction,
-    PaymentStatus,
-    PaymentMethod,
-    CRMCustomer,
     APIKey,
     APIUsage,
+    ConfigurationStatus,
+    CRMCustomer,
+    DeliveryOrder,
+    DeliveryOrderStatus,
+    Integration,
+    IntegrationConfiguration,
+    IntegrationStatus,
+    IntegrationType,
+    Partner,
+    PartnerStatus,
+    PaymentMethod,
+    PaymentStatus,
+    PaymentTransaction,
+    Webhook,
+    WebhookStatus,
 )
 
 # Configuração de logging
@@ -138,7 +139,7 @@ class MarketplaceService:
         # Salva o registro no banco de dados
         self.db_service.insert_one("marketplace_api_usage", usage_data)
 
-        return APIUsage(**usage_data)
+        return APIUsage.parse_obj(usage_data)
 
     def get_api_usage_metrics(
         self,
@@ -158,7 +159,7 @@ class MarketplaceService:
             Métricas de uso da API
         """
         # Constrói os filtros
-        filters = {}
+        filters: Dict[str, Any] = {}
 
         if partner_id:
             filters["partner_id"] = partner_id
@@ -767,7 +768,7 @@ class IntegrationService:
                 "marketplace_integration_configurations", config_data
             )
 
-            return IntegrationConfiguration(**config_data)
+            return IntegrationConfiguration.parse_obj(config_data)
 
     def _validate_configuration(
         self, schema: Dict[str, Any], configuration: Dict[str, Any]
@@ -1216,8 +1217,8 @@ class WebhookService:
         Returns:
             Assinatura calculada
         """
-        import hmac
         import hashlib
+        import hmac
 
         # Converte o payload para string JSON
         payload_str = json.dumps(payload, sort_keys=True)
@@ -1432,7 +1433,7 @@ class APIKeyService:
         self.db_service.insert_one("marketplace_api_keys", key_data)
 
         # Retorna a chave criada
-        return APIKey(**key_data)
+        return APIKey.parse_obj(key_data)
 
     def _generate_api_key(self) -> str:
         """
@@ -1464,7 +1465,7 @@ class APIKeyService:
         if not key_data:
             return None
 
-        return APIKey(**key_data)
+        return APIKey.parse_obj(key_data)
 
     def validate_api_key(self, api_key: str) -> Optional[APIKey]:
         """
@@ -1489,7 +1490,7 @@ class APIKeyService:
         if key_data["expires_at"] and key_data["expires_at"] < datetime.now():
             return None
 
-        return APIKey(**key_data)
+        return APIKey.parse_obj(key_data)
 
     def revoke_api_key(self, key_id: str) -> bool:
         """

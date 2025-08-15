@@ -5,15 +5,15 @@ Serviço para gerenciamento de NFC-e (Nota Fiscal de Consumidor Eletrônica)
 import logging
 import xml.etree.ElementTree as ET
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from src.fiscal.models.nfce_models import (
     NFCeDocument,
-    NFCeStatus,
-    NFCeResponse,
     NFCeEvent,
+    NFCeResponse,
     NFCeStateRule,
+    NFCeStatus,
 )
 
 # Configuração de logging
@@ -541,7 +541,7 @@ class NFCeService:
             return (
                 response_data["success"],
                 response_data["status_message"],
-                NFCeEvent(**event_data),
+                NFCeEvent(**event_data),  # type: ignore
             )
 
         except Exception as e:

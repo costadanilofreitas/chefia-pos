@@ -2,36 +2,37 @@
 Router para o marketplace de integrações
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Request, Response, status
-from typing import Dict, List, Optional, Any
 import time
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
+
+from src.core.auth.auth_service import get_current_user
+from src.core.config.config_service import get_config_service
+from src.core.db.db_service import get_db_service
 from src.marketplace.models.marketplace_models import (
-    Partner,
-    Integration,
-    IntegrationType,
-    IntegrationConfiguration,
-    Webhook,
+    APIKey,
+    CRMCustomer,
     DeliveryOrder,
     DeliveryOrderStatus,
+    Integration,
+    IntegrationConfiguration,
+    IntegrationType,
+    Partner,
     PaymentTransaction,
-    CRMCustomer,
-    APIKey,
+    Webhook,
 )
 from src.marketplace.services.marketplace_service import (
+    APIKeyService,
+    CRMAdapter,
+    DeliveryAdapter,
+    IntegrationService,
     MarketplaceService,
     PartnerService,
-    IntegrationService,
-    WebhookService,
-    APIKeyService,
-    DeliveryAdapter,
     PaymentAdapter,
-    CRMAdapter,
+    WebhookService,
 )
-from src.core.auth.auth_service import get_current_user
-from src.core.db.db_service import get_db_service
-from src.core.config.config_service import get_config_service
 
 # Criação do router
 router = APIRouter(prefix="/v1", tags=["marketplace"])
@@ -90,7 +91,8 @@ def get_crm_adapter():
 
 
 # Middleware para registro de uso da API
-@router.middleware("http")
+# Note: middleware deve ser adicionado ao app principal, não ao router
+# @router.middleware("http")  # APIRouter não suporta middleware
 async def api_usage_middleware(request: Request, call_next):
     # Extrai informações da requisição
     start_time = time.time()
@@ -120,7 +122,7 @@ async def api_usage_middleware(request: Request, call_next):
                 response_time=response_time,
                 request_size=len(await request.body()),
                 response_size=0,  # Não temos acesso ao tamanho da resposta aqui
-                ip_address=request.client.host,
+                ip_address=request.client.host if request.client else "unknown",
                 user_agent=request.headers.get("User-Agent", ""),
             )
 
@@ -141,7 +143,7 @@ async def create_partner(
         partner = partner_service.register_partner(partner_data)
         return partner
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/partners/{partner_id}", response_model=Partner)
@@ -179,7 +181,7 @@ async def update_partner(
 
         return partner
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/partners/{partner_id}/approve", response_model=Partner)
@@ -283,7 +285,7 @@ async def create_integration(
         integration = integration_service.register_integration(integration_data)
         return integration
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/integrations/{integration_id}", response_model=Integration)
@@ -323,7 +325,7 @@ async def update_integration(
 
         return integration
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/integrations", response_model=Dict[str, Any])
@@ -427,7 +429,7 @@ async def configure_integration(
         )
         return config
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get(
@@ -482,7 +484,7 @@ async def create_webhook(
         webhook = webhook_service.register_webhook(webhook_data)
         return webhook
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/webhooks/{webhook_id}", response_model=Webhook)
@@ -520,7 +522,7 @@ async def update_webhook(
 
         return webhook
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.delete("/webhooks/{webhook_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -721,7 +723,7 @@ async def create_delivery_order(
 
         return order
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.put("/delivery/orders/{order_id}/status", response_model=DeliveryOrder)
@@ -756,7 +758,9 @@ async def update_delivery_order_status(
         )
 
     # Atualiza o status do pedido
-    order = delivery_adapter.update_order_status(order_id, status_data["status"])
+    order = delivery_adapter.update_order_status(
+        order_id, DeliveryOrderStatus(status_data["status"])
+    )
 
     if not order:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
@@ -863,7 +867,7 @@ async def create_payment_transaction(
 
         return transaction
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get(
@@ -932,7 +936,7 @@ async def refund_payment_transaction(
 
         return transaction
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/payments/methods", response_model=List[Dict[str, Any]])
@@ -1077,7 +1081,7 @@ async def create_crm_customer(
 
         return customer
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.put("/crm/customers/{customer_id}", response_model=CRMCustomer)
@@ -1179,7 +1183,7 @@ async def create_api_key(
 
         return api_key
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/api-keys/{key_id}", response_model=APIKey)

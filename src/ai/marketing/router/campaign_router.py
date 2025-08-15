@@ -1,6 +1,7 @@
-from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Body
 import logging
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from ..marketing.services.campaign_service import MarketingCampaignService
 
@@ -40,7 +41,7 @@ async def create_campaign(
         logger.error(f"Error creating campaign: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error creating campaign: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/campaigns/{campaign_id}", response_model=Dict[str, Any])
@@ -55,10 +56,12 @@ async def get_campaign(
         result = await service.get_campaign(campaign_id)
         return result
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error getting campaign: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error getting campaign: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting campaign: {str(e)}"
+        ) from e
 
 
 @router.get("/campaigns", response_model=List[Dict[str, Any]])
@@ -78,7 +81,7 @@ async def list_campaigns(
         logger.error(f"Error listing campaigns: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error listing campaigns: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/campaigns/{campaign_id}/process", response_model=Dict[str, Any])
@@ -93,12 +96,12 @@ async def process_campaign(
         result = await service.process_campaign(campaign_id)
         return result
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error processing campaign: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error processing campaign: {str(e)}"
-        )
+        ) from e
 
 
 @router.patch("/campaigns/{campaign_id}/status", response_model=Dict[str, Any])
@@ -119,12 +122,12 @@ async def update_campaign_status(
         result = await service.update_campaign_status(campaign_id, status)
         return result
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error updating campaign status: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error updating campaign status: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/templates", response_model=Dict[str, Any])
@@ -145,7 +148,7 @@ async def create_template(
         logger.error(f"Error creating template: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error creating template: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/templates", response_model=List[Dict[str, Any]])
@@ -165,7 +168,7 @@ async def list_templates(
         logger.error(f"Error listing templates: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error listing templates: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/messages/send", response_model=Dict[str, Any])
@@ -191,10 +194,12 @@ async def send_message(
         result = await service.send_message(customer_id, message, channel, metadata)
         return result
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error sending message: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error sending message: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error sending message: {str(e)}"
+        ) from e
 
 
 @router.post("/messages/generate", response_model=Dict[str, str])
@@ -219,9 +224,9 @@ async def generate_message(
         )
         return {"message": message}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error generating message: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error generating message: {str(e)}"
-        )
+        ) from e

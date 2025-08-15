@@ -1,8 +1,9 @@
-from typing import List, Optional, Dict, Any
-from enum import Enum
-from datetime import datetime
-from pydantic import BaseModel, Field
 import uuid
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class KDSOrderStatus(str, Enum):
@@ -22,6 +23,16 @@ class KDSOrderPriority(str, Enum):
     NORMAL = "normal"
     HIGH = "high"
     URGENT = "urgent"
+
+
+class ItemStatus(str, Enum):
+    """Status de um item no KDS."""
+
+    PENDING = "pending"
+    PREPARING = "preparing"
+    READY = "ready"
+    DELIVERED = "delivered"
+    CANCELLED = "cancelled"
 
 
 class KDSOrderItem(BaseModel):

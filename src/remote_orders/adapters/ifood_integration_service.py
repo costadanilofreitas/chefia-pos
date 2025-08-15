@@ -5,22 +5,23 @@ Este módulo implementa a integração completa do iFood com o sistema POS,
 incluindo processamento de pedidos, confirmação, notificações e reembolsos.
 """
 
-import os
-import logging
 import asyncio
+import logging
+import os
 import uuid
-from typing import Dict, Any
 from datetime import datetime
-from fastapi import Request, BackgroundTasks, Header
+from typing import Any, Dict
 
-from .ifood.auth_manager import IFoodAuthManager
-from .ifood.api_client import IFoodAPIClient
-from .ifood.webhook_handler import IFoodWebhookHandler
+from fastapi import BackgroundTasks, Header, Request
+
 from ..models.remote_order_models import (
     RemoteOrderStatus,
     RemotePlatform,
     RemotePlatformConfig,
 )
+from .ifood.api_client import IFoodAPIClient
+from .ifood.auth_manager import IFoodAuthManager
+from .ifood.webhook_handler import IFoodWebhookHandler
 
 # Configuração de logging
 logger = logging.getLogger(__name__)
@@ -75,10 +76,9 @@ class IFoodIntegrationService:
         )
 
         # Configurações de confirmação
-        self.auto_confirm_orders = self.config.settings.get(
-            "auto_confirm_orders", False
-        )
-        self.confirmation_timeout_minutes = self.config.settings.get(
+        settings = self.config.settings or {}
+        self.auto_confirm_orders = settings.get("auto_confirm_orders", False)
+        self.confirmation_timeout_minutes = settings.get(
             "confirmation_timeout_minutes", 15
         )
 
@@ -169,6 +169,15 @@ class IFoodIntegrationService:
 
             # Atualizar status no iFood
             ifood_order_id = order.get("external_order_id")
+            if not ifood_order_id:
+                logger.error(
+                    f"ID externo do pedido não encontrado para o pedido {order_id}"
+                )
+                return {
+                    "success": False,
+                    "error": "ID externo do pedido não encontrado",
+                }
+
             update_result = await self.api_client.update_order_status(
                 ifood_order_id, "CONFIRMED"
             )
@@ -236,6 +245,15 @@ class IFoodIntegrationService:
 
             # Atualizar status no iFood
             ifood_order_id = order.get("external_order_id")
+            if not ifood_order_id:
+                logger.error(
+                    f"ID externo do pedido não encontrado para o pedido {order_id}"
+                )
+                return {
+                    "success": False,
+                    "error": "ID externo do pedido não encontrado",
+                }
+
             update_result = await self.api_client.update_order_status(
                 ifood_order_id, "CANCELLED", reason
             )
@@ -318,6 +336,15 @@ class IFoodIntegrationService:
 
             # Atualizar status no iFood
             ifood_order_id = order.get("external_order_id")
+            if not ifood_order_id:
+                logger.error(
+                    f"ID externo do pedido não encontrado para o pedido {order_id}"
+                )
+                return {
+                    "success": False,
+                    "error": "ID externo do pedido não encontrado",
+                }
+
             update_result = await self.api_client.update_order_status(
                 ifood_order_id, ifood_status
             )
@@ -450,7 +477,7 @@ class IFoodIntegrationService:
             elif event_type == "status_changed":
                 # Mudança de status
                 order_id = data.get("order_id")
-                status = data.get("status")
+                data.get("status")
                 internal_status = data.get("internal_status")
 
                 # Atualizar status interno

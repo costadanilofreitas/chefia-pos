@@ -1,8 +1,8 @@
-from typing import Dict, Any
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict
 
-from src.core.events.event_bus import get_event_bus, Event, EventType
+from src.core.events.event_bus import Event, EventType, get_event_bus
 from src.remote_orders.models.remote_order_models import (
     RemoteOrderStatus,
     RemotePlatform,

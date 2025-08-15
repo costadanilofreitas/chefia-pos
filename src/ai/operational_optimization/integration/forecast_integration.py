@@ -9,19 +9,20 @@ Este módulo implementa:
 
 import logging
 import os
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any
-from fastapi import HTTPException
 
 # Importar corretamente os módulos
 import sys
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from fastapi import HTTPException
 
 sys.path.append("/home/ubuntu/pos-modern")
 from src.ai.demand_forecast.models import (
-    ForecastResult,
-    TimeGranularity,
     ForecastDimension,
+    ForecastResult,
     ModelType,
+    TimeGranularity,
 )
 from src.ai.demand_forecast.service import DemandForecastService
 
@@ -112,7 +113,7 @@ class ForecastIntegrationService:
             logger.error(f"Error getting demand forecast: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"Error getting demand forecast: {str(e)}"
-            )
+            ) from e
 
     async def get_weather_data(
         self,
@@ -203,7 +204,7 @@ class ForecastIntegrationService:
             logger.error(f"Error getting weather data: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"Error getting weather data: {str(e)}"
-            )
+            ) from e
 
     async def get_events_data(
         self,
@@ -307,7 +308,7 @@ class ForecastIntegrationService:
             logger.error(f"Error getting events data: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"Error getting events data: {str(e)}"
-            )
+            ) from e
 
     async def enrich_forecast_with_external_data(
         self, forecast: ForecastResult, restaurant_id: str, location: Dict[str, float]
@@ -361,4 +362,4 @@ class ForecastIntegrationService:
             logger.error(f"Error enriching forecast: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"Error enriching forecast: {str(e)}"
-            )
+            ) from e

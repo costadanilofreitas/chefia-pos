@@ -9,6 +9,8 @@ export interface DashboardMetrics {
   todayOrders: number;
   averageTicket: number;
   openCashiers: number;
+  revenue: number; // Compatibilidade com ManagerScreen
+  orders: number; // Compatibilidade com ManagerScreen
 }
 
 export interface RevenueData {
@@ -79,7 +81,9 @@ class AnalyticsService {
         totalRevenue: revenue,
         todayOrders: orders,
         averageTicket: averageTicket,
-        openCashiers: cashiers
+        openCashiers: cashiers,
+        revenue: revenue,
+        orders: orders
       };
     } catch (error) {
       console.error('Erro ao obter métricas do dashboard:', error);
@@ -88,7 +92,9 @@ class AnalyticsService {
         totalRevenue: 0,
         todayOrders: 0,
         averageTicket: 0,
-        openCashiers: 0
+        openCashiers: 0,
+        revenue: 0,
+        orders: 0
       };
     }
   }

@@ -1,8 +1,9 @@
-from enum import Enum
-from datetime import datetime
-from typing import Dict, Any, List, Optional
-from pydantic import BaseModel as PydanticBaseModel
 import uuid
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel as PydanticBaseModel
 
 
 class OrderStatus(str, Enum):
@@ -11,6 +12,7 @@ class OrderStatus(str, Enum):
     PENDING = "pending"
     PREPARING = "preparing"
     READY = "ready"
+    DELIVERING = "delivering"
     DELIVERED = "delivered"
     CANCELLED = "cancelled"
 
@@ -32,6 +34,7 @@ class PaymentStatus(str, Enum):
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
+    PAID = "paid"  # Alias for COMPLETED
     FAILED = "failed"
     REFUNDED = "refunded"
 
@@ -113,25 +116,28 @@ class OrderItem(PydanticBaseModel):
     total_price: float = 0.0
     notes: str = ""
     customizations: List[Dict[str, Any]] = []
+    # Additional fields needed by order service
+    order_id: Optional[str] = None
+    product_type: Optional[str] = None
+    sections: Optional[Dict[str, Any]] = None
 
     class Config:
         from_attributes = True
 
     def to_dict(self) -> Dict[str, Any]:
         """Converte o item de pedido para um dicionário."""
-        data = super().to_dict()
-        data.update(
-            {
-                "product_id": self.product_id,
-                "product_name": self.product_name,
-                "quantity": self.quantity,
-                "unit_price": self.unit_price,
-                "total_price": self.total_price,
-                "notes": self.notes,
-                "customizations": self.customizations,
-            }
-        )
-        return data
+        return {
+            "id": self.id,
+            "product_id": self.product_id,
+            "product_name": self.product_name,
+            "quantity": self.quantity,
+            "unit_price": self.unit_price,
+            "total_price": self.total_price,
+            "notes": self.notes,
+            "customizations": self.customizations,
+            "created_at": getattr(self, "created_at", None),
+            "updated_at": getattr(self, "updated_at", None),
+        }
 
 
 class OrderItemCreate(PydanticBaseModel):
@@ -143,6 +149,9 @@ class OrderItemCreate(PydanticBaseModel):
     unit_price: float = 0.0
     notes: str = ""
     customizations: List[Dict[str, Any]] = []
+    # Additional fields needed by order service
+    sections: Optional[Dict[str, Any]] = None
+    price_adjustment: Optional[float] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Converte para dicionário."""
@@ -165,7 +174,7 @@ class OrderItemUpdate(PydanticBaseModel):
 
     def to_dict(self) -> Dict[str, Any]:
         """Converte para dicionário."""
-        data = {}
+        data: Dict[str, Any] = {}
         if self.quantity is not None:
             data["quantity"] = self.quantity
         if self.notes is not None:
@@ -183,7 +192,7 @@ class Order(PydanticBaseModel):
     updated_at: str = ""
     customer_id: str = ""
     customer_name: str = ""
-    items: List[Dict[str, Any]] = []
+    items: List["OrderItem"] = []
     status: OrderStatus = OrderStatus.PENDING
     total_amount: float = 0.0
     payment_method: Optional[str] = None
@@ -196,33 +205,43 @@ class Order(PydanticBaseModel):
     notes: str = ""
     source: str = "pos"
     order_type: OrderType = OrderType.DINE_IN
+    # Additional fields needed by order service
+    cashier_id: Optional[str] = None
+    order_number: Optional[str] = None
+    subtotal: float = 0.0
+    tax: float = 0.0
+    discount: float = 0.0
+    total: float = 0.0
+    applied_coupon_code: Optional[str] = None
+    coupon_discount: float = 0.0
+    points_redeemed: int = 0
+    points_discount: float = 0.0
 
     class Config:
         from_attributes = True
 
     def to_dict(self) -> Dict[str, Any]:
         """Converte o pedido para um dicionário."""
-        data = super().to_dict()
-        data.update(
-            {
-                "customer_id": self.customer_id,
-                "customer_name": self.customer_name,
-                "items": [item.to_dict() for item in self.items],
-                "status": self.status,
-                "total_amount": self.total_amount,
-                "payment_method": self.payment_method,
-                "payment_status": self.payment_status,
-                "table_number": self.table_number,
-                "waiter_id": self.waiter_id,
-                "is_delivery": self.is_delivery,
-                "delivery_address": self.delivery_address,
-                "delivery_fee": self.delivery_fee,
-                "notes": self.notes,
-                "source": self.source,
-                "order_type": self.order_type,
-            }
-        )
-        return data
+        return {
+            "id": self.id,
+            "customer_id": self.customer_id,
+            "customer_name": self.customer_name,
+            "items": [item.to_dict() for item in self.items],
+            "status": self.status,
+            "total_amount": self.total_amount,
+            "payment_method": self.payment_method,
+            "payment_status": self.payment_status,
+            "table_number": self.table_number,
+            "waiter_id": self.waiter_id,
+            "is_delivery": self.is_delivery,
+            "delivery_address": self.delivery_address,
+            "delivery_fee": self.delivery_fee,
+            "created_at": getattr(self, "created_at", None),
+            "updated_at": getattr(self, "updated_at", None),
+            "notes": getattr(self, "notes", None),
+            "source": getattr(self, "source", None),
+            "order_type": getattr(self, "order_type", None),
+        }
 
     def calculate_total(self) -> float:
         """Calcula o valor total do pedido."""
@@ -235,7 +254,7 @@ class OrderCreate(PydanticBaseModel):
 
     customer_id: str = ""
     customer_name: str = ""
-    items: List[Dict[str, Any]] = []
+    items: List["OrderItemCreate"] = []
     table_number: Optional[int] = None
     waiter_id: str = ""
     is_delivery: bool = False
@@ -244,13 +263,19 @@ class OrderCreate(PydanticBaseModel):
     notes: str = ""
     source: str = "pos"
     order_type: OrderType = OrderType.DINE_IN
+    # Additional fields needed by order service
+    cashier_id: Optional[str] = None
+    external_reference: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Converte para dicionário."""
         return {
             "customer_id": self.customer_id,
             "customer_name": self.customer_name,
-            "items": self.items,
+            "items": [
+                item.to_dict() if hasattr(item, "to_dict") else item
+                for item in self.items
+            ],
             "table_number": self.table_number,
             "waiter_id": self.waiter_id,
             "is_delivery": self.is_delivery,
@@ -271,16 +296,29 @@ class OrderUpdate(PydanticBaseModel):
     table_number: Optional[int] = None
     waiter_id: Optional[str] = None
     notes: Optional[str] = None
+    # Additional fields needed by order service
+    applied_coupon_code: Optional[str] = None
+    coupon_discount: Optional[float] = None
+    points_redeemed: Optional[int] = None
+    points_discount: Optional[float] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Converte para dicionário."""
-        data = {}
+        data: Dict[str, Any] = {}
         if self.status is not None:
-            data["status"] = self.status
+            data["status"] = (
+                self.status.value
+                if isinstance(self.status, OrderStatus)
+                else self.status
+            )
         if self.payment_method is not None:
             data["payment_method"] = self.payment_method
         if self.payment_status is not None:
-            data["payment_status"] = self.payment_status
+            data["payment_status"] = (
+                self.payment_status.value
+                if isinstance(self.payment_status, PaymentStatus)
+                else self.payment_status
+            )
         if self.table_number is not None:
             data["table_number"] = self.table_number
         if self.waiter_id is not None:
@@ -293,20 +331,15 @@ class OrderUpdate(PydanticBaseModel):
 class ApplyCouponRequest(PydanticBaseModel):
     """Modelo para aplicação de cupom."""
 
-    def __init__(self, **kwargs):
-        self.coupon_code = kwargs.get("coupon_code", "")
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Converte para dicionário."""
-        return {"coupon_code": self.coupon_code}
+    coupon_code: str
 
 
 class ApplyPointsRequest(PydanticBaseModel):
     """Modelo para aplicação de pontos."""
 
-    def __init__(self, **kwargs):
-        self.points_amount = kwargs.get("points_amount", 0)
-        self.customer_id = kwargs.get("customer_id", "")
+    points_amount: int = 0
+    customer_id: str = ""
+    points_to_redeem: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         """Converte para dicionário."""
@@ -316,20 +349,15 @@ class ApplyPointsRequest(PydanticBaseModel):
 class DiscountResponse(PydanticBaseModel):
     """Modelo para resposta de desconto."""
 
-    def __init__(self, **kwargs):
-        self.discount_amount = kwargs.get("discount_amount", 0.0)
-        self.discount_type = kwargs.get("discount_type", "")
-        self.description = kwargs.get("description", "")
-        self.success = kwargs.get("success", False)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Converte para dicionário."""
-        return {
-            "discount_amount": self.discount_amount,
-            "discount_type": self.discount_type,
-            "description": self.description,
-            "success": self.success,
-        }
+    subtotal: float = 0.0
+    coupon_discount: float = 0.0
+    points_discount: float = 0.0
+    total_discount: float = 0.0
+    tax: float = 0.0
+    total: float = 0.0
+    applied_coupon_code: Optional[str] = None
+    points_redeemed: int = 0
+    remaining_points: Optional[int] = None
 
 
 class CashierOperation(BaseModel):

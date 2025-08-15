@@ -6,8 +6,8 @@ sys.path.append("/home/ubuntu/pos-modern")
 
 # Importar os testes
 from src.remote_orders.tests.test_ifood_adapter import TestIFoodAdapter
-from src.remote_orders.tests.test_remote_order_service import TestRemoteOrderService
 from src.remote_orders.tests.test_remote_order_router import TestRemoteOrderRouter
+from src.remote_orders.tests.test_remote_order_service import TestRemoteOrderService
 
 if __name__ == "__main__":
     # Criar o runner de testes

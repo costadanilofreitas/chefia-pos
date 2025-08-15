@@ -7,26 +7,26 @@ describe('useOrder Hook', () => {
     
     expect(result.current.currentOrder).toEqual({ items: [] });
     expect(result.current.loading).toBe(false);
-    expect(typeof result.current.addItemToOrder).toBe('function');
-    expect(typeof result.current.removeItemFromOrder).toBe('function');
+    expect(typeof result.current.addToCart).toBe('function');
+    expect(typeof result.current.removeFromCart).toBe('function');
     expect(typeof result.current.createOrder).toBe('function');
-    expect(typeof result.current.getOrderById).toBe('function');
+    expect(typeof result.current.getOrders).toBe('function');
     expect(typeof result.current.updateOrder).toBe('function');
-    expect(typeof result.current.processPayment).toBe('function');
+    expect(typeof result.current.finalizeOrder).toBe('function');
   });
 
-  it('should have addItemToOrder function', () => {
+  it('should have addToCart function', () => {
     const { result } = renderHook(() => useOrder());
     
-    expect(result.current.addItemToOrder).toBeDefined();
-    expect(typeof result.current.addItemToOrder).toBe('function');
+    expect(result.current.addToCart).toBeDefined();
+    expect(typeof result.current.addToCart).toBe('function');
   });
 
-  it('should have removeItemFromOrder function', () => {
+  it('should have removeFromCart function', () => {
     const { result } = renderHook(() => useOrder());
     
-    expect(result.current.removeItemFromOrder).toBeDefined();
-    expect(typeof result.current.removeItemFromOrder).toBe('function');
+    expect(result.current.removeFromCart).toBeDefined();
+    expect(typeof result.current.removeFromCart).toBe('function');
   });
 
   it('should have createOrder function', () => {
@@ -36,11 +36,11 @@ describe('useOrder Hook', () => {
     expect(typeof result.current.createOrder).toBe('function');
   });
 
-  it('should have getOrderById function', () => {
+  it('should have getOrders function', () => {
     const { result } = renderHook(() => useOrder());
     
-    expect(result.current.getOrderById).toBeDefined();
-    expect(typeof result.current.getOrderById).toBe('function');
+    expect(result.current.getOrders).toBeDefined();
+    expect(typeof result.current.getOrders).toBe('function');
   });
 
   it('should have updateOrder function', () => {
@@ -50,11 +50,11 @@ describe('useOrder Hook', () => {
     expect(typeof result.current.updateOrder).toBe('function');
   });
 
-  it('should have processPayment function', () => {
+  it('should have finalizeOrder function', () => {
     const { result } = renderHook(() => useOrder());
     
-    expect(result.current.processPayment).toBeDefined();
-    expect(typeof result.current.processPayment).toBe('function');
+    expect(result.current.finalizeOrder).toBeDefined();
+    expect(typeof result.current.finalizeOrder).toBe('function');
   });
 });
 

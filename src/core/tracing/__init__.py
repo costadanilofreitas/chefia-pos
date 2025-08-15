@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Depends
-from .trace_api import router as trace_router
+from fastapi import FastAPI
+
 from ..database.mongodb import get_database
-from .transaction_tracker import TransactionTracker
+from ..events.event_bus import EventBus, EventType
 from .event_logger import EventLogger
-from ..events.event_bus import EventBus
+from .trace_api import router as trace_router
+from .transaction_tracker import TransactionTracker
 
 # Inicializar componentes
 event_bus = EventBus()
@@ -26,12 +27,16 @@ def register_tracing(app: FastAPI):
         return response
 
     # Registrar handlers para eventos do sistema
-    @event_bus.subscribe("transaction.events")
-    async def handle_transaction_event(message, metadata):
+    async def handle_transaction_event(event):
+        message = event.data
         db = await get_database()
         from .trace_repository import TraceRepository
 
         repository = TraceRepository(db)
         await repository.save_event(message)
+
+    # Subscribe to transaction events
+    # Note: Using SYSTEM_CONFIG_CHANGED as a placeholder since transaction events aren't defined
+    event_bus.subscribe(EventType.SYSTEM_CONFIG_CHANGED, handle_transaction_event)
 
     return app

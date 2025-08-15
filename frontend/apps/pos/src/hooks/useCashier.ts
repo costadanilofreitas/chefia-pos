@@ -11,10 +11,12 @@ export interface UseCashierReturn {
   // Ações
   checkTerminalStatus: (terminalId: string) => Promise<TerminalStatus>;
   openCashier: (cashierData: CashierCreate) => Promise<Cashier>;
-  closeCashier: (cashierId: string, closeData: CashierClose) => Promise<Cashier>;
+  closeCashier: (physicalCashAmount: number, notes?: string) => Promise<Cashier>;
   registerWithdrawal: (cashierId: string, withdrawal: CashierWithdrawal) => Promise<any>;
   refreshCashier: (cashierId: string) => Promise<void>;
   clearError: () => void;
+  operations: any[];
+  getSummary: () => Promise<any>;
 }
 
 export const useCashier = (): UseCashierReturn => {
@@ -22,6 +24,7 @@ export const useCashier = (): UseCashierReturn => {
   const [terminalStatus, setTerminalStatus] = useState<TerminalStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [operations, setOperations] = useState<any[]>([]);
 
   /**
    * Verifica o status do terminal
@@ -80,12 +83,22 @@ export const useCashier = (): UseCashierReturn => {
   /**
    * Fecha um caixa
    */
-  const closeCashier = useCallback(async (cashierId: string, closeData: CashierClose): Promise<Cashier> => {
+  const closeCashier = useCallback(async (physicalCashAmount: number, notes?: string): Promise<Cashier> => {
     try {
+      if (!currentCashier?.id) {
+        throw new Error('Nenhum caixa ativo para fechar');
+      }
+      
       setLoading(true);
       setError(null);
       
-      const closedCashier = await cashierService.closeCashier(cashierId, closeData);
+      const closeData: CashierClose = {
+        operator_id: currentCashier.current_operator_id,
+        physical_cash_amount: physicalCashAmount,
+        notes
+      };
+      
+      const closedCashier = await cashierService.closeCashier(currentCashier.id, closeData);
       setCurrentCashier(closedCashier);
       
       // Atualizar status do terminal se disponível
@@ -102,7 +115,7 @@ export const useCashier = (): UseCashierReturn => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentCashier]);
 
   /**
    * Registra uma retirada (ruptura) no caixa
@@ -151,12 +164,49 @@ export const useCashier = (): UseCashierReturn => {
     setError(null);
   }, []);
 
+  /**
+   * Busca resumo das operações do caixa
+   */
+  const getSummary = useCallback(async (): Promise<any> => {
+    try {
+      if (!currentCashier?.id) {
+        throw new Error('Nenhum caixa ativo');
+      }
+      
+      const operations = await cashierService.getCashierOperations(currentCashier.id);
+      setOperations(operations);
+      
+      // Calcular resumo das operações
+      const summary = operations.reduce((acc: any, operation: any) => {
+        switch (operation.operation_type) {
+          case 'SALE':
+            acc.sales += operation.amount;
+            break;
+          case 'WITHDRAWAL':
+            acc.withdrawals += operation.amount;
+            break;
+          case 'DEPOSIT':
+            acc.deposits += operation.amount;
+            break;
+        }
+        return acc;
+      }, { sales: 0, withdrawals: 0, deposits: 0 });
+      
+      return summary;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Erro ao buscar resumo do caixa';
+      setError(errorMessage);
+      throw err;
+    }
+  }, [currentCashier?.id]);
+
   return {
     // Estado
     currentCashier,
     terminalStatus,
     loading,
     error,
+    operations,
 
     // Ações
     checkTerminalStatus,
@@ -164,7 +214,8 @@ export const useCashier = (): UseCashierReturn => {
     closeCashier,
     registerWithdrawal,
     refreshCashier,
-    clearError
+    clearError,
+    getSummary
   };
 };
 

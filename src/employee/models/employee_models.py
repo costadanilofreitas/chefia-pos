@@ -1,8 +1,9 @@
-from pydantic import BaseModel, Field, validator
-from typing import List, Dict, Optional, Any
-from enum import Enum
-from datetime import datetime, date
 import uuid
+from datetime import date, datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field, validator
 
 
 class EmploymentType(str, Enum):

@@ -1,0 +1,99 @@
+{
+  "name": "Production",
+  "backend": {
+    "host": "0.0.0.0",
+    "port": 8001,
+    "api_url": "https://api.chefia-pos.com",
+    "debug": false,
+    "hot_reload": false,
+    "log_level": "WARNING"
+  },
+  "frontend": {
+    "pos": {
+      "port": 3000,
+      "api_url": "https://api.chefia-pos.com",
+      "app_name": "ChefIA POS",
+      "debug": false,
+      "hot_reload": false
+    },
+    "kds": {
+      "port": 3001,
+      "api_url": "https://api.chefia-pos.com",
+      "app_name": "ChefIA KDS",
+      "debug": false,
+      "hot_reload": false
+    },
+    "kiosk": {
+      "port": 3002,
+      "api_url": "https://api.chefia-pos.com",
+      "app_name": "ChefIA Kiosk",
+      "debug": false,
+      "hot_reload": false
+    },
+    "waiter": {
+      "port": 3003,
+      "api_url": "https://api.chefia-pos.com",
+      "app_name": "ChefIA Waiter",
+      "debug": false,
+      "hot_reload": false
+    },
+    "backoffice": {
+      "port": 3004,
+      "api_url": "https://api.chefia-pos.com",
+      "app_name": "ChefIA Backoffice",
+      "debug": false,
+      "hot_reload": false
+    }
+  },
+  "database": {
+    "host": "${POSTGRES_HOST}",
+    "port": 5432,
+    "name": "${POSTGRES_DB}",
+    "user": "${POSTGRES_USER}",
+    "password": "${POSTGRES_PASSWORD}",
+    "pool_size": 20,
+    "max_overflow": 50,
+    "echo_sql": false
+  },
+  "redis": {
+    "host": "${REDIS_HOST}",
+    "port": 6379,
+    "password": "${REDIS_PASSWORD}",
+    "db": 0,
+    "max_connections": 50
+  },
+  "rabbitmq": {
+    "host": "${RABBITMQ_HOST}",
+    "port": 5672,
+    "user": "${RABBITMQ_USER}",
+    "password": "${RABBITMQ_PASSWORD}",
+    "virtual_host": "/",
+    "management_port": 15672
+  },
+  "auth": {
+    "jwt_secret": "${JWT_SECRET}",
+    "jwt_algorithm": "HS256",
+    "jwt_expiration_hours": 4,
+    "refresh_token_expiration_days": 3
+  },
+  "features": {
+    "enable_debug_toolbar": false,
+    "enable_hot_reload": false,
+    "enable_cors": false,
+    "enable_swagger": false,
+    "enable_analytics": true,
+    "enable_error_tracking": true
+  },
+  "external_services": {
+    "payment_gateway": {
+      "provider": "asaas",
+      "sandbox": false,
+      "api_key": "${ASAAS_PRODUCTION_API_KEY}"
+    },
+    "delivery": {
+      "google_maps_api_key": "${GOOGLE_MAPS_API_KEY}",
+      "ifood_sandbox": false,
+      "rappi_sandbox": false
+    }
+  }
+}

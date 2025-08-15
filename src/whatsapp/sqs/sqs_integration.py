@@ -6,13 +6,14 @@ event-based entre o chatbot WhatsApp e o sistema POS, garantindo
 processamento ordenado e exatamente uma vez.
 """
 
-import os
 import json
-import uuid
 import logging
-import boto3
-from typing import Dict, Any, List
+import os
+import uuid
 from datetime import datetime
+from typing import Any, Dict, List
+
+import boto3
 from botocore.exceptions import ClientError
 
 # Configuração de logging

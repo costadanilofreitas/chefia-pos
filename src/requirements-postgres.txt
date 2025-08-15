@@ -1,0 +1,21 @@
+# Dependências específicas para PostgreSQL Remote Orders
+# Execute: pip install -r requirements-postgres.txt
+
+# PostgreSQL Async Driver
+asyncpg==0.30.0
+
+# SQLAlchemy com suporte async
+sqlalchemy[asyncio]==2.0.43
+
+# Validação de email (para Pydantic EmailStr)
+email-validator==2.2.0
+
+# Dependência do SQLAlchemy async
+greenlet==3.2.4
+
+# Dependências já existentes mas importantes para PostgreSQL
+python-multipart==0.0.20
+pydantic[email]==2.11.7
+
+# Para testes (opcional)
+pytest-asyncio==0.24.0

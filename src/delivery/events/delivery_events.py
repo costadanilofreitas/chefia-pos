@@ -1,6 +1,6 @@
-from src.core.events.event_bus import EventHandler, Event, EventType, get_event_bus
-from src.delivery.services.delivery_service import delivery_service
+from src.core.events.event_bus import Event, EventHandler, EventType, get_event_bus
 from src.delivery.models.delivery_models import DeliveryOrderStatus
+from src.delivery.services.delivery_service import delivery_service
 
 
 class OrderCreatedHandler(EventHandler):

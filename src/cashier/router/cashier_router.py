@@ -1,24 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from typing import List, Optional
 import logging
+from typing import List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from src.auth.models import Permission, User
 from src.auth.security import get_current_active_user, has_permission
-from src.auth.models import User, Permission
+from src.business_day.services.business_day_service import get_business_day_service
 from src.cashier.models.cashier import (
     Cashier,
-    CashierCreate,
-    CashierUpdate,
     CashierClose,
+    CashierCreate,
     CashierOperation,
-    CashierWithdrawal,
-    CashierSummary,
     CashierOperationResponse,
     CashierStatus,
+    CashierSummary,
+    CashierUpdate,
+    CashierWithdrawal,
     OperationType,
     create_cashier,
 )
 from src.cashier.services.cashier_service import get_cashier_service
-from src.business_day.services.business_day_service import get_business_day_service
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ async def open_cashier(
     Retorna o caixa criado.
     """
     service = get_cashier_service()
-    business_day_service = get_business_day_service()
+    get_business_day_service()
 
     # Verificar se o terminal_id foi fornecido
     if not cashier_create.terminal_id:
@@ -300,7 +301,7 @@ async def get_terminal_cashier_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro interno ao verificar status do terminal: {str(e)}",
-        )
+        ) from e
 
 
 @router.get("", response_model=List[CashierSummary])

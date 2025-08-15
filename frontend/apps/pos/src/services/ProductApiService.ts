@@ -17,6 +17,8 @@ export interface Product {
   is_featured: boolean;
   weight_based: boolean;
   pricing_strategy: 'FIXED' | 'WEIGHT_BASED' | 'DYNAMIC';
+  image_url?: string;
+  is_available?: boolean;
   created_at: string;
   updated_at: string;
   images: string[];
@@ -27,12 +29,14 @@ export interface Product {
 export interface ProductSummary {
   id: string;
   name: string;
+  description?: string;
   price: number;
   category_id?: string;
   status: 'ACTIVE' | 'INACTIVE' | 'OUT_OF_STOCK';
   type: 'SIMPLE' | 'COMBO' | 'COMPOSITE';
   is_featured: boolean;
   image_url?: string;
+  is_available?: boolean;
 }
 
 export interface ProductCreate {
@@ -47,6 +51,8 @@ export interface ProductCreate {
   is_featured?: boolean;
   weight_based?: boolean;
   pricing_strategy?: 'FIXED' | 'WEIGHT_BASED' | 'DYNAMIC';
+  image_url?: string;
+  is_available?: boolean;
 }
 
 export interface ProductUpdate {
@@ -61,6 +67,8 @@ export interface ProductUpdate {
   is_featured?: boolean;
   weight_based?: boolean;
   pricing_strategy?: 'FIXED' | 'WEIGHT_BASED' | 'DYNAMIC';
+  image_url?: string;
+  is_available?: boolean;
 }
 
 export interface ProductCategory {

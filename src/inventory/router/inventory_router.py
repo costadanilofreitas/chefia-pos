@@ -1,22 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional
 import uuid
 from datetime import datetime
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..models.inventory_models import (
-    InventoryItem,
-    InventoryItemCreate,
-    InventoryItemUpdate,
-    InventoryTransaction,
-    InventoryTransactionCreate,
-    TransactionType,
-    TransactionStatus,
-    InventoryLoss,
-    InventoryLossCreate,
-    LossReason,
     InventoryCount,
     InventoryCountCreate,
     InventoryCountStatus,
+    InventoryItem,
+    InventoryItemCreate,
+    InventoryItemUpdate,
+    InventoryLoss,
+    InventoryLossCreate,
+    InventoryTransaction,
+    InventoryTransactionCreate,
+    LossReason,
+    TransactionStatus,
+    TransactionType,
 )
 from ..services.inventory_service import InventoryService
 

@@ -7,10 +7,11 @@ Este módulo implementa:
 3. Integração com dados de feriados
 """
 
-import os
 import logging
+import os
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any
+from typing import Any, Dict, List, Optional
+
 from fastapi import HTTPException
 
 # Configurar logging
@@ -184,7 +185,7 @@ class ExternalDataService:
             logger.error(f"Error getting weather forecast: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"Error getting weather forecast: {str(e)}"
-            )
+            ) from e
 
     async def get_nearby_events(
         self,
@@ -363,7 +364,7 @@ class ExternalDataService:
             logger.error(f"Error getting nearby events: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"Error getting nearby events: {str(e)}"
-            )
+            ) from e
 
     async def get_holidays(
         self,
@@ -518,4 +519,4 @@ class ExternalDataService:
             logger.error(f"Error getting holidays: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"Error getting holidays: {str(e)}"
-            )
+            ) from e

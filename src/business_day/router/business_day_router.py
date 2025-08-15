@@ -1,15 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from typing import List, Optional
 from datetime import date
+from typing import List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import status as http_status
+
+from src.auth.models import Permission, User
 from src.auth.security import get_current_active_user, has_permission
-from src.auth.models import User, Permission
 from src.business_day.models.business_day import (
     BusinessDay,
-    BusinessDayCreate,
-    BusinessDayUpdate,
     BusinessDayClose,
+    BusinessDayCreate,
     BusinessDaySummary,
+    BusinessDayUpdate,
     DailySalesReport,
     DayStatus,
     create_business_day,
@@ -23,7 +25,7 @@ router = APIRouter(
 )
 
 
-@router.post("", response_model=BusinessDay, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=BusinessDay, status_code=http_status.HTTP_201_CREATED)
 async def open_business_day(
     business_day_create: BusinessDayCreate,
     current_user: User = Depends(has_permission(Permission.CASHIER_OPEN)),
@@ -43,7 +45,7 @@ async def open_business_day(
     open_day = await service.get_open_business_day()
     if open_day:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=http_status.HTTP_400_BAD_REQUEST,
             detail=f"Já existe um dia aberto com data {open_day.date}. Feche-o antes de abrir um novo dia.",
         )
 
@@ -53,14 +55,14 @@ async def open_business_day(
         today = date.today()
         if day_date < today:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail=f"Não é possível abrir um dia com data passada. Data atual: {today.isoformat()}",
             )
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=http_status.HTTP_400_BAD_REQUEST,
             detail="Formato de data inválido. Use o formato ISO (YYYY-MM-DD).",
-        )
+        ) from e
 
     # Criar o dia de operação
     business_day = create_business_day(business_day_create, current_user.id)
@@ -92,14 +94,14 @@ async def close_business_day(
     business_day = await service.get_business_day(business_day_id)
     if not business_day:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Dia de operação com ID {business_day_id} não encontrado.",
         )
 
     # Verificar se o dia está aberto
     if business_day.status != DayStatus.OPEN:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=http_status.HTTP_400_BAD_REQUEST,
             detail="O dia de operação já está fechado.",
         )
 
@@ -109,7 +111,7 @@ async def close_business_day(
     cashiers_open = await service.get_open_cashiers(business_day_id)
     if cashiers_open:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=http_status.HTTP_400_BAD_REQUEST,
             detail=f"Existem {len(cashiers_open)} caixas abertos. Feche todos os caixas antes de fechar o dia.",
         )
 
@@ -145,20 +147,20 @@ async def list_business_days(
     if start_date:
         try:
             date.fromisoformat(start_date)
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail="Formato de data inicial inválido. Use o formato ISO (YYYY-MM-DD).",
-            )
+            ) from e
 
     if end_date:
         try:
             date.fromisoformat(end_date)
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail="Formato de data final inválido. Use o formato ISO (YYYY-MM-DD).",
-            )
+            ) from e
 
     # Buscar dias de operação
     business_days = await service.list_business_days(
@@ -186,7 +188,7 @@ async def get_current_business_day(
     business_day = await service.get_open_business_day()
     if not business_day:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="Não há um dia de operação aberto.",
         )
 
@@ -205,7 +207,7 @@ async def get_business_day(
     business_day = await service.get_business_day(business_day_id)
     if not business_day:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Dia de operação com ID {business_day_id} não encontrado.",
         )
 
@@ -229,7 +231,7 @@ async def get_business_day_report(
     business_day = await service.get_business_day(business_day_id)
     if not business_day:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Dia de operação com ID {business_day_id} não encontrado.",
         )
 
@@ -256,7 +258,7 @@ async def update_business_day(
     business_day = await service.get_business_day(business_day_id)
     if not business_day:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Dia de operação com ID {business_day_id} não encontrado.",
         )
 

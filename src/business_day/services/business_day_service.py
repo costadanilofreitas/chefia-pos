@@ -1,21 +1,21 @@
-from typing import List, Dict, Any, Optional
-from datetime import datetime
-import uuid
 import json
-import os
 import logging
+import os
+import uuid
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
+from src.business_day.events.business_day_events import (
+    publish_business_day_closed,
+    publish_business_day_opened,
+    publish_business_day_updated,
+)
 from src.business_day.models.business_day import (
     BusinessDay,
     BusinessDaySummary,
     DailySalesReport,
     DayStatus,
-)
-from src.business_day.events.business_day_events import (
-    publish_business_day_opened,
-    publish_business_day_closed,
-    publish_business_day_updated,
 )
 
 logger = logging.getLogger(__name__)
@@ -82,6 +82,8 @@ class BusinessDayService:
             opened_at=now.isoformat(),
             status=DayStatus.OPEN,
             notes=notes or "",
+            closed_by=None,
+            closed_at=None,
             total_sales=0.0,
             total_orders=0,
             created_at=now.isoformat(),

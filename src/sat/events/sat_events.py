@@ -1,8 +1,8 @@
-from datetime import datetime
-import uuid
 import logging
+import uuid
+from datetime import datetime
 
-from src.core.events.event_bus import get_event_bus, Event, EventType
+from src.core.events.event_bus import Event, EventType, get_event_bus
 from src.sat.services.sat_service import get_sat_service
 
 
@@ -175,7 +175,7 @@ class SATEventHandler:
                     event.data.get("terminal_id", "unknown"),
                     str(e),
                 )
-            except:
+            except Exception:
                 pass
 
     async def handle_order_canceled(self, event: Event) -> None:
@@ -224,7 +224,7 @@ class SATEventHandler:
             try:
                 cfe_id = f"cfe_{event.data.get('order_id', 'unknown')}"
                 await self.publisher.publish_cancel_failed(cfe_id, str(e))
-            except:
+            except Exception:
                 pass
 
 

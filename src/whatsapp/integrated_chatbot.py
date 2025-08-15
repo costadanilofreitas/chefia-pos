@@ -9,22 +9,23 @@ Este módulo integra todos os componentes do chatbot WhatsApp:
 - IA generativa via Amazon Bedrock (Claude)
 """
 
-import os
-import logging
 import asyncio
-from typing import Dict, Any
-from fastapi import FastAPI, Request, Response, HTTPException, BackgroundTasks
+import logging
+import os
+from typing import Any, Dict
 
-from .twilio_integration import TwilioWhatsAppIntegration
-from .sqs.sqs_integration import WhatsAppSQSIntegration
-from .payment_integration import WhatsAppPaymentIntegration
-from .order_confirmation import (
-    WhatsAppOrderConfirmation,
-    OrderConfirmationMode,
-    OrderStatus,
-)
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Response
+
 from .ai_integration import WhatsAppAIIntegration
 from .chatbot_service import WhatsAppChatbotService
+from .order_confirmation import (
+    OrderConfirmationMode,
+    OrderStatus,
+    WhatsAppOrderConfirmation,
+)
+from .payment_integration import WhatsAppPaymentIntegration
+from .sqs.sqs_integration import WhatsAppSQSIntegration
+from .twilio_integration import TwilioWhatsAppIntegration
 
 # Configuração de logging
 logger = logging.getLogger(__name__)
@@ -367,7 +368,7 @@ class WhatsAppIntegratedChatbot:
                         if message_type == "order_status_update":
                             # Notificar cliente sobre atualização de status
                             order_id = message.get("order_id")
-                            customer_id = message.get("customer_id")
+                            message.get("customer_id")
                             status = message.get("status")
 
                             # Obter número de telefone do cliente (em produção seria do banco de dados)
@@ -441,7 +442,7 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
 
     except Exception as e:
         logger.error(f"Erro no endpoint de webhook: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/send")
@@ -468,7 +469,7 @@ async def send_message(data: Dict[str, Any]):
         raise
     except Exception as e:
         logger.error(f"Erro no endpoint de envio: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/campaign")
@@ -498,7 +499,7 @@ async def send_campaign(data: Dict[str, Any]):
         raise
     except Exception as e:
         logger.error(f"Erro no endpoint de campanha: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.on_event("shutdown")

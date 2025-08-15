@@ -1,18 +1,21 @@
 from __future__ import annotations
 
-from fastapi import Request, status
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
 import logging
-from typing import Callable, Any
+from typing import Any, Callable
+
+from fastapi import Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.core.exceptions.base_exceptions import CoreException
 
 logger = logging.getLogger(__name__)
 
 
-async def error_handling_middleware(request: Request, call_next: Callable) -> JSONResponse:
+async def error_handling_middleware(
+    request: Request, call_next: Callable
+) -> JSONResponse:
     """
     Middleware para tratamento padronizado de erros.
 
@@ -51,7 +54,9 @@ def register_exception_handlers(app: Any) -> None:
     """
 
     @app.exception_handler(CoreException)
-    async def pos_modern_exception_handler(request: Request, exc: CoreException) -> JSONResponse:
+    async def pos_modern_exception_handler(
+        request: Request, exc: CoreException
+    ) -> JSONResponse:
         """Handler para exceções do POS Modern."""
         # Mapear códigos de erro para status HTTP
         status_code_map = {
@@ -81,7 +86,9 @@ def register_exception_handlers(app: Any) -> None:
         # Extrair detalhes dos erros
         details: dict[str, str] = {}
         for error in exc.errors():
-            loc = ".".join([str(l) for l in error["loc"] if l != "body"])
+            loc = ".".join(
+                [str(location) for location in error["loc"] if location != "body"]
+            )
             details[loc] = error["msg"]
 
         # Registrar erro no log
@@ -99,7 +106,9 @@ def register_exception_handlers(app: Any) -> None:
         )
 
     @app.exception_handler(StarletteHTTPException)
-    async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+    async def http_exception_handler(
+        request: Request, exc: StarletteHTTPException
+    ) -> JSONResponse:
         """Handler para exceções HTTP do Starlette."""
         # Registrar erro no log
         log_method = logger.warning if exc.status_code < 500 else logger.error

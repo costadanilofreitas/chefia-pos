@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
-from typing import Dict, Any
 import logging
+from typing import Any, Dict
 
-from src.peripherals.services.keyboard_manager import (
-    get_keyboard_manager,
-    KeyboardManager,
-)
+from fastapi import APIRouter, Body, Depends, HTTPException
+
 from src.peripherals.models.peripheral_models import CommandType
+from src.peripherals.services.keyboard_manager import (
+    KeyboardManager,
+    get_keyboard_manager,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ async def list_keyboards(
         logger.error(f"Erro ao listar teclados: {e}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao listar teclados: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/{device_id}")
@@ -61,7 +62,7 @@ async def get_keyboard_config(
         logger.error(f"Erro ao obter configuração do teclado {device_id}: {e}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter configuração do teclado: {str(e)}"
-        )
+        ) from e
 
 
 @router.put("/{device_id}")
@@ -99,7 +100,7 @@ async def update_keyboard_config(
         raise HTTPException(
             status_code=500,
             detail=f"Erro ao atualizar configuração do teclado: {str(e)}",
-        )
+        ) from e
 
 
 @router.post("/{device_id}/activate")
@@ -135,7 +136,9 @@ async def activate_keyboard(
         raise
     except Exception as e:
         logger.error(f"Erro ao ativar teclado {device_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Erro ao ativar teclado: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao ativar teclado: {str(e)}"
+        ) from e
 
 
 @router.post("/{device_id}/deactivate")
@@ -174,7 +177,7 @@ async def deactivate_keyboard(
         logger.error(f"Erro ao desativar teclado {device_id}: {e}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao desativar teclado: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/commands/available")
@@ -192,7 +195,7 @@ async def list_available_commands():
         logger.error(f"Erro ao listar comandos disponíveis: {e}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao listar comandos disponíveis: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/discover")
@@ -222,4 +225,4 @@ async def discover_keyboards(
         logger.error(f"Erro ao descobrir teclados: {e}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao descobrir teclados: {str(e)}"
-        )
+        ) from e

@@ -1,19 +1,19 @@
-import unittest
-import json
-import uuid
 import asyncio
+import json
+import unittest
+import uuid
 from datetime import datetime
 
+from src.remote_orders.adapters.ifood_adapter import IFoodAdapter
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder,
+    RemoteOrderCustomer,
+    RemoteOrderItem,
+    RemoteOrderPayment,
     RemoteOrderStatus,
     RemotePlatform,
     RemotePlatformConfig,
-    RemoteOrderItem,
-    RemoteOrderCustomer,
-    RemoteOrderPayment,
 )
-from src.remote_orders.adapters.ifood_adapter import IFoodAdapter
 
 
 class TestIFoodAdapter(unittest.TestCase):

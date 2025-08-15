@@ -1,14 +1,15 @@
-from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel
 
+from src.auth.auth import get_current_user
 from src.waiter.models.table_layout_models import (
     TableLayout,
-    TableStatus,
     TableLayoutConfig,
+    TableStatus,
 )
 from src.waiter.services.table_layout_service import TableLayoutService
-from src.auth.auth import get_current_user
 
 router = APIRouter(prefix="/api/waiter/tables", tags=["waiter"])
 
@@ -75,7 +76,7 @@ async def create_layout(
         layout = await service.create_layout(request.dict())
         return layout
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/layouts", response_model=List[TableLayout])

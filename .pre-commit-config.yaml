@@ -1,0 +1,73 @@
+# Pre-commit hooks para formatação automática
+repos:
+  # Black - formatação de código
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3
+        args: [--line-length=88]
+
+  # isort - organização de imports
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile=black, --line-length=88]
+
+  # flake8 - linting
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=88, --extend-ignore=E203,W503]
+
+  # autopep8 - correções automáticas adicionais
+  - repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v2.0.4
+    hooks:
+      - id: autopep8
+        args: [--max-line-length=88, --in-place]
+
+  # Hooks gerais do pre-commit
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Remove espaços em branco no final das linhas
+      - id: trailing-whitespace
+        exclude: \.md$
+      
+      # Remove linhas vazias no final dos arquivos
+      - id: end-of-file-fixer
+        exclude: \.md$
+      
+      # Verifica se arquivos grandes foram adicionados
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      
+      # Verifica sintaxe YAML
+      - id: check-yaml
+      
+      # Verifica sintaxe JSON
+      - id: check-json
+      
+      # Verifica sintaxe TOML
+      - id: check-toml
+      
+      # Verifica se há conflitos de merge
+      - id: check-merge-conflict
+      
+      # Verifica se há print() statements (opcional)
+      - id: debug-statements
+      
+      # Verifica encoding UTF-8
+      - id: check-encoding-pragma
+        args: [--remove]
+
+  # mypy - verificação de tipos
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests, types-redis]
+        args: [--ignore-missing-imports, --no-strict-optional]

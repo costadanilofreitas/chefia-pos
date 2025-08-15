@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.api.main import app
-from src.auth.security import get_current_user, check_permissions
+from src.auth.security import check_permissions, get_current_user
 
 
 # Mock de autenticação para testes
@@ -459,7 +459,7 @@ def test_export_import_menu(client):
 
     # Obter arquivo de exportação
     file_url = export_data["file_url"]
-    file_name = file_url.split("/")[-1]
+    file_url.split("/")[-1]
 
     # Importar menu (simulando upload de arquivo)
     # Nota: Este teste é simplificado, pois não podemos facilmente simular upload de arquivo

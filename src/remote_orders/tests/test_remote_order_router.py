@@ -1,15 +1,16 @@
 import unittest
 import uuid
-from unittest.mock import patch, MagicMock, AsyncMock
-from fastapi.testclient import TestClient
-from fastapi import FastAPI
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from src.auth.security import get_current_user
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder,
     RemotePlatformConfig,
 )
 from src.remote_orders.router.remote_order_router import router as remote_order_router
-from src.auth.security import get_current_user
 
 
 class TestRemoteOrderRouter(unittest.TestCase):

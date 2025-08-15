@@ -1,7 +1,7 @@
-import unittest
 import asyncio
-import sys
 import os
+import sys
+import unittest
 from datetime import datetime
 
 # Adicionar diretório raiz ao path para importações
@@ -397,7 +397,7 @@ def run_end_to_end_tests():
     test_suite.addTest(unittest.makeSuite(EndToEndTestCase))
 
     # Configurar runner
-    runner = unittest.TextTestRunner(verbosity=2)
+    unittest.TextTestRunner(verbosity=2)
 
     # Executar testes assíncronos
     loop = asyncio.get_event_loop()

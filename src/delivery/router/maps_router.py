@@ -1,7 +1,8 @@
-from typing import Dict, List, Optional, Any
-from datetime import datetime
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel
 
 from ..services.google_maps_service import GoogleMapsService
@@ -83,10 +84,10 @@ async def geocode_address(
         }
     except ValueError as e:
         logger.error(f"Geocoding error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Unexpected error during geocoding: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.post("/optimize-route", response_model=OptimizeRouteResponse)
@@ -142,10 +143,10 @@ async def optimize_route(
         }
     except ValueError as e:
         logger.error(f"Route optimization error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Unexpected error during route optimization: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.post("/delivery-zone", response_model=DeliveryZoneResponse)
@@ -185,10 +186,10 @@ async def calculate_delivery_zone(
         return {"zone_id": zone_id, "polygon": polygon, "estimated_area": area}
     except ValueError as e:
         logger.error(f"Delivery zone calculation error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Unexpected error during delivery zone calculation: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/routes/{route_id}", response_model=Dict[str, Any])
@@ -222,7 +223,7 @@ async def get_route_details(
         raise
     except Exception as e:
         logger.error(f"Unexpected error getting route details: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/couriers/{courier_id}/location", response_model=Dict[str, Any])
@@ -260,7 +261,7 @@ async def get_courier_location(
         raise
     except Exception as e:
         logger.error(f"Unexpected error getting courier location: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.post("/couriers/{courier_id}/location", status_code=204)
@@ -287,7 +288,7 @@ async def update_courier_location(
         raise
     except Exception as e:
         logger.error(f"Unexpected error updating courier location: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.get("/distance-matrix", response_model=Dict[str, Any])
@@ -335,7 +336,7 @@ async def calculate_distance_matrix(
         }
     except ValueError as e:
         logger.error(f"Distance matrix calculation error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Unexpected error during distance matrix calculation: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from e

@@ -1,7 +1,8 @@
-from src.core.events.event_bus import EventHandler, Event, EventType, get_event_bus
-from src.auth.models import User
-from typing import Dict, Any
 import logging
+from typing import Any, Dict
+
+from src.auth.models import User
+from src.core.events.event_bus import Event, EventHandler, EventType, get_event_bus
 
 logger = logging.getLogger(__name__)
 

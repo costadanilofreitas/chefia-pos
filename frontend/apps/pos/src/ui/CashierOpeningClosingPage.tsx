@@ -271,10 +271,10 @@ const CashierOpeningClosingPage: React.FC = () => {
         cashier_id: currentCashier?.id,
         terminal_id: `POS-${terminalId}`,
         user_name: user?.name ?? '',
-        opening_balance: currentCashier?.initial_amount,
+        opening_balance: currentCashier?.initial_balance,
         closing_balance: parseFloat(closingAmount),
-        expected_balance: currentCashier?.current_amount,
-        difference: parseFloat(closingAmount) - (currentCashier?.current_amount ?? 0),
+        expected_balance: currentCashier?.current_balance,
+        difference: parseFloat(closingAmount) - (currentCashier?.current_balance ?? 0),
         cash_sales: 0, // Seria calculado das operações
         card_sales: 0, // Seria calculado das operações
         pix_sales: 0, // Seria calculado das operações
@@ -484,7 +484,7 @@ const CashierOpeningClosingPage: React.FC = () => {
                         Saldo Inicial:
                       </Typography>
                       <Typography variant="body1" fontWeight="bold">
-                        {formatCurrency(currentCashier?.initial_amount || 0)}
+                        {formatCurrency(currentCashier?.initial_balance || 0)}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -492,7 +492,7 @@ const CashierOpeningClosingPage: React.FC = () => {
                         Saldo Esperado:
                       </Typography>
                       <Typography variant="body1" fontWeight="bold">
-                        {formatCurrency(currentCashier?.current_amount || 0)}
+                        {formatCurrency(currentCashier?.current_balance || 0)}
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -734,7 +734,7 @@ const CashierOpeningClosingPage: React.FC = () => {
                   </Grid>
                   <Grid item xs={6}>
                     <Typography variant="body2" fontWeight="bold">
-                      {formatCurrency(currentCashier?.initial_amount || 0)}
+                      {formatCurrency(currentCashier?.initial_balance || 0)}
                     </Typography>
                   </Grid>
                   <Grid item xs={6}>
@@ -742,7 +742,7 @@ const CashierOpeningClosingPage: React.FC = () => {
                   </Grid>
                   <Grid item xs={6}>
                     <Typography variant="body2" fontWeight="bold">
-                      {formatCurrency(currentCashier?.current_amount || 0)}
+                      {formatCurrency(currentCashier?.current_balance || 0)}
                     </Typography>
                   </Grid>
                   {closingAmount && (
@@ -755,12 +755,12 @@ const CashierOpeningClosingPage: React.FC = () => {
                           variant="body2" 
                           fontWeight="bold"
                           color={
-                            parseFloat(closingAmount) - (currentCashier?.current_amount || 0) >= 0 
+                            parseFloat(closingAmount) - (currentCashier?.current_balance || 0) >= 0 
                               ? 'success.main' 
                               : 'error.main'
                           }
                         >
-                          {formatCurrency(parseFloat(closingAmount) - (currentCashier?.current_amount || 0))}
+                          {formatCurrency(parseFloat(closingAmount) - (currentCashier?.current_balance || 0))}
                         </Typography>
                       </Grid>
                     </>

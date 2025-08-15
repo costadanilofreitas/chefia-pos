@@ -10,7 +10,7 @@ from fastapi import HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update, delete, func
-from ..models.menu_models import Menu, MenuItem, MenuCategory, MenuItemCategory, QRCodeConfig
+from ..models.menu_models import Menu, MenuItem, MenuCategory, MenuItemCategory, MenuItemAllergen, QRCodeConfig
 from ..models.menu_order_models import MenuOrder, MenuOrderItem, MenuOrderStatus
 from ..models.menu_cache_models import MenuCache
 from ..database.session import get_async_session

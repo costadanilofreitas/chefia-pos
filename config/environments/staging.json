@@ -1,0 +1,99 @@
+{
+  "name": "Staging",
+  "backend": {
+    "host": "0.0.0.0",
+    "port": 8001,
+    "api_url": "https://staging-api.chefia-pos.com",
+    "debug": false,
+    "hot_reload": false,
+    "log_level": "INFO"
+  },
+  "frontend": {
+    "pos": {
+      "port": 3000,
+      "api_url": "https://staging-api.chefia-pos.com",
+      "app_name": "ChefIA POS - Staging",
+      "debug": false,
+      "hot_reload": false
+    },
+    "kds": {
+      "port": 3001,
+      "api_url": "https://staging-api.chefia-pos.com",
+      "app_name": "ChefIA KDS - Staging",
+      "debug": false,
+      "hot_reload": false
+    },
+    "kiosk": {
+      "port": 3002,
+      "api_url": "https://staging-api.chefia-pos.com",
+      "app_name": "ChefIA Kiosk - Staging",
+      "debug": false,
+      "hot_reload": false
+    },
+    "waiter": {
+      "port": 3003,
+      "api_url": "https://staging-api.chefia-pos.com",
+      "app_name": "ChefIA Waiter - Staging",
+      "debug": false,
+      "hot_reload": false
+    },
+    "backoffice": {
+      "port": 3004,
+      "api_url": "https://staging-api.chefia-pos.com",
+      "app_name": "ChefIA Backoffice - Staging",
+      "debug": false,
+      "hot_reload": false
+    }
+  },
+  "database": {
+    "host": "${POSTGRES_HOST}",
+    "port": 5432,
+    "name": "${POSTGRES_DB}",
+    "user": "${POSTGRES_USER}",
+    "password": "${POSTGRES_PASSWORD}",
+    "pool_size": 10,
+    "max_overflow": 20,
+    "echo_sql": false
+  },
+  "redis": {
+    "host": "${REDIS_HOST}",
+    "port": 6379,
+    "password": "${REDIS_PASSWORD}",
+    "db": 0,
+    "max_connections": 20
+  },
+  "rabbitmq": {
+    "host": "${RABBITMQ_HOST}",
+    "port": 5672,
+    "user": "${RABBITMQ_USER}",
+    "password": "${RABBITMQ_PASSWORD}",
+    "virtual_host": "/",
+    "management_port": 15672
+  },
+  "auth": {
+    "jwt_secret": "${JWT_SECRET}",
+    "jwt_algorithm": "HS256",
+    "jwt_expiration_hours": 8,
+    "refresh_token_expiration_days": 7
+  },
+  "features": {
+    "enable_debug_toolbar": false,
+    "enable_hot_reload": false,
+    "enable_cors": true,
+    "enable_swagger": true,
+    "enable_analytics": true,
+    "enable_error_tracking": true
+  },
+  "external_services": {
+    "payment_gateway": {
+      "provider": "asaas",
+      "sandbox": true,
+      "api_key": "${ASAAS_SANDBOX_API_KEY}"
+    },
+    "delivery": {
+      "google_maps_api_key": "${GOOGLE_MAPS_API_KEY}",
+      "ifood_sandbox": true,
+      "rappi_sandbox": true
+    }
+  }
+}

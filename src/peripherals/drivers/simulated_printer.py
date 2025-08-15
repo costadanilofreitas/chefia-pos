@@ -1,25 +1,26 @@
-from typing import Dict, Any
-import os
 import json
-from datetime import datetime
+import os
 import tempfile
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 from src.peripherals.models.peripheral_models import (
-    Printer,
-    PrinterConfig,
+    BasePeripheralDriver,
+    PeripheralConfig,
     PeripheralStatus,
 )
 
 
-class SimulatedPrinter(Printer):
+class SimulatedPrinter(BasePeripheralDriver):
     """Implementação simulada de impressora para testes sem hardware real."""
 
-    def __init__(self, config: PrinterConfig):
+    def __init__(self, config: PeripheralConfig):
         super().__init__(config)
-        self.model = config.model or "Simulated Printer"
+        self.model = config.options.get("model", "Simulated Printer")
         self.output_dir = config.options.get("output_dir", tempfile.gettempdir())
         self.print_count = 0
-        self.last_output = None
+        self.last_output: Optional[str] = None
+        self.last_status_check = datetime.now()
 
     async def initialize(self) -> bool:
         """Inicializa a impressora simulada."""
@@ -57,6 +58,13 @@ class SimulatedPrinter(Printer):
             "output_dir": self.output_dir,
             "print_count": self.print_count,
         }
+
+    async def print(
+        self, content: str, options: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Método print genérico - delega para print_text."""
+        success = await self.print_text(content)
+        return {"success": success, "content": content}
 
     async def print_text(self, text: str) -> bool:
         """Simula a impressão de texto simples."""
@@ -190,7 +198,7 @@ class SimulatedPrinter(Printer):
             await self.update_status(PeripheralStatus.ERROR, "Impressora não conectada")
             return False
 
-        if not self.config.cash_drawer_enabled:
+        if not self.config.options.get("cash_drawer_enabled", False):
             await self.update_status(
                 PeripheralStatus.ERROR, "Gaveta de dinheiro não habilitada"
             )

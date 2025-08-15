@@ -1,17 +1,18 @@
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from src.auth.models import Permission, User
+from src.auth.security import get_current_user
 from src.sat.models.sat_models import (
-    SATConfig,
-    SATStatus,
-    SATResponse,
-    SATStatusResponse,
-    SATEmitRequest,
     SATCancelRequest,
+    SATConfig,
+    SATEmitRequest,
+    SATResponse,
+    SATStatus,
+    SATStatusResponse,
 )
 from src.sat.services.sat_service import get_sat_service
-from src.auth.security import get_current_user
-from src.auth.models import User, Permission
 
 router = APIRouter(prefix="/api/v1", tags=["sat"])
 
@@ -66,7 +67,7 @@ async def emit_cfe(
 
     # Buscar pedido (em uma implementação real, seria do banco de dados)
     # Aqui estamos simulando um pedido para fins de demonstração
-    order_data = {
+    order_data: Dict[str, Any] = {
         "id": request.order_id,
         "total": 100.0,
         "discount": 0,
@@ -92,10 +93,12 @@ async def emit_cfe(
     # Adicionar informações do cliente, se fornecidas
     if request.customer_document or request.customer_name:
         order_data["customer"] = {}
+        customer_dict = order_data["customer"]
+        assert isinstance(customer_dict, dict)
         if request.customer_document:
-            order_data["customer"]["document"] = request.customer_document
+            customer_dict["document"] = request.customer_document
         if request.customer_name:
-            order_data["customer"]["name"] = request.customer_name
+            customer_dict["name"] = request.customer_name
 
     # Emitir CF-e
     return await sat_service.emit_cfe(order_data, request.terminal_id)

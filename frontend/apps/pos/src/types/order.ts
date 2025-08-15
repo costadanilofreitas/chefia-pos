@@ -74,11 +74,15 @@ export interface Order {
   customer_id?: string;
   items: OrderItem[];
   total: number;
+  total_amount?: number;
   status: OrderStatus;
   order_type: OrderType;
   source: string;
   table_number?: number;
+  table_id?: string;
+  seat_number?: number;
   waiter_id?: string;
+  waiter_name?: string;
   terminal_id?: string;
   cashier_id?: string;
   notes?: string;
@@ -102,9 +106,14 @@ export interface OrderCreate {
   customer_id?: string;
   items: OrderItemCreate[];
   table_number?: number;
+  table_id?: string;
+  seat_number?: number;
   waiter_id?: string;
+  terminal_id?: string;
   order_type: OrderType;
   source: string;
+  status?: OrderStatus;
+  total_amount?: number;
   notes?: string;
   coupon_code?: string;
   loyalty_points_to_use?: number;
@@ -128,6 +137,7 @@ export interface OrderFilters {
   customer_id?: string;
   table_number?: number;
   waiter_id?: string;
+  terminal_id?: string;
   date_from?: string;
   date_to?: string;
   payment_status?: PaymentStatus;

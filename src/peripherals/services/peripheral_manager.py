@@ -1,11 +1,14 @@
-from typing import Dict, List, Any, Optional
+import asyncio
+import importlib
+import json
 import logging
 import os
-import json
-import importlib
-import asyncio
+from typing import Any, Dict, List, Optional
 
-from src.peripherals.models.peripheral_models import Peripheral, PeripheralConfig
+from src.peripherals.models.peripheral_models import (
+    BasePeripheralDriver,
+    PeripheralConfig,
+)
 
 
 class PeripheralFactory:
@@ -44,7 +47,9 @@ class PeripheralFactory:
     }
 
     @classmethod
-    def create_peripheral(cls, config: PeripheralConfig) -> Optional[Peripheral]:
+    def create_peripheral(
+        cls, config: PeripheralConfig
+    ) -> Optional[BasePeripheralDriver]:
         """
         Cria uma instância de periférico com base na configuração.
 
@@ -116,7 +121,7 @@ class PeripheralManager:
     """Gerenciador central de periféricos."""
 
     def __init__(self):
-        self.peripherals: Dict[str, Peripheral] = {}
+        self.peripherals: Dict[str, BasePeripheralDriver] = {}
         self.config_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)), "config", "peripherals.json"
         )
@@ -177,10 +182,10 @@ class PeripheralManager:
             os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
 
             # Preparar dados de configuração
-            config_data = {"peripherals": {}}
+            config_data: Dict[str, Any] = {"peripherals": {}}
 
             for peripheral_id, peripheral in self.peripherals.items():
-                config = peripheral.config
+                config = peripheral.config  # config é um PeripheralConfig
                 config_data["peripherals"][peripheral_id] = {
                     "type": config.type,
                     "driver": config.driver,
@@ -296,11 +301,13 @@ class PeripheralManager:
             logging.error(f"Erro ao remover periférico: {str(e)}")
             return False
 
-    def get_peripheral(self, peripheral_id: str) -> Optional[Peripheral]:
+    def get_peripheral(self, peripheral_id: str) -> Optional[BasePeripheralDriver]:
         """Retorna um periférico pelo ID."""
         return self.peripherals.get(peripheral_id)
 
-    def get_peripherals_by_type(self, peripheral_type: str) -> Dict[str, Peripheral]:
+    def get_peripherals_by_type(
+        self, peripheral_type: str
+    ) -> Dict[str, BasePeripheralDriver]:
         """Retorna todos os periféricos de um determinado tipo."""
         return {
             peripheral_id: peripheral
@@ -308,7 +315,7 @@ class PeripheralManager:
             if peripheral.config.type == peripheral_type
         }
 
-    def get_all_peripherals(self) -> Dict[str, Peripheral]:
+    def get_all_peripherals(self) -> Dict[str, BasePeripheralDriver]:
         """Retorna todos os periféricos gerenciados."""
         return self.peripherals.copy()
 

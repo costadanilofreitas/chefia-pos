@@ -63,8 +63,10 @@ export class ApiInterceptor {
 
         // Add authorization header if token exists
         if (this.tokenData?.access_token) {
-          config.headers = config.headers || {};
-          (config.headers as any)['Authorization'] = `Bearer ${this.tokenData.access_token}`;
+          if (!config.headers) {
+            config.headers = {} as any;
+          }
+          config.headers.Authorization = `Bearer ${this.tokenData.access_token}`;
         }
         
         return config;
@@ -95,8 +97,10 @@ export class ApiInterceptor {
               
               // Retry original request with new token
               if (this.tokenData?.access_token) {
-                originalRequest.headers = originalRequest.headers || {};
-                (originalRequest.headers as any).Authorization = `Bearer ${this.tokenData.access_token}`;
+                if (!originalRequest.headers) {
+                  originalRequest.headers = {} as any;
+                }
+                originalRequest.headers.Authorization = `Bearer ${this.tokenData.access_token}`;
                 return this.axiosInstance(originalRequest);
               }
             } catch (refreshError) {

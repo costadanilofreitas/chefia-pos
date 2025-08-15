@@ -5,26 +5,28 @@ Este módulo implementa a integração completa com a API do iFood,
 incluindo gerenciamento de pedidos, eventos, webhooks e notificações.
 """
 
-import os
+import asyncio
+import hashlib
+import hmac
 import json
 import logging
-import hmac
-import hashlib
-import requests
-import asyncio
-from typing import Dict, Any, List
+import os
+import uuid
 from datetime import datetime
+from typing import Any, Dict, List
 
-from .auth_manager import IFoodAuthManager
+import requests
+
 from ...models.remote_order_models import (
     RemoteOrder,
+    RemoteOrderCustomer,
+    RemoteOrderItem,
+    RemoteOrderPayment,
     RemoteOrderStatus,
     RemotePlatform,
     RemotePlatformConfig,
-    RemoteOrderItem,
-    RemoteOrderCustomer,
-    RemoteOrderPayment,
 )
+from .auth_manager import IFoodAuthManager
 
 # Configuração de logging
 logger = logging.getLogger(__name__)
@@ -97,7 +99,7 @@ class IFoodAPIClient:
             error_response = None
             try:
                 error_response = e.response.json() if hasattr(e, "response") else None
-            except:
+            except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}
@@ -138,7 +140,7 @@ class IFoodAPIClient:
             error_response = None
             try:
                 error_response = e.response.json() if hasattr(e, "response") else None
-            except:
+            except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}
@@ -176,7 +178,7 @@ class IFoodAPIClient:
             error_response = None
             try:
                 error_response = e.response.json() if hasattr(e, "response") else None
-            except:
+            except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}
@@ -251,7 +253,7 @@ class IFoodAPIClient:
             error_response = None
             try:
                 error_response = e.response.json() if hasattr(e, "response") else None
-            except:
+            except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}
@@ -364,8 +366,8 @@ class IFoodAPIClient:
                 total=float(order_data.get("totalPrice", 0)),
                 notes=order_data.get("notes"),
                 scheduled_for=(
-                    datetime.fromisoformat(order_data.get("scheduledFor"))
-                    if order_data.get("scheduledFor")
+                    datetime.fromisoformat(scheduled_for_str)
+                    if (scheduled_for_str := order_data.get("scheduledFor"))
                     else None
                 ),
                 raw_data=order_data,
@@ -377,7 +379,7 @@ class IFoodAPIClient:
             # Registrar erro detalhado
             logger.error(f"Erro ao converter pedido iFood: {str(e)}")
             logger.error(f"Dados do pedido: {json.dumps(order_data, indent=2)}")
-            raise ValueError(f"Erro ao converter pedido iFood: {str(e)}")
+            raise ValueError(f"Erro ao converter pedido iFood: {str(e)}") from e
 
     async def process_events(self, callback=None) -> Dict[str, Any]:
         """
@@ -441,7 +443,7 @@ class IFoodAPIClient:
 
                 elif event_type == "INTEGRATION":
                     # Evento de integração
-                    integration_code = event.get("metadata", {}).get("code")
+                    event.get("metadata", {}).get("code")
 
                     # Chamar callback se fornecido
                     if callback:

@@ -1,19 +1,20 @@
-import bcrypt
+import os
 import random
 import uuid
-import os
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Any, Dict
+
+import bcrypt
 import jwt
 
 from ..models.numeric_password_models import (
-    OperatorCredential,
-    OperatorCredentialCreate,
-    OperatorCredentialUpdate,
-    OperatorCredentialReset,
+    AuthConfig,
     LoginRequest,
     LoginResponse,
-    AuthConfig,
+    OperatorCredential,
+    OperatorCredentialCreate,
+    OperatorCredentialReset,
+    OperatorCredentialUpdate,
 )
 
 

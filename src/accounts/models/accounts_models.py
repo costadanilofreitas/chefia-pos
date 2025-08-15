@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field, validator
-from typing import List, Dict, Optional, Any
-from enum import Enum
-from datetime import datetime, date
 import uuid
+from datetime import date as Date
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field, validator
 
 
 class AccountType(str, Enum):
@@ -125,10 +127,10 @@ class Transaction(BaseModel):
     type: TransactionType
     amount: float
     description: str
-    date: date
+    date: Date
     status: PaymentStatus = PaymentStatus.PENDING
-    due_date: Optional[date] = None
-    payment_date: Optional[date] = None
+    due_date: Optional[Date] = None
+    payment_date: Optional[Date] = None
     category: Optional[str] = None
     reference: Optional[str] = None  # Número de referência externa
     source_type: SourceType
@@ -147,10 +149,10 @@ class TransactionCreate(BaseModel):
     type: TransactionType
     amount: float
     description: str
-    date: date
+    date: Date
     status: PaymentStatus = PaymentStatus.PENDING
-    due_date: Optional[date] = None
-    payment_date: Optional[date] = None
+    due_date: Optional[Date] = None
+    payment_date: Optional[Date] = None
     category: Optional[str] = None
     reference: Optional[str] = None
     source_type: SourceType
@@ -165,10 +167,10 @@ class TransactionUpdate(BaseModel):
 
     amount: Optional[float] = None
     description: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[Date] = None
     status: Optional[PaymentStatus] = None
-    due_date: Optional[date] = None
-    payment_date: Optional[date] = None
+    due_date: Optional[Date] = None
+    payment_date: Optional[Date] = None
     category: Optional[str] = None
     reference: Optional[str] = None
     notes: Optional[str] = None
@@ -182,10 +184,10 @@ class Receivable(BaseModel):
     customer_id: Optional[str] = None
     description: str
     amount: float
-    issue_date: date
-    due_date: date
+    issue_date: Date
+    due_date: Date
     status: PaymentStatus = PaymentStatus.PENDING
-    payment_date: Optional[date] = None
+    payment_date: Optional[Date] = None
     payment_amount: Optional[float] = None
     payment_method: Optional[str] = None
     reference: Optional[str] = None  # Número da duplicata ou referência
@@ -198,7 +200,9 @@ class Receivable(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
 
     @validator("payment_amount")
-    def validate_payment_amount(cls, v: Optional[float], values: Dict[str, Any]) -> Optional[float]:
+    def validate_payment_amount(
+        cls, v: Optional[float], values: Dict[str, Any]
+    ) -> Optional[float]:
         if v is not None and "amount" in values and v > values["amount"]:
             raise ValueError(
                 "O valor do pagamento não pode ser maior que o valor da duplicata"
@@ -206,7 +210,9 @@ class Receivable(BaseModel):
         return v
 
     @validator("payment_date")
-    def validate_payment_date(cls, v: Optional[date], values: Dict[str, Any]) -> Optional[date]:
+    def validate_payment_date(
+        cls, v: Optional[Date], values: Dict[str, Any]
+    ) -> Optional[Date]:
         if v is not None and "issue_date" in values and v < values["issue_date"]:
             raise ValueError(
                 "A data de pagamento não pode ser anterior à data de emissão"
@@ -220,8 +226,8 @@ class ReceivableCreate(BaseModel):
     customer_id: Optional[str] = None
     description: str
     amount: float
-    issue_date: date
-    due_date: date
+    issue_date: Date
+    due_date: Date
     status: PaymentStatus = PaymentStatus.PENDING
     reference: Optional[str] = None
     source_type: SourceType
@@ -236,9 +242,9 @@ class ReceivableUpdate(BaseModel):
 
     description: Optional[str] = None
     amount: Optional[float] = None
-    due_date: Optional[date] = None
+    due_date: Optional[Date] = None
     status: Optional[PaymentStatus] = None
-    payment_date: Optional[date] = None
+    payment_date: Optional[Date] = None
     payment_amount: Optional[float] = None
     payment_method: Optional[str] = None
     notes: Optional[str] = None
@@ -253,10 +259,10 @@ class Payable(BaseModel):
     employee_id: Optional[str] = None  # Para pagamentos de salários
     description: str
     amount: float
-    issue_date: date
-    due_date: date
+    issue_date: Date
+    due_date: Date
     status: PaymentStatus = PaymentStatus.PENDING
-    payment_date: Optional[date] = None
+    payment_date: Optional[Date] = None
     payment_amount: Optional[float] = None
     payment_method: Optional[str] = None
     reference: Optional[str] = None  # Número da fatura, etc.
@@ -269,7 +275,9 @@ class Payable(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
 
     @validator("payment_amount")
-    def validate_payment_amount(cls, v: Optional[float], values: Dict[str, Any]) -> Optional[float]:
+    def validate_payment_amount(
+        cls, v: Optional[float], values: Dict[str, Any]
+    ) -> Optional[float]:
         if v is not None and "amount" in values and v > values["amount"]:
             raise ValueError(
                 "O valor do pagamento não pode ser maior que o valor da conta"
@@ -277,7 +285,9 @@ class Payable(BaseModel):
         return v
 
     @validator("payment_date")
-    def validate_payment_date(cls, v: Optional[date], values: Dict[str, Any]) -> Optional[date]:
+    def validate_payment_date(
+        cls, v: Optional[Date], values: Dict[str, Any]
+    ) -> Optional[Date]:
         if v is not None and "issue_date" in values and v < values["issue_date"]:
             raise ValueError(
                 "A data de pagamento não pode ser anterior à data de emissão"
@@ -292,8 +302,8 @@ class PayableCreate(BaseModel):
     employee_id: Optional[str] = None
     description: str
     amount: float
-    issue_date: date
-    due_date: date
+    issue_date: Date
+    due_date: Date
     status: PaymentStatus = PaymentStatus.PENDING
     reference: Optional[str] = None
     source_type: SourceType
@@ -308,9 +318,9 @@ class PayableUpdate(BaseModel):
 
     description: Optional[str] = None
     amount: Optional[float] = None
-    due_date: Optional[date] = None
+    due_date: Optional[Date] = None
     status: Optional[PaymentStatus] = None
-    payment_date: Optional[date] = None
+    payment_date: Optional[Date] = None
     payment_amount: Optional[float] = None
     payment_method: Optional[str] = None
     notes: Optional[str] = None
@@ -326,15 +336,15 @@ class RecurringTransaction(BaseModel):
     amount: float
     description: str
     recurrence_type: RecurrenceType
-    start_date: date
-    end_date: Optional[date] = None
+    start_date: Date
+    end_date: Optional[Date] = None
     day_of_month: Optional[int] = None  # Para recorrências mensais ou superiores
     day_of_week: Optional[int] = None  # Para recorrências semanais
     category: Optional[str] = None
     source_type: SourceType
     source_id: Optional[str] = None
     is_active: bool = True
-    last_generated: Optional[date] = None
+    last_generated: Optional[Date] = None
     notes: Optional[str] = None
     created_by: str
     created_at: datetime = Field(default_factory=datetime.now)
@@ -349,8 +359,8 @@ class RecurringTransactionCreate(BaseModel):
     amount: float
     description: str
     recurrence_type: RecurrenceType
-    start_date: date
-    end_date: Optional[date] = None
+    start_date: Date
+    end_date: Optional[Date] = None
     day_of_month: Optional[int] = None
     day_of_week: Optional[int] = None
     category: Optional[str] = None
@@ -366,11 +376,12 @@ class RecurringTransactionUpdate(BaseModel):
     amount: Optional[float] = None
     description: Optional[str] = None
     recurrence_type: Optional[RecurrenceType] = None
-    end_date: Optional[date] = None
+    end_date: Optional[Date] = None
     day_of_month: Optional[int] = None
     day_of_week: Optional[int] = None
     category: Optional[str] = None
     is_active: Optional[bool] = None
+    last_generated: Optional[Date] = None
     notes: Optional[str] = None
 
 
@@ -379,8 +390,8 @@ class FinancialReport(BaseModel):
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     type: str  # "cash_flow", "balance_sheet", "income_statement", etc.
-    start_date: date
-    end_date: date
+    start_date: Date
+    end_date: Date
     data: Dict[str, Any]
     created_by: str
     created_at: datetime = Field(default_factory=datetime.now)
@@ -390,8 +401,8 @@ class FinancialReportCreate(BaseModel):
     """Dados para criação de um novo relatório financeiro."""
 
     type: str
-    start_date: date
-    end_date: date
+    start_date: Date
+    end_date: Date
     created_by: str
 
 

@@ -1,15 +1,16 @@
-from typing import Dict, Any, Optional
-import aiohttp
 import logging
-from datetime import datetime
+from typing import Any, Dict, Optional
+
+import aiohttp
 
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder,
-    RemoteOrderItem,
-    RemoteOrderStatus,
     RemoteOrderCustomer,
-    RemoteOrderPayment,
     RemoteOrderDelivery,
+    RemoteOrderItem,
+    RemoteOrderPayment,
+    RemoteOrderStatus,
+    RemotePlatform,
 )
 
 logger = logging.getLogger(__name__)
@@ -97,29 +98,25 @@ class RappiAdapter:
         # Extrair informações de entrega
         delivery_data = rappi_order.get("delivery", {})
         delivery = RemoteOrderDelivery(
-            type=delivery_data.get("type", "delivery"),
             address=delivery_data.get("address", {}),
-            notes=delivery_data.get("notes", ""),
+            fee=delivery_data.get("fee", 0.0),
             estimated_time=delivery_data.get("estimatedTime", 0),
+            instructions=delivery_data.get("notes", ""),
         )
 
         # Criar o pedido remoto
         remote_order = RemoteOrder(
             id=f"rappi_{rappi_order.get('id', '')}",
-            external_id=rappi_order.get("id", ""),
-            source="rappi",
-            restaurant_id=self.restaurant_id,
-            store_id=self.store_id,
-            order_number=rappi_order.get("orderNumber", ""),
+            platform=RemotePlatform.RAPPI,
+            external_order_id=rappi_order.get("id", ""),
             status=RemoteOrderStatus.PENDING,
-            customer=customer,
             items=items,
+            customer=customer,
             payment=payment,
-            delivery=delivery,
-            total_amount=rappi_order.get("totalAmount", 0.0),
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
+            subtotal=rappi_order.get("subtotal", 0.0),
+            total=rappi_order.get("totalAmount", 0.0),
             raw_data=rappi_order,
+            delivery=delivery.dict() if delivery else None,
         )
 
         return remote_order
@@ -377,8 +374,11 @@ class RappiAdapter:
         Returns:
             bool: True se a assinatura é válida
         """
-        import hmac
         import hashlib
+        import hmac
+
+        if not self.api_secret:
+            return False
 
         expected_signature = hmac.new(
             self.api_secret.encode(), payload.encode(), hashlib.sha256

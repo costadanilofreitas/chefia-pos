@@ -6,13 +6,13 @@ processando mensagens recebidas e gerando respostas apropriadas.
 """
 
 import logging
-from typing import Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List
 
 from ...core.messaging import (
     BaseChatbotService,
-    MessageType,
     ConversationState,
+    MessageType,
     PlatformType,
 )
 
@@ -113,7 +113,7 @@ class MessengerChatbotService(BaseChatbotService):
         Returns:
             Dict[str, Any]: Resposta a ser enviada
         """
-        message_type = message_data.get("type", "unknown")
+        message_data.get("type", "unknown")
         text = message_data.get("text", "").lower()
 
         # Verificar se é uma saudação ou pedido de menu

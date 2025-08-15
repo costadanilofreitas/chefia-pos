@@ -6,7 +6,7 @@ incluindo Facebook Pixel e outras plataformas.
 """
 
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 from .facebook_pixel import FacebookPixelIntegration
 

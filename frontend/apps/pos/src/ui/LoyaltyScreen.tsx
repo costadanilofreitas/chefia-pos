@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCustomer } from '../hooks/useCustomer';
+import { Customer, Address } from '../services/CustomerService';
 import {
   Box,
   Typography,
@@ -89,20 +90,20 @@ import {
 } from '@mui/icons-material';
 import { formatCurrency } from '../utils/formatters';
 
-interface Customer {
+interface LoyaltyCustomer {
   id: string;
   name: string;
-  email: string;
-  phone: string;
+  email?: string;
+  phone?: string;
   birthDate?: string;
-  address?: string;
-  totalPoints: number;
-  usedPoints: number;
-  totalSpent: number;
-  visitCount: number;
-  lastVisit: string;
-  registrationDate: string;
-  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+  address?: string | Address;
+  totalPoints?: number;
+  usedPoints?: number;
+  totalSpent?: number;
+  visitCount?: number;
+  lastVisit?: string;
+  registrationDate?: string;
+  tier?: string;
   preferences?: {
     favoriteItems: string[];
     allergies: string[];
@@ -115,7 +116,7 @@ interface Customer {
   };
   satisfaction?: number; // 1-5 rating
   clv?: number; // Customer Lifetime Value
-  segment?: 'new' | 'regular' | 'vip' | 'inactive';
+  segment?: string;
 }
 
 interface LoyaltyTransaction {
@@ -166,7 +167,7 @@ interface CRMAnalytics {
   averageClv: number;
   retentionRate: number;
   satisfactionScore: number;
-  topSpenders: Customer[];
+  topSpenders: LoyaltyCustomer[];
   segmentDistribution: {
     new: number;
     regular: number;
@@ -217,8 +218,8 @@ const LoyaltyScreen: React.FC = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [analytics, setAnalytics] = useState<CRMAnalytics | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<LoyaltyCustomer | null>(null);
+  const [editingCustomer, setEditingCustomer] = useState<LoyaltyCustomer | null>(null);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
   const [couponDialogOpen, setCouponDialogOpen] = useState(false);
@@ -370,7 +371,7 @@ const LoyaltyScreen: React.FC = () => {
         averageClv: realCustomers.length > 0 ? realCustomers.reduce((sum, c) => sum + (c.clv || 0), 0) / realCustomers.length : 0,
         retentionRate: realCustomers.length > 0 ? (realCustomers.filter(c => c.visitCount && c.visitCount > 1).length / realCustomers.length) * 100 : 0,
         satisfactionScore: realCustomers.length > 0 ? realCustomers.reduce((sum, c) => sum + (c.satisfaction || 0), 0) / realCustomers.length : 0,
-        topSpenders: realCustomers.sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0)).slice(0, 3),
+        topSpenders: realCustomers.sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0)).slice(0, 3) as LoyaltyCustomer[],
         segmentDistribution: {
           new: realCustomers.filter(c => c.segment === 'new').length,
           regular: realCustomers.filter(c => c.segment === 'regular').length,
@@ -697,7 +698,7 @@ const LoyaltyScreen: React.FC = () => {
                       <IconButton 
                         size="small"
                         onClick={() => {
-                          setSelectedCustomer(customer);
+                          setSelectedCustomer(customer as LoyaltyCustomer);
                           setCustomerDetailDialogOpen(true);
                         }}
                       >
@@ -711,8 +712,8 @@ const LoyaltyScreen: React.FC = () => {
                             name: customer.name,
                             email: customer.email,
                             phone: customer.phone,
-                            birthDate: customer.birthDate || '',
-                            address: customer.address || '',
+                            birthDate: customer.birth_date || '',
+                            address: customer.address?.street || '',
                             favoriteItems: customer.preferences?.favoriteItems || [],
                             allergies: customer.preferences?.allergies || [],
                             dietaryRestrictions: customer.preferences?.dietaryRestrictions || [],
@@ -728,7 +729,7 @@ const LoyaltyScreen: React.FC = () => {
                       <IconButton 
                         size="small"
                         onClick={() => {
-                          setSelectedCustomer(customer);
+                          setSelectedCustomer(customer as LoyaltyCustomer);
                           setPointsDialogOpen(true);
                         }}
                       >

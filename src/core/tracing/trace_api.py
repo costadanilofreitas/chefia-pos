@@ -1,14 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, Depends, HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
+
 from ..database.mongodb import get_database
 from .trace_repository import TraceRepository
 from .transaction_tracker import (
-    TransactionType,
-    TransactionOrigin,
     EventType,
+    TransactionOrigin,
     TransactionStatus,
+    TransactionType,
 )
 
 router = APIRouter(
@@ -68,7 +70,7 @@ async def search_transactions(
     Pesquisa transações com base em filtros específicos.
     """
     # Construir filtros
-    filters = {}
+    filters: Dict[str, Any] = {}
 
     if type:
         filters["type"] = type
@@ -86,22 +88,24 @@ async def search_transactions(
     if start_date:
         try:
             start_datetime = datetime.fromisoformat(start_date)
-            filters["start_time"] = filters.get("start_time", {})
+            if "start_time" not in filters:
+                filters["start_time"] = {}
             filters["start_time"]["$gte"] = start_datetime
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=400, detail="Formato de data inválido para start_date"
-            )
+            ) from e
 
     if end_date:
         try:
             end_datetime = datetime.fromisoformat(end_date)
-            filters["start_time"] = filters.get("start_time", {})
+            if "start_time" not in filters:
+                filters["start_time"] = {}
             filters["start_time"]["$lte"] = end_datetime
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=400, detail="Formato de data inválido para end_date"
-            )
+            ) from e
 
     # Executar pesquisa
     transactions = await repository.search_transactions(
@@ -154,18 +158,18 @@ async def get_transaction_stats(
     if start_date:
         try:
             start_datetime = datetime.fromisoformat(start_date)
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=400, detail="Formato de data inválido para start_date"
-            )
+            ) from e
 
     if end_date:
         try:
             end_datetime = datetime.fromisoformat(end_date)
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=400, detail="Formato de data inválido para end_date"
-            )
+            ) from e
 
     # Validar group_by
     valid_group_by = ["type", "origin", "status", "first_module", "last_module"]

@@ -11,11 +11,12 @@ import logging
 import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional
+
 from fastapi import HTTPException
 
-from ..models import DeliveryOptimization
 from ...demand_forecast.models import ForecastResult
 from ...demand_forecast.service import DemandForecastService
+from ..models import DeliveryOptimization
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -142,7 +143,7 @@ class DeliveryOptimizationService:
             raise HTTPException(
                 status_code=500,
                 detail=f"Error optimizing delivery operations: {str(e)}",
-            )
+            ) from e
 
     async def _get_demand_forecast(
         self, restaurant_id: str, start_date: datetime, end_date: datetime

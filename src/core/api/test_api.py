@@ -1,15 +1,16 @@
+import asyncio
+import logging
+from typing import Any, Dict, List, Optional
+
 from fastapi import (
     APIRouter,
-    HTTPException,
     BackgroundTasks,
+    HTTPException,
     Query,
     WebSocket,
     WebSocketDisconnect,
 )
-from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
-import logging
-import asyncio
 
 from ..events.event_bus import Event, EventType, get_event_bus
 from ..events.event_monitor import get_event_monitor
@@ -78,10 +79,10 @@ router = APIRouter(
 logger = logging.getLogger(__name__)
 
 # Sequências de eventos em execução
-active_sequences = {}
+active_sequences: Dict[str, Any] = {}
 
 
-async def validate_event_type(event_type: str) -> str:
+async def validate_event_type(event_type: str) -> EventType:
     """
     Valida se o tipo de evento é válido.
 
@@ -89,7 +90,7 @@ async def validate_event_type(event_type: str) -> str:
         event_type: Tipo do evento a ser validado
 
     Returns:
-        str: Tipo do evento validado
+        EventType: Tipo do evento validado
 
     Raises:
         HTTPException: Se o tipo de evento for inválido
@@ -102,12 +103,12 @@ async def validate_event_type(event_type: str) -> str:
                 status_code=400,
                 detail=f"Tipo de evento inválido. Tipos válidos: {', '.join(valid_types)}",
             )
-        return event_type
+        return EventType(event_type)
     except Exception as e:
         logger.error(f"Erro ao validar tipo de evento: {str(e)}")
         raise HTTPException(
             status_code=400, detail=f"Erro ao validar tipo de evento: {str(e)}"
-        )
+        ) from e
 
 
 async def publish_event(event_data: EventData) -> EventResponse:
@@ -125,11 +126,11 @@ async def publish_event(event_data: EventData) -> EventResponse:
         event_type = await validate_event_type(event_data.event_type)
 
         # Criar evento
-        event = Event(event_data.data, event_data.metadata)
+        event = Event(event_type, event_data.data, event_data.metadata)
 
         # Publicar no barramento
         event_bus = get_event_bus()
-        await event_bus.publish(event_type, event)
+        await event_bus.publish(event)
 
         return EventResponse(
             id=event.id,
@@ -143,7 +144,7 @@ async def publish_event(event_data: EventData) -> EventResponse:
         logger.error(f"Erro ao publicar evento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao publicar evento: {str(e)}"
-        )
+        ) from e
 
 
 async def run_event_sequence(
@@ -258,7 +259,9 @@ async def list_events(
         raise
     except Exception as e:
         logger.error(f"Erro ao listar eventos: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao listar eventos: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao listar eventos: {str(e)}"
+        ) from e
 
 
 @router.get("/events/{event_id}", response_model=Dict[str, Any])
@@ -289,7 +292,9 @@ async def get_event(event_id: str):
         raise
     except Exception as e:
         logger.error(f"Erro ao obter evento: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao obter evento: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao obter evento: {str(e)}"
+        ) from e
 
 
 @router.get("/event-types", response_model=List[EventTypeInfo])
@@ -313,7 +318,7 @@ async def list_event_types():
         logger.error(f"Erro ao listar tipos de eventos: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao listar tipos de eventos: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/sequences", response_model=EventSequenceResponse)
@@ -355,7 +360,7 @@ async def create_sequence(sequence: EventSequence, background_tasks: BackgroundT
         logger.error(f"Erro ao criar sequência: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar sequência: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/sequences/{sequence_id}", response_model=Dict[str, Any])
@@ -412,7 +417,7 @@ async def websocket_events(websocket: WebSocket):
     monitor = get_event_monitor()
 
     # Fila para eventos
-    queue = asyncio.Queue()
+    queue: asyncio.Queue = asyncio.Queue()
 
     # Callback para receber eventos
     async def on_event(event):
@@ -471,7 +476,7 @@ async def start_monitor():
         logger.error(f"Erro ao iniciar monitoramento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao iniciar monitoramento: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/monitor/stop", response_model=Dict[str, str])
@@ -490,7 +495,7 @@ async def stop_monitor():
         logger.error(f"Erro ao parar monitoramento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao parar monitoramento: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/monitor/clear", response_model=Dict[str, str])
@@ -509,7 +514,7 @@ async def clear_monitor():
         logger.error(f"Erro ao limpar histórico: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao limpar histórico: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/monitor/stats", response_model=Dict[str, Any])
@@ -538,4 +543,4 @@ async def get_monitor_stats():
         logger.error(f"Erro ao obter estatísticas: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter estatísticas: {str(e)}"
-        )
+        ) from e

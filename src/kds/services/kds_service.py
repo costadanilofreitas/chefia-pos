@@ -1,21 +1,21 @@
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
 import json
 import os
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
+from src.kds.events.kds_events import get_kds_event_publisher
 from src.kds.models.kds_models import (
     KDSOrder,
     KDSOrderItem,
-    KDSOrderStatus,
-    KDSOrderPriority,
-    KDSOrderUpdate,
     KDSOrderItemUpdate,
+    KDSOrderPriority,
+    KDSOrderStatus,
+    KDSOrderUpdate,
     KDSSession,
     KDSSessionCreate,
     KDSSessionUpdate,
     KDSStats,
 )
-from src.kds.events.kds_events import get_kds_event_publisher
 
 # Simulação de banco de dados com arquivo JSON
 DATA_DIR = os.path.join("/home/ubuntu/pos-modern/data")

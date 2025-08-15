@@ -1,9 +1,9 @@
-from typing import Dict, Any
-import os
 import json
+import os
 from datetime import datetime
+from typing import Any, Dict
 
-from src.peripherals.models.peripheral_models import ReceiptTemplate, PrinterException
+from src.peripherals.models.peripheral_models import PrinterException, ReceiptTemplate
 from src.peripherals.services.peripheral_service import get_peripheral_manager
 
 

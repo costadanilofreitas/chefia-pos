@@ -1,20 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+
+from src.auth.models import Permission, User
+from src.auth.security import get_current_user
 
 from ..models.supplier_models import (
-    Supplier,
-    SupplierCreate,
-    SupplierUpdate,
-    SupplierQuery,
     PurchaseOrder,
     PurchaseOrderCreate,
-    PurchaseOrderUpdate,
     PurchaseOrderStatus,
+    PurchaseOrderUpdate,
+    Supplier,
+    SupplierCreate,
+    SupplierQuery,
+    SupplierUpdate,
 )
 from ..services.supplier_service import supplier_service
-from src.auth.security import get_current_user
-from src.auth.models import User, Permission
 
 router = APIRouter(prefix="/api/v1", tags=["suppliers"])
 
@@ -145,7 +147,9 @@ async def create_purchase_order(
             user_name=current_user.username,
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.get("/purchase-orders/{order_id}", response_model=PurchaseOrder)
@@ -191,10 +195,12 @@ async def update_purchase_order(
     return updated_order
 
 
-@router.put("/purchase-orders/{order_id}/status/{status}", response_model=PurchaseOrder)
+@router.put(
+    "/purchase-orders/{order_id}/status/{new_status}", response_model=PurchaseOrder
+)
 async def change_purchase_order_status(
     order_id: str = Path(..., description="The ID of the purchase order"),
-    status: PurchaseOrderStatus = Path(..., description="The new status"),
+    new_status: PurchaseOrderStatus = Path(..., description="The new status"),
     current_user: User = Depends(get_current_user),
 ):
     """Change the status of a purchase order."""
@@ -202,7 +208,7 @@ async def change_purchase_order_status(
 
     updated_order = await supplier_service.change_purchase_order_status(
         order_id=order_id,
-        new_status=status,
+        new_status=new_status,
         user_id=current_user.id,
         user_name=current_user.username,
     )
@@ -210,7 +216,7 @@ async def change_purchase_order_status(
     if not updated_order:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot change status of purchase order: {order_id} to {status}",
+            detail=f"Cannot change status of purchase order: {order_id} to {new_status}",
         )
 
     return updated_order

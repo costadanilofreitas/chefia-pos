@@ -1,19 +1,26 @@
-import unittest
-from unittest.mock import patch, MagicMock
 import asyncio
+import unittest
+from unittest.mock import MagicMock, patch
+
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from ..models.seat_models import (
     Seat,
-    SeatStatus,
     SeatCreate,
-    SeatUpdate,
     SeatOrderItemCreate,
     SeatPaymentCreate,
+    SeatStatus,
+    SeatUpdate,
 )
-from ..services.seat_service import SeatService, SeatOrderService, SeatPaymentService
-from ..services.partial_payment_service import PaymentSessionService, BillSplitService
-from ..router.seat_router import router
+from ..router.seat_router import (
+    get_seat_order_service,
+    get_seat_payment_service,
+    get_seat_service,
+    router,
+)
+from ..services.partial_payment_service import BillSplitService, PaymentSessionService
+from ..services.seat_service import SeatOrderService, SeatPaymentService, SeatService
 
 
 class TestSeatService(unittest.TestCase):
@@ -98,7 +105,7 @@ class TestSeatService(unittest.TestCase):
         loop.run_until_complete(self.seat_service.delete_seat(seat.id))
 
         # Verificar se o assento foi removido
-        with self.assertRaises(Exception):
+        with self.assertRaises(HTTPException):
             loop.run_until_complete(self.seat_service.get_seat(seat.id))
 
 

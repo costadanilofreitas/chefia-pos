@@ -1,13 +1,13 @@
+import asyncio
 import unittest
 from unittest.mock import MagicMock
-import asyncio
 
 from ..models.terminal_models import (
-    TerminalConfig,
     OfflineOrder,
-    TerminalType,
-    TerminalStatus,
     TerminalCapabilities,
+    TerminalConfig,
+    TerminalStatus,
+    TerminalType,
 )
 from ..services.terminal_service import TerminalService
 

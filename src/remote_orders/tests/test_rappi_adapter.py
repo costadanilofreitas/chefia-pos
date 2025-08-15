@@ -1,9 +1,9 @@
 import unittest
-from unittest.mock import AsyncMock, patch, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.remote_orders.adapters.rappi_adapter import RappiAdapter
-from src.remote_orders.models.remote_order_models import RemoteOrderStatus, RemoteOrder
+from src.remote_orders.models.remote_order_models import RemoteOrder, RemoteOrderStatus
 
 
 class TestRappiAdapter(unittest.TestCase):
@@ -282,8 +282,8 @@ class TestRappiAdapter(unittest.TestCase):
         adapter = RappiAdapter(self.config)
 
         # Criar uma assinatura válida
-        import hmac
         import hashlib
+        import hmac
 
         payload = '{"eventType":"ORDER_CREATED"}'
         expected_signature = hmac.new(

@@ -1,0 +1,99 @@
+{
+  "name": "Development",
+  "backend": {
+    "host": "localhost",
+    "port": 8001,
+    "api_url": "http://localhost:8001",
+    "debug": true,
+    "hot_reload": true,
+    "log_level": "DEBUG"
+  },
+  "frontend": {
+    "pos": {
+      "port": 3000,
+      "api_url": "http://localhost:8001",
+      "app_name": "ChefIA POS - Dev",
+      "debug": true,
+      "hot_reload": true
+    },
+    "kds": {
+      "port": 3001,
+      "api_url": "http://localhost:8001",
+      "app_name": "ChefIA KDS - Dev",
+      "debug": true,
+      "hot_reload": true
+    },
+    "kiosk": {
+      "port": 3002,
+      "api_url": "http://localhost:8001",
+      "app_name": "ChefIA Kiosk - Dev",
+      "debug": true,
+      "hot_reload": true
+    },
+    "waiter": {
+      "port": 3003,
+      "api_url": "http://localhost:8001",
+      "app_name": "ChefIA Waiter - Dev",
+      "debug": true,
+      "hot_reload": true
+    },
+    "backoffice": {
+      "port": 3004,
+      "api_url": "http://localhost:8001",
+      "app_name": "ChefIA Backoffice - Dev",
+      "debug": true,
+      "hot_reload": true
+    }
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "posmodern",
+    "user": "posmodern",
+    "password": "posmodern123",
+    "pool_size": 5,
+    "max_overflow": 10,
+    "echo_sql": true
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "password": "posmodern123",
+    "db": 0,
+    "max_connections": 10
+  },
+  "rabbitmq": {
+    "host": "localhost",
+    "port": 5672,
+    "user": "posmodern",
+    "password": "posmodern123",
+    "virtual_host": "/",
+    "management_port": 15672
+  },
+  "auth": {
+    "jwt_secret": "dev-jwt-secret-key-change-in-production",
+    "jwt_algorithm": "HS256",
+    "jwt_expiration_hours": 24,
+    "refresh_token_expiration_days": 30
+  },
+  "features": {
+    "enable_debug_toolbar": true,
+    "enable_hot_reload": true,
+    "enable_cors": true,
+    "enable_swagger": true,
+    "enable_analytics": false,
+    "enable_error_tracking": false
+  },
+  "external_services": {
+    "payment_gateway": {
+      "provider": "asaas",
+      "sandbox": true,
+      "api_key": "sandbox-api-key"
+    },
+    "delivery": {
+      "google_maps_api_key": "development-google-maps-key",
+      "ifood_sandbox": true,
+      "rappi_sandbox": true
+    }
+  }
+}

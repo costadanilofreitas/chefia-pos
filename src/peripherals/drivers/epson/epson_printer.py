@@ -1,20 +1,20 @@
-from typing import Dict, Any
 import traceback
+from typing import Any, Dict
 
 try:
-    from escpos.printer import Usb, Network, Serial, File
     from escpos.exceptions import Error as ESCPOSError
+    from escpos.printer import Network, Serial, Usb
 
     ESCPOS_AVAILABLE = True
 except ImportError:
     ESCPOS_AVAILABLE = False
 
 from src.peripherals.models.peripheral_models import (
+    ConnectionException,
+    PeripheralConnectionType,
+    PeripheralStatus,
     Printer,
     PrinterConfig,
-    PeripheralStatus,
-    PeripheralConnectionType,
-    ConnectionException,
 )
 
 
@@ -57,16 +57,16 @@ class EpsonPrinter(Printer):
                         vendor_id, product_id = map(
                             lambda x: int(x, 16), self.port.split(":")
                         )
-                    except (ValueError, AttributeError):
-                        raise ConfigurationException(
+                    except (ValueError, AttributeError) as e:
+                        raise Exception(
                             f"Formato de porta USB inválido: {self.port}. Use 'vendor_id:product_id' em hexadecimal."
-                        )
+                        ) from e
 
                 self.printer = Usb(vendor_id, product_id)
 
             elif self.connection_type == PeripheralConnectionType.NETWORK:
                 if not self.address:
-                    raise ConfigurationException(
+                    raise Exception(
                         "Endereço IP não especificado para conexão de rede."
                     )
 
@@ -74,10 +74,8 @@ class EpsonPrinter(Printer):
                 if self.port and self.port != "auto":
                     try:
                         port = int(self.port)
-                    except ValueError:
-                        raise ConfigurationException(
-                            f"Porta de rede inválida: {self.port}"
-                        )
+                    except ValueError as e:
+                        raise Exception(f"Porta de rede inválida: {self.port}") from e
 
                 self.printer = Network(self.address, port)
 
@@ -97,7 +95,7 @@ class EpsonPrinter(Printer):
                 self.printer = Serial(devfile=port, baudrate=baudrate)
 
             else:
-                raise ConfigurationException(
+                raise Exception(
                     f"Tipo de conexão não suportado: {self.connection_type}"
                 )
 
@@ -113,13 +111,17 @@ class EpsonPrinter(Printer):
         except ESCPOSError as e:
             await self.update_status(PeripheralStatus.ERROR, str(e))
             self.connected = False
-            raise ConnectionException(f"Erro ao conectar à impressora Epson: {str(e)}")
+            raise ConnectionException(
+                f"Erro ao conectar à impressora Epson: {str(e)}"
+            ) from e
 
         except Exception as e:
             await self.update_status(PeripheralStatus.ERROR, str(e))
             self.connected = False
             traceback.print_exc()
-            raise ConnectionException(f"Erro ao inicializar impressora Epson: {str(e)}")
+            raise ConnectionException(
+                f"Erro ao inicializar impressora Epson: {str(e)}"
+            ) from e
 
     async def shutdown(self) -> bool:
         """Finaliza a impressora Epson."""
@@ -188,7 +190,7 @@ class EpsonPrinter(Printer):
             content = receipt.get("content", [])
 
             for section in content:
-                section_type = section.get("type", "")
+                section.get("type", "")
                 section_content = section.get("content", [])
 
                 # Processar cada item de conteúdo da seção

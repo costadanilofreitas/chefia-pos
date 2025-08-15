@@ -7,10 +7,11 @@ mensagens via WhatsApp, incluindo suporte a comboboxes e mídia.
 
 import json
 import logging
-from typing import Dict, List, Any
 from datetime import datetime
-from twilio.rest import Client
+from typing import Any, Dict, List
+
 from twilio.base.exceptions import TwilioRestException
+from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 
 # Configuração de logging

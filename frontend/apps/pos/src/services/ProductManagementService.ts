@@ -18,27 +18,25 @@ export interface Category {
   id: string;
   name: string;
   description?: string;
-  color: string;
+  color?: string;
   icon?: string;
-  active: boolean;
-  sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Ingredient {
   id: string;
   name: string;
   description?: string;
-  unit: string; // kg, g, l, ml, unidade, etc.
-  currentStock: number;
-  minimumStock: number;
-  cost: number; // custo por unidade
+  unit: string;
+  current_stock: number;
+  minimum_stock: number;
+  cost_per_unit: number;
   supplier?: string;
-  active: boolean;
-  outOfStock: boolean;
-  createdAt: string;
-  updatedAt: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ComboItem {
@@ -52,41 +50,41 @@ export interface Combo {
   id: string;
   name: string;
   description: string;
+  category_id?: string;
   items: ComboItem[];
   basePrice: number;
-  price: number; // Adicionando propriedade price
-  discount: number; // Adicionando propriedade discount
+  price: number;
+  discount: number;
   discountPercentage: number;
   finalPrice: number;
-  image?: string;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
+  image_url?: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ProductIngredient {
-  ingredientId: string;
+  ingredient_id: string;
   quantity: number;
-  required: boolean;
+  is_required: boolean;
 }
 
 export interface Product {
   id: string;
   name: string;
   description: string;
-  categoryId: string;
+  category_id: string;
   price: number;
   cost: number;
   ingredients: ProductIngredient[];
   allergens: string[];
-  preparationTime: number;
+  preparation_time: number;
   calories?: number;
-  image?: string;
-  imageUrl?: string; // Adicionando propriedade imageUrl
-  available: boolean;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
+  image_url?: string;
+  is_available: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // Funções de conversão entre interfaces do backend e frontend
@@ -97,10 +95,9 @@ function convertBackendCategory(backendCategory: BackendCategory): Category {
     description: backendCategory.description,
     color: backendCategory.color || '#666666',
     icon: backendCategory.icon,
-    active: backendCategory.is_active,
-    sortOrder: backendCategory.sort_order,
-    createdAt: backendCategory.created_at,
-    updatedAt: backendCategory.updated_at
+    is_active: backendCategory.is_active,
+    created_at: backendCategory.created_at,
+    updated_at: backendCategory.updated_at
   };
 }
 
@@ -110,14 +107,13 @@ function convertBackendIngredient(backendIngredient: BackendIngredient): Ingredi
     name: backendIngredient.name,
     description: backendIngredient.description,
     unit: backendIngredient.unit,
-    currentStock: backendIngredient.current_stock,
-    minimumStock: backendIngredient.minimum_stock,
-    cost: backendIngredient.cost_per_unit,
-    supplier: backendIngredient.supplier_name,
-    active: !backendIngredient.is_out_of_stock,
-    outOfStock: backendIngredient.is_out_of_stock,
-    createdAt: backendIngredient.created_at,
-    updatedAt: backendIngredient.updated_at
+    current_stock: backendIngredient.current_stock,
+    minimum_stock: backendIngredient.minimum_stock,
+    cost_per_unit: backendIngredient.cost_per_unit,
+    supplier: backendIngredient.supplier,
+    is_active: backendIngredient.is_active,
+    created_at: backendIngredient.created_at,
+    updated_at: backendIngredient.updated_at
   };
 }
 
@@ -126,23 +122,22 @@ function convertBackendProduct(backendProduct: BackendProduct): Product {
     id: backendProduct.id,
     name: backendProduct.name,
     description: backendProduct.description,
-    categoryId: backendProduct.category_id,
+    category_id: backendProduct.category_id,
     price: backendProduct.price,
     cost: backendProduct.price * 0.6, // Estimativa de custo (60% do preço)
     ingredients: backendProduct.ingredients?.map(ing => ({
-      ingredientId: ing.id,
+      ingredient_id: ing.id,
       quantity: (ing as any).quantity || 1,
-      required: ing.is_required
+      is_required: ing.is_required
     })) || [],
     allergens: [], // Campo não implementado no backend ainda
-    preparationTime: 15, // Campo não implementado no backend ainda
+    preparation_time: 15, // Campo não implementado no backend ainda
     calories: undefined, // Campo não implementado no backend ainda
-    image: backendProduct.image_url,
-    imageUrl: backendProduct.image_url, // Adicionando imageUrl
-    available: backendProduct.is_available,
-    active: backendProduct.status === 'ACTIVE',
-    createdAt: backendProduct.created_at,
-    updatedAt: backendProduct.updated_at
+    image_url: backendProduct.image_url,
+    is_available: backendProduct.is_available,
+    status: backendProduct.status,
+    created_at: backendProduct.created_at,
+    updated_at: backendProduct.updated_at
   };
 }
 
@@ -164,10 +159,10 @@ function convertBackendCombo(backendProduct: BackendProduct): Combo {
     discount: discount, // Adicionando propriedade discount
     discountPercentage: discount > 0 ? Math.round((discount / basePrice) * 100) : 0, // Calcular desconto real
     finalPrice: backendProduct.price,
-    image: backendProduct.image_url,
-    active: backendProduct.status === 'ACTIVE',
-    createdAt: backendProduct.created_at,
-    updatedAt: backendProduct.updated_at
+    image_url: backendProduct.image_url,
+    status: backendProduct.status,
+    created_at: backendProduct.created_at,
+    updated_at: backendProduct.updated_at
   };
 }
 
@@ -198,10 +193,10 @@ export class ProductManagementService {
         description: 'Hambúrgueres artesanais e tradicionais',
         color: '#FF6B35',
         icon: '🍔',
-        active: true,
-        sortOrder: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        is_active: true,
+        // sortOrder: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       },
       {
         id: '2',
@@ -209,10 +204,10 @@ export class ProductManagementService {
         description: 'Pizzas tradicionais e especiais',
         color: '#4ECDC4',
         icon: '🍕',
-        active: true,
-        sortOrder: 2,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        is_active: true,
+        // sortOrder: 2,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       },
       {
         id: '3',
@@ -220,10 +215,10 @@ export class ProductManagementService {
         description: 'Refrigerantes, sucos e bebidas especiais',
         color: '#45B7D1',
         icon: '🥤',
-        active: true,
-        sortOrder: 3,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        is_active: true,
+        // sortOrder: 3,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       },
       {
         id: '4',
@@ -231,10 +226,10 @@ export class ProductManagementService {
         description: 'Doces e sobremesas da casa',
         color: '#F7DC6F',
         icon: '🍰',
-        active: true,
-        sortOrder: 4,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        is_active: true,
+        // sortOrder: 4,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
     ];
   }
@@ -246,7 +241,7 @@ export class ProductManagementService {
         description: category.description,
         color: category.color,
         icon: category.icon,
-        is_active: category.active
+        is_active: category.is_active
       };
       
       const backendCategory = await productApiService.createCategory(categoryData);
@@ -263,7 +258,7 @@ export class ProductManagementService {
         description: category.description,
         color: category.color,
         icon: category.icon,
-        is_active: category.active
+        is_active: category.is_active
       };
       
       const backendCategory = await productApiService.updateCategory(id, categoryData);
@@ -301,9 +296,9 @@ export class ProductManagementService {
         name: ingredient.name,
         description: ingredient.description,
         unit: ingredient.unit,
-        cost_per_unit: ingredient.cost,
+        cost_per_unit: ingredient.cost_per_unit,
         supplier: ingredient.supplier,
-        is_active: ingredient.active
+        is_active: ingredient.is_active
       };
       
       const backendIngredient = await productApiService.createIngredient(ingredientData);
@@ -320,9 +315,9 @@ export class ProductManagementService {
         name: ingredient.name,
         description: ingredient.description,
         unit: ingredient.unit,
-        cost_per_unit: ingredient.cost,
+        cost_per_unit: ingredient.cost_per_unit,
         supplier: ingredient.supplier,
-        is_active: ingredient.active
+        is_active: ingredient.is_active
       };
       
       const backendIngredient = await productApiService.updateIngredient(id, ingredientData);
@@ -351,18 +346,17 @@ export class ProductManagementService {
         id: product.id,
         name: product.name,
         description: product.description || '',
-        categoryId: product.category_id || '',
+        category_id: product.category_id || '',
         price: product.price,
         cost: product.price * 0.6, // Estimativa
         ingredients: [],
         allergens: [],
-        preparationTime: 15,
-        image: product.image_url,
-        imageUrl: product.image_url,
-        available: product.status === 'ACTIVE',
-        active: product.status === 'ACTIVE',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        preparation_time: 15,
+        image_url: product.image_url,
+        is_available: product.status === 'ACTIVE',
+        status: product.status || 'ACTIVE',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }));
     } catch (error) {
       console.error('Erro ao buscar produtos:', error);
@@ -376,8 +370,8 @@ export class ProductManagementService {
         name: product.name,
         description: product.description,
         price: product.price,
-        category_id: product.categoryId,
-        status: product.active ? 'ACTIVE' : 'INACTIVE',
+        category_id: product.category_id,
+        status: product.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
         type: 'SIMPLE',
         is_featured: false,
         weight_based: false
@@ -388,18 +382,17 @@ export class ProductManagementService {
         id: backendProduct.id,
         name: backendProduct.name,
         description: backendProduct.description || '',
-        categoryId: backendProduct.category_id || '',
+        category_id: backendProduct.category_id || '',
         price: backendProduct.price,
         cost: product.cost,
         ingredients: product.ingredients,
         allergens: product.allergens,
-        preparationTime: product.preparationTime,
-        image: backendProduct.images[0],
-        imageUrl: backendProduct.images[0],
-        available: backendProduct.status === 'ACTIVE',
-        active: backendProduct.status === 'ACTIVE',
-        createdAt: backendProduct.created_at,
-        updatedAt: backendProduct.updated_at
+        preparation_time: product.preparation_time,
+        image_url: backendProduct.images[0],
+        is_available: backendProduct.status === 'ACTIVE',
+        status: backendProduct.status,
+        created_at: backendProduct.created_at,
+        updated_at: backendProduct.updated_at
       };
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
@@ -413,8 +406,8 @@ export class ProductManagementService {
         name: product.name,
         description: product.description,
         price: product.price,
-        category_id: product.categoryId,
-        status: product.active ? 'ACTIVE' : 'INACTIVE'
+        category_id: product.category_id,
+        status: product.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE'
       };
       
       const backendProduct = await productApiService.updateProduct(id, productData);
@@ -422,18 +415,17 @@ export class ProductManagementService {
         id: backendProduct.id,
         name: backendProduct.name,
         description: backendProduct.description || '',
-        categoryId: backendProduct.category_id || '',
+        category_id: backendProduct.category_id || '',
         price: backendProduct.price,
         cost: product.cost || backendProduct.price * 0.6,
         ingredients: product.ingredients || [],
         allergens: product.allergens || [],
-        preparationTime: product.preparationTime || 15,
-        image: backendProduct.images[0],
-        imageUrl: backendProduct.images[0],
-        available: backendProduct.status === 'ACTIVE',
-        active: backendProduct.status === 'ACTIVE',
-        createdAt: backendProduct.created_at,
-        updatedAt: backendProduct.updated_at
+        preparation_time: product.preparation_time || 15,
+        image_url: backendProduct.images[0],
+        is_available: backendProduct.status === 'ACTIVE',
+        status: backendProduct.status,
+        created_at: backendProduct.created_at,
+        updated_at: backendProduct.updated_at
       };
     } catch (error) {
       console.error('Erro ao atualizar produto:', error);
@@ -454,7 +446,7 @@ export class ProductManagementService {
   // Combos
   static async getCombos(): Promise<Combo[]> {
     try {
-      const backendCombos = await productApiService.getProducts({ type: 'COMBO' });
+      const backendCombos = await productApiService.listProducts({ type: 'COMBO' });
       return backendCombos.map(convertBackendCombo);
     } catch (error) {
       console.error('Erro ao buscar combos:', error);
@@ -468,15 +460,14 @@ export class ProductManagementService {
         name: combo.name,
         description: combo.description,
         price: combo.finalPrice,
-        category_id: combo.categoryId || 'default-category', // Usar categoria do combo ou padrão
-        image_url: combo.image,
-        is_available: combo.active,
-        status: combo.active ? 'ACTIVE' : 'INACTIVE',
-        type: 'COMBO',
-        is_combo: true
+        category_id: combo.category_id || 'default-category', // Usar categoria do combo ou padrão
+        image_url: combo.image_url,
+        is_available: combo.status === 'ACTIVE',
+        status: combo.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
+        type: 'COMBO'
       };
 
-      const comboItems: BackendComboItem[] = combo.items.map(item => ({
+      const comboItems: any[] = combo.items.map(item => ({
         id: `combo-item-${Date.now()}-${Math.random()}`,
         product_id: item.productId,
         product_name: '', // Será preenchido pelo backend
@@ -485,7 +476,7 @@ export class ProductManagementService {
         price_adjustment: item.additionalCost
       }));
       
-      const backendCombo = await productApiService.createCombo(productData, comboItems);
+      const backendCombo = await productApiService.createProduct(productData);
       return convertBackendCombo(backendCombo);
     } catch (error) {
       console.error('Erro ao salvar combo:', error);
@@ -499,12 +490,12 @@ export class ProductManagementService {
         name: combo.name,
         description: combo.description,
         price: combo.finalPrice,
-        image_url: combo.image,
-        is_available: combo.active,
-        status: combo.active ? 'ACTIVE' : 'INACTIVE'
+        image_url: combo.image_url,
+        is_available: combo.status === 'ACTIVE',
+        status: combo.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE'
       };
 
-      const comboItems: BackendComboItem[] | undefined = combo.items?.map(item => ({
+      const comboItems: any[] | undefined = combo.items?.map(item => ({
         id: `combo-item-${Date.now()}-${Math.random()}`,
         product_id: item.productId,
         product_name: '',
@@ -513,7 +504,7 @@ export class ProductManagementService {
         price_adjustment: item.additionalCost
       }));
       
-      const backendCombo = await productApiService.updateCombo(id, productData, comboItems);
+      const backendCombo = await productApiService.updateProduct(id, productData);
       if (!backendCombo) {
         throw new Error('Combo não encontrado');
       }
@@ -526,7 +517,8 @@ export class ProductManagementService {
 
   static async deleteCombo(id: string): Promise<boolean> {
     try {
-      return await productApiService.deleteProduct(id);
+      const result = await productApiService.deleteProduct(id);
+      return result.success;
     } catch (error) {
       console.error('Erro ao excluir combo:', error);
       throw error;
@@ -536,7 +528,7 @@ export class ProductManagementService {
   // Métodos auxiliares
   static async getProductsByCategory(categoryId: string): Promise<Product[]> {
     try {
-      const backendProducts = await productApiService.getProducts({ 
+      const backendProducts = await productApiService.listProducts({ 
         category_id: categoryId,
         type: 'SIMPLE'
       });
@@ -549,7 +541,7 @@ export class ProductManagementService {
 
   static async searchProducts(query: string): Promise<Product[]> {
     try {
-      const backendProducts = await productApiService.getProducts({ 
+      const backendProducts = await productApiService.listProducts({ 
         search: query,
         type: 'SIMPLE'
       });
@@ -562,7 +554,7 @@ export class ProductManagementService {
 
   static async getAvailableProducts(): Promise<Product[]> {
     try {
-      const backendProducts = await productApiService.getProducts({ type: 'SIMPLE' });
+      const backendProducts = await productApiService.listProducts({ type: 'SIMPLE' });
       return backendProducts
         .filter(p => p.is_available && p.status === 'ACTIVE')
         .map(convertBackendProduct);
@@ -574,7 +566,7 @@ export class ProductManagementService {
 
   static async getUnavailableProducts(): Promise<Product[]> {
     try {
-      const backendProducts = await productApiService.getProducts({ type: 'SIMPLE' });
+      const backendProducts = await productApiService.listProducts({ type: 'SIMPLE' });
       return backendProducts
         .filter(p => !p.is_available || p.status === 'INACTIVE')
         .map(convertBackendProduct);

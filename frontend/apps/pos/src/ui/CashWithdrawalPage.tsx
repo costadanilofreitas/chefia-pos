@@ -165,7 +165,7 @@ const CashWithdrawalPage: React.FC = () => {
   });
 
   useEffect(() => {
-    if (!currentCashier || currentCashier.status !== 'open') {
+    if (!currentCashier || currentCashier.status !== 'OPEN') {
       setAlertInfo({
         open: true,
         message: 'O caixa precisa estar aberto para realizar operações de sangria.',
@@ -195,7 +195,7 @@ const CashWithdrawalPage: React.FC = () => {
       return;
     }
 
-    if (operationType === 'withdrawal' && parseFloat(amount) > (currentCashier?.current_amount || 0)) {
+    if (operationType === 'withdrawal' && parseFloat(amount) > (currentCashier?.current_balance || 0)) {
       setAlertInfo({
         open: true,
         message: 'O valor da retirada não pode ser maior que o saldo disponível no caixa.',
@@ -388,7 +388,7 @@ const CashWithdrawalPage: React.FC = () => {
                     Saldo Atual
                   </Typography>
                   <Typography variant="h5" color="primary.main">
-                    {formatCurrency(currentCashier?.current_amount || 0)}
+                    {formatCurrency(currentCashier?.current_balance || 0)}
                   </Typography>
                 </Box>
               </Box>
@@ -497,7 +497,7 @@ const CashWithdrawalPage: React.FC = () => {
                   startAdornment: <Typography variant="body1" sx={{ mr: 1 }}>R$</Typography>,
                 }}
                 helperText={operationType === 'withdrawal' 
-                  ? `Saldo disponível: ${formatCurrency(currentCashier?.current_amount || 0)}`
+                  ? `Saldo disponível: ${formatCurrency(currentCashier?.current_balance || 0)}`
                   : 'Valor a ser adicionado ao caixa'
                 }
               />
@@ -559,7 +559,7 @@ const CashWithdrawalPage: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText
                   primary="Saldo Inicial"
-                  secondary={formatCurrency(currentCashier?.initial_amount || 0)}
+                  secondary={formatCurrency(currentCashier?.initial_balance || 0)}
                 />
               </ListItem>
               
@@ -569,7 +569,7 @@ const CashWithdrawalPage: React.FC = () => {
                 </ListItemIcon>
                 <ListItemText
                   primary="Saldo Atual"
-                  secondary={formatCurrency(currentCashier?.current_amount || 0)}
+                  secondary={formatCurrency(currentCashier?.current_balance || 0)}
                 />
               </ListItem>
 

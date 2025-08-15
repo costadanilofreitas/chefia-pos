@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException
-from typing import Dict, Any
 import json
 import os
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any, Dict
+
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/api/v1/campaigns", tags=["Campaigns"])
 
@@ -17,7 +18,7 @@ def load_campaigns():
     try:
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    except:
+    except (FileNotFoundError, json.JSONDecodeError, Exception):
         return []
 
 

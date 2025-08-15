@@ -1,15 +1,16 @@
-from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import aiohttp
 
 from src.payment.models.payment_models import AsaasConfig
 from src.payment.models.split_models import (
-    SplitConfig,
-    SplitType,
-    SplitTransaction,
     RetentionTransaction,
+    SplitConfig,
     SplitPaymentRecord,
+    SplitTransaction,
+    SplitType,
 )
 
 logger = logging.getLogger(__name__)
@@ -18,13 +19,19 @@ logger = logging.getLogger(__name__)
 class AsaasAdapter:
     """Adaptador para integração com a API do Asaas para processamento de pagamentos."""
 
-    def __init__(self, config: AsaasConfig = None):
+    def __init__(self, config: Optional[AsaasConfig] = None):
         """
         Inicializa o adaptador Asaas.
 
         Args:
             config: Configuração do Asaas
         """
+        self.api_key: Optional[str]
+        self.environment: str
+        self.webhook_token: Optional[str]
+        self.base_url: str
+        self.headers: Dict[str, str]
+
         if config:
             self.api_key = config.api_key
             self.environment = config.environment
@@ -159,9 +166,9 @@ class AsaasAdapter:
             split_item = {"walletId": recipient.wallet_id}
 
             if recipient.type == SplitType.PERCENTAGE:
-                split_item["percentualValue"] = recipient.value
+                split_item["percentualValue"] = str(recipient.value)
             else:
-                split_item["fixedValue"] = recipient.value
+                split_item["fixedValue"] = str(recipient.value)
 
             split_data.append(split_item)
 
@@ -171,9 +178,9 @@ class AsaasAdapter:
             split_item = {"walletId": retention.wallet_id}
 
             if retention.type == SplitType.PERCENTAGE:
-                split_item["percentualValue"] = retention.value
+                split_item["percentualValue"] = str(retention.value)
             else:
-                split_item["fixedValue"] = retention.value
+                split_item["fixedValue"] = str(retention.value)
 
             split_data.append(split_item)
 
@@ -512,7 +519,7 @@ class AsaasAdapter:
         Returns:
             Dict: Valores calculados para cada destinatário e retenção
         """
-        result = {
+        result: Dict[str, Any] = {
             "total_value": total_value,
             "recipients": [],
             "retention": None,
@@ -676,17 +683,18 @@ class AsaasAdapter:
         for split in split_payment_record.splits:
             if split.wallet_id in transfers_by_wallet:
                 transfer = transfers_by_wallet[split.wallet_id]
+                from src.payment.models.split_models import SplitRecipientStatus
+
                 split.status = (
-                    "transferred"
+                    SplitRecipientStatus.TRANSFERRED
                     if transfer.get("status") == "CONFIRMED"
-                    else "pending"
+                    else SplitRecipientStatus.PENDING
                 )
                 split.transfer_id = transfer.get("id")
+                transfer_date = transfer.get("transferDate")
                 split.transferred_at = (
-                    datetime.fromisoformat(
-                        transfer.get("transferDate").replace("Z", "+00:00")
-                    )
-                    if transfer.get("transferDate")
+                    datetime.fromisoformat(transfer_date.replace("Z", "+00:00"))
+                    if transfer_date
                     else None
                 )
                 split.updated_at = datetime.utcnow()

@@ -1,18 +1,19 @@
-from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Header, Body, status
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, status
 from fastapi.responses import JSONResponse
 
+from src.auth.models import Permission, User
+from src.auth.security import get_current_user
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder,
+    RemoteOrderCreate,
+    RemoteOrderResponse,
     RemoteOrderStatus,
     RemotePlatform,
     RemotePlatformConfig,
-    RemoteOrderCreate,
-    RemoteOrderResponse,
 )
 from src.remote_orders.services.remote_order_service import remote_order_service
-from src.auth.security import get_current_user
-from src.auth.models import User, Permission
 
 router = APIRouter(prefix="/api/v1", tags=["remote-orders"])
 
@@ -90,10 +91,10 @@ async def list_remote_orders(
     if platform:
         try:
             platform_enum = RemotePlatform(platform)
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=400, detail=f"Plataforma {platform} não suportada"
-            )
+            ) from e
 
     orders = await remote_order_service.list_remote_orders(
         platform=platform_enum,
@@ -132,7 +133,9 @@ async def accept_remote_order(
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao aceitar pedido: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao aceitar pedido: {str(e)}"
+        ) from e
 
 
 @router.post("/remote-orders/{order_id}/reject", response_model=RemoteOrder)
@@ -151,7 +154,7 @@ async def reject_remote_order(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao rejeitar pedido: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/remote-platforms/", response_model=List[RemotePlatformConfig])
@@ -171,10 +174,10 @@ async def get_platform_config(
 
     try:
         platform_enum = RemotePlatform(platform)
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=400, detail=f"Plataforma {platform} não suportada"
-        )
+        ) from e
 
     config = await remote_order_service.get_platform_config(platform_enum)
     if not config:
@@ -197,10 +200,10 @@ async def update_platform_config(
 
     try:
         platform_enum = RemotePlatform(platform)
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=400, detail=f"Plataforma {platform} não suportada"
-        )
+        ) from e
 
     if config_data.platform != platform_enum:
         raise HTTPException(
@@ -250,95 +253,107 @@ async def create_test_remote_order(
 
 @router.post("/remote-orders/{order_id}/dispatch", response_model=RemoteOrder)
 async def dispatch_remote_order(
-    order_id: str,
-    current_user: User = Depends(get_current_user)
+    order_id: str, current_user: User = Depends(get_current_user)
 ):
     """Despacha um pedido remoto (marca como enviado para entrega)."""
     _check_permissions(current_user, ["remote_orders.update"])
-    
+
     try:
         return await remote_order_service.dispatch_remote_order(order_id)
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao despachar pedido: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao despachar pedido: {str(e)}"
+        ) from e
+
 
 @router.post("/remote-orders/{order_id}/cancel", response_model=RemoteOrder)
 async def cancel_remote_order(
     order_id: str,
     reason: str = Body(..., embed=True),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Cancela um pedido remoto já aceito."""
     _check_permissions(current_user, ["remote_orders.update"])
-    
+
     try:
         return await remote_order_service.cancel_remote_order(order_id, reason)
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao cancelar pedido: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao cancelar pedido: {str(e)}"
+        ) from e
+
 
 @router.post("/remote-orders/{order_id}/ready", response_model=RemoteOrder)
 async def mark_order_ready(
-    order_id: str,
-    current_user: User = Depends(get_current_user)
+    order_id: str, current_user: User = Depends(get_current_user)
 ):
     """Marca um pedido como pronto para entrega."""
     _check_permissions(current_user, ["remote_orders.update"])
-    
+
     try:
         return await remote_order_service.mark_order_ready(order_id)
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao marcar pedido como pronto: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao marcar pedido como pronto: {str(e)}"
+        ) from e
+
 
 @router.get("/remote-orders/stats/summary")
-async def get_orders_summary(
-    current_user: User = Depends(get_current_user)
-):
+async def get_orders_summary(current_user: User = Depends(get_current_user)):
     """Obtém resumo estatístico dos pedidos remotos."""
     _check_permissions(current_user, ["remote_orders.read"])
-    
+
     try:
         return await remote_order_service.get_orders_summary()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao obter resumo: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao obter resumo: {str(e)}"
+        ) from e
+
 
 @router.get("/remote-orders/stats/by-platform")
 async def get_stats_by_platform(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Obtém estatísticas por plataforma."""
     _check_permissions(current_user, ["remote_orders.read"])
-    
+
     try:
         return await remote_order_service.get_stats_by_platform(start_date, end_date)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao obter estatísticas: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao obter estatísticas: {str(e)}"
+        ) from e
+
 
 @router.post("/remote-orders/bulk-action")
 async def bulk_action_orders(
     action: str = Body(...),
     order_ids: List[str] = Body(...),
     reason: Optional[str] = Body(None),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Executa ação em lote em múltiplos pedidos."""
     _check_permissions(current_user, ["remote_orders.update"])
-    
+
     valid_actions = ["accept", "reject", "cancel", "dispatch", "ready"]
     if action not in valid_actions:
         raise HTTPException(
-            status_code=400, 
-            detail=f"Ação inválida. Ações válidas: {', '.join(valid_actions)}"
+            status_code=400,
+            detail=f"Ação inválida. Ações válidas: {', '.join(valid_actions)}",
         )
-    
+
     try:
         return await remote_order_service.bulk_action_orders(action, order_ids, reason)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro na ação em lote: {str(e)}")
-
+        raise HTTPException(
+            status_code=500, detail=f"Erro na ação em lote: {str(e)}"
+        ) from e

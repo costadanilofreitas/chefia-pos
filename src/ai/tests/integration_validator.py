@@ -8,25 +8,25 @@ Este módulo implementa:
 """
 
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, Any
 
 # Importar corretamente os módulos
 import sys
+from datetime import datetime, timedelta
+from typing import Any, Dict
 
 sys.path.append("/home/ubuntu/pos-modern")
 
-from src.ai.operational_optimization.services.optimization_service import (
-    OperationalOptimizationService,
+from src.ai.demand_forecast.models import ForecastDimension, TimeGranularity
+from src.ai.demand_forecast.service import DemandForecastService
+from src.ai.operational_optimization.integration.external_data import (
+    ExternalDataService,
 )
 from src.ai.operational_optimization.integration.forecast_integration import (
     ForecastIntegrationService,
 )
-from src.ai.operational_optimization.integration.external_data import (
-    ExternalDataService,
+from src.ai.operational_optimization.services.optimization_service import (
+    OperationalOptimizationService,
 )
-from src.ai.demand_forecast.service import DemandForecastService
-from src.ai.demand_forecast.models import TimeGranularity, ForecastDimension
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -372,7 +372,7 @@ class IntegrationValidator:
                 )
 
                 # 3. Enriquecer previsão com dados externos
-                enriched_forecast = (
+                (
                     await self.forecast_integration.enrich_forecast_with_external_data(
                         forecast=forecast,
                         restaurant_id=restaurant_id,

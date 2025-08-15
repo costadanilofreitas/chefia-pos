@@ -3,23 +3,25 @@ Serviços para dashboards analíticos personalizáveis
 """
 
 import logging
-from datetime import datetime, timedelta
-from typing import List, Dict, Any, Union, Tuple
+import time
 import uuid
-import pandas as pd
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Tuple, Union
+
 import numpy as np
+import pandas as pd
 from fastapi import HTTPException, status
 
 from src.analytics.models.dashboard_models import (
-    Dashboard,
-    DashboardLayout,
     ChartConfiguration,
-    DashboardFilter,
-    DataSourceType,
-    FilterOperator,
-    DashboardShare,
+    Dashboard,
     DashboardAlert,
     DashboardExport,
+    DashboardFilter,
+    DashboardLayout,
+    DashboardShare,
+    DataSourceType,
+    FilterOperator,
     ScheduledReport,
 )
 from src.core.config.config_service import ConfigService
@@ -36,13 +38,11 @@ class AnalyticsService:
         self.logger = logging.getLogger(__name__)
 
         # Inicializa os serviços específicos
-        self.dashboard_service = DashboardService(db_service, config_service, event_bus)
-        self.data_source_service = DataSourceService(
-            db_service, config_service, event_bus
-        )
-        self.alert_service = AlertService(db_service, config_service, event_bus)
-        self.export_service = ExportService(db_service, config_service, event_bus)
-        self.report_service = ReportService(db_service, config_service, event_bus)
+        self.dashboard_service = DashboardService(config_service, event_bus)
+        self.data_source_service = DataSourceService(config_service, event_bus)
+        self.alert_service = AlertService(config_service, event_bus)
+        self.export_service = ExportService(config_service, event_bus)
+        self.report_service = ReportService(config_service, event_bus)
 
     def get_analytics_summary(self, restaurant_id: str) -> Dict[str, Any]:
         """Obtém um resumo dos dados analíticos para um restaurante"""
@@ -77,7 +77,7 @@ class AnalyticsService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error getting analytics summary: {str(e)}",
-            )
+            ) from e
 
     def get_usage_statistics(self, restaurant_id: str) -> Dict[str, Any]:
         """Obtém estatísticas de uso dos dashboards"""
@@ -161,7 +161,7 @@ class DashboardService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error creating dashboard: {str(e)}",
-            )
+            ) from e
 
     def get_dashboard(self, dashboard_id: str) -> Dashboard:
         """Obtém um dashboard pelo ID"""
@@ -181,7 +181,7 @@ class DashboardService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error getting dashboard: {str(e)}",
-            )
+            ) from e
 
     def update_dashboard(
         self, dashboard_id: str, update_data: Dict[str, Any]
@@ -221,7 +221,7 @@ class DashboardService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error updating dashboard: {str(e)}",
-            )
+            ) from e
 
     def delete_dashboard(self, dashboard_id: str) -> bool:
         """Exclui um dashboard"""
@@ -251,7 +251,7 @@ class DashboardService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error deleting dashboard: {str(e)}",
-            )
+            ) from e
 
     def list_dashboards(
         self,
@@ -315,7 +315,7 @@ class DashboardService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error listing dashboards: {str(e)}",
-            )
+            ) from e
 
     def count_dashboards(self, restaurant_id: str) -> int:
         """Conta o número de dashboards para um restaurante"""
@@ -409,7 +409,7 @@ class DashboardService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error sharing dashboard: {str(e)}",
-            )
+            ) from e
 
     def create_dashboard_from_template(
         self,
@@ -459,7 +459,7 @@ class DashboardService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error creating dashboard from template: {str(e)}",
-            )
+            ) from e
 
     def duplicate_dashboard(self, dashboard_id: str, new_name: str = None) -> Dashboard:
         """Duplica um dashboard existente"""
@@ -492,7 +492,7 @@ class DashboardService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error duplicating dashboard: {str(e)}",
-            )
+            ) from e
 
     def record_dashboard_view(self, dashboard_id: str, user_id: str) -> None:
         """Registra uma visualização de dashboard"""
@@ -554,7 +554,7 @@ class DataSourceService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error getting data for chart: {str(e)}",
-            )
+            ) from e
 
     def _get_raw_data(
         self, data_source: DataSourceType, filters: List[DashboardFilter] = None
@@ -817,7 +817,7 @@ class DataSourceService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error listing data sources: {str(e)}",
-            )
+            ) from e
 
     def get_data_source_metadata(
         self, data_source_type: DataSourceType, restaurant_id: str
@@ -844,7 +844,7 @@ class DataSourceService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error getting data source metadata: {str(e)}",
-            )
+            ) from e
 
 
 class AlertService:
@@ -907,7 +907,7 @@ class AlertService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error creating alert: {str(e)}",
-            )
+            ) from e
 
     def get_alert(self, alert_id: str) -> DashboardAlert:
         """Obtém um alerta pelo ID"""
@@ -927,7 +927,7 @@ class AlertService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error getting alert: {str(e)}",
-            )
+            ) from e
 
     def update_alert(
         self, alert_id: str, update_data: Dict[str, Any]
@@ -967,7 +967,7 @@ class AlertService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error updating alert: {str(e)}",
-            )
+            ) from e
 
     def delete_alert(self, alert_id: str) -> bool:
         """Exclui um alerta"""
@@ -997,7 +997,7 @@ class AlertService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error deleting alert: {str(e)}",
-            )
+            ) from e
 
     def list_alerts(
         self,
@@ -1060,7 +1060,7 @@ class AlertService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error listing alerts: {str(e)}",
-            )
+            ) from e
 
     def count_alerts(self, restaurant_id: str) -> int:
         """Conta o número de alertas para um restaurante"""
@@ -1146,7 +1146,7 @@ class AlertService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error triggering alert: {str(e)}",
-            )
+            ) from e
 
     def _send_alert_notifications(
         self, alert: DashboardAlert, value: Union[int, float]
@@ -1247,7 +1247,7 @@ class ExportService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error exporting dashboard: {str(e)}",
-            )
+            ) from e
 
     def _process_export(self, export: DashboardExport) -> None:
         """Processa uma exportação em background"""
@@ -1333,7 +1333,7 @@ class ExportService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error getting export status: {str(e)}",
-            )
+            ) from e
 
     def list_exports(
         self,
@@ -1391,7 +1391,7 @@ class ExportService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error listing exports: {str(e)}",
-            )
+            ) from e
 
 
 class ReportService:
@@ -1450,7 +1450,7 @@ class ReportService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error creating scheduled report: {str(e)}",
-            )
+            ) from e
 
     def get_scheduled_report(self, report_id: str) -> ScheduledReport:
         """Obtém um relatório agendado pelo ID"""
@@ -1470,7 +1470,7 @@ class ReportService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error getting scheduled report: {str(e)}",
-            )
+            ) from e
 
     def update_scheduled_report(
         self, report_id: str, update_data: Dict[str, Any]
@@ -1510,7 +1510,7 @@ class ReportService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error updating scheduled report: {str(e)}",
-            )
+            ) from e
 
     def delete_scheduled_report(self, report_id: str) -> bool:
         """Exclui um relatório agendado"""
@@ -1540,7 +1540,7 @@ class ReportService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error deleting scheduled report: {str(e)}",
-            )
+            ) from e
 
     def list_scheduled_reports(
         self,
@@ -1604,7 +1604,7 @@ class ReportService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error listing scheduled reports: {str(e)}",
-            )
+            ) from e
 
     def count_reports(self, restaurant_id: str) -> int:
         """Conta o número de relatórios agendados para um restaurante"""
@@ -1651,7 +1651,7 @@ class ReportService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error running scheduled report: {str(e)}",
-            )
+            ) from e
 
     def _process_report(self, report: ScheduledReport) -> None:
         """Processa um relatório em background"""

@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends, status
-from typing import List, Optional
 import uuid
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from src.auth.security import get_current_active_user
 
 from ..models.coupon_models import Coupon, CouponCreate, CouponUpdate
 from ..services.coupon_service import coupon_service
-from src.auth.security import get_current_active_user
 
 router = APIRouter(
     prefix="/api/v1/coupons",

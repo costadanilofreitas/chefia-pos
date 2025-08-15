@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 from jose import jwt
 
 from src.api.main import app
-from src.auth.security import SECRET_KEY, ALGORITHM
+from src.auth.security import ALGORITHM, SECRET_KEY
 
 client = TestClient(app)
 
@@ -110,7 +110,7 @@ def test_verify_permission():
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 200
-    assert response.json()["has_permission"] == True
+    assert response.json()["has_permission"]
 
 
 def test_verify_permission_unauthorized():
@@ -144,7 +144,7 @@ def test_verify_role():
         "/api/v1/auth/verify-role/caixa", headers={"Authorization": f"Bearer {token}"}
     )
     assert response.status_code == 200
-    assert response.json()["has_role"] == True
+    assert response.json()["has_role"]
 
 
 def test_verify_role_unauthorized():

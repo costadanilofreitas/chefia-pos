@@ -1,9 +1,10 @@
-import os
-import boto3
 import json
 import logging
-from typing import List, Dict, Any, Optional
+import os
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import boto3
 from botocore.exceptions import ClientError
 
 # Configuração de logging
@@ -385,7 +386,7 @@ class MarketingCampaignService:
             )
 
             # Processar cada cliente
-            results = {
+            results: Dict[str, Any] = {
                 "total": len(customers),
                 "processed": 0,
                 "success": 0,
@@ -589,12 +590,12 @@ class MarketingCampaignService:
 
         # Construir prompt
         prompt = f"""
-        Você é um assistente especializado em marketing para restaurantes. Sua tarefa é personalizar a mensagem abaixo 
+        Você é um assistente especializado em marketing para restaurantes. Sua tarefa é personalizar a mensagem abaixo
         para o cliente específico, com base nos dados fornecidos.
-        
+
         TEMPLATE DE MENSAGEM:
         {template_content}
-        
+
         DADOS DO CLIENTE:
         Nome: {customer_data.get('name', 'Cliente')}
         Último pedido: {customer_data.get('last_order_date', 'Desconhecido')}
@@ -602,12 +603,12 @@ class MarketingCampaignService:
         Frequência de visitas: {customer_data.get('visit_frequency', 'Desconhecida')}
         Valor médio de pedido: R$ {customer_data.get('average_order_value', 'Desconhecido')}
         Dias desde último pedido: {customer_data.get('days_since_last_order', 'Desconhecido')}
-        
+
         DADOS DA CAMPANHA:
         Tipo: {campaign_data.get('type', 'promocional')}
         Nome: {campaign_data.get('name', '')}
         Descrição: {campaign_data.get('description', '')}
-        
+
         INSTRUÇÕES:
         1. Personalize a mensagem substituindo os marcadores de posição pelos dados do cliente.
         2. Use um tom {tone} e estilo {style}.
@@ -618,7 +619,7 @@ class MarketingCampaignService:
         7. Se a campanha for de feedback, agradeça pela fidelidade.
         8. Não adicione informações que não estejam nos dados fornecidos.
         9. Mantenha a mensagem adequada para WhatsApp/Telegram.
-        
+
         Forneça apenas a mensagem personalizada, sem comentários adicionais.
         """
 
@@ -648,7 +649,7 @@ class MarketingCampaignService:
             # - order_value: clientes com valor médio de pedido acima de X
 
             # Consulta básica por restaurant_id
-            scan_params = {
+            scan_params: Dict[str, Any] = {
                 "FilterExpression": "restaurant_id = :rid",
                 "ExpressionAttributeValues": {":rid": restaurant_id},
             }

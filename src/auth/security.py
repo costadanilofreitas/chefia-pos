@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, Callable
 import os
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+from datetime import datetime, timedelta
+from typing import Any, Callable, Coroutine, Dict, Optional
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 
-from src.auth.models import UserInDB, TokenData, UserRole, Permission
+from src.auth.models import Permission, TokenData, UserInDB, UserRole
 
 # Configurações de segurança
 SECRET_KEY = os.getenv("SECRET_KEY", "temporarysecretkey123456789")
@@ -147,7 +148,9 @@ def get_user(db: Dict[str, Dict[str, Any]], username: str) -> Optional[UserInDB]
     return None
 
 
-def authenticate_user(db: Dict[str, Dict[str, Any]], username: str, password: str) -> Optional[UserInDB]:
+def authenticate_user(
+    db: Dict[str, Dict[str, Any]], username: str, password: str
+) -> Optional[UserInDB]:
     """Autentica um usuário verificando nome de usuário e senha."""
     user = get_user(db, username)
     if not user:
@@ -157,7 +160,9 @@ def authenticate_user(db: Dict[str, Dict[str, Any]], username: str, password: st
     return user
 
 
-def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> tuple[str, int]:
+def create_access_token(
+    data: Dict[str, Any], expires_delta: Optional[timedelta] = None
+) -> tuple[str, int]:
     """Cria um token JWT com os dados fornecidos e tempo de expiração."""
     to_encode = data.copy()
     if expires_delta:
@@ -186,22 +191,29 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
             role=payload.get("role"),
             permissions=payload.get("permissions", []),
         )
-    except JWTError:
+    except JWTError as e:
+        raise credentials_exception from e
+    username = token_data.username
+    if username is None:
         raise credentials_exception
-    user = get_user(fake_users_db, username=token_data.username)
+    user = get_user(fake_users_db, username=username)
     if user is None:
         raise credentials_exception
     return user
 
 
-async def get_current_active_user(current_user: UserInDB = Depends(get_current_user)) -> UserInDB:
+async def get_current_active_user(
+    current_user: UserInDB = Depends(get_current_user),
+) -> UserInDB:
     """Verifica se o usuário atual está ativo."""
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Usuário inativo")
     return current_user
 
 
-def has_permission(required_permission: str) -> Callable[[UserInDB], UserInDB]:
+def has_permission(
+    required_permission: str,
+) -> Callable[[UserInDB], Coroutine[Any, Any, UserInDB]]:
     """Verifica se o usuário tem a permissão necessária."""
 
     async def permission_dependency(
@@ -216,7 +228,9 @@ def has_permission(required_permission: str) -> Callable[[UserInDB], UserInDB]:
     return permission_dependency
 
 
-def has_role(required_role: UserRole) -> Callable[[UserInDB], UserInDB]:
+def has_role(
+    required_role: UserRole,
+) -> Callable[[UserInDB], Coroutine[Any, Any, UserInDB]]:
     """Verifica se o usuário tem o papel necessário."""
 
     async def role_dependency(

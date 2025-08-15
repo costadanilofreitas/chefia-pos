@@ -3,8 +3,9 @@ Modelos de dados para MFE (Módulo Fiscal Eletrônico)
 """
 
 from datetime import datetime
-from typing import Optional, Dict, Any
 from enum import Enum
+from typing import Any, Dict, Optional
+
 from pydantic import BaseModel, Field
 
 

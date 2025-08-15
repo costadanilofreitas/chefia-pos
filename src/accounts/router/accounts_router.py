@@ -1,33 +1,35 @@
-from typing import List, Dict, Optional, Any
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body, status
 from datetime import date
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
+
+from src.auth.models import Permission, User
+from src.auth.security import get_current_user
 
 from ..models.accounts_models import (
     Account,
     AccountCreate,
+    AccountType,
     AccountUpdate,
-    Transaction,
-    TransactionCreate,
-    TransactionUpdate,
-    Receivable,
-    ReceivableCreate,
-    ReceivableUpdate,
+    FinancialReport,
+    FinancialReportCreate,
     Payable,
     PayableCreate,
     PayableUpdate,
+    PaymentStatus,
+    Receivable,
+    ReceivableCreate,
+    ReceivableUpdate,
     RecurringTransaction,
     RecurringTransactionCreate,
     RecurringTransactionUpdate,
-    FinancialReport,
-    FinancialReportCreate,
-    AccountType,
-    TransactionType,
-    PaymentStatus,
     SourceType,
+    Transaction,
+    TransactionCreate,
+    TransactionType,
+    TransactionUpdate,
 )
 from ..services.accounts_service import accounts_service
-from src.auth.security import get_current_user
-from src.auth.models import User, Permission
 
 router = APIRouter(prefix="/api/v1", tags=["accounts"])
 
@@ -57,12 +59,14 @@ async def create_account(
         return await accounts_service.create_account(
             account_data=account_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao criar conta: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao criar conta: {str(e)}"
+        ) from e
 
 
 @router.get("/accounts/{account_id}", response_model=Account)
@@ -91,17 +95,17 @@ async def update_account(
             account_id=account_id,
             account_data=account_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
         if not account:
             raise HTTPException(status_code=404, detail="Conta não encontrada")
         return account
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar conta: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/accounts/", response_model=List[Account])
@@ -132,17 +136,17 @@ async def update_account_balance(
             amount=amount,
             operation=operation,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
         if not account:
             raise HTTPException(status_code=404, detail="Conta não encontrada")
         return account
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar saldo: {str(e)}"
-        )
+        ) from e
 
 
 # === Endpoints para Transações ===
@@ -158,14 +162,14 @@ async def create_transaction(
         return await accounts_service.create_transaction(
             transaction_data=transaction_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar transação: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/transactions/{transaction_id}", response_model=Transaction)
@@ -194,17 +198,17 @@ async def update_transaction(
             transaction_id=transaction_id,
             update_data=update_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
         if not transaction:
             raise HTTPException(status_code=404, detail="Transação não encontrada")
         return transaction
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar transação: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/transactions/", response_model=List[Transaction])
@@ -250,14 +254,14 @@ async def create_receivable(
         return await accounts_service.create_receivable(
             receivable_data=receivable_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar conta a receber: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/receivables/{receivable_id}", response_model=Receivable)
@@ -286,7 +290,7 @@ async def update_receivable(
             receivable_id=receivable_id,
             update_data=update_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
         if not receivable:
             raise HTTPException(
@@ -294,11 +298,11 @@ async def update_receivable(
             )
         return receivable
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar conta a receber: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/receivables/", response_model=List[Receivable])
@@ -344,14 +348,14 @@ async def create_payable(
         return await accounts_service.create_payable(
             payable_data=payable_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar conta a pagar: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/payables/{payable_id}", response_model=Payable)
@@ -380,17 +384,17 @@ async def update_payable(
             payable_id=payable_id,
             update_data=update_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
         if not payable:
             raise HTTPException(status_code=404, detail="Conta a pagar não encontrada")
         return payable
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar conta a pagar: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/payables/", response_model=List[Payable])
@@ -439,14 +443,14 @@ async def create_recurring_transaction(
         return await accounts_service.create_recurring_transaction(
             transaction_data=transaction_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar transação recorrente: {str(e)}"
-        )
+        ) from e
 
 
 @router.get(
@@ -481,7 +485,7 @@ async def update_recurring_transaction(
             transaction_id=transaction_id,
             update_data=update_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
         if not transaction:
             raise HTTPException(
@@ -489,11 +493,11 @@ async def update_recurring_transaction(
             )
         return transaction
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar transação recorrente: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/recurring-transactions/", response_model=List[RecurringTransaction])
@@ -525,7 +529,7 @@ async def process_recurring_transactions(
         raise HTTPException(
             status_code=500,
             detail=f"Erro ao processar transações recorrentes: {str(e)}",
-        )
+        ) from e
 
 
 # === Endpoints para Relatórios Financeiros ===
@@ -541,14 +545,14 @@ async def create_financial_report(
         return await accounts_service.create_financial_report(
             report_data=report_data,
             user_id=current_user.id,
-            user_name=current_user.full_name,
+            user_name=current_user.full_name or current_user.username,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar relatório: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/reports/{report_id}", response_model=FinancialReport)
@@ -596,7 +600,7 @@ async def get_financial_summary(current_user: User = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter resumo financeiro: {str(e)}"
-        )
+        ) from e
 
 
 # === Endpoints para Integração com Pedidos ===
@@ -631,7 +635,7 @@ async def create_receivable_from_order(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar conta a receber do pedido: {str(e)}"
-        )
+        ) from e
 
 
 # === Endpoints para Integração com Compras ===
@@ -662,7 +666,7 @@ async def create_payable_from_purchase(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar conta a pagar da compra: {str(e)}"
-        )
+        ) from e
 
 
 # === Endpoints para Integração com Funcionários ===
@@ -692,4 +696,4 @@ async def create_payable_for_employee(
         raise HTTPException(
             status_code=500,
             detail=f"Erro ao criar conta a pagar para funcionário: {str(e)}",
-        )
+        ) from e

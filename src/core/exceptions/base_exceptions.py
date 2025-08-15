@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 class CoreException(Exception):
     """Exceção base para todas as exceções do sistema POS Modern."""
 
-    def __init__(self, message: str, code: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        code: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """
         Inicializa a exceção.
 
@@ -34,7 +39,12 @@ class CoreException(Exception):
 class ValidationException(CoreException):
     """Exceção para erros de validação de dados."""
 
-    def __init__(self, message: str, field: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        field: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """
         Inicializa a exceção.
 
@@ -53,7 +63,12 @@ class ValidationException(CoreException):
 class ResourceNotFoundException(CoreException):
     """Exceção para recursos não encontrados."""
 
-    def __init__(self, resource_type: str, resource_id: str, details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self,
+        resource_type: str,
+        resource_id: str,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """
         Inicializa a exceção.
 
@@ -72,7 +87,11 @@ class ResourceNotFoundException(CoreException):
 class AuthorizationException(CoreException):
     """Exceção para erros de autorização."""
 
-    def __init__(self, message: str = "Acesso não autorizado", details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self,
+        message: str = "Acesso não autorizado",
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """
         Inicializa a exceção.
 
@@ -86,7 +105,9 @@ class AuthorizationException(CoreException):
 class ExternalServiceException(CoreException):
     """Exceção para erros em serviços externos."""
 
-    def __init__(self, service_name: str, message: str, details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self, service_name: str, message: str, details: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Inicializa a exceção.
 
@@ -105,7 +126,12 @@ class ExternalServiceException(CoreException):
 class DatabaseException(CoreException):
     """Exceção para erros de banco de dados."""
 
-    def __init__(self, message: str, operation: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        operation: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """
         Inicializa a exceção.
 
@@ -124,7 +150,12 @@ class DatabaseException(CoreException):
 class BusinessRuleException(CoreException):
     """Exceção para violações de regras de negócio."""
 
-    def __init__(self, message: str, rule: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        rule: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """
         Inicializa a exceção.
 

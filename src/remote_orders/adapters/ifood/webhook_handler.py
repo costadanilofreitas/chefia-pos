@@ -6,14 +6,15 @@ incluindo verificação de assinatura, processamento de eventos
 e integração com o sistema de pedidos.
 """
 
-import os
 import json
 import logging
-from typing import Dict, Any, Callable
-from fastapi import Request, BackgroundTasks, Header
+import os
+from typing import Any, Callable, Dict
 
-from .api_client import IFoodAPIClient
+from fastapi import BackgroundTasks, Header, Request
+
 from ...models.remote_order_models import RemoteOrderStatus
+from .api_client import IFoodAPIClient
 
 # Configuração de logging
 logger = logging.getLogger(__name__)
@@ -201,7 +202,7 @@ class IFoodWebhookHandler:
                     await self.api_client.update_order_status(order_id, "CONFIRMED")
 
             # Enviar notificação se handler disponível
-            if self.notification_handler:
+            if self.notification_handler and complete_order_data:
                 await self.notification_handler(
                     "new_order",
                     {
@@ -327,7 +328,7 @@ class IFoodWebhookHandler:
         try:
             # Extrair dados do evento
             event_code = data.get("code")
-            metadata = data.get("metadata", {})
+            data.get("metadata", {})
 
             if not event_code:
                 logger.error(

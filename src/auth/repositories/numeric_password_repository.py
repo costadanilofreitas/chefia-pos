@@ -1,7 +1,7 @@
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 import json
 import os
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from ..models.numeric_password_models import OperatorCredential
 
@@ -147,7 +147,7 @@ class NumericPasswordRepository:
         data = self._load_data()
         credentials = []
 
-        for operator_id, credential_data in data.items():
+        for _operator_id, credential_data in data.items():
             credential = OperatorCredential(
                 id=credential_data.get("id", credential_data["operator_id"]),
                 operator_id=credential_data["operator_id"],

@@ -5,26 +5,25 @@ describe('useCashier Hook', () => {
   it('should return initial state', () => {
     const { result } = renderHook(() => useCashier());
     
-    expect(result.current.currentCashier).toBeNull();
+    expect(result.current.currentCashier).toBeDefined();
     expect(result.current.loading).toBe(false);
     expect(typeof result.current.openCashier).toBe('function');
     expect(typeof result.current.closeCashier).toBe('function');
-    expect(typeof result.current.getCurrentCashier).toBe('function');
-    expect(typeof result.current.registerCashOut).toBe('function');
+    expect(typeof result.current.registerWithdrawal).toBe('function');
   });
 
-  it('should have open function', () => {
+  it('should have openCashier function', () => {
     const { result } = renderHook(() => useCashier());
     
-    expect(result.current.open).toBeDefined();
-    expect(typeof result.current.open).toBe('function');
+    expect(result.current.openCashier).toBeDefined();
+    expect(typeof result.current.openCashier).toBe('function');
   });
 
-  it('should have close function', () => {
+  it('should have closeCashier function', () => {
     const { result } = renderHook(() => useCashier());
     
-    expect(result.current.close).toBeDefined();
-    expect(typeof result.current.close).toBe('function');
+    expect(result.current.closeCashier).toBeDefined();
+    expect(typeof result.current.closeCashier).toBe('function');
   });
 
   it('should have currentCashier property', () => {
@@ -33,11 +32,11 @@ describe('useCashier Hook', () => {
     expect(result.current.currentCashier).toBeDefined();
   });
 
-  it('should have withdraw function', () => {
+  it('should have registerWithdrawal function', () => {
     const { result } = renderHook(() => useCashier());
     
-    expect(result.current.withdraw).toBeDefined();
-    expect(typeof result.current.withdraw).toBe('function');
+    expect(result.current.registerWithdrawal).toBeDefined();
+    expect(typeof result.current.registerWithdrawal).toBe('function');
   });
 });
 

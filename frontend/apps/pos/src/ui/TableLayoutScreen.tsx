@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOrder } from '../hooks/useOrder';
+import { OrderType, OrderStatus } from '../types/order';
 import {
   Box,
   Typography,
@@ -292,8 +293,9 @@ const TableLayoutScreen: React.FC = () => {
           unit_price: item.price,
           notes: item.notes
         })),
-        order_type: newOrder.orderType === 'table' ? 'dine_in' : 'dine_in',
-        status: 'pending' as const,
+        order_type: newOrder.orderType === 'table' ? OrderType.DINE_IN : OrderType.DINE_IN,
+        source: 'pos',
+        status: OrderStatus.PENDING,
         total_amount: newOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
       };
 

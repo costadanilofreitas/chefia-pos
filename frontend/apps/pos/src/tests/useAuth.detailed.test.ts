@@ -6,7 +6,7 @@ describe('useAuth Hook - Detailed Tests', () => {
     const { result } = renderHook(() => useAuth());
     
     await act(async () => {
-      const loginResult = await result.current.login('testuser', 'password');
+      const loginResult = await result.current.login({ operator_id: 'testuser', password: 'password' });
       expect(loginResult).toBeDefined();
     });
   });

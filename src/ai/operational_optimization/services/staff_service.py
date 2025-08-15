@@ -8,20 +8,21 @@ Este serviço implementa:
 """
 
 import logging
-import uuid
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any
-from fastapi import HTTPException
 
 # Importar corretamente os módulos
 import sys
+import uuid
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from fastapi import HTTPException
 
 sys.path.append("/home/ubuntu/pos-modern")
 
-from src.ai.operational_optimization.models import StaffingRecommendation
 from src.ai.operational_optimization.integration.forecast_integration import (
     ForecastIntegrationService,
 )
+from src.ai.operational_optimization.models import StaffingRecommendation
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -174,7 +175,7 @@ class StaffOptimizationService:
             raise HTTPException(
                 status_code=500,
                 detail=f"Error generating staff recommendations: {str(e)}",
-            )
+            ) from e
 
     async def optimize_staff_schedule(
         self, restaurant_id: str, date: datetime, current_schedule: Dict[str, Any]
@@ -256,4 +257,4 @@ class StaffOptimizationService:
             logger.error(f"Error optimizing staff schedule: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"Error optimizing staff schedule: {str(e)}"
-            )
+            ) from e

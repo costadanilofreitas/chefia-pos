@@ -1,17 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from typing import Dict, Optional, Any
 import logging
+from typing import Any, Dict, Optional
 
-from ..models.payment_models import PaymentMethod
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+
 from ..models.partial_payment_models import (
+    BillSplitCreate,
+    CustomSplitRequest,
+    EqualSplitRequest,
+    PartialPaymentCreate,
     PaymentSessionCreate,
     PaymentSessionUpdate,
-    PartialPaymentCreate,
-    BillSplitCreate,
-    EqualSplitRequest,
-    CustomSplitRequest,
 )
-from ..services.partial_payment_service import PaymentSessionService, BillSplitService
+from ..models.payment_models import PaymentMethod
+from ..services.partial_payment_service import BillSplitService, PaymentSessionService
 from ..services.payment_service import PaymentService
 
 router = APIRouter(
@@ -56,7 +57,7 @@ async def create_payment_session(
         logger.error(f"Erro ao criar sessão de pagamento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar sessão de pagamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/sessions/{session_id}", response_model=Dict[str, Any])
@@ -77,7 +78,7 @@ async def get_payment_session(
         logger.error(f"Erro ao obter sessão de pagamento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter sessão de pagamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/sessions/order/{order_id}", response_model=Dict[str, Any])
@@ -95,7 +96,7 @@ async def get_sessions_by_order(
         logger.error(f"Erro ao obter sessões de pagamento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter sessões de pagamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.patch("/sessions/{session_id}", response_model=Dict[str, Any])
@@ -120,7 +121,7 @@ async def update_payment_session(
         logger.error(f"Erro ao atualizar sessão de pagamento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar sessão de pagamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/sessions/{session_id}/close", response_model=Dict[str, Any])
@@ -140,7 +141,7 @@ async def close_payment_session(
         logger.error(f"Erro ao fechar sessão de pagamento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao fechar sessão de pagamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/sessions/{session_id}/cancel", response_model=Dict[str, Any])
@@ -160,7 +161,7 @@ async def cancel_payment_session(
         logger.error(f"Erro ao cancelar sessão de pagamento: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao cancelar sessão de pagamento: {str(e)}"
-        )
+        ) from e
 
 
 # Rotas para pagamentos parciais
@@ -198,7 +199,7 @@ async def create_partial_payment(
         logger.error(f"Erro ao criar pagamento parcial: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar pagamento parcial: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/payments/session/{session_id}", response_model=Dict[str, Any])
@@ -218,7 +219,7 @@ async def get_payments_by_session(
         logger.error(f"Erro ao obter pagamentos: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter pagamentos: {str(e)}"
-        )
+        ) from e
 
 
 # Rotas para divisão de conta
@@ -243,7 +244,7 @@ async def create_bill_split(
         logger.error(f"Erro ao criar divisão de conta: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar divisão de conta: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/splits/{split_id}", response_model=Dict[str, Any])
@@ -264,7 +265,7 @@ async def get_bill_split(
         logger.error(f"Erro ao obter divisão de conta: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter divisão de conta: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/splits/session/{session_id}", response_model=Dict[str, Any])
@@ -286,7 +287,7 @@ async def get_split_by_session(
         logger.error(f"Erro ao obter divisão de conta: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao obter divisão de conta: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/splits/equal", response_model=Dict[str, Any])
@@ -314,7 +315,7 @@ async def create_equal_split(
         logger.error(f"Erro ao criar divisão igualitária: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar divisão igualitária: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/splits/custom", response_model=Dict[str, Any])
@@ -339,7 +340,7 @@ async def create_custom_split(
         logger.error(f"Erro ao criar divisão personalizada: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar divisão personalizada: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/splits/parts/{part_id}/pay", response_model=Dict[str, Any])
@@ -373,4 +374,4 @@ async def pay_split_part(
         logger.error(f"Erro ao pagar parte da divisão: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Erro ao pagar parte da divisão: {str(e)}"
-        )
+        ) from e

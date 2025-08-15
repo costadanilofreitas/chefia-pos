@@ -1,9 +1,10 @@
-import pytest
-from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock
 import json
 import os
 from datetime import date, datetime, timedelta
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from fastapi.testclient import TestClient
 
 from src.api.main import app
 from src.business_day.models.business_day import BusinessDay, DayStatus
@@ -49,7 +50,7 @@ def clean_test_data():
 @pytest.fixture
 async def open_business_day(clean_test_data):
     """Cria um dia de operação aberto para testes."""
-    service = get_business_day_service()
+    get_business_day_service()
     today = date.today().isoformat()
 
     business_day = BusinessDay(

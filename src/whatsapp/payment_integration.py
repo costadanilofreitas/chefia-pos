@@ -6,11 +6,12 @@ de pagamentos via WhatsApp, incluindo PIX, cartão de crédito e débito,
 bem como reembolsos automáticos para pedidos não confirmados.
 """
 
-import os
 import logging
-import requests
-from typing import Dict, Any, List, Optional
+import os
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import requests
 from pydantic import BaseModel
 
 # Configuração de logging
@@ -224,7 +225,7 @@ class WhatsAppPaymentIntegration:
             error_response = None
             try:
                 error_response = e.response.json() if hasattr(e, "response") else None
-            except:
+            except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}
@@ -267,7 +268,7 @@ class WhatsAppPaymentIntegration:
             error_response = None
             try:
                 error_response = e.response.json() if hasattr(e, "response") else None
-            except:
+            except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}
@@ -338,7 +339,7 @@ class WhatsAppPaymentIntegration:
             error_response = None
             try:
                 error_response = e.response.json() if hasattr(e, "response") else None
-            except:
+            except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}
@@ -418,7 +419,7 @@ class WhatsAppPaymentIntegration:
             error_response = None
             try:
                 error_response = e.response.json() if hasattr(e, "response") else None
-            except:
+            except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}
@@ -461,7 +462,7 @@ class WhatsAppPaymentIntegration:
             error_response = None
             try:
                 error_response = e.response.json() if hasattr(e, "response") else None
-            except:
+            except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}
@@ -516,7 +517,7 @@ class WhatsAppPaymentIntegration:
             error_response = None
             try:
                 error_response = e.response.json() if hasattr(e, "response") else None
-            except:
+            except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}

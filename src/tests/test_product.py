@@ -1,18 +1,20 @@
-import pytest
-from fastapi.testclient import TestClient
 import json
 import os
 
+import pytest
+from fastapi import HTTPException
+from fastapi.testclient import TestClient
+
 from src.api.main import app
 from src.product.models.product import (
+    CategoryType,
     Product,
+    ProductCategory,
     ProductStatus,
     ProductType,
-    CategoryType,
-    ProductCategory,
 )
-from src.product.services.product_service import get_product_service
 from src.product.services.combo_rules_service import get_combo_rules_service
+from src.product.services.product_service import get_product_service
 
 # Configurar cliente de teste
 client = TestClient(app)
@@ -347,7 +349,7 @@ async def test_update_product(test_products):
     assert data["id"] == test_products[0].id
     assert data["name"] == "Hambúrguer Clássico Especial"
     assert data["price"] == 17.90
-    assert data["is_featured"] == True
+    assert data["is_featured"]
 
 
 @pytest.mark.asyncio
@@ -393,7 +395,7 @@ async def test_create_category_success():
     data = response.json()
     assert data["name"] == "Promoções"
     assert data["type"] == "main"
-    assert data["is_active"] == True
+    assert data["is_active"]
 
 
 @pytest.mark.asyncio
@@ -503,7 +505,7 @@ async def test_create_combo_success(test_products, test_categories):
     assert len(items) == 2
     assert items[0]["product_id"] == test_products[0].id
     assert items[1]["product_id"] == test_products[1].id
-    assert items[1]["is_exchangeable"] == True
+    assert items[1]["is_exchangeable"]
     assert items[1]["exchange_group_id"] == exchange_group["id"]
 
 
@@ -551,7 +553,7 @@ async def test_upload_product_image(test_products):
     assert response.status_code == 200
     data = response.json()
     assert data["product_id"] == test_products[0].id
-    assert data["is_main"] == True
+    assert data["is_main"]
     assert "url" in data
 
     # Verificar se a imagem foi registrada
@@ -564,7 +566,7 @@ async def test_upload_product_image(test_products):
     images = images_response.json()
     assert len(images) == 1
     assert images[0]["product_id"] == test_products[0].id
-    assert images[0]["is_main"] == True
+    assert images[0]["is_main"]
 
 
 # Testes para cardápios
@@ -588,7 +590,7 @@ async def test_create_menu_success(test_categories, test_products):
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "Cardápio Principal"
-    assert data["is_active"] == True
+    assert data["is_active"]
     assert len(data["categories"]) == 3
     assert len(data["products"]) == 3
 
@@ -649,7 +651,7 @@ async def test_get_current_menu(test_categories, test_products):
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Cardápio Principal"
-    assert data["is_active"] == True
+    assert data["is_active"]
 
 
 # Testes para regras de negócio de combos

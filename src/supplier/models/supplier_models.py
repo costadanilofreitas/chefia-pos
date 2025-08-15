@@ -1,10 +1,12 @@
 # /home/ubuntu/pos-modern/src/supplier/models/supplier_models.py
 
-from pydantic import BaseModel, Field, EmailStr, validator
-from typing import Optional, List
-from datetime import datetime
-import uuid
+import enum
 import re
+import uuid
+from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, EmailStr, Field, validator
 
 
 class Address(BaseModel):

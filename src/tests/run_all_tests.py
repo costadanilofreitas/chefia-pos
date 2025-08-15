@@ -1,7 +1,7 @@
-import unittest
 import asyncio
-import sys
 import os
+import sys
+import unittest
 from datetime import datetime
 
 # Adicionar diretório raiz ao path para importações
@@ -9,14 +9,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 # Importar testes
 from src.order.tests.test_order_service import OrderServiceTestCase
-from src.payment.tests.test_payment_service import PaymentServiceTestCase
 from src.payment.tests.test_asaas_adapter import AsaasAdapterTestCase
+from src.payment.tests.test_payment_service import PaymentServiceTestCase
 from src.remote_orders.tests.test_ifood_adapter import IFoodAdapterTestCase
 from src.remote_orders.tests.test_rappi_adapter import RappiAdapterTestCase
-from src.remote_orders.tests.test_remote_order_service import RemoteOrderServiceTestCase
 from src.remote_orders.tests.test_remote_order_integration import (
     RemoteOrderIntegrationTestCase,
 )
+from src.remote_orders.tests.test_remote_order_service import RemoteOrderServiceTestCase
 
 
 def run_tests():

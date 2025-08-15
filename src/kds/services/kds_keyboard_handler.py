@@ -1,11 +1,10 @@
-from typing import Optional
 import logging
 from datetime import datetime
+from typing import List, Optional
 
-from src.peripherals.events.peripheral_events import PeripheralEventType
+from src.core.events.event_bus import Event, EventBus, EventType
+from src.kds.models.kds_models import ItemStatus, KDSOrder
 from src.peripherals.models.peripheral_models import CommandType
-from src.core.events.event_bus import EventBus, Event
-from src.kds.models.kds_models import ItemStatus
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +22,15 @@ class KDSKeyboardHandler:
         self.event_bus = event_bus
         self.current_order_index = 0
         self.current_item_index = 0
-        self.orders = []  # Lista de pedidos ativos no KDS
+        self.orders: List[KDSOrder] = []  # Lista de pedidos ativos no KDS
 
         # Registrar handlers de eventos
         self.event_bus.subscribe(
-            PeripheralEventType.KEYBOARD_COMMAND, self._handle_keyboard_command
+            EventType.PERIPHERAL_KEYBOARD_COMMAND, self._handle_keyboard_command
         )
-        self.event_bus.subscribe("kds.orders_updated", self._handle_orders_updated)
+        self.event_bus.subscribe(
+            EventType.KDS_ORDERS_UPDATED, self._handle_orders_updated
+        )
 
     async def _handle_keyboard_command(self, event: Event):
         """
@@ -91,7 +92,7 @@ class KDSKeyboardHandler:
 
             if self.orders and self.current_order_index >= 0:
                 current_order = self.orders[self.current_order_index]
-                items = current_order.get("items", [])
+                items = current_order.items if hasattr(current_order, "items") else []
 
                 if items and self.current_item_index >= len(items):
                     self.current_item_index = len(items) - 1
@@ -377,9 +378,9 @@ class KDSKeyboardHandler:
             str: Próximo status ou None se não houver próximo status
         """
         status_flow = {
-            ItemStatus.PENDING: ItemStatus.PREPARING,
-            ItemStatus.PREPARING: ItemStatus.READY,
-            ItemStatus.READY: ItemStatus.DELIVERED,
+            ItemStatus.PENDING.value: ItemStatus.PREPARING.value,
+            ItemStatus.PREPARING.value: ItemStatus.READY.value,
+            ItemStatus.READY.value: ItemStatus.DELIVERED.value,
         }
 
         return status_flow.get(current_status)

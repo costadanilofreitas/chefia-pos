@@ -1,8 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import Dict, Optional, Any
-from enum import Enum
-from datetime import datetime
 import uuid
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class PaymentProvider(str, Enum):
@@ -31,10 +32,14 @@ class PaymentStatus(str, Enum):
     PENDING = "pending"
     CONFIRMED = "confirmed"
     RECEIVED = "received"
+    COMPLETED = "completed"
     OVERDUE = "overdue"
     REFUNDED = "refunded"
+    REFUND_PENDING = "refund_pending"
     CANCELLED = "cancelled"
     FAILED = "failed"
+    DISPUTE = "dispute"
+    UNKNOWN = "unknown"
 
 
 class NotificationType(str, Enum):
@@ -145,3 +150,33 @@ class PaymentWebhook(BaseModel):
     status: str
     payment_date: Optional[datetime] = None
     metadata: Dict[str, Any] = {}
+
+
+class AsaasConfig(BaseModel):
+    """Configuração específica do Asaas."""
+
+    api_key: str
+    sandbox: bool = True
+    webhook_url: Optional[str] = None
+    webhook_token: Optional[str] = None
+    environment: str = "sandbox"
+    client_id: Optional[str] = None
+    client_secret: Optional[str] = None
+    scope: Optional[str] = None
+
+
+class SplitConfig(BaseModel):
+    """Configuração de divisão de pagamento."""
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: Optional[str] = None
+    wallet_id: str
+    percentage: Optional[float] = None
+    fixed_value: Optional[float] = None
+    external_reference: Optional[str] = None
+    total_value: Optional[float] = None
+    charge_id: Optional[str] = None
+    enabled: bool = True
+    recipients: List[Dict[str, Any]] = []
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

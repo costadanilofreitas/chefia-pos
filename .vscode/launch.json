@@ -1,0 +1,157 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Backend (FastAPI)",
+      "type": "python",
+      "request": "launch",
+      "module": "src.main",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "ENVIRONMENT": "development"
+      },
+      "args": [],
+      "justMyCode": false,
+      "stopOnEntry": false
+    },
+    {
+      "name": "Debug POS App (React)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/apps/pos/node_modules/.bin/vite",
+      "args": ["dev", "--port", "3000"],
+      "cwd": "${workspaceFolder}/frontend/apps/pos",
+      "env": {
+        "NODE_ENV": "development",
+        "VITE_API_URL": "http://localhost:8001",
+        "VITE_APP_NAME": "ChefIA POS"
+      },
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Debug KDS App (React)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/apps/kds/node_modules/.bin/vite",
+      "args": ["dev", "--port", "3001"],
+      "cwd": "${workspaceFolder}/frontend/apps/kds",
+      "env": {
+        "NODE_ENV": "development",
+        "VITE_API_URL": "http://localhost:8001",
+        "VITE_APP_NAME": "ChefIA KDS"
+      },
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Debug Kiosk App (React)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/apps/kiosk/node_modules/.bin/vite",
+      "args": ["dev", "--port", "3002"],
+      "cwd": "${workspaceFolder}/frontend/apps/kiosk",
+      "env": {
+        "NODE_ENV": "development",
+        "VITE_API_URL": "http://localhost:8001",
+        "VITE_APP_NAME": "ChefIA Kiosk"
+      },
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Debug Waiter App (React)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/apps/waiter/node_modules/.bin/vite",
+      "args": ["dev", "--port", "3003"],
+      "cwd": "${workspaceFolder}/frontend/apps/waiter",
+      "env": {
+        "NODE_ENV": "development",
+        "VITE_API_URL": "http://localhost:8001",
+        "VITE_APP_NAME": "ChefIA Waiter"
+      },
+      "console": "integratedTerminal",
+      "sourceMaps": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Debug Backend Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "src/tests/",
+        "-v",
+        "--tb=short"
+      ],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "ENVIRONMENT": "test"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Debug Frontend Tests (POS)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/apps/pos/node_modules/.bin/jest",
+      "args": ["--watch", "--verbose"],
+      "cwd": "${workspaceFolder}/frontend/apps/pos",
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "console": "integratedTerminal",
+      "sourceMaps": true
+    },
+    {
+      "name": "Debug E2E Tests (Playwright)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/apps/pos/node_modules/.bin/playwright",
+      "args": ["test", "--ui"],
+      "cwd": "${workspaceFolder}/frontend/apps/pos",
+      "env": {
+        "NODE_ENV": "test"
+      },
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Full Stack (Backend + POS)",
+      "configurations": [
+        "Debug Backend (FastAPI)",
+        "Debug POS App (React)"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "fullstack",
+        "order": 1
+      }
+    },
+    {
+      "name": "Debug All Frontend Apps",
+      "configurations": [
+        "Debug POS App (React)",
+        "Debug KDS App (React)",
+        "Debug Kiosk App (React)",
+        "Debug Waiter App (React)"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "frontend",
+        "order": 2
+      }
+    }
+  ]
+}

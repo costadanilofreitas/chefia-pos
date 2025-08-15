@@ -1,6 +1,7 @@
-import os
 import logging
+import os
 from datetime import datetime, timedelta
+
 from fastapi import HTTPException
 
 # Configurar logging
@@ -39,9 +40,10 @@ class DemandForecastService:
             # Por enquanto, retornar previsão simulada
 
             # Simular pontos de previsão
-            from .models import ForecastResult, ForecastPoint
             import random
             import uuid
+
+            from .models import ForecastPoint, ForecastResult
 
             points = []
             current_date = request.start_date
@@ -109,4 +111,4 @@ class DemandForecastService:
             logger.error(f"Error creating forecast: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"Error creating forecast: {str(e)}"
-            )
+            ) from e

@@ -6,8 +6,9 @@ export interface Product {
   description?: string;
   price: number;
   category_id?: string;
-  status: 'active' | 'inactive';
+  status: 'ACTIVE' | 'INACTIVE' | 'OUT_OF_STOCK';
   image_url?: string;
+  is_available?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -17,8 +18,9 @@ export interface ProductCreate {
   description?: string;
   price: number;
   category_id?: string;
-  status?: 'active' | 'inactive';
+  status?: 'ACTIVE' | 'INACTIVE' | 'OUT_OF_STOCK';
   image_url?: string;
+  is_available?: boolean;
 }
 
 export interface ProductUpdate {
@@ -26,14 +28,16 @@ export interface ProductUpdate {
   description?: string;
   price?: number;
   category_id?: string;
-  status?: 'active' | 'inactive';
+  status?: 'ACTIVE' | 'INACTIVE' | 'OUT_OF_STOCK';
   image_url?: string;
+  is_available?: boolean;
 }
 
 export interface ProductCategory {
   id: string;
   name: string;
   description?: string;
+  is_active?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -41,11 +45,13 @@ export interface ProductCategory {
 export interface CategoryCreate {
   name: string;
   description?: string;
+  is_active?: boolean;
 }
 
 export interface CategoryUpdate {
   name?: string;
   description?: string;
+  is_active?: boolean;
 }
 
 export class ProductService {

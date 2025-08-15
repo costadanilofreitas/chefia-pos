@@ -1,22 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from typing import List, Optional, Dict
 import os
 import uuid
 from datetime import datetime
+from typing import Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from src.product.models.product import (
-    Product,
-    ProductCreate,
-    ProductUpdate,
-    ProductSummary,
-    ProductCategory,
     CategoryCreate,
     CategoryUpdate,
-    ProductStatus,
-    ProductType,
     Ingredient,
     IngredientCreate,
     IngredientUpdate,
+    Product,
+    ProductCategory,
+    ProductCreate,
+    ProductStatus,
+    ProductSummary,
+    ProductType,
+    ProductUpdate,
 )
 
 router = APIRouter(prefix="/api/v1", tags=["products"])

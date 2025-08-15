@@ -5,12 +5,12 @@ Este módulo implementa testes para validar a integração omnichannel,
 incluindo WhatsApp, Messenger, Instagram e Facebook Pixel.
 """
 
-import os
+import asyncio
 import json
 import logging
-import asyncio
-from typing import Dict, Any
+import os
 from datetime import datetime
+from typing import Any, Dict
 
 # Configuração de logging
 logger = logging.getLogger(__name__)

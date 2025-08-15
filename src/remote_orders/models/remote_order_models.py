@@ -1,6 +1,7 @@
-from typing import Dict, Any, Optional, List
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -18,6 +19,7 @@ class RemoteOrderStatus(str, Enum):
 
     PENDING = "pending"  # Recebido, aguardando aceitação
     ACCEPTED = "accepted"  # Aceito pelo restaurante
+    CONFIRMED = "confirmed"  # Confirmado pela plataforma
     REJECTED = "rejected"  # Rejeitado pelo restaurante
     PREPARING = "preparing"  # Em preparação
     READY = "ready"  # Pronto para entrega/retirada
@@ -38,11 +40,13 @@ class RemoteOrderItem(BaseModel):
     total_price: float
     notes: Optional[str] = None
     customizations: List[Dict[str, Any]] = []
+    options: Optional[List[Dict[str, Any]]] = None
 
 
 class RemoteOrderCustomer(BaseModel):
     """Dados do cliente em um pedido remoto."""
 
+    id: Optional[str] = None
     name: str
     phone: Optional[str] = None
     email: Optional[str] = None
@@ -59,6 +63,16 @@ class RemoteOrderPayment(BaseModel):
     change: Optional[float] = None
     prepaid: bool = False
     online: bool = False  # Indica se é pagamento online
+    currency: str = "BRL"
+
+
+class RemoteOrderDelivery(BaseModel):
+    """Informações de entrega de um pedido remoto."""
+
+    address: Dict[str, Any]
+    fee: float
+    estimated_time: Optional[int] = None  # Tempo estimado em minutos
+    instructions: Optional[str] = None
 
 
 class RemoteOrder(BaseModel):
@@ -87,6 +101,9 @@ class RemoteOrder(BaseModel):
     restaurant_id: Optional[str] = None
     store_id: Optional[str] = None
     external_id: Optional[str] = None  # Alias para external_order_id
+    order_number: Optional[str] = None
+    delivery: Optional[Dict[str, Any]] = None
+    total_amount: Optional[float] = None
 
 
 class RemotePlatformConfig(BaseModel):
@@ -100,6 +117,9 @@ class RemotePlatformConfig(BaseModel):
     auto_accept: bool = False
     default_preparation_time: int = 30  # em minutos
     notification_email: Optional[str] = None
+    merchant_id: Optional[str] = None
+    webhook_secret: Optional[str] = None
+    settings: Optional[Dict[str, Any]] = None
     notification_phone: Optional[str] = None
 
 

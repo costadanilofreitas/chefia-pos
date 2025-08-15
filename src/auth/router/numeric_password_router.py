@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
-from typing import Dict, Any, Optional
 import os
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 
 from ..models.numeric_password_models import (
+    AuthConfig,
     LoginRequest,
     LoginResponse,
     OperatorCredentialCreate,
-    OperatorCredentialUpdate,
     OperatorCredentialReset,
-    AuthConfig,
+    OperatorCredentialUpdate,
 )
 from ..services.numeric_password_service import NumericPasswordService
 
@@ -49,7 +50,7 @@ async def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from e
 
 
 @router.post("/credentials", response_model=Dict[str, Any])
@@ -65,7 +66,9 @@ async def create_credential(
             "operator_id": credential.operator_id,
         }
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.put("/credentials/{operator_id}/password", response_model=Dict[str, Any])
@@ -82,7 +85,9 @@ async def update_password(
             "operator_id": credential.operator_id,
         }
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.post("/credentials/{operator_id}/reset", response_model=Dict[str, Any])
@@ -93,7 +98,7 @@ async def reset_password(
 ):
     """Reseta a senha de um operador."""
     if reset_data is None:
-        reset_data = OperatorCredentialReset(operator_id=operator_id)
+        reset_data = OperatorCredentialReset(operator_id=operator_id, new_password=None)
     else:
         reset_data.operator_id = operator_id
 
@@ -106,7 +111,9 @@ async def reset_password(
 
         return response
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.get("/config", response_model=AuthConfig)

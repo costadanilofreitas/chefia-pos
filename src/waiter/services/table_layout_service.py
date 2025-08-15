@@ -1,12 +1,12 @@
-from typing import List, Dict, Any, Optional
 import logging
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from src.waiter.models.table_layout_models import (
     TableLayout,
-    TableStatus,
     TableLayoutConfig,
+    TableStatus,
 )
 
 logger = logging.getLogger(__name__)

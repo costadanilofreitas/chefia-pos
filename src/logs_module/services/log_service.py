@@ -1,22 +1,22 @@
 # /home/ubuntu/pos-modern/src/logging/services/log_service.py
 
-import os
 import json
 import logging
 import logging.handlers
-from typing import List, Dict, Any, Optional, Union
-from datetime import datetime, timedelta
-import uuid
+import os
 import re
+import uuid
 from collections import Counter, defaultdict
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
 
 from ..models.log_models import (
-    LogEntry,
-    LogQuery,
-    LogStats,
     LogConfig,
+    LogEntry,
     LogLevel,
+    LogQuery,
     LogSource,
+    LogStats,
 )
 
 # Configuration
@@ -85,6 +85,9 @@ class LogService:
 
         # Add file handler if enabled
         if self.log_config.file_logging:
+            file_handler: Union[
+                logging.FileHandler, logging.handlers.RotatingFileHandler
+            ]
             if self.log_config.log_rotation:
                 file_handler = logging.handlers.RotatingFileHandler(
                     self.log_config.log_file_path,
@@ -372,7 +375,7 @@ class LogService:
         entries_by_module = Counter(log.module for log in logs)
 
         # Count by hour
-        entries_by_hour = defaultdict(int)
+        entries_by_hour: defaultdict[str, int] = defaultdict(int)
         for log in logs:
             hour = log.timestamp.strftime("%H")
             entries_by_hour[hour] += 1
@@ -387,16 +390,20 @@ class LogService:
         ]
 
         # Most active users
-        user_counts = defaultdict(lambda: {"count": 0, "user_name": ""})
+        user_counts: defaultdict[str, Dict[str, Any]] = defaultdict(
+            lambda: {"count": 0, "user_name": ""}
+        )
         for log in logs:
             if log.user_id:
-                user_counts[log.user_id]["count"] += 1
+                user_counts[log.user_id]["count"] = (
+                    user_counts[log.user_id]["count"] + 1
+                )
                 user_counts[log.user_id]["user_name"] = log.user_name or ""
 
         most_active_users = [
             {"user_id": user_id, "user_name": data["user_name"], "count": data["count"]}
             for user_id, data in sorted(
-                user_counts.items(), key=lambda x: x[1]["count"], reverse=True
+                user_counts.items(), key=lambda x: int(x[1]["count"]), reverse=True
             )[:10]
         ]
 
@@ -485,7 +492,7 @@ class LogService:
                     with open(file_path, "r") as f:
                         file_entries = sum(1 for _ in f)
                     entries_removed += file_entries
-                except:
+                except (FileNotFoundError, OSError, Exception):
                     pass
 
                 # Remove the file
@@ -623,7 +630,7 @@ async def log_debug(
     """Helper function to log a debug message."""
     entry = LogEntry(
         level=LogLevel.DEBUG,
-        source=source if isinstance(source, LogSource) else source,
+        source=source if isinstance(source, LogSource) else LogSource(source),
         module=module,
         message=message,
         **kwargs,
@@ -637,7 +644,7 @@ async def log_info(
     """Helper function to log an info message."""
     entry = LogEntry(
         level=LogLevel.INFO,
-        source=source if isinstance(source, LogSource) else source,
+        source=source if isinstance(source, LogSource) else LogSource(source),
         module=module,
         message=message,
         **kwargs,
@@ -651,7 +658,7 @@ async def log_warning(
     """Helper function to log a warning message."""
     entry = LogEntry(
         level=LogLevel.WARNING,
-        source=source if isinstance(source, LogSource) else source,
+        source=source if isinstance(source, LogSource) else LogSource(source),
         module=module,
         message=message,
         **kwargs,
@@ -665,7 +672,7 @@ async def log_error(
     """Helper function to log an error message."""
     entry = LogEntry(
         level=LogLevel.ERROR,
-        source=source if isinstance(source, LogSource) else source,
+        source=source if isinstance(source, LogSource) else LogSource(source),
         module=module,
         message=message,
         **kwargs,
@@ -679,7 +686,7 @@ async def log_critical(
     """Helper function to log a critical message."""
     entry = LogEntry(
         level=LogLevel.CRITICAL,
-        source=source if isinstance(source, LogSource) else source,
+        source=source if isinstance(source, LogSource) else LogSource(source),
         module=module,
         message=message,
         **kwargs,

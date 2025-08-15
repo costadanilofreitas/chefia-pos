@@ -1,25 +1,25 @@
-from typing import List, Dict, Any, Optional
-from datetime import datetime
 import json
-import os
 import logging
+import os
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from src.cashier.models.cashier import (
-    Cashier,
-    CashierSummary,
-    CashierOperation,
-    CashierOperationResponse,
-    CashierReport,
-    CashierStatus,
-    OperationType,
-    PaymentMethod,
-    create_operation,
-)
 from src.cashier.events.cashier_events import (
     publish_cashier_closed,
     publish_cashier_operation,
     publish_cashier_updated,
+)
+from src.cashier.models.cashier import (
+    Cashier,
+    CashierOperation,
+    CashierOperationResponse,
+    CashierReport,
+    CashierStatus,
+    CashierSummary,
+    OperationType,
+    PaymentMethod,
+    create_operation,
 )
 
 logger = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ class CashierService:
         opening_operation = CashierOperation(
             operation_type=OperationType.OPENING,
             amount=cashier.opening_balance,
-            operator_id=cashier.current_operator_id,
+            operator_id=cashier.current_operator_id or "",
             payment_method=PaymentMethod.CASH,
             related_entity_id=None,
             notes="Abertura de caixa",
@@ -445,8 +445,8 @@ class CashierService:
             if op.operation_type == OperationType.SALE and op.payment_method:
                 method = op.payment_method
                 if method not in sales_by_payment_method:
-                    sales_by_payment_method[method] = 0
-                sales_by_payment_method[method] += op.amount
+                    sales_by_payment_method[method] = 0.0
+                sales_by_payment_method[method] += float(op.amount)
 
         # Contar operações por tipo
         operations_count = {}

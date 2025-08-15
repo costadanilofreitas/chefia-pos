@@ -9,16 +9,17 @@ Este módulo implementa um sistema de suporte completo com:
 - Análise de sentimento e priorização automática
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, BackgroundTasks
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
-import uuid
 import json
 import logging
+import uuid
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
-from src.core.auth.auth_service import get_current_user, User
-from src.core.db.db_service import get_db_service
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
+
+from src.core.auth.auth_service import User, get_current_user
 from src.core.config.config_service import get_config_service
+from src.core.db.db_service import get_db_service
 from src.core.events.event_bus import get_event_bus
 
 # Configuração de logging
@@ -163,7 +164,7 @@ class TicketService:
     ) -> Dict[str, Any]:
         """Atualiza um ticket existente."""
         # Obter ticket atual
-        ticket = await self.get_ticket(ticket_id)
+        await self.get_ticket(ticket_id)
 
         # Campos que não podem ser atualizados diretamente
         protected_fields = [
@@ -574,7 +575,7 @@ class ChatbotService:
     ) -> Dict[str, Any]:
         """Encerra uma conversa de chatbot."""
         # Obter conversa atual
-        chat = await self.get_chat(chat_id)
+        await self.get_chat(chat_id)
 
         # Atualizar status da conversa
         now = datetime.utcnow()
@@ -724,7 +725,7 @@ class ChatbotService:
         context = chat.get("context", {})
 
         # Obter histórico de mensagens
-        messages = chat.get("messages", [])
+        chat.get("messages", [])
 
         # Preparar prompt para o modelo de IA
         prompt = self._prepare_prompt(chat, user_message)
@@ -814,7 +815,7 @@ class ChatbotService:
 
         # Construir prompt
         prompt = f"""Você é um assistente de suporte para um sistema de PDV (Ponto de Venda) para restaurantes chamado POS Modern.
-        
+
 Informações do chat:
 - Nome do usuário: {user_name}
 - ID do restaurante: {restaurant_id}
@@ -963,7 +964,7 @@ class KnowledgeBaseService:
     ) -> Dict[str, Any]:
         """Atualiza um artigo existente."""
         # Obter artigo atual
-        article = await self.get_article(article_id)
+        await self.get_article(article_id)
 
         # Campos que não podem ser atualizados diretamente
         protected_fields = [
@@ -997,7 +998,7 @@ class KnowledgeBaseService:
     async def delete_article(self, article_id: str) -> bool:
         """Exclui um artigo."""
         # Verificar se o artigo existe
-        article = await self.get_article(article_id)
+        await self.get_article(article_id)
 
         # Excluir artigo do banco de dados
         result = await self.db_service.delete("knowledge_articles", {"id": article_id})
@@ -1082,7 +1083,7 @@ class KnowledgeBaseService:
     async def rate_article(self, article_id: str, is_helpful: bool) -> Dict[str, Any]:
         """Avalia um artigo como útil ou não útil."""
         # Obter artigo atual
-        article = await self.get_article(article_id)
+        await self.get_article(article_id)
 
         # Incrementar contador apropriado
         if is_helpful:
@@ -1115,7 +1116,7 @@ class SupportAnalyticsService:
         thirty_days_ago = now - timedelta(days=30)
 
         # Converter para string ISO
-        now_str = now.isoformat()
+        now.isoformat()
         thirty_days_ago_str = thirty_days_ago.isoformat()
 
         # Métricas de tickets
@@ -1191,7 +1192,7 @@ class SupportAnalyticsService:
             return 0
 
         # Calcular tempo de resolução para cada ticket
-        total_hours = 0
+        total_hours = 0.0
         count = 0
 
         for ticket in resolved_tickets:
@@ -1446,6 +1447,10 @@ async def update_ticket(
     support_service: SupportService = Depends(get_support_service),
 ):
     """Atualiza um ticket existente."""
+    # Inicializar se None
+    if update_data is None:
+        update_data = {}
+
     # Adicionar usuário atual como atualizador
     update_data["updated_by"] = current_user.id
 
@@ -1460,6 +1465,10 @@ async def add_ticket_message(
     support_service: SupportService = Depends(get_support_service),
 ):
     """Adiciona uma mensagem a um ticket existente."""
+    # Inicializar se None
+    if message_data is None:
+        message_data = {}
+
     # Adicionar usuário atual como remetente
     message_data["sender_id"] = current_user.id
 
@@ -1525,6 +1534,10 @@ async def add_chat_message(
     support_service: SupportService = Depends(get_support_service),
 ):
     """Adiciona uma mensagem a uma conversa existente."""
+    # Inicializar se None
+    if message_data is None:
+        message_data = {}
+
     # Adicionar usuário atual como remetente
     message_data["sender_id"] = current_user.id
     message_data["sender_type"] = "user"
@@ -1598,6 +1611,10 @@ async def update_article(
     support_service: SupportService = Depends(get_support_service),
 ):
     """Atualiza um artigo existente."""
+    # Inicializar se None
+    if update_data is None:
+        update_data = {}
+
     # Adicionar usuário atual como atualizador
     update_data["updated_by"] = current_user.id
 

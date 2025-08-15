@@ -1,30 +1,31 @@
-import unittest
-import sys
 import os
+import sys
+import unittest
+import uuid
 
 # Add the parent directory to the path so we can import modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 # Import test modules
-from src.inventory.tests.test_inventory_service import TestInventoryService
-from src.inventory.tests.test_inventory_router import TestInventoryRouter
-from src.inventory.tests.test_inventory_financial_integration import (
-    TestInventoryFinancialIntegration,
-)
+from src.accounts.services.accounts_service import AccountsService
 
 # Import inventory models for end-to-end testing
 from src.inventory.models.inventory_models import (
+    FinancialEntryType,
     InventoryItemCreate,
-    TransactionType,
-    TransactionStatus,
     InventoryLossCreate,
     LossReason,
-    FinancialEntryType,
+    TransactionStatus,
+    TransactionType,
 )
 
 # Import services for end-to-end testing
 from src.inventory.services.inventory_service import InventoryService
-from src.accounts.services.accounts_service import AccountsService
+from src.inventory.tests.test_inventory_financial_integration import (
+    TestInventoryFinancialIntegration,
+)
+from src.inventory.tests.test_inventory_router import TestInventoryRouter
+from src.inventory.tests.test_inventory_service import TestInventoryService
 
 
 class TestInventoryEndToEnd(unittest.TestCase):

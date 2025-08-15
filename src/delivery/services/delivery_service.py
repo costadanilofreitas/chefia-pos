@@ -1,20 +1,20 @@
 import uuid
-from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
+from src.core.events.event_bus import Event, EventType, get_event_bus
 from src.delivery.models.delivery_models import (
-    DeliveryOrder,
-    DeliveryOrderStatus,
-    DeliveryCourier,
     CourierStatus,
     CourierType,
+    DeliveryCourier,
+    DeliveryOrder,
+    DeliveryOrderStatus,
     DeliveryRoute,
-    RouteStatus,
-    DeliveryZone,
     DeliveryTracking,
+    DeliveryZone,
+    RouteStatus,
     TrackingEventType,
 )
-from src.core.events.event_bus import get_event_bus, Event
 
 
 class DeliveryService:
@@ -75,10 +75,10 @@ class DeliveryService:
 
         # Publicar evento
         from src.core.events.event_bus import Event, EventType
-        
+
         await self.event_bus.publish(
             Event(
-                event_type=EventType.ORDER_CREATED,
+                event_type=EventType.DELIVERY_ORDER_CREATED,
                 data={
                     "delivery_order": delivery_order.dict(),
                     "source": "delivery_service",
@@ -99,6 +99,8 @@ class DeliveryService:
         delivery_order = self.delivery_orders[delivery_order_id]
 
         # Verificar se o entregador existe
+        # Get global courier service instance
+        global courier_service
         courier = await courier_service.get_courier(courier_id)
         if not courier:
             raise ValueError(f"Entregador {courier_id} não encontrado")
@@ -185,6 +187,7 @@ class DeliveryService:
 
             # Se o entregador estiver atribuído, atualizar seu status
             if delivery_order.courier_id:
+                global courier_service
                 await courier_service.update_courier_after_delivery(
                     delivery_order.courier_id
                 )
@@ -199,6 +202,7 @@ class DeliveryService:
 
             # Se o entregador estiver atribuído, atualizar seu status
             if delivery_order.courier_id:
+                global courier_service
                 await courier_service.update_courier_after_delivery(
                     delivery_order.courier_id
                 )
@@ -275,6 +279,7 @@ class DeliveryService:
     ) -> float:
         """Calcula a taxa de entrega para um endereço."""
         # Obter zona de entrega para o endereço
+        global zone_service
         zone = await zone_service.get_zone_for_address(address_id)
 
         if not zone:
@@ -301,6 +306,7 @@ class DeliveryService:
     async def estimate_delivery_time(self, address_id: str) -> int:
         """Estima o tempo de entrega em minutos."""
         # Obter zona de entrega para o endereço
+        global zone_service
         zone = await zone_service.get_zone_for_address(address_id)
 
         if not zone:
@@ -494,7 +500,7 @@ class DeliveryService:
             return []
 
         # Agrupar por região (simplificado)
-        regions = {}
+        regions: Dict[str, List[DeliveryOrder]] = {}
         for order in pending_orders:
             # Simulação de região
             region = "CENTRAL"
@@ -506,7 +512,7 @@ class DeliveryService:
 
         # Criar rotas
         routes = []
-        for region, orders in regions.items():
+        for _region, orders in regions.items():
             route = DeliveryRoute(
                 id=str(uuid.uuid4()),
                 status=RouteStatus.PLANNING,
@@ -615,7 +621,7 @@ class CourierService:
                     "courier_id": courier_id,
                     "updates": data,
                     "source": "courier_service",
-                }
+                },
             ),
         )
 
@@ -648,7 +654,7 @@ class CourierService:
                     "old_status": old_status,
                     "new_status": status,
                     "source": "courier_service",
-                }
+                },
             ),
         )
 
@@ -669,13 +675,14 @@ class CourierService:
 
         # Publicar evento
         await self.event_bus.publish(
-            "DELIVERY_EVENT",
             Event(
+                event_type=EventType.DELIVERY_EVENT,
                 data={
                     "courier_id": courier_id,
                     "location": location,
                     "source": "courier_service",
-                }
+                },
+                metadata={"module": "delivery"},
             ),
         )
 
@@ -743,14 +750,15 @@ class CourierService:
 
         # Publicar evento
         await self.event_bus.publish(
-            "DELIVERY_EVENT",
             Event(
+                event_type=EventType.DELIVERY_EVENT,
                 data={
                     "courier_id": courier_id,
                     "status": courier.status,
                     "current_deliveries": courier.current_deliveries,
                     "source": "courier_service",
-                }
+                },
+                metadata={"module": "delivery"},
             ),
         )
 
@@ -825,13 +833,14 @@ class DeliveryZoneService:
 
         # Publicar evento
         await self.event_bus.publish(
-            "DELIVERY_EVENT",
             Event(
+                event_type=EventType.DELIVERY_EVENT,
                 data={
                     "zone": zone.dict(),
                     "action": "created",
                     "source": "zone_service",
-                }
+                },
+                metadata={"module": "delivery"},
             ),
         )
 
@@ -865,8 +874,11 @@ class DeliveryZoneService:
 
         # Publicar evento
         await self.event_bus.publish(
-            "DELIVERY_EVENT",
-            Event(data={"zone_id": zone_id, "updates": data, "source": "zone_service"}),
+            Event(
+                event_type=EventType.DELIVERY_EVENT,
+                data={"zone_id": zone_id, "updates": data, "source": "zone_service"},
+                metadata={"module": "delivery"},
+            ),
         )
 
         return zone

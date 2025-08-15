@@ -1,16 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import List, Optional
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..demand_forecast.models import (
+    DemandAlert,
+    ForecastDimension,
     ForecastRequest,
     ForecastResult,
-    DemandAlert,
+    ModelType,
     StockRecommendation,
     TimeGranularity,
-    ForecastDimension,
-    ModelType,
 )
 from ..demand_forecast.service import DemandForecastService
 
@@ -48,7 +49,7 @@ async def create_forecast(
         logger.error(f"Error creating forecast: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error creating forecast: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/{forecast_id}", response_model=ForecastResult)
@@ -66,7 +67,9 @@ async def get_forecast(
         raise
     except Exception as e:
         logger.error(f"Error getting forecast: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error getting forecast: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting forecast: {str(e)}"
+        ) from e
 
 
 @router.get("/alerts/{restaurant_id}", response_model=List[DemandAlert])
@@ -93,7 +96,9 @@ async def get_alerts(
         return alerts
     except Exception as e:
         logger.error(f"Error getting alerts: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error getting alerts: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting alerts: {str(e)}"
+        ) from e
 
 
 @router.get(
@@ -117,7 +122,7 @@ async def get_recommendations(
         logger.error(f"Error getting recommendations: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error getting recommendations: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/quick-forecast/{restaurant_id}", response_model=ForecastResult)
@@ -160,4 +165,4 @@ async def create_quick_forecast(
         logger.error(f"Error creating quick forecast: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500, detail=f"Error creating quick forecast: {str(e)}"
-        )
+        ) from e

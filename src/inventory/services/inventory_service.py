@@ -1,29 +1,31 @@
-from fastapi import HTTPException, status
-from typing import List, Optional, Dict
+import logging
 import uuid
 from datetime import datetime
-import logging
+from typing import Dict, List, Optional
 
-from ..models.inventory_models import (
-    InventoryItem,
-    InventoryItemCreate,
-    InventoryItemUpdate,
-    InventoryTransaction,
-    InventoryTransactionCreate,
-    TransactionType,
-    TransactionStatus,
-    InventoryLoss,
-    InventoryLossCreate,
-    LossReason,
-    InventoryCount,
-    InventoryCountCreate,
-    InventoryCountStatus,
-    FinancialEntry,
-    FinancialEntryType,
-)
+from fastapi import HTTPException, status
 
 # Import financial service for integration
 from src.accounts.services.accounts_service import AccountsService
+
+from ..models.inventory_models import (
+    FinancialEntry,
+    FinancialEntryType,
+    InventoryCount,
+    InventoryCountCreate,
+    InventoryCountItem,
+    InventoryCountStatus,
+    InventoryItem,
+    InventoryItemCreate,
+    InventoryItemUpdate,
+    InventoryLoss,
+    InventoryLossCreate,
+    InventoryTransaction,
+    InventoryTransactionCreate,
+    LossReason,
+    TransactionStatus,
+    TransactionType,
+)
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -328,9 +330,12 @@ class InventoryService:
 
         # Update item stock
         item = await self.get_inventory_item(transaction.item_id)
-        await self._update_item_stock(
-            item, transaction.new_stock, transaction.unit_cost
-        )
+        if item is None:
+            raise HTTPException(
+                status_code=404, detail=f"Item with ID {transaction.item_id} not found"
+            )
+        unit_cost = transaction.unit_cost or 0.0
+        await self._update_item_stock(item, transaction.new_stock, unit_cost)
 
         # Create financial entry if needed
         if transaction.transaction_type == TransactionType.PURCHASE:
@@ -339,7 +344,7 @@ class InventoryService:
                 reference_id=transaction_id,
                 reference_type="transaction",
                 amount=transaction.value_change,
-                description=f"Inventory purchase: {item.name} x {transaction.quantity}",
+                description=f"Inventory purchase: {item.name if item else 'Unknown'} x {transaction.quantity}",
                 is_posted=True,
             )
         elif (
@@ -351,7 +356,7 @@ class InventoryService:
                 reference_id=transaction_id,
                 reference_type="transaction",
                 amount=transaction.value_change,
-                description=f"Inventory adjustment: {item.name}",
+                description=f"Inventory adjustment: {item.name if item else 'Unknown'}",
                 is_posted=True,
             )
 
@@ -459,22 +464,22 @@ class InventoryService:
 
         # Apply filters
         if item_id:
-            losses = [l for l in losses if l.item_id == item_id]
+            losses = [loss for loss in losses if loss.item_id == item_id]
 
         if reason:
-            losses = [l for l in losses if l.reason == reason]
+            losses = [loss for loss in losses if loss.reason == reason]
 
         if status:
-            losses = [l for l in losses if l.status == status]
+            losses = [loss for loss in losses if loss.status == status]
 
         if start_date:
-            losses = [l for l in losses if l.created_at >= start_date]
+            losses = [loss for loss in losses if loss.created_at >= start_date]
 
         if end_date:
-            losses = [l for l in losses if l.created_at <= end_date]
+            losses = [loss for loss in losses if loss.created_at <= end_date]
 
         # Sort by created_at (newest first)
-        losses.sort(key=lambda l: l.created_at, reverse=True)
+        losses.sort(key=lambda loss: loss.created_at, reverse=True)
 
         return losses
 
@@ -570,8 +575,8 @@ class InventoryService:
 
         # Process count items
         count_items = []
-        total_variance = 0
-        total_value_variance = 0
+        total_variance = 0.0
+        total_value_variance = 0.0
 
         for item_count in count_create.items:
             item = await self.get_inventory_item(item_count.item_id)
@@ -583,6 +588,11 @@ class InventoryService:
                 if item_count.expected_quantity > 0
                 else 0
             )
+            if item is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Item with ID {item_count.item_id} not found",
+                )
             value_variance = variance * item.cost_per_unit
 
             count_item = {
@@ -604,9 +614,24 @@ class InventoryService:
         count_id = uuid.uuid4()
         now = datetime.utcnow()
 
+        # Convert count_items dict to InventoryCountItem objects
+        count_item_objects = []
+        for item_dict in count_items:
+            count_item_obj = InventoryCountItem(
+                id=item_dict["id"],  # type: ignore
+                item_id=item_dict["item_id"],  # type: ignore
+                expected_quantity=item_dict["expected_quantity"],  # type: ignore
+                actual_quantity=item_dict["actual_quantity"],  # type: ignore
+                notes=item_dict["notes"],  # type: ignore
+                variance=item_dict["variance"],  # type: ignore
+                variance_percentage=item_dict["variance_percentage"],  # type: ignore
+                value_variance=item_dict["value_variance"],  # type: ignore
+            )
+            count_item_objects.append(count_item_obj)
+
         count = InventoryCount(
             id=count_id,
-            items=count_items,
+            items=count_item_objects,
             total_variance=total_variance,
             total_value_variance=total_value_variance,
             created_at=now,
@@ -712,7 +737,7 @@ class InventoryService:
                     reference_id=count_id,
                     reference_type="count",
                     notes=f"Inventory count adjustment: {count_item.notes or ''}",
-                    unit_cost=item.cost_per_unit,
+                    unit_cost=item.cost_per_unit if item else 0.0,
                 )
             )
 

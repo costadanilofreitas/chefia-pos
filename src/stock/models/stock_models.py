@@ -1,9 +1,10 @@
 # /home/ubuntu/pos-modern/src/stock/models/stock_models.py
 
-from pydantic import BaseModel, Field
-from typing import Optional, List, Literal
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import List, Literal, Optional
+
+from pydantic import BaseModel, Field
 
 
 class StockItemBase(BaseModel):

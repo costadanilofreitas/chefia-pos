@@ -1,36 +1,36 @@
-import os
 import json
-from typing import List, Dict, Optional, Any
-from datetime import datetime, date, timedelta
+import os
 import uuid
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from src.core.events.event_bus import Event, EventType, get_event_bus
+from src.logs_module.services.log_service import LogSource, log_error, log_info
 
 from ..models.accounts_models import (
     Account,
     AccountCreate,
+    AccountsEvent,
+    AccountType,
     AccountUpdate,
-    Transaction,
-    TransactionCreate,
-    TransactionUpdate,
-    Receivable,
-    ReceivableCreate,
-    ReceivableUpdate,
+    FinancialReport,
+    FinancialReportCreate,
     Payable,
     PayableCreate,
     PayableUpdate,
+    PaymentStatus,
+    Receivable,
+    ReceivableCreate,
+    ReceivableUpdate,
     RecurringTransaction,
     RecurringTransactionCreate,
     RecurringTransactionUpdate,
-    FinancialReport,
-    FinancialReportCreate,
-    AccountType,
-    TransactionType,
-    PaymentStatus,
     SourceType,
-    AccountsEvent,
+    Transaction,
+    TransactionCreate,
+    TransactionType,
+    TransactionUpdate,
 )
-
-from src.logs_module.services.log_service import log_info, log_error, LogSource
-from src.core.events.event_bus import get_event_bus, Event, EventType
 
 # Configuração
 ACCOUNTS_DATA_FILE = os.path.join("/home/ubuntu/pos-modern/data", "accounts.json")
@@ -1841,7 +1841,7 @@ class AccountsService:
         )
 
         # Agrupa por status
-        by_status = {
+        by_status: Dict[str, List[Any]] = {
             "pending": [],
             "paid": [],
             "partially_paid": [],
@@ -1924,7 +1924,7 @@ class AccountsService:
         )
 
         # Agrupa por status
-        by_status = {
+        by_status: Dict[str, List[Any]] = {
             "pending": [],
             "paid": [],
             "partially_paid": [],
@@ -2269,7 +2269,9 @@ class AccountsService:
             type=event_type, account_id=account_id, user_id=user_id, data=data
         )
 
-        await self.event_bus.publish(Event(type=EventType.ACCOUNTS, data=event.dict()))
+        await self.event_bus.publish(
+            Event(EventType.ACCOUNTS_TRANSACTION_CREATED, event.dict())
+        )
 
 
 # Cria uma instância singleton

@@ -1,14 +1,14 @@
-import unittest
 import os
 import sys
+import unittest
 
 # Adicionar diretório raiz ao path para importar módulos
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 # Importar testes
-from test_payment_service import TestPaymentService
 from test_asaas_adapter import TestAsaasAdapter
 from test_payment_router import TestPaymentRouter
+from test_payment_service import TestPaymentService
 
 if __name__ == "__main__":
     # Criar suíte de testes

@@ -1,7 +1,8 @@
-from typing import Dict, Any, Optional
-from src.core.events.event_bus import Event, EventType, EventHandler, get_event_bus
-from src.waiter.models.waiter_models import WaiterOrder, WaiterOrderStatus
 from datetime import datetime
+from typing import Any, Dict, Optional
+
+from src.core.events.event_bus import Event, EventHandler, EventType, get_event_bus
+from src.waiter.models.waiter_models import WaiterOrder, WaiterOrderStatus
 
 # Definição de tipos de eventos como strings para o módulo de garçom
 WAITER_ORDER_CREATED = "waiter.order_created"

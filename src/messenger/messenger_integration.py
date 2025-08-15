@@ -6,12 +6,13 @@ permitindo envio e recebimento de mensagens, templates interativos,
 e processamento de webhooks.
 """
 
-import os
-import logging
-import hmac
 import hashlib
+import hmac
+import logging
+import os
+from typing import Any, Dict, List
+
 import requests
-from typing import Dict, Any, List
 
 from ...core.messaging import BasePlatformIntegration, MessageType
 

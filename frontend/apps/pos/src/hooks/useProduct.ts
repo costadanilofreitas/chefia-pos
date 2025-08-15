@@ -11,8 +11,10 @@ export interface Product {
   combo_items?: any[];
   type?: string;
   description?: string;
-  image?: string;
-  available?: boolean;
+  image_url?: string;
+  is_available?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Category {
@@ -20,6 +22,9 @@ export interface Category {
   name: string;
   description?: string;
   icon?: string;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const useProduct = () => {
@@ -57,8 +62,10 @@ export const useProduct = () => {
         is_combo: (p as any).type === 'COMBO',
         combo_items: (p as any).combo_items || [],
         description: (p as any).description || '',
-        image: (p as any).image || '',
-        available: (p as any).available !== false
+        image_url: (p as any).image_url || '',
+        is_available: (p as any).status === 'ACTIVE' && (p as any).is_available !== false,
+        created_at: (p as any).created_at,
+        updated_at: (p as any).updated_at
       }));
       
       setProducts(convertedProducts);

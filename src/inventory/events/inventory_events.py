@@ -1,9 +1,9 @@
-from typing import Dict, Any, Optional
-from enum import Enum
-from datetime import datetime
 import uuid
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, Optional
 
-from src.core.events.event_bus import EventBus, Event
+from src.core.events.event_bus import Event, EventBus
 
 
 class InventoryEventType(str, Enum):

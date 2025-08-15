@@ -11,16 +11,17 @@ Este serviço orquestra todos os serviços de otimização operacional:
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Any
+from typing import Any, Dict, Optional
+
 from fastapi import HTTPException
 
-from ..models import OperationalOptimizationConfig
-from .staff_service import StaffOptimizationService
-from .delivery_service import DeliveryOptimizationService
-from .table_service import TableOptimizationService
-from .kiosk_service import KioskOptimizationService
-from .whatsapp_service import WhatsAppCampaignService
 from ...demand_forecast.service import DemandForecastService
+from ..models import OperationalOptimizationConfig
+from .delivery_service import DeliveryOptimizationService
+from .kiosk_service import KioskOptimizationService
+from .staff_service import StaffOptimizationService
+from .table_service import TableOptimizationService
+from .whatsapp_service import WhatsAppCampaignService
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -167,7 +168,7 @@ class OperationalOptimizationService:
             raise HTTPException(
                 status_code=500,
                 detail=f"Error generating optimization recommendations: {str(e)}",
-            )
+            ) from e
 
     async def _calculate_optimization_metrics(
         self, recommendations: Dict[str, Any]

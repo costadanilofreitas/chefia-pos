@@ -1,8 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+import uuid
 from datetime import datetime
 from enum import Enum
-import uuid
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 # Enums
@@ -22,6 +23,9 @@ class PricingStrategy(str, Enum):
     FIXED = "FIXED"
     WEIGHT_BASED = "WEIGHT_BASED"
     DYNAMIC = "DYNAMIC"
+    HIGHEST_PRICE = "HIGHEST_PRICE"
+    AVERAGE_PRICE = "AVERAGE_PRICE"
+    SUM_PRICE = "SUM_PRICE"
 
 
 # Base Models
@@ -64,6 +68,7 @@ class Product(ProductBase):
     images: List[str] = []
     ingredients: List[Dict[str, Any]] = []
     combo_items: List[Dict[str, Any]] = []
+    attributes: Dict[str, Any] = {}  # Atributos personalizados do produto
 
 
 class ProductSummary(BaseModel):
@@ -165,6 +170,8 @@ class MenuBase(BaseModel):
     name: str
     description: Optional[str] = None
     is_active: bool = True
+    products: List[str] = []  # Lista de IDs de produtos
+    categories: List[str] = []  # Lista de IDs de categorias
 
 
 class MenuCreate(MenuBase):
@@ -267,4 +274,12 @@ class MenuExport(BaseModel):
     name: str
     format: str
     file_path: str
+    menu: Dict[str, Any] = {}
+    products: List[Dict[str, Any]] = []
+    categories: List[Dict[str, Any]] = []
+    images: List[Dict[str, Any]] = []
+    combo_items: List[Dict[str, Any]] = []
+    composite_sections: List[Dict[str, Any]] = []
+    ingredients: List[Dict[str, Any]] = []
+    option_groups: List[Dict[str, Any]] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)

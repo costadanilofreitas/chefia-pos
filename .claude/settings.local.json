@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(pip:*)",
+      "Bash(timeout:*)",
+      "Bash(mv:*)",
+      "Bash(mkdir:*)",
+      "Bash(docker-compose:*)",
+      "Bash(docker:*)",
+      "Bash(git:*)",
+      "Bash(poetry:*)",
+      "Bash(npm:*)",
+      "Bash(nvm:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(mypy:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run test:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(poetry run ruff:*)",
+      "Bash(ruff check:*)",
+      "Bash(rm:*)",
+      "Bash(make:*)"
+    ],
+    "deny": [],
+    "ask": [],
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "C:\\c\\Users\\Consultor\\Documents\\projetos\\chefia-pos"
+    ]
+  }
+}

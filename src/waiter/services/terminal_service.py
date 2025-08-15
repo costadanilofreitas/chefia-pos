@@ -1,15 +1,15 @@
-from typing import List, Dict, Any, Optional
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from ..models.terminal_models import (
-    TerminalConfig,
-    TerminalSession,
-    OfflineOrder,
-    TerminalStatus,
-)
 from ...core.events.event_bus import EventBus
 from ...core.exceptions.base_exceptions import ResourceNotFoundException
+from ..models.terminal_models import (
+    OfflineOrder,
+    TerminalConfig,
+    TerminalSession,
+    TerminalStatus,
+)
 
 
 class TerminalService:
@@ -100,7 +100,7 @@ class TerminalService:
     ) -> Optional[TerminalSession]:
         """Inicia uma nova sessão em um terminal."""
         if terminal_id not in self._configs:
-            raise ResourceNotFoundException(f"Terminal {terminal_id} não encontrado")
+            raise ResourceNotFoundException("Terminal", terminal_id)
 
         session_id = str(uuid.uuid4())
         now = datetime.now()
@@ -221,10 +221,10 @@ class TerminalService:
     ) -> Dict[str, Any]:
         """Sincroniza dados entre o terminal e o servidor."""
         if terminal_id not in self._configs:
-            raise ResourceNotFoundException(f"Terminal {terminal_id} não encontrado")
+            raise ResourceNotFoundException("Terminal", terminal_id)
 
         if session_id not in self._sessions:
-            raise ResourceNotFoundException(f"Sessão {session_id} não encontrada")
+            raise ResourceNotFoundException("Sessão", session_id)
 
         session = self._sessions[session_id]
 

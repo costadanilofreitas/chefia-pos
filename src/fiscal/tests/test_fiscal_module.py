@@ -1,19 +1,19 @@
-import unittest
 import asyncio
 import os
+import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 from ..models.fiscal_models import (
+    BeneficioFiscal,
     ConfiguracaoRegional,
     GrupoFiscal,
+    OrigemProduto,
+    ProductFiscalInfo,
     RegimeTributario,
+    RegraNcm,
     TipoImposto,
     TipoItem,
-    OrigemProduto,
-    RegraNcm,
-    BeneficioFiscal,
-    ProductFiscalInfo,
 )
 from ..services.fiscal_service import FiscalService
 

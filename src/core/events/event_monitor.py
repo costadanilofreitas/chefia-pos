@@ -1,6 +1,7 @@
-from typing import Dict, Any, List, Optional, Callable
 import logging
-from .event_bus import Event, get_event_bus, EventType
+from typing import Any, Callable, Dict, List, Optional
+
+from .event_bus import Event, EventType, get_event_bus
 
 
 class EventMonitor:

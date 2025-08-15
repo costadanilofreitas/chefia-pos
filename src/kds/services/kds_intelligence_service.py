@@ -1,9 +1,9 @@
-from typing import List, Dict, Any, Optional, Tuple
 import logging
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
+from src.core.events.event_bus import Event, EventBus, EventType
 from src.order.services.order_service import OrderService
-from src.core.events.event_bus import EventBus, Event
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,9 @@ class KDSIntelligenceService:
         """
         order_data = event.data
         order_id = order_data.get("order_id")
+        if not order_id or not isinstance(order_id, str):
+            logger.error("KDS Intelligence: ID do pedido inválido")
+            return
 
         logger.info(f"KDS Intelligence: Processando novo pedido {order_id}")
 
@@ -48,7 +51,7 @@ class KDSIntelligenceService:
             return
 
         # Calcular tempos de preparo e sincronização
-        await self.calculate_preparation_times(order)
+        await self.calculate_preparation_times(order.dict())
 
     async def handle_order_update(self, event: Event):
         """
@@ -59,6 +62,9 @@ class KDSIntelligenceService:
         """
         order_data = event.data
         order_id = order_data.get("order_id")
+        if not order_id or not isinstance(order_id, str):
+            logger.error("KDS Intelligence: ID do pedido inválido na atualização")
+            return
 
         logger.info(f"KDS Intelligence: Atualizando pedido {order_id}")
 
@@ -66,7 +72,7 @@ class KDSIntelligenceService:
         if self.should_recalculate_times(order_data):
             order = await self.order_service.get_order(order_id)
             if order:
-                await self.calculate_preparation_times(order)
+                await self.calculate_preparation_times(order.dict())
 
     async def handle_item_status_change(self, event: Event):
         """
@@ -79,6 +85,15 @@ class KDSIntelligenceService:
         order_id = item_data.get("order_id")
         item_id = item_data.get("item_id")
         new_status = item_data.get("status")
+
+        if (
+            not order_id
+            or not isinstance(order_id, str)
+            or not item_id
+            or not isinstance(item_id, str)
+        ):
+            logger.error("KDS Intelligence: IDs inválidos no evento de item")
+            return
 
         logger.info(
             f"KDS Intelligence: Item {item_id} do pedido {order_id} mudou para status {new_status}"
@@ -93,7 +108,7 @@ class KDSIntelligenceService:
         # Verificar se é necessário recalcular tempos para outros itens do pedido
         order = await self.order_service.get_order(order_id)
         if order:
-            await self.update_preparation_times(order, item_id)
+            await self.update_preparation_times(order.dict(), item_id)
 
     async def calculate_preparation_times(self, order: Dict[str, Any]) -> None:
         """
@@ -124,12 +139,15 @@ class KDSIntelligenceService:
         adjusted_start_times = await self.adjust_start_times(start_times, items)
 
         # Salvar os tempos calculados no banco de dados
-        await self.save_preparation_schedule(
-            order.get("order_id"), adjusted_start_times
+        order_id = (
+            order.get("order_id")
+            if isinstance(order, dict)
+            else getattr(order, "id", None)
         )
-
-        # Publicar evento com os tempos calculados
-        self.publish_preparation_schedule(order.get("order_id"), adjusted_start_times)
+        if order_id:
+            await self.save_preparation_schedule(order_id, adjusted_start_times)
+            # Publicar evento com os tempos calculados
+            await self.publish_preparation_schedule(order_id, adjusted_start_times)
 
     async def get_preparation_times(
         self, items: List[Dict[str, Any]]
@@ -148,6 +166,9 @@ class KDSIntelligenceService:
         for item in items:
             item_id = item.get("item_id")
             product_id = item.get("product_id")
+
+            if not product_id or not item_id:
+                continue
 
             # Obter tempo estimado do produto
             estimated_time = await self.get_product_preparation_time(product_id)
@@ -239,7 +260,7 @@ class KDSIntelligenceService:
         if not prep_times:
             return 0, ""
 
-        longest_item_id = max(prep_times, key=prep_times.get)
+        longest_item_id = max(prep_times, key=lambda x: prep_times.get(x, 0))
         longest_time = prep_times[longest_item_id]
 
         return longest_time, longest_item_id
@@ -313,7 +334,7 @@ class KDSIntelligenceService:
             f"KDS Intelligence: Salvando agenda de preparo para pedido {order_id}: {start_times}"
         )
 
-    def publish_preparation_schedule(
+    async def publish_preparation_schedule(
         self, order_id: str, start_times: Dict[str, int]
     ) -> None:
         """
@@ -329,8 +350,8 @@ class KDSIntelligenceService:
             "timestamp": datetime.now().isoformat(),
         }
 
-        self.event_bus.publish(
-            "kds.preparation_schedule_updated", Event(data=event_data)
+        await self.event_bus.publish(
+            Event(event_type=EventType.KDS_ORDER_UPDATED, data=event_data)
         )
 
     def should_recalculate_times(self, order_data: Dict[str, Any]) -> bool:
@@ -379,7 +400,9 @@ class KDSIntelligenceService:
             "timestamp": datetime.now().isoformat(),
         }
 
-        self.event_bus.publish("kds.item_preparation_started", Event(data=event_data))
+        await self.event_bus.publish(
+            Event(event_type=EventType.KDS_ITEM_STATUS_CHANGED, data=event_data)
+        )
 
     async def record_preparation_end(self, order_id: str, item_id: str) -> None:
         """
@@ -413,7 +436,9 @@ class KDSIntelligenceService:
             "timestamp": datetime.now().isoformat(),
         }
 
-        self.event_bus.publish("kds.item_preparation_completed", Event(data=event_data))
+        await self.event_bus.publish(
+            Event(event_type=EventType.KDS_ITEM_STATUS_CHANGED, data=event_data)
+        )
 
     async def update_preparation_times(
         self, order: Dict[str, Any], changed_item_id: str
@@ -464,10 +489,12 @@ class KDSIntelligenceService:
         # active_orders = await self.order_service.get_active_orders()
 
         # Implementação simulada
-        active_orders = []  # Simulação - em produção, buscar do banco
+        active_orders: List[Dict[str, Any]] = (
+            []
+        )  # Simulação - em produção, buscar do banco
 
         # Calcular pontuação de prioridade para cada pedido
-        prioritized_orders = []
+        prioritized_orders: List[Dict[str, Any]] = []
         for order in active_orders:
             priority_score = self.calculate_priority_score(order)
             prioritized_orders.append(
@@ -475,7 +502,7 @@ class KDSIntelligenceService:
             )
 
         # Ordenar por pontuação de prioridade (maior primeiro)
-        prioritized_orders.sort(key=lambda x: x["priority_score"], reverse=True)
+        prioritized_orders.sort(key=lambda x: float(x["priority_score"]), reverse=True)
 
         # Retornar apenas os dados do pedido, já ordenados
         return [item["order"] for item in prioritized_orders]
@@ -493,8 +520,12 @@ class KDSIntelligenceService:
         score = 0.0
 
         # Fator 1: Tempo de espera (pedidos mais antigos têm prioridade)
-        created_at = datetime.fromisoformat(order.get("created_at"))
-        wait_time_minutes = (datetime.now() - created_at).total_seconds() / 60
+        created_at_str = order.get("created_at")
+        if created_at_str:
+            created_at = datetime.fromisoformat(created_at_str)
+            wait_time_minutes = (datetime.now() - created_at).total_seconds() / 60
+        else:
+            wait_time_minutes = 0
         score += min(
             wait_time_minutes * 2, 100
         )  # Máximo de 100 pontos por tempo de espera
@@ -617,10 +648,12 @@ def get_kds_intelligence_service(
     global _kds_intelligence_service
 
     if _kds_intelligence_service is None:
-        from src.order.services.order_service import get_order_service
         from src.core.events.event_bus import get_event_bus
+        from src.order.services.order_service import (
+            order_service as default_order_service,
+        )
 
-        _order_service = order_service or get_order_service()
+        _order_service = order_service or default_order_service
         _event_bus = event_bus or get_event_bus()
 
         _kds_intelligence_service = KDSIntelligenceService(_order_service, _event_bus)

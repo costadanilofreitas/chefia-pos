@@ -1,7 +1,7 @@
 import logging
-from typing import Dict, Any
 import os
 import time
+from typing import Any, Dict
 
 from src.peripherals.models.peripheral_models import (
     CashDrawer,
@@ -116,7 +116,7 @@ class StandaloneCashDrawer(CashDrawer):
                         },
                     }
 
-            except:
+            except Exception:
                 # Muitas gavetas não suportam verificação de status
                 pass
 

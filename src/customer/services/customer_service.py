@@ -1,14 +1,14 @@
-from typing import List, Optional, Dict
 import uuid
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from ..models.customer_models import (
+    Address,
     Customer,
     CustomerCreate,
     CustomerUpdate,
-    Address,
-    PurchaseHistoryEntry,
     PointsRedemption,
+    PurchaseHistoryEntry,
 )
 
 # In-memory storage (replace with database interaction)
@@ -46,7 +46,7 @@ class CustomerService:
         for customer in _customers_db.values():
             if (
                 search_lower in customer.name.lower()
-                or search_lower in customer.email.lower()
+                or (customer.email and search_lower in customer.email.lower())
                 or (customer.phone and search_lower in customer.phone.lower())
             ):
                 filtered_customers.append(customer)
@@ -234,6 +234,77 @@ class CustomerService:
         customer.last_updated = datetime.utcnow()
         _customers_db[customer_id] = customer
         return customer
+
+    # --- Coupon Management ---
+    async def validate_coupon(
+        self, coupon_code: str, order_total: float, product_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Validates a coupon code and returns discount information."""
+        from src.loyalty.services.coupon_service import coupon_service
+
+        # Convert product_id string to UUID if provided
+        product_uuid = uuid.UUID(product_id) if product_id else None
+
+        # Use the existing coupon service
+        result = await coupon_service.validate_coupon(
+            coupon_code, order_total, product_uuid
+        )
+
+        # Return in the format expected by order service
+        return {
+            "valid": result["valid"],
+            "discount_amount": result["discount_amount"],
+            "discount_type": (
+                "percentage"
+                if result.get("coupon")
+                and result["coupon"].discount_type == "PERCENTAGE"
+                else "fixed"
+            ),
+            "error": result.get("error"),
+        }
+
+    async def redeem_coupon(
+        self,
+        coupon_code: str,
+        order_id: uuid.UUID,
+        customer_id: Optional[uuid.UUID] = None,
+        discount_amount: float = 0.0,
+    ) -> Dict[str, Any]:
+        """Redeems a coupon for an order."""
+        from src.loyalty.services.coupon_service import coupon_service
+
+        try:
+            # Use the existing coupon service
+            redemption = await coupon_service.redeem_coupon(
+                coupon_code, order_id, customer_id, discount_amount
+            )
+            return {
+                "success": True,
+                "redemption_id": str(redemption.coupon_id),
+                "error": None,
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def calculate_points_discount(
+        self, customer_id: str, points_to_redeem: int
+    ) -> Dict[str, Any]:
+        """Calculates discount amount for given points."""
+        # Placeholder implementation using existing redeem_points logic
+        try:
+            customer_uuid = uuid.UUID(customer_id)
+            # Use a temporary order ID for calculation purposes
+            temp_order_id = uuid.uuid4()
+            result = await self.redeem_points(
+                customer_uuid, points_to_redeem, temp_order_id
+            )
+            return {
+                "valid": result["success"],
+                "discount_amount": result.get("discount_amount", 0.0),
+                "error": result.get("error"),
+            }
+        except Exception as e:
+            return {"valid": False, "discount_amount": 0.0, "error": str(e)}
 
 
 # Instantiate the service

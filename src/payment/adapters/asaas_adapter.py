@@ -1,13 +1,14 @@
-from typing import Dict, Any, List, Optional
 import logging
+from typing import Any, Dict, List, Optional
+
 import aiohttp
 
 from src.payment.models.payment_models import (
+    AsaasConfig,
     PaymentMethod,
     PaymentStatus,
-    SplitConfig,
-    AsaasConfig,
 )
+from src.payment.models.split_models import SplitConfig, SplitType
 
 logger = logging.getLogger(__name__)
 
@@ -385,7 +386,7 @@ class AsaasAdapter:
 
         data = {
             "name": split_config.name,
-            "enabled": split_config.enabled,
+            "enabled": split_config.is_active,
             "fixedRecipients": self._format_split_config(split_config),
         }
 
@@ -448,7 +449,7 @@ class AsaasAdapter:
 
         data = {
             "name": split_config.name,
-            "enabled": split_config.enabled,
+            "enabled": split_config.is_active,
             "fixedRecipients": self._format_split_config(split_config),
         }
 
@@ -522,11 +523,12 @@ class AsaasAdapter:
         for recipient in split_config.recipients:
             recipient_data = {
                 "walletId": recipient.wallet_id,
-                "percentualValue": (
-                    recipient.percentage if recipient.percentage else None
-                ),
-                "fixedValue": recipient.fixed_value if recipient.fixed_value else None,
             }
+
+            if recipient.type == SplitType.PERCENTAGE:
+                recipient_data["percentualValue"] = str(recipient.value)
+            else:
+                recipient_data["fixedValue"] = str(recipient.value)
 
             # Remover campos None
             recipient_data = {k: v for k, v in recipient_data.items() if v is not None}

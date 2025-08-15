@@ -2,34 +2,33 @@
 Router para os módulos fiscais avançados (NFC-e, CF-e, MFE, Contabilidade)
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel
 
-from src.fiscal.models.nfce_models import (
-    NFCeDocument,
-    NFCeStatus,
-    NFCeResponse,
-    NFCeEvent,
-)
-from src.fiscal.models.cfe_models import CFeDocument, CFeStatus, CFeResponse, CFeEvent
-from src.fiscal.models.mfe_models import MFEEquipment, MFEStatus, MFEConfiguration
+from src.core.auth.dependencies import get_current_user, verify_permissions
+from src.core.config.service import ConfigService
+from src.core.database.service import DatabaseService
 from src.fiscal.models.accounting_models import (
     AccountingExportBatch,
-    AccountingProvider,
     AccountingMapping,
+    AccountingProvider,
     AccountingSchedule,
 )
-
-from src.fiscal.services.nfce_service import NFCeService
+from src.fiscal.models.cfe_models import CFeDocument, CFeEvent, CFeResponse, CFeStatus
+from src.fiscal.models.mfe_models import MFEConfiguration, MFEEquipment, MFEStatus
+from src.fiscal.models.nfce_models import (
+    NFCeDocument,
+    NFCeEvent,
+    NFCeResponse,
+    NFCeStatus,
+)
+from src.fiscal.services.accounting_service import AccountingService
 from src.fiscal.services.cfe_service import CFeService
 from src.fiscal.services.mfe_service import MFEService
-from src.fiscal.services.accounting_service import AccountingService
-
-from src.core.auth.dependencies import get_current_user, verify_permissions
-from src.core.database.service import DatabaseService
-from src.core.config.service import ConfigService
+from src.fiscal.services.nfce_service import NFCeService
 
 # Criação do router
 router = APIRouter(prefix="/fiscal", tags=["fiscal"])
@@ -265,9 +264,11 @@ async def create_nfce(
         nfce = nfce_service.create_nfce(request.dict())
         return nfce
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao criar NFC-e: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao criar NFC-e: {str(e)}"
+        ) from e
 
 
 @router.get("/nfce/{nfce_id}", response_model=NFCeDocument)
@@ -303,11 +304,11 @@ async def update_nfce(
 
         return nfce
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar NFC-e: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/nfce/{nfce_id}/send", response_model=NFCeResponse)
@@ -359,7 +360,7 @@ async def list_nfce(
     verify_permissions(current_user, "fiscal:nfce:read")
 
     # Constrói os filtros
-    filters = {}
+    filters: Dict[str, Any] = {}
 
     if status:
         filters["status"] = status
@@ -403,9 +404,11 @@ async def create_cfe(
         cfe = cfe_service.create_cfe(request.dict())
         return cfe
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao criar CF-e: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao criar CF-e: {str(e)}"
+        ) from e
 
 
 @router.get("/cfe/{cfe_id}", response_model=CFeDocument)
@@ -441,9 +444,11 @@ async def update_cfe(
 
         return cfe
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao atualizar CF-e: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Erro ao atualizar CF-e: {str(e)}"
+        ) from e
 
 
 @router.post("/cfe/{cfe_id}/send", response_model=CFeResponse)
@@ -495,13 +500,13 @@ async def list_cfe(
     verify_permissions(current_user, "fiscal:cfe:read")
 
     # Constrói os filtros
-    filters = {}
+    filters: Dict[str, Any] = {}
 
     if status:
         filters["status"] = status
 
     if start_date or end_date:
-        date_filter = {}
+        date_filter: Dict[str, datetime] = {}
         if start_date:
             date_filter["$gte"] = start_date
         if end_date:
@@ -539,11 +544,11 @@ async def register_mfe_equipment(
         equipment = mfe_service.register_equipment(request.dict())
         return equipment
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao registrar equipamento MFE: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/mfe/equipment/{equipment_id}", response_model=MFEEquipment)
@@ -583,11 +588,11 @@ async def update_mfe_equipment(
 
         return equipment
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar equipamento MFE: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/mfe/equipment/{equipment_id}/activate")
@@ -743,7 +748,7 @@ async def list_mfe_equipment(
     verify_permissions(current_user, "fiscal:mfe:read")
 
     # Constrói os filtros
-    filters = {}
+    filters: Dict[str, Any] = {}
 
     if status:
         filters["status"] = status
@@ -780,11 +785,11 @@ async def register_accounting_provider(
         provider = accounting_service.register_provider(request.dict())
         return provider
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao registrar provedor: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/accounting/provider/{provider_id}", response_model=AccountingProvider)
@@ -822,11 +827,11 @@ async def update_accounting_provider(
 
         return provider
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar provedor: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/accounting/mapping", response_model=AccountingMapping, status_code=201)
@@ -842,11 +847,11 @@ async def create_accounting_mapping(
         mapping = accounting_service.create_mapping(request.dict())
         return mapping
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar mapeamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/accounting/mapping/{mapping_id}", response_model=AccountingMapping)
@@ -884,11 +889,11 @@ async def update_accounting_mapping(
 
         return mapping
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar mapeamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.post(
@@ -911,11 +916,11 @@ async def create_export_batch(
         )
         return batch
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar lote de exportação: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/accounting/export/{batch_id}/process")
@@ -989,11 +994,11 @@ async def create_accounting_schedule(
         schedule = accounting_service.create_schedule(request.dict())
         return schedule
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao criar agendamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/accounting/schedule/{schedule_id}", response_model=AccountingSchedule)
@@ -1031,11 +1036,11 @@ async def update_accounting_schedule(
 
         return schedule
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Erro ao atualizar agendamento: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/accounting/execute-scheduled")

@@ -2,24 +2,24 @@
 Módulo de testes para validação dos módulos fiscais avançados
 """
 
-import unittest
 import os
 import sys
+import unittest
+from contextlib import ExitStack
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 # Adiciona o diretório raiz ao path para importação dos módulos
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
-from src.fiscal.models.nfce_models import NFCeDocument, NFCeStatus
+from src.fiscal.models.accounting_models import AccountingExportStatus
 from src.fiscal.models.cfe_models import CFeDocument, CFeStatus
 from src.fiscal.models.mfe_models import MFEEquipment, MFEStatus
-from src.fiscal.models.accounting_models import AccountingExportStatus
-
-from src.fiscal.services.nfce_service import NFCeService
+from src.fiscal.models.nfce_models import NFCeDocument, NFCeStatus
+from src.fiscal.services.accounting_service import AccountingService
 from src.fiscal.services.cfe_service import CFeService
 from src.fiscal.services.mfe_service import MFEService
-from src.fiscal.services.accounting_service import AccountingService
+from src.fiscal.services.nfce_service import NFCeService
 
 
 class TestFiscalModules(unittest.TestCase):
@@ -514,18 +514,22 @@ class TestFiscalModules(unittest.TestCase):
         # Configura os mocks
         self.db_service.find_one.side_effect = [existing_batch, existing_provider]
 
-        # Mock para os métodos de obtenção de documentos fiscais
-        with patch.object(
-            self.nfce_service, "get_nfce_for_accounting"
-        ) as mock_get_nfce, patch.object(
-            self.cfe_service, "get_cfe_for_accounting"
-        ) as mock_get_cfe, patch.object(
-            self.accounting_service, "_generate_export_file"
-        ) as mock_generate_file, patch.object(
-            self.nfce_service, "mark_as_exported"
-        ) as mock_mark_nfce, patch.object(
-            self.cfe_service, "mark_as_exported"
-        ) as mock_mark_cfe:
+        with ExitStack() as stack:
+            mock_get_nfce = stack.enter_context(
+                patch.object(self.nfce_service, "get_nfce_for_accounting")
+            )
+            mock_get_cfe = stack.enter_context(
+                patch.object(self.cfe_service, "get_cfe_for_accounting")
+            )
+            mock_generate_file = stack.enter_context(
+                patch.object(self.accounting_service, "_generate_export_file")
+            )
+            mock_mark_nfce = stack.enter_context(
+                patch.object(self.nfce_service, "mark_as_exported")
+            )
+            mock_mark_cfe = stack.enter_context(
+                patch.object(self.cfe_service, "mark_as_exported")
+            )
 
             # Configura os mocks para retornar documentos
             mock_get_nfce.return_value = nfce_documents

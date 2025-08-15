@@ -1,17 +1,19 @@
 # /home/ubuntu/pos-modern/src/stock/router/stock_router.py
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional
 import uuid
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..models.stock_models import (
     StockItem,
+    StockItemBase,
     StockItemCreate,
+    StockLevel,
     StockMovement,
     StockMovementCreate,
-    StockLevel,
 )
-from ..services.stock_service import stock_service, StockService
+from ..services.stock_service import StockService, stock_service
 
 # No dependency needed for licensing check as this is a basic module
 
@@ -103,7 +105,7 @@ async def record_stock_movement_endpoint(
         # Handle unexpected errors
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        ) from e
 
 
 @router.get("/movements/", response_model=List[StockMovement])

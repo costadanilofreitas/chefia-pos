@@ -1,7 +1,8 @@
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class TerminalType(str, Enum):
@@ -63,6 +64,8 @@ class TerminalConfig(BaseModel):
         None, description="ID do comerciante na operadora"
     )
     terminal_id: Optional[str] = Field(None, description="ID do terminal na operadora")
+    restaurant_id: Optional[str] = Field(None, description="ID do restaurante")
+    store_id: Optional[str] = Field(None, description="ID da loja")
     sync_interval: int = Field(5, description="Intervalo de sincronização em minutos")
     offline_mode_enabled: bool = Field(
         True, description="Se o modo offline está habilitado"

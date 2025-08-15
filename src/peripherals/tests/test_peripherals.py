@@ -1,24 +1,24 @@
-import unittest
 import asyncio
-import os
-import sys
 import json
 import logging
+import os
+import sys
+import unittest
 from unittest.mock import patch
 
 # Adicionar diretório raiz ao path para importações
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
-from src.peripherals.models.peripheral_models import PeripheralConfig, PeripheralStatus
-from src.peripherals.services.peripheral_manager import (
-    PeripheralManager,
-    PeripheralFactory,
-)
-from src.peripherals.drivers.simulated_printer import SimulatedThermalPrinter
 from src.peripherals.drivers.barcode_reader import SimulatedBarcodeReader
-from src.peripherals.drivers.pix_reader import SimulatedPixReader
 from src.peripherals.drivers.cash_drawer import SimulatedCashDrawer
 from src.peripherals.drivers.payment_terminal import SimulatedPaymentTerminal
+from src.peripherals.drivers.pix_reader import SimulatedPixReader
+from src.peripherals.drivers.simulated_printer import SimulatedThermalPrinter
+from src.peripherals.models.peripheral_models import PeripheralConfig, PeripheralStatus
+from src.peripherals.services.peripheral_manager import (
+    PeripheralFactory,
+    PeripheralManager,
+)
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)

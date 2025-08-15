@@ -70,7 +70,7 @@ export default function POSMainPage() {
     const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch && product.available;
+    return matchesCategory && matchesSearch && product.is_available;
   });
 
   // Adicionar produto ao carrinho
@@ -237,7 +237,7 @@ export default function POSMainPage() {
                       <CardMedia
                         component="img"
                         height="160"
-                        image={product.image}
+                        image={product.image_url}
                         alt={product.name}
                         sx={{ 
                           objectFit: 'cover',

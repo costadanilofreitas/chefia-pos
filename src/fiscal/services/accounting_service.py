@@ -2,23 +2,23 @@
 Serviço para integração contábil e exportação de documentos fiscais
 """
 
-import os
-import logging
-import json
 import csv
+import json
+import logging
+import os
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from src.fiscal.models.accounting_models import (
     AccountingExportBatch,
-    AccountingExportStatus,
     AccountingExportItem,
-    DocumentType,
+    AccountingExportStatus,
     AccountingMapping,
     AccountingProvider,
     AccountingSchedule,
+    DocumentType,
 )
 
 # Configuração de logging
@@ -320,7 +320,7 @@ class AccountingService:
         self.db_service.insert_one("fiscal_accounting_export_batches", batch_data)
 
         # Retorna o lote criado
-        return AccountingExportBatch(**batch_data)
+        return AccountingExportBatch(**batch_data)  # type: ignore
 
     def get_export_batch(self, batch_id: str) -> Optional[AccountingExportBatch]:
         """
@@ -339,7 +339,7 @@ class AccountingService:
         if not batch_data:
             return None
 
-        return AccountingExportBatch(**batch_data)
+        return AccountingExportBatch(**batch_data)  # type: ignore
 
     def update_export_batch(
         self, batch_id: str, update_data: Dict[str, Any]
@@ -374,7 +374,7 @@ class AccountingService:
         )
 
         # Retorna o lote atualizado
-        return AccountingExportBatch(**batch_data)
+        return AccountingExportBatch(**batch_data)  # type: ignore
 
     def process_export_batch(self, batch_id: str) -> Tuple[bool, str, Optional[str]]:
         """
@@ -712,7 +712,7 @@ class AccountingService:
             Caminho do arquivo gerado
         """
         # Cria a estrutura de dados para exportação
-        export_data = {
+        export_data: Dict[str, Any] = {
             "batch": {
                 "id": batch.id,
                 "reference_period": batch.reference_period,
@@ -1016,8 +1016,8 @@ class AccountingService:
 
             if hour < 0 or hour > 23 or minute < 0 or minute > 59:
                 raise ValueError()
-        except:
-            raise ValueError("Hora deve estar no formato HH:MM (24h)")
+        except (ValueError, TypeError) as e:
+            raise ValueError("Hora deve estar no formato HH:MM (24h)") from e
 
     def _calculate_next_run(self, schedule_data: Dict[str, Any]) -> datetime:
         """

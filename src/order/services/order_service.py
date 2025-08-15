@@ -1,27 +1,30 @@
-from typing import List, Dict, Any, Optional
-from fastapi import HTTPException
-from datetime import datetime
-import uuid
 import json
 import os
+import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from fastapi import HTTPException
+
+from src.core.events.event_bus import Event, EventType, get_event_bus
 from src.core.models.core_models import (
-    OrderItem,
-    OrderItemCreate,
-    OrderItemUpdate,
-    Order,
-    OrderCreate,
-    OrderUpdate,
-    OrderStatus,
-    PaymentStatus,
-    PaymentMethod,
-    OrderType,
     ApplyCouponRequest,
     ApplyPointsRequest,
     DiscountResponse,
+    Order,
+    OrderCreate,
+    OrderItem,
+    OrderItemCreate,
+    OrderItemUpdate,
+    OrderStatus,
+    OrderType,
+    OrderUpdate,
+    PaymentMethod,
+    PaymentStatus,
 )
-from src.core.events.event_bus import get_event_bus, Event, EventType
+from src.customer.models.customer_models import PurchaseHistoryEntry
 from src.customer.services.customer_service import customer_service
+from src.product.models.product import ProductType
 
 # Simulação de banco de dados com arquivo JSON
 DATA_DIR = os.path.join("/home/ubuntu/pos-modern/data")
@@ -115,14 +118,15 @@ class OrderService:
 
             unit_price = product.price
             if product.type == ProductType.COMPOSITE and item_data.sections:
-                section_product_ids = {
-                    s.section_id: s.product_id for s in item_data.sections
-                }
+                # sections é um Dict[str, Any], não uma lista
+                section_product_ids = item_data.sections
                 unit_price = await product_service.calculate_composite_product_price(
                     product.id, section_product_ids
                 )
 
-            price_adjustment = sum(c.price_adjustment for c in item_data.customizations)
+            price_adjustment = sum(
+                c.get("price_adjustment", 0.0) for c in item_data.customizations
+            )
             unit_price += price_adjustment
             total_price = unit_price * item_data.quantity
             subtotal += total_price
@@ -307,14 +311,15 @@ class OrderService:
 
         unit_price = product.price
         if product.type == ProductType.COMPOSITE and item_data.sections:
-            section_product_ids = {
-                s.section_id: s.product_id for s in item_data.sections
-            }
+            # sections é um Dict[str, Any], não uma lista
+            section_product_ids = item_data.sections
             unit_price = await product_service.calculate_composite_product_price(
                 product.id, section_product_ids
             )
 
-        price_adjustment = sum(c.price_adjustment for c in item_data.customizations)
+        price_adjustment = sum(
+            c.get("price_adjustment", 0.0) for c in item_data.customizations
+        )
         unit_price += price_adjustment
         total_price = unit_price * item_data.quantity
 
@@ -407,12 +412,12 @@ class OrderService:
 
             unit_price = product.price
             price_adjustment = sum(
-                c.price_adjustment for c in update_data.customizations
+                c.get("price_adjustment", 0.0) for c in update_data.customizations
             )
             unit_price += price_adjustment
             item["unit_price"] = unit_price
             item["total_price"] = unit_price * item["quantity"]
-            item["customizations"] = [c.dict() for c in update_data.customizations]
+            item["customizations"] = update_data.customizations
             price_difference = item["total_price"] - old_total  # Recalculate difference
 
         if update_data.notes is not None:
@@ -538,7 +543,7 @@ class OrderService:
             # Re-raise the exception from validate_coupon
             raise e
 
-        coupon = validation["coupon"]
+        validation["coupon"]
         discount_amount = validation["discount_amount"]
 
         # Update order with coupon discount
@@ -547,6 +552,8 @@ class OrderService:
             coupon_discount=discount_amount,
         )
         updated_order = await self.update_order(order_id, update_data)
+        if not updated_order:
+            raise HTTPException(status_code=500, detail="Erro ao atualizar pedido")
 
         # Record coupon redemption
         await customer_service.redeem_coupon(
@@ -602,7 +609,7 @@ class OrderService:
         # Calculate points discount
         try:
             calculation = await customer_service.calculate_points_discount(
-                uuid.UUID(order.customer_id), points_request.points_to_redeem
+                order.customer_id, points_request.points_to_redeem
             )
         except HTTPException as e:
             # Re-raise the exception from calculate_points_discount
@@ -616,6 +623,8 @@ class OrderService:
             points_discount=discount_amount,
         )
         updated_order = await self.update_order(order_id, update_data)
+        if not updated_order:
+            raise HTTPException(status_code=500, detail="Erro ao atualizar pedido")
 
         # Record points redemption (only when order is finalized/paid)
         # This will be done in the finalize_order method to avoid deducting points prematurely
@@ -675,7 +684,7 @@ class OrderService:
         # Process points redemption if applicable
         if order.points_redeemed and order.customer_id:
             await customer_service.redeem_points(
-                uuid.UUID(order.customer_id), uuid.UUID(order_id), order.points_redeemed
+                uuid.UUID(order.customer_id), order.points_redeemed, uuid.UUID(order_id)
             )
 
         # Add purchase to customer history if applicable
@@ -705,6 +714,9 @@ class OrderService:
                 await customer_service.update_loyalty_points(
                     uuid.UUID(order.customer_id), points_to_award
                 )
+
+        if not updated_order:
+            raise HTTPException(status_code=500, detail="Erro ao atualizar pedido")
 
         event_bus = get_event_bus()
         await event_bus.publish(

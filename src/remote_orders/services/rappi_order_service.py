@@ -1,19 +1,23 @@
 from __future__ import annotations
 
-from typing import Dict, Any, Optional
 import logging
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any, Dict, Optional
+
 from pydantic import BaseModel
 
+from src.core.events.event_bus import Event, EventBus, EventType
+from src.payment.services.payment_service import PaymentService
+from src.remote_orders.adapters.rappi_adapter import RappiAdapter
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder,
-    RemoteOrderStatus,
+    RemoteOrderCustomer,
     RemoteOrderItem,
+    RemoteOrderPayment,
+    RemoteOrderStatus,
+    RemotePlatform,
 )
-from src.remote_orders.adapters.rappi_adapter import RappiAdapter
-from src.core.events.event_bus import EventBus, Event, EventType
-from src.payment.services.payment_service import PaymentService
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +170,7 @@ class RappiOrderService:
                             "source": "rappi",
                             "restaurant_id": saved_order.restaurant_id,
                             "store_id": saved_order.store_id,
-                        }
+                        },
                     ),
                 )
 
@@ -224,6 +228,10 @@ class RappiOrderService:
             return False
 
         # Obter configuração do restaurante
+        if not order.restaurant_id:
+            logger.error(f"Order {order.id} has no restaurant_id")
+            return False
+
         config = await self.get_rappi_configuration(order.restaurant_id)
 
         if not config:
@@ -255,7 +263,7 @@ class RappiOrderService:
                             "store_id": order.store_id,
                             "status": RemoteOrderStatus.ACCEPTED.value,
                             "previous_status": RemoteOrderStatus.PENDING.value,
-                        }
+                        },
                     ),
                 )
 
@@ -291,6 +299,10 @@ class RappiOrderService:
             return False
 
         # Obter configuração do restaurante
+        if not order.restaurant_id:
+            logger.error(f"Order {order.id} has no restaurant_id")
+            return False
+
         config = await self.get_rappi_configuration(order.restaurant_id)
 
         if not config:
@@ -321,7 +333,7 @@ class RappiOrderService:
                             "status": RemoteOrderStatus.REJECTED.value,
                             "previous_status": order.status.value,
                             "reason": reason,
-                        }
+                        },
                     ),
                 )
 
@@ -457,6 +469,10 @@ class RappiOrderService:
             return False
 
         # Obter configuração do restaurante
+        if not order.restaurant_id:
+            logger.error(f"Order {order.id} has no restaurant_id")
+            return False
+
         config = await self.get_rappi_configuration(order.restaurant_id)
 
         if not config:
@@ -489,7 +505,7 @@ class RappiOrderService:
                             "store_id": order.store_id,
                             "status": status.value,
                             "previous_status": previous_status.value,
-                        }
+                        },
                     ),
                 )
 
@@ -518,6 +534,10 @@ class RappiOrderService:
             return True
 
         # Obter configuração do restaurante
+        if not order.restaurant_id:
+            logger.error(f"Order {order.id} has no restaurant_id")
+            return False
+
         config = await self.get_rappi_configuration(order.restaurant_id)
 
         if not config:
@@ -553,7 +573,7 @@ class RappiOrderService:
                             "store_id": order.store_id,
                             "amount": order.payment.total,
                             "reason": reason,
-                        }
+                        },
                     ),
                 )
 
@@ -575,6 +595,10 @@ class RappiOrderService:
             bool: True se a notificação foi enviada com sucesso
         """
         # Obter configuração do restaurante
+        if not order.restaurant_id:
+            logger.error(f"Order {order.id} has no restaurant_id")
+            return False
+
         config = await self.get_rappi_configuration(order.restaurant_id)
 
         if not config:
@@ -747,7 +771,10 @@ class RappiOrderService:
 _rappi_order_service = None
 
 
-def get_rappi_order_service(event_bus: Optional[EventBus] = None, payment_service: Optional[PaymentService] = None) -> RappiOrderService:
+def get_rappi_order_service(
+    event_bus: Optional[EventBus] = None,
+    payment_service: Optional[PaymentService] = None,
+) -> RappiOrderService:
     """
     Obtém uma instância do serviço de pedidos Rappi.
 

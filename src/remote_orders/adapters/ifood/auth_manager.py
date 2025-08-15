@@ -5,11 +5,12 @@ Este módulo implementa a autenticação OAuth2 com a API do iFood,
 gerenciamento de tokens de acesso e renovação automática.
 """
 
-import os
 import logging
-import requests
-from typing import Dict, Any
+import os
 from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
+
+import requests
 
 # Configuração de logging
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class IFoodAuthManager:
         # Armazenamento de token
         self.access_token = None
         self.refresh_token = None
-        self.token_expiry = None
+        self.token_expiry: Optional[datetime] = None
 
         # Validar configurações
         if not self.client_id or not self.client_secret:
@@ -104,7 +105,7 @@ class IFoodAuthManager:
             error_response = None
             try:
                 error_response = e.response.json() if hasattr(e, "response") else None
-            except:
+            except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}
@@ -165,7 +166,7 @@ class IFoodAuthManager:
             logger.info("Tentando autenticação completa após falha na renovação")
             return await self.authenticate()
 
-    async def get_valid_token(self) -> str:
+    async def get_valid_token(self) -> Optional[str]:
         """
         Obtém um token de acesso válido, renovando se necessário.
 

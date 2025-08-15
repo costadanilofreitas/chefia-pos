@@ -1,10 +1,10 @@
 import unittest
-from unittest.mock import AsyncMock, patch, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from src.remote_orders.services.rappi_order_service import RappiOrderService
-from src.remote_orders.models.remote_order_models import RemoteOrderStatus, RemoteOrder
 from src.core.events.event_bus import Event
+from src.remote_orders.models.remote_order_models import RemoteOrder, RemoteOrderStatus
+from src.remote_orders.services.rappi_order_service import RappiOrderService
 
 
 class TestRappiOrderService(unittest.TestCase):

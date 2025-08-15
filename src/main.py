@@ -1,17 +1,38 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
 from datetime import datetime
 from typing import Any
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+# Importar e registrar routers
+from src.auth.auth_router import router as auth_router
+from src.business_day.router.business_day_router import router as business_day_router
+from src.cashier.router.cashier_router import router as cashier_router
 from src.core.middleware.error_handling import (
-    register_exception_handlers,
     error_handling_middleware,
+    register_exception_handlers,
 )
 from src.core.utils.logging_utils import configure_logging
+from src.customer.router.customer_router import router as customer_router
+from src.delivery.router.delivery_router import router as delivery_router
+from src.employee.router.employee_router import router as employee_router
+from src.loyalty.router.campaign_router import router as campaign_router
+from src.loyalty.router.coupon_router import router as coupon_router
+from src.order.router.order_router import router as order_router
+from src.product.router.product_router import router as product_router
+
+# from src.analytics.router.analytics_router import router as analytics_router  # Comentado temporariamente
+# from src.payment.router.payment_router import router as payment_router
+# from src.payment.router.split_payment_router import router as split_payment_router
+from src.remote_orders.router.remote_order_router import router as remote_order_router
+
+# from src.remote_orders.router.rappi_router import router as rappi_router
+# from src.waiter.router.table_layout_router import router as table_layout_router
+# from src.peripherals.router.keyboard_router import router as keyboard_router
 
 # Configurar logging
 log_file = os.environ.get("LOG_FILE", "/var/log/pos-modern/app.log")
@@ -40,26 +61,6 @@ app.middleware("http")(error_handling_middleware)
 
 # Registrar handlers de exceções
 register_exception_handlers(app)
-
-# Importar e registrar routers
-from src.auth.auth_router import router as auth_router
-from src.cashier.router.cashier_router import router as cashier_router
-from src.customer.router.customer_router import router as customer_router
-from src.employee.router.employee_router import router as employee_router
-from src.delivery.router.delivery_router import router as delivery_router
-from src.product.router.product_router import router as product_router
-from src.order.router.order_router import router as order_router
-from src.business_day.router.business_day_router import router as business_day_router
-from src.loyalty.router.campaign_router import router as campaign_router
-from src.loyalty.router.coupon_router import router as coupon_router
-
-# from src.analytics.router.analytics_router import router as analytics_router  # Comentado temporariamente
-# from src.payment.router.payment_router import router as payment_router
-# from src.payment.router.split_payment_router import router as split_payment_router
-from src.remote_orders.router.remote_order_router import router as remote_order_router
-# from src.remote_orders.router.rappi_router import router as rappi_router
-# from src.waiter.router.table_layout_router import router as table_layout_router
-# from src.peripherals.router.keyboard_router import router as keyboard_router
 
 # Registrar routers
 app.include_router(auth_router)

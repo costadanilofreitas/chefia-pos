@@ -1,19 +1,19 @@
-import unittest
 import asyncio
 import json
 import os
+import unittest
 
+from src.sat.drivers.simulated_driver import SimulatedSATDriver
 from src.sat.models.sat_models import (
-    SATConfig,
-    SATStatus,
-    SATResponse,
-    SATStatusResponse,
     CFe,
-    SATDriverType,
     ContingencyMode,
+    SATConfig,
+    SATDriverType,
+    SATResponse,
+    SATStatus,
+    SATStatusResponse,
 )
 from src.sat.services.sat_service import get_sat_service
-from src.sat.drivers.simulated_driver import SimulatedSATDriver
 
 
 class TestSATModule(unittest.TestCase):

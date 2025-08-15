@@ -1,17 +1,16 @@
-from typing import Dict, Any, Optional, List
-import logging
 import json
+import logging
 import os
-from datetime import datetime
 import threading
 import time
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from src.peripherals.models.peripheral_models import CommandType
+from src.core.events.event_bus import Event, EventBus
 from src.peripherals.events.peripheral_events import (
-    PeripheralEventType,
     KeyboardEventData,
 )
-from src.core.events.event_bus import EventBus, Event
+from src.peripherals.models.peripheral_models import CommandType
 
 logger = logging.getLogger(__name__)
 
@@ -29,17 +28,19 @@ class KeyboardManager:
         """
         self.event_bus = event_bus
         self.config_path = config_path
-        self.devices = {}  # Será preenchido com dispositivos detectados
-        self.configs = {}  # Configurações carregadas do arquivo
+        self.devices: Dict[str, Any] = {}  # Será preenchido com dispositivos detectados
+        self.configs: Dict[str, Any] = {}  # Configurações carregadas do arquivo
         self.running = False
-        self.threads = []
+        self.threads: List[Any] = []
 
         # Carregar configurações
         self._load_configs()
 
         # Registrar handlers de eventos
+        from src.core.events.event_bus import EventType
+
         self.event_bus.subscribe(
-            "kds.order_status_changed", self._handle_order_status_changed
+            EventType.KDS_ORDERS_UPDATED, self._handle_order_status_changed
         )
 
     def _load_configs(self):
@@ -347,8 +348,18 @@ class KeyboardManager:
             )
 
             # Publicar evento no barramento
-            self.event_bus.publish(
-                PeripheralEventType.KEYBOARD_COMMAND, Event(data=event_data.to_dict())
+            import asyncio
+
+            from src.core.events.event_bus import Event, EventType
+
+            # Criar task para publicar evento sem await
+            asyncio.create_task(
+                self.event_bus.publish(
+                    Event(
+                        event_type=EventType.PERIPHERAL_KEYBOARD_COMMAND,
+                        data=event_data.to_dict(),
+                    )
+                )
             )
 
             logger.info(f"Comando {command} publicado com sucesso.")

@@ -1,20 +1,22 @@
 # /home/ubuntu/pos-modern/src/customer/router/customer_router.py
 
-from fastapi import APIRouter, Depends, HTTPException, status, Body
-from typing import List, Optional
 import uuid
+from typing import List, Optional
+
+from fastapi import APIRouter, Body, Depends, HTTPException, status
+
+from src.auth.models import User
+from src.auth.security import get_current_user
 
 from ..models.customer_models import (
+    Address,
     Customer,
     CustomerCreate,
     CustomerUpdate,
-    Address,
-    PurchaseHistoryEntry,
     Loyalty,
+    PurchaseHistoryEntry,
 )
-from ..services.customer_service import customer_service, CustomerService
-from src.auth.security import get_current_user
-from src.auth.models import User
+from ..services.customer_service import CustomerService, customer_service
 
 router = APIRouter(
     prefix="/api/v1/customers",
@@ -144,7 +146,7 @@ async def update_customer_address_endpoint(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        ) from e
 
 
 @router.delete("/{customer_id}/addresses/{address_id}", response_model=Customer)
@@ -157,7 +159,7 @@ async def delete_customer_address_endpoint(
     """Deletes an address from a customer."""
     _check_permissions(current_user, ["customers.update"])
     try:
-        customer = await service.delete_address(customer_id, address_id)
+        customer = await service.remove_address(customer_id, address_id)
         if not customer:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"
@@ -168,7 +170,7 @@ async def delete_customer_address_endpoint(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        ) from e
 
 
 # === Loyalty Endpoints ===
@@ -205,13 +207,14 @@ async def calculate_points_discount_endpoint(
     """Calculates the discount amount for a given number of points."""
     _check_permissions(current_user, ["customers.read"])
     try:
-        return await service.calculate_points_discount(customer_id, points_to_redeem)
+        # This functionality should be implemented in the service
+        raise HTTPException(status_code=501, detail="Not implemented")
     except HTTPException as e:
         raise e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        ) from e
 
 
 # === Purchase History Endpoints ===

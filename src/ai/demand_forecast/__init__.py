@@ -4,12 +4,12 @@ Inicialização do módulo de previsão de demanda.
 
 # Importações necessárias
 from .models import (
-    TimeGranularity,
     ForecastDimension,
-    ModelType,
     ForecastPoint,
     ForecastRequest,
     ForecastResult,
+    ModelType,
+    TimeGranularity,
 )
 
 # Exportar classes e funções relevantes

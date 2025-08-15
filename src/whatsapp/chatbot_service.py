@@ -10,13 +10,14 @@ Este módulo implementa um chatbot bidirecional via WhatsApp/Twilio com:
 6. Abertura de tickets de suporte
 """
 
-import os
 import json
 import logging
+import os
 import uuid
-from enum import Enum
-from typing import Dict, List, Optional, Any
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from fastapi import Request
 from pydantic import BaseModel, Field
 
@@ -408,7 +409,7 @@ class WhatsAppChatbotService:
             WhatsAppConversation: Conversação
         """
         # Verificar se há conversação ativa
-        for conv_id, conv in self.conversations.items():
+        for _conv_id, conv in self.conversations.items():
             if conv.customer_id == customer_id and conv.is_active:
                 return conv
 
@@ -998,7 +999,7 @@ class WhatsAppChatbotService:
 
         # Verificar se cliente já tem carrinho
         cart = None
-        for cart_id, existing_cart in self.carts.items():
+        for existing_cart in self.carts.items():
             if existing_cart.customer_id == customer_id:
                 cart = existing_cart
                 break
@@ -1040,7 +1041,7 @@ class WhatsAppChatbotService:
         """
         # Encontrar carrinho do cliente
         cart = None
-        for cart_id, existing_cart in self.carts.items():
+        for _cart_id, existing_cart in self.carts.items():
             if existing_cart.customer_id == customer_id:
                 cart = existing_cart
                 break
@@ -1252,7 +1253,7 @@ class WhatsAppChatbotService:
 
         # Encontrar carrinho do cliente
         cart = None
-        for cart_id, existing_cart in self.carts.items():
+        for _cart_id, existing_cart in self.carts.items():
             if existing_cart.customer_id == customer.id:
                 cart = existing_cart
                 break

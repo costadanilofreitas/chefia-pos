@@ -1,14 +1,14 @@
-import unittest
 import asyncio
-from unittest.mock import MagicMock, patch
-import sys
 import os
+import sys
+import unittest
+from unittest.mock import MagicMock, patch
 
 # Adicionar diretório raiz ao path para importações
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
-from src.delivery.services.google_maps_service import GoogleMapsService
 from src.delivery.router.maps_router import router
+from src.delivery.services.google_maps_service import GoogleMapsService
 
 
 class TestGoogleMapsIntegration(unittest.TestCase):
@@ -93,8 +93,8 @@ class TestGoogleMapsIntegration(unittest.TestCase):
 
         # Executar o teste de forma assíncrona
         async def run_test():
-            from fastapi.testclient import TestClient
             from fastapi import FastAPI
+            from fastapi.testclient import TestClient
 
             app = FastAPI()
             app.include_router(router)
@@ -126,8 +126,8 @@ class TestGoogleMapsIntegration(unittest.TestCase):
 
         # Executar o teste de forma assíncrona
         async def run_test():
-            from fastapi.testclient import TestClient
             from fastapi import FastAPI
+            from fastapi.testclient import TestClient
 
             app = FastAPI()
             app.include_router(router)
@@ -172,8 +172,8 @@ class TestGoogleMapsIntegration(unittest.TestCase):
 
         # Executar o teste de forma assíncrona
         async def run_test():
-            from fastapi.testclient import TestClient
             from fastapi import FastAPI
+            from fastapi.testclient import TestClient
 
             app = FastAPI()
             app.include_router(router)

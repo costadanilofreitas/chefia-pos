@@ -92,7 +92,7 @@ const BusinessDayPage: FC = () => {
       try {
         await getCurrentBusinessDay();
         // Verificar se há caixas abertos seria feito via API
-        setHasOpenCashiers(currentCashier?.status === 'open');
+        setHasOpenCashiers(currentCashier?.status === 'OPEN');
       } catch (error) {
         console.error('Erro ao buscar status do dia de operação ou caixas:', error);
       }
@@ -106,7 +106,7 @@ const BusinessDayPage: FC = () => {
       await openBusinessDay({
         store_id: 'STORE-001',
         date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
-        opened_by: user?.employee_id || '123',
+        opened_by: user?.id || '123',
         notes,
       });
 
@@ -154,6 +154,7 @@ const BusinessDayPage: FC = () => {
 
       await closeBusinessDay({
         notes,
+        closed_by: user?.id || '123',
       });
 
       await PrinterService.printBusinessDayClosingReceipt({
@@ -210,7 +211,7 @@ const BusinessDayPage: FC = () => {
           </Typography>
         </Box>
         <Grid container spacing={4} justifyContent="center">
-          {!currentBusinessDay || currentBusinessDay.status !== 'open' ? (
+          {!currentBusinessDay || currentBusinessDay.status !== 'OPEN' ? (
             <Grid item xs={12} md={6}>
               <StyledPaper elevation={3} sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <Box sx={{ textAlign: 'center', mb: 3 }}>
@@ -330,9 +331,9 @@ const BusinessDayPage: FC = () => {
                     <Typography
                       variant="body1"
                       fontWeight="bold"
-                      color={currentBusinessDay?.status === 'open' ? 'success.main' : 'text.primary'}
+                      color={currentBusinessDay?.status === 'OPEN' ? 'success.main' : 'text.primary'}
                     >
-                      {currentBusinessDay?.status === 'open' ? 'Aberto' : 'Fechado'}
+                      {currentBusinessDay?.status === 'OPEN' ? 'Aberto' : 'Fechado'}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -350,7 +351,7 @@ const BusinessDayPage: FC = () => {
                     Relatórios
                   </ActionButton>
                 </Grid>
-                {currentBusinessDay?.status === 'open' && (
+                {currentBusinessDay?.status === 'OPEN' && (
                   <Grid item xs={12}>
                     <ActionButton
                       variant="contained"

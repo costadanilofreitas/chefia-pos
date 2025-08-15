@@ -1,26 +1,24 @@
 # Modelos de autenticação
-from .user_models import (
-    User,
-    UserInDB,
-    UserCreate,
-    UserUpdate,
-    UserRole,
-    Permission,
-    TokenData,
-    Token,
-    TokenPayload,
-)
-
 from .numeric_password_models import (
-    OperatorCredential,
-    OperatorCredentialCreate,
-    OperatorCredentialUpdate,
-    OperatorCredentialReset,
+    AuthConfig,
     LoginRequest,
     LoginResponse,
-    AuthConfig,
+    OperatorCredential,
+    OperatorCredentialCreate,
+    OperatorCredentialReset,
+    OperatorCredentialUpdate,
 )
-
+from .user_models import (
+    Permission,
+    Token,
+    TokenData,
+    TokenPayload,
+    User,
+    UserCreate,
+    UserInDB,
+    UserRole,
+    UserUpdate,
+)
 
 # Export all models
 __all__ = [

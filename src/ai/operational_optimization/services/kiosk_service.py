@@ -10,11 +10,12 @@ Este serviço implementa funcionalidades para:
 import logging
 import uuid
 from datetime import datetime
-from typing import List, Dict, Optional, Any
+from typing import Any, Dict, List, Optional
+
 from fastapi import HTTPException
 
-from ..models import KioskOptimization
 from ...demand_forecast.service import DemandForecastService
+from ..models import KioskOptimization
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -141,7 +142,7 @@ class KioskOptimizationService:
             logger.error(f"Error optimizing kiosk experience: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"Error optimizing kiosk experience: {str(e)}"
-            )
+            ) from e
 
     async def _get_all_kiosk_ids(self, restaurant_id: str) -> List[str]:
         """

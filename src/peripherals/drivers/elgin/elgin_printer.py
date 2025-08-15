@@ -1,14 +1,14 @@
 import asyncio
 import logging
-from typing import Dict, Any
 import os
 import re
+from typing import Any, Dict
 
 from src.peripherals.models.peripheral_models import (
+    PeripheralException,
+    PeripheralStatus,
     ThermalPrinter,
     ThermalPrinterConfig,
-    PeripheralStatus,
-    PeripheralException,
 )
 
 # Constantes para comandos ESC/POS da Elgin
@@ -139,10 +139,14 @@ class ElginThermalPrinter(ThermalPrinter):
             if self.ep_out is None:
                 raise PeripheralException("Endpoint de saída não encontrado")
 
-        except ImportError:
-            raise PeripheralException("Biblioteca USB não disponível. Instale 'pyusb'.")
+        except ImportError as e:
+            raise PeripheralException(
+                "Biblioteca USB não disponível. Instale 'pyusb'."
+            ) from e
         except Exception as e:
-            raise PeripheralException(f"Erro ao inicializar conexão USB: {str(e)}")
+            raise PeripheralException(
+                f"Erro ao inicializar conexão USB: {str(e)}"
+            ) from e
 
     async def _initialize_serial(self) -> None:
         """Inicializa conexão serial."""
@@ -178,12 +182,14 @@ class ElginThermalPrinter(ThermalPrinter):
             if not self.connection.is_open:
                 self.connection.open()
 
-        except ImportError:
+        except ImportError as e:
             raise PeripheralException(
                 "Biblioteca Serial não disponível. Instale 'pyserial'."
-            )
+            ) from e
         except Exception as e:
-            raise PeripheralException(f"Erro ao inicializar conexão serial: {str(e)}")
+            raise PeripheralException(
+                f"Erro ao inicializar conexão serial: {str(e)}"
+            ) from e
 
     async def _initialize_network(self) -> None:
         """Inicializa conexão de rede."""
@@ -203,10 +209,12 @@ class ElginThermalPrinter(ThermalPrinter):
             self.connection.settimeout(self.config.options.get("timeout", 5))
             self.connection.connect((address, port))
 
-        except ImportError:
-            raise PeripheralException("Biblioteca Socket não disponível")
+        except ImportError as e:
+            raise PeripheralException("Biblioteca Socket não disponível") from e
         except Exception as e:
-            raise PeripheralException(f"Erro ao inicializar conexão de rede: {str(e)}")
+            raise PeripheralException(
+                f"Erro ao inicializar conexão de rede: {str(e)}"
+            ) from e
 
     async def _send_command(self, command: bytes) -> bool:
         """Envia comando para a impressora."""
@@ -672,8 +680,8 @@ class ElginThermalPrinter(ThermalPrinter):
             return False
 
         try:
-            from PIL import Image
             import numpy as np
+            from PIL import Image
 
             # Verificar se o arquivo existe
             if not os.path.exists(image_path):

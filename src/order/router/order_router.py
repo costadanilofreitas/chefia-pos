@@ -1,25 +1,26 @@
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from src.auth.models import Permission, User
+from src.auth.security import get_current_user
 from src.core.models.core_models import (
-    OrderItem,
-    OrderItemCreate,
+    ApplyCouponRequest,
+    ApplyPointsRequest,
+    DiscountResponse,
     # OrderItemCustomization,
     # OrderItemSection,
     Order,
     OrderCreate,
-    OrderUpdate,
-    OrderStatus,
-    PaymentStatus,
-    PaymentMethod,
-    OrderType,
+    OrderItem,
+    OrderItemCreate,
     OrderItemUpdate,
-    ApplyCouponRequest,
-    ApplyPointsRequest,
-    DiscountResponse,
+    OrderStatus,
+    OrderType,
+    OrderUpdate,
+    PaymentMethod,
+    PaymentStatus,
 )
-from src.auth.security import get_current_user
-from src.auth.models import User, Permission
 from src.order.services.order_service import order_service
 
 router = APIRouter(prefix="/api/v1", tags=["orders"])
@@ -160,7 +161,7 @@ async def apply_coupon_to_order(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erro ao aplicar cupom",
-        )
+        ) from e
 
 
 @router.post("/orders/{order_id}/apply-points", response_model=DiscountResponse)
@@ -182,7 +183,7 @@ async def apply_points_to_order(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erro ao aplicar pontos",
-        )
+        ) from e
 
 
 @router.post("/orders/{order_id}/finalize", response_model=Order)
@@ -204,4 +205,4 @@ async def finalize_order(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erro ao finalizar pedido",
-        )
+        ) from e

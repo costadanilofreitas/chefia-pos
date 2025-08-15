@@ -1,7 +1,7 @@
+import asyncio
 import unittest
 import uuid
-import asyncio
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder,

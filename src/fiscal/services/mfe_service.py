@@ -4,16 +4,16 @@ Serviço para gerenciamento de MFE (Módulo Fiscal Eletrônico)
 
 import logging
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from src.fiscal.models.mfe_models import (
+    MFEConfiguration,
     MFEEquipment,
-    MFEStatus,
     MFEOperation,
     MFEOperationType,
-    MFEConfiguration,
     MFEStateRule,
+    MFEStatus,
 )
 
 # Configuração de logging
@@ -978,13 +978,13 @@ class MFEService:
             Tupla com (lista de operações, total de operações)
         """
         # Constrói os filtros
-        filters = {"equipment_id": equipment_id}
+        filters: Dict[str, Any] = {"equipment_id": equipment_id}
 
         if operation_type:
             filters["operation_type"] = operation_type
 
         if start_date or end_date:
-            date_filter = {}
+            date_filter: Dict[str, datetime] = {}
             if start_date:
                 date_filter["$gte"] = start_date
             if end_date:

@@ -1,10 +1,12 @@
-import os
-import json
-import requests
-import logging
-from typing import Dict, List, Optional, Any
 import hashlib
+import json
+import logging
+import math
+import os
 import time
+from typing import Any, Dict, List, Optional
+
+import requests
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -93,7 +95,7 @@ class GoogleMapsService:
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error during geocoding: {str(e)}")
-            raise ValueError(f"Failed to geocode address: {str(e)}")
+            raise ValueError(f"Failed to geocode address: {str(e)}") from e
 
     async def calculate_route(
         self,
@@ -199,7 +201,7 @@ class GoogleMapsService:
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error during route calculation: {str(e)}")
-            raise ValueError(f"Failed to calculate route: {str(e)}")
+            raise ValueError(f"Failed to calculate route: {str(e)}") from e
 
     async def calculate_distance_matrix(
         self,
@@ -293,7 +295,7 @@ class GoogleMapsService:
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error during distance matrix calculation: {str(e)}")
-            raise ValueError(f"Failed to calculate distance matrix: {str(e)}")
+            raise ValueError(f"Failed to calculate distance matrix: {str(e)}") from e
 
     async def optimize_waypoints(
         self,
@@ -383,7 +385,7 @@ class GoogleMapsService:
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error during place details request: {str(e)}")
-            raise ValueError(f"Failed to get place details: {str(e)}")
+            raise ValueError(f"Failed to get place details: {str(e)}") from e
 
     async def snap_to_roads(
         self, path: List[Dict[str, float]]
@@ -446,7 +448,7 @@ class GoogleMapsService:
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error during snap to roads: {str(e)}")
-            raise ValueError(f"Failed to snap points to roads: {str(e)}")
+            raise ValueError(f"Failed to snap points to roads: {str(e)}") from e
 
     async def find_nearest_addresses(
         self,
@@ -528,7 +530,7 @@ class GoogleMapsService:
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error during nearby search: {str(e)}")
-            raise ValueError(f"Failed to find nearby places: {str(e)}")
+            raise ValueError(f"Failed to find nearby places: {str(e)}") from e
 
     async def calculate_delivery_zone(
         self, center: Dict[str, float], max_travel_time: int = 15, mode: str = "driving"

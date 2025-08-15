@@ -24,9 +24,10 @@ import {
   Alert,
   Tabs,
   Tab,
-  Slider,
-  TimePicker
+  Slider
 } from '@mui/material';
+// TimePicker temporarily disabled due to missing dependency
+// import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import {
   Close as CloseIcon,
   Save as SaveIcon,

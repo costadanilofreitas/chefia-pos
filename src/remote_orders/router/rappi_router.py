@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, Body, Request
-import logging
-from typing import Dict, Any, Optional
 import json
+import logging
+from typing import Any, Dict, Optional
 
-from src.remote_orders.services.rappi_order_service import (
-    get_rappi_order_service,
-    RappiOrderService,
-)
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Request
+
 from src.remote_orders.models.remote_order_models import RemoteOrderStatus
+from src.remote_orders.services.rappi_order_service import (
+    RappiOrderService,
+    get_rappi_order_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ async def rappi_webhook(
         logger.exception(f"Error processing Rappi webhook: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error processing webhook: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/orders")
@@ -184,10 +185,10 @@ async def update_rappi_order_status(
 
         return {"status": "success", "message": f"Order status updated to {status_str}"}
 
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=400, detail=f"Invalid status: {data.get('status')}"
-        )
+        ) from e
 
 
 @router.post("/products/{product_id}/availability")

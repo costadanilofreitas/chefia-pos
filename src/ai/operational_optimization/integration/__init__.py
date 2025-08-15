@@ -3,8 +3,8 @@ Inicialização do módulo de integração.
 """
 
 # Importações necessárias
-from .forecast_integration import ForecastIntegrationService
 from .external_data import ExternalDataService
+from .forecast_integration import ForecastIntegrationService
 
 # Exportar classes e funções relevantes
 __all__ = ["ForecastIntegrationService", "ExternalDataService"]

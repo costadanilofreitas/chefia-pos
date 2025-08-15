@@ -1,13 +1,14 @@
 # /home/ubuntu/pos-modern/src/kiosk/services/kiosk_service.py
 
-from typing import List, Optional, Dict, Any
-from datetime import datetime
-import uuid
 import json
 import os
+import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from ..models.kiosk_models import KioskConfig, KioskSession, KioskOrder, KioskAnalytics
-from src.core.events.event_bus import get_event_bus, Event, EventType
+from src.core.events.event_bus import Event, EventType, get_event_bus
+
+from ..models.kiosk_models import KioskAnalytics, KioskConfig, KioskOrder, KioskSession
 
 # Simulação de banco de dados com arquivo JSON
 DATA_DIR = os.path.join("/home/ubuntu/pos-modern/data")

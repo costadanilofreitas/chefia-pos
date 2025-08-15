@@ -1,30 +1,30 @@
-import os
 import json
-from typing import List, Dict, Optional, Any
-from datetime import datetime, date, timedelta
+import os
 import uuid
+from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from src.accounts.services.accounts_service import accounts_service
+from src.core.events.event_bus import Event, EventType, get_event_bus
+from src.logs_module.services.log_service import LogSource, log_error, log_info
 
 from ..models.employee_models import (
-    Employee,
-    EmployeeCreate,
-    EmployeeUpdate,
-    EmployeeQuery,
-    EmployeeRole,
     DeliveryAssignment,
     DeliveryAssignmentCreate,
     DeliveryAssignmentUpdate,
+    Employee,
     EmployeeAttendance,
     EmployeeAttendanceCreate,
     EmployeeAttendanceUpdate,
+    EmployeeCreate,
+    EmployeeEvent,
     EmployeePerformance,
     EmployeePerformanceCreate,
     EmployeePerformanceUpdate,
-    EmployeeEvent,
+    EmployeeQuery,
+    EmployeeRole,
+    EmployeeUpdate,
 )
-
-from src.logs_module.services.log_service import log_info, log_error, LogSource
-from src.core.events.event_bus import get_event_bus, Event
-from src.accounts.services.accounts_service import accounts_service
 
 # Configuração
 EMPLOYEES_DATA_FILE = os.path.join("/home/ubuntu/pos-modern/data", "employees.json")
@@ -132,7 +132,7 @@ class EmployeeService:
 
         # Registra o evento
         await self._publish_employee_event(
-            event_type="employee_created",
+            event_type=EventType.EMPLOYEE_CREATED,
             employee_id=employee.id,
             user_id=user_id,
             data=employee.model_dump(),
@@ -201,7 +201,7 @@ class EmployeeService:
 
                 # Registra o evento
                 await self._publish_employee_event(
-                    event_type="employee_updated",
+                    event_type=EventType.EMPLOYEE_UPDATED,
                     employee_id=employee_id,
                     user_id=user_id,
                     data={
@@ -254,7 +254,7 @@ class EmployeeService:
 
                 # Registra o evento
                 await self._publish_employee_event(
-                    event_type="employee_terminated",
+                    event_type=EventType.EMPLOYEE_DELETED,
                     employee_id=employee_id,
                     user_id=user_id,
                     data={
@@ -343,23 +343,27 @@ class EmployeeService:
 
         # Verifica data de contratação (início)
         if query.hire_date_start:
-            hire_date = (
-                datetime.strptime(employee_data.get("hire_date"), "%Y-%m-%d").date()
-                if isinstance(employee_data.get("hire_date"), str)
-                else employee_data.get("hire_date")
-            )
-            if hire_date < query.hire_date_start:
-                return False
+            hire_date_str = employee_data.get("hire_date")
+            if hire_date_str:
+                hire_date = (
+                    datetime.strptime(hire_date_str, "%Y-%m-%d").date()
+                    if isinstance(hire_date_str, str)
+                    else hire_date_str
+                )
+                if hire_date and hire_date < query.hire_date_start:
+                    return False
 
         # Verifica data de contratação (fim)
         if query.hire_date_end:
-            hire_date = (
-                datetime.strptime(employee_data.get("hire_date"), "%Y-%m-%d").date()
-                if isinstance(employee_data.get("hire_date"), str)
-                else employee_data.get("hire_date")
-            )
-            if hire_date > query.hire_date_end:
-                return False
+            hire_date_str = employee_data.get("hire_date")
+            if hire_date_str:
+                hire_date = (
+                    datetime.strptime(hire_date_str, "%Y-%m-%d").date()
+                    if isinstance(hire_date_str, str)
+                    else hire_date_str
+                )
+                if hire_date and hire_date > query.hire_date_end:
+                    return False
 
         return True
 
@@ -401,7 +405,7 @@ class EmployeeService:
 
         # Registra o evento
         await self._publish_employee_event(
-            event_type="delivery_assigned",
+            event_type=EventType.EMPLOYEE_UPDATED,
             employee_id=assignment.employee_id,
             user_id=user_id,
             data=assignment.model_dump(),
@@ -481,9 +485,8 @@ class EmployeeService:
                 self._save_delivery_assignments()
 
                 # Registra o evento
-                event_type = f"delivery_{updated_assignment.status}"
                 await self._publish_employee_event(
-                    event_type=event_type,
+                    event_type=EventType.EMPLOYEE_UPDATED,
                     employee_id=updated_assignment.employee_id,
                     user_id=user_id,
                     data=updated_assignment.model_dump(),
@@ -648,7 +651,7 @@ class EmployeeService:
 
         # Registra o evento
         await self._publish_employee_event(
-            event_type="attendance_recorded",
+            event_type=EventType.EMPLOYEE_ATTENDANCE_RECORDED,
             employee_id=attendance.employee_id,
             user_id=user_id,
             data=attendance.model_dump(),
@@ -734,12 +737,8 @@ class EmployeeService:
                 employee_name = employee.name if employee else "Desconhecido"
 
                 # Registra o evento
-                event_type = "attendance_updated"
-                if "clock_out" in update_dict:
-                    event_type = "attendance_completed"
-
                 await self._publish_employee_event(
-                    event_type=event_type,
+                    event_type=EventType.EMPLOYEE_ATTENDANCE_RECORDED,
                     employee_id=updated_attendance.employee_id,
                     user_id=user_id,
                     data=updated_attendance.model_dump(),
@@ -860,7 +859,7 @@ class EmployeeService:
 
         # Registra o evento
         await self._publish_employee_event(
-            event_type="performance_evaluated",
+            event_type=EventType.EMPLOYEE_PERFORMANCE_EVALUATED,
             employee_id=evaluation.employee_id,
             user_id=user_id,
             data=evaluation.model_dump(),
@@ -922,7 +921,7 @@ class EmployeeService:
 
                 # Registra o evento
                 await self._publish_employee_event(
-                    event_type="performance_updated",
+                    event_type=EventType.EMPLOYEE_PERFORMANCE_EVALUATED,
                     employee_id=updated_evaluation.employee_id,
                     user_id=user_id,
                     data=updated_evaluation.model_dump(),
@@ -1059,7 +1058,7 @@ class EmployeeService:
 
                 # Registra o evento
                 await self._publish_employee_event(
-                    event_type="salary_payable_created",
+                    event_type=EventType.EMPLOYEE_UPDATED,
                     employee_id=employee.id,
                     user_id=user_id,
                     data={
@@ -1112,14 +1111,14 @@ class EmployeeService:
         active_employees = sum(1 for e in self.employees if e.get("is_active", True))
 
         # Contagem por função
-        roles = {}
+        roles: Dict[str, int] = {}
         for employee in self.employees:
             role = employee.get("role")
             if role:
                 roles[role] = roles.get(role, 0) + 1
 
         # Contagem por tipo de vínculo
-        employment_types = {}
+        employment_types: Dict[str, int] = {}
         for employee in self.employees:
             emp_type = employee.get("employment_type")
             if emp_type:
@@ -1193,7 +1192,11 @@ class EmployeeService:
         }
 
     async def _publish_employee_event(
-        self, event_type: str, employee_id: str, user_id: str, data: Dict[str, Any]
+        self,
+        event_type: EventType,
+        employee_id: str,
+        user_id: str,
+        data: Dict[str, Any],
     ) -> None:
         """
         Publica um evento relacionado a funcionário no barramento de eventos.
@@ -1209,11 +1212,11 @@ class EmployeeService:
         )
 
         await self.event_bus.publish(
-            event_type,
             Event(
+                event_type=event_type,
                 data=event.model_dump(),
                 metadata={"event_type": event_type, "module": "employee"},
-            ),
+            )
         )
 
 

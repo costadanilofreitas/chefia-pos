@@ -1,12 +1,13 @@
-import pytest
-from fastapi.testclient import TestClient
 import json
 import os
 from datetime import date, datetime
 
+import pytest
+from fastapi.testclient import TestClient
+
 from src.api.main import app
-from src.cashier.services.cashier_service import get_cashier_service
 from src.business_day.services.business_day_service import get_business_day_service
+from src.cashier.services.cashier_service import get_cashier_service
 
 # Configurar cliente de teste
 client = TestClient(app)
@@ -62,7 +63,7 @@ def clean_test_data():
 @pytest.fixture
 async def open_business_day(clean_test_data):
     """Cria um dia de operação aberto para testes."""
-    service = get_business_day_service()
+    get_business_day_service()
     today = date.today().isoformat()
 
     business_day = {
@@ -93,7 +94,7 @@ async def open_business_day(clean_test_data):
 @pytest.fixture
 async def open_cashier(open_business_day):
     """Cria um caixa aberto para testes."""
-    service = get_cashier_service()
+    get_cashier_service()
 
     cashier = {
         "id": "test-cashier-id",

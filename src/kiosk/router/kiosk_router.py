@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
-from ..models.kiosk_models import KioskConfig, KioskSession, KioskOrder, KioskAnalytics
-from ..services.kiosk_service import kiosk_service
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from src.auth.models import Permission, User
 from src.auth.security import get_current_user
-from src.auth.models import User, Permission
+
+from ..models.kiosk_models import KioskAnalytics, KioskConfig, KioskOrder, KioskSession
+from ..services.kiosk_service import kiosk_service
 
 router = APIRouter(prefix="/api/v1", tags=["kiosk"])
 
@@ -83,7 +85,7 @@ async def start_kiosk_session(kiosk_id: str):
     try:
         return await kiosk_service.start_kiosk_session(kiosk_id)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @router.put("/kiosk/session/{session_id}/activity", response_model=KioskSession)
@@ -113,9 +115,11 @@ async def create_order_from_kiosk(session_id: str, order_data: KioskOrder):
     try:
         return await kiosk_service.create_order_from_kiosk(session_id, order_data)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating order: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error creating order: {str(e)}"
+        ) from e
 
 
 # Kiosk Analytics Endpoints

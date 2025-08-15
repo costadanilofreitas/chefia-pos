@@ -1,0 +1,99 @@
+{
+  "name": "Test",
+  "backend": {
+    "host": "localhost",
+    "port": 8002,
+    "api_url": "http://localhost:8002",
+    "debug": true,
+    "hot_reload": false,
+    "log_level": "ERROR"
+  },
+  "frontend": {
+    "pos": {
+      "port": 3100,
+      "api_url": "http://localhost:8002",
+      "app_name": "ChefIA POS - Test",
+      "debug": true,
+      "hot_reload": false
+    },
+    "kds": {
+      "port": 3101,
+      "api_url": "http://localhost:8002",
+      "app_name": "ChefIA KDS - Test",
+      "debug": true,
+      "hot_reload": false
+    },
+    "kiosk": {
+      "port": 3102,
+      "api_url": "http://localhost:8002",
+      "app_name": "ChefIA Kiosk - Test",
+      "debug": true,
+      "hot_reload": false
+    },
+    "waiter": {
+      "port": 3103,
+      "api_url": "http://localhost:8002",
+      "app_name": "ChefIA Waiter - Test",
+      "debug": true,
+      "hot_reload": false
+    },
+    "backoffice": {
+      "port": 3104,
+      "api_url": "http://localhost:8002",
+      "app_name": "ChefIA Backoffice - Test",
+      "debug": true,
+      "hot_reload": false
+    }
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5433,
+    "name": "posmodern_test",
+    "user": "posmodern_test",
+    "password": "posmodern_test",
+    "pool_size": 2,
+    "max_overflow": 5,
+    "echo_sql": false
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6380,
+    "password": "posmodern_test",
+    "db": 1,
+    "max_connections": 5
+  },
+  "rabbitmq": {
+    "host": "localhost",
+    "port": 5673,
+    "user": "posmodern_test",
+    "password": "posmodern_test",
+    "virtual_host": "/test",
+    "management_port": 15673
+  },
+  "auth": {
+    "jwt_secret": "test-jwt-secret-key-not-for-production",
+    "jwt_algorithm": "HS256",
+    "jwt_expiration_hours": 1,
+    "refresh_token_expiration_days": 1
+  },
+  "features": {
+    "enable_debug_toolbar": false,
+    "enable_hot_reload": false,
+    "enable_cors": true,
+    "enable_swagger": false,
+    "enable_analytics": false,
+    "enable_error_tracking": false
+  },
+  "external_services": {
+    "payment_gateway": {
+      "provider": "mock",
+      "sandbox": true,
+      "api_key": "test-mock-api-key"
+    },
+    "delivery": {
+      "google_maps_api_key": "test-google-maps-key",
+      "ifood_sandbox": true,
+      "rappi_sandbox": true
+    }
+  }
+}

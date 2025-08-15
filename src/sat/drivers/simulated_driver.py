@@ -1,14 +1,15 @@
 import asyncio
-import random
 import logging
+import random
 from datetime import datetime
+from typing import List
 
 from src.sat.models.sat_models import (
-    SATConfig,
-    SATStatus,
-    SATResponse,
-    SATStatusResponse,
     CFe,
+    SATConfig,
+    SATResponse,
+    SATStatus,
+    SATStatusResponse,
 )
 from src.sat.services.sat_service import SATDriver
 
@@ -19,8 +20,8 @@ class SimulatedSATDriver(SATDriver):
     def __init__(self, config: SATConfig):
         super().__init__(config)
         self.status = SATStatus.UNKNOWN
-        self.emitted_cfes = []
-        self.canceled_cfes = []
+        self.emitted_cfes: List[CFe] = []
+        self.canceled_cfes: List[CFe] = []
         self.error_probability = 0.05  # 5% de chance de erro simulado
         self.delay_min = 0.5  # Delay mínimo em segundos
         self.delay_max = 2.0  # Delay máximo em segundos

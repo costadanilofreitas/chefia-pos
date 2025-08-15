@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Path, Request
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 from ..models.menu_models import Menu, MenuItem, MenuCategory, QRCodeConfig
@@ -249,7 +249,7 @@ async def get_order(
 @router.put("/orders/{order_id}/status", response_model=MenuOrder)
 async def update_order_status(
     order_id: UUID = Path(..., description="The ID of the order"),
-    status: MenuOrderStatus,
+    status: MenuOrderStatus = Body(..., description="The new status for the order"),
     db: AsyncSession = Depends(get_async_session)
 ):
     """Update the status of an order"""

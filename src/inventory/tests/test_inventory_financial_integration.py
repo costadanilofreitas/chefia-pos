@@ -1,19 +1,19 @@
-import unittest
 import asyncio
-from unittest.mock import AsyncMock
+import unittest
 import uuid
+from unittest.mock import AsyncMock
 
+from src.accounts.services.accounts_service import AccountsService
 from src.inventory.models.inventory_models import (
-    InventoryItemCreate,
-    InventoryTransactionCreate,
-    TransactionType,
-    TransactionStatus,
-    InventoryLossCreate,
-    LossReason,
     FinancialEntryType,
+    InventoryItemCreate,
+    InventoryLossCreate,
+    InventoryTransactionCreate,
+    LossReason,
+    TransactionStatus,
+    TransactionType,
 )
 from src.inventory.services.inventory_service import InventoryService
-from src.accounts.services.accounts_service import AccountsService
 
 
 class TestInventoryFinancialIntegration(unittest.TestCase):
@@ -136,9 +136,7 @@ class TestInventoryFinancialIntegration(unittest.TestCase):
 
         # Approve the adjustment
         approver_id = uuid.uuid4()
-        approved_transaction = await self.inventory_service.approve_transaction(
-            transaction.id, approver_id
-        )
+        await self.inventory_service.approve_transaction(transaction.id, approver_id)
 
         # Verify that a financial entry was created
         financial_entries = [
@@ -203,7 +201,7 @@ class TestInventoryFinancialIntegration(unittest.TestCase):
 
 def run_tests():
     """Run the tests asynchronously."""
-    loop = asyncio.get_event_loop()
+    asyncio.get_event_loop()
 
     # Create a test suite
     suite = unittest.TestSuite()

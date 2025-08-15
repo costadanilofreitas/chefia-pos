@@ -1,29 +1,30 @@
-from typing import List, Dict, Any, Optional
-from datetime import datetime
 import json
-import os
 import logging
+import os
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from src.core.events.event_bus import Event, EventType, get_event_bus
+from src.core.models.core_models import OrderUpdate
+from src.core.models.core_models import PaymentStatus as OrderPaymentStatus
+from src.payment.adapters.asaas_adapter_enhanced import AsaasAdapter
 from src.payment.models.payment_models import (
+    Payment,
+    PaymentCreate,
     PaymentProvider,
     PaymentStatus,
     ProviderConfig,
     ProviderConfigCreate,
     ProviderConfigUpdate,
-    Payment,
-    PaymentCreate,
 )
 from src.payment.models.split_models import (
+    RetentionConfig,
     SplitConfig,
     SplitConfigCreate,
     SplitConfigUpdate,
-    SplitRecipient,
-    RetentionConfig,
     SplitPaymentRecord,
+    SplitRecipient,
 )
-from src.payment.adapters.asaas_adapter_enhanced import AsaasAdapter
-from src.core.events.event_bus import get_event_bus, Event, EventType
-from src.product.models.product import OrderUpdate, PaymentStatus as OrderPaymentStatus
 
 # Configuração de logging
 logger = logging.getLogger(__name__)
@@ -314,7 +315,7 @@ class SplitPaymentService:
             return False
 
         # Obter configuração para evento
-        config = configs.pop(config_index)
+        configs.pop(config_index)
 
         # Salvar configurações atualizadas
         self._save_split_configs(configs)

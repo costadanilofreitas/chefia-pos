@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import logging
 import json
+import logging
 import os
 import sys
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 class StructuredLogFormatter(logging.Formatter):
@@ -86,7 +86,12 @@ def configure_logging(log_level: str = "INFO", log_file: Optional[str] = None) -
     logging.getLogger("fastapi").setLevel(logging.WARNING)
 
 
-def log_with_context(logger: logging.Logger, level: str, message: str, details: Optional[Dict[str, Any]] = None) -> None:
+def log_with_context(
+    logger: logging.Logger,
+    level: str,
+    message: str,
+    details: Optional[Dict[str, Any]] = None,
+) -> None:
     """
     Registra uma mensagem de log com contexto adicional.
 

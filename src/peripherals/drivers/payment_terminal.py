@@ -1,33 +1,39 @@
 import asyncio
-import logging
-from typing import Dict, Any, Optional
-import os
 import json
-import time
+import logging
+import os
 import socket
+import time
+from typing import Any, Dict, Optional
 
 from src.peripherals.models.peripheral_models import (
+    BasePeripheralDriver,
     PaymentTerminal,
     PaymentTerminalConfig,
-    PeripheralStatus,
     PeripheralException,
+    PeripheralFactory,
+    PeripheralStatus,
 )
 
 
-class SiTefTerminal(PaymentTerminal):
+class SiTefTerminal(BasePeripheralDriver):
     """Driver para terminais de pagamento SiTef."""
 
     def __init__(self, config: PaymentTerminalConfig):
-        super().__init__(config)
-        self.address = config.address
-        self.port = config.options.get("port", 4096)
+        # Convert PaymentTerminalConfig to PeripheralConfig for BasePeripheralDriver
+        peripheral_config = PeripheralFactory.create_peripheral_config(
+            config, "payment_terminal", "sitef_terminal"
+        )
+        super().__init__(peripheral_config)
+        self.host = config.host
+        self.port = config.port
         self.company_id = config.options.get("company_id", "00000000")
         self.terminal_id = config.options.get("terminal_id", "00000000")
-        self.timeout = config.options.get("timeout", 60)  # segundos
+        self.timeout = config.timeout
         self.initialized = False
-        self.connection = None
+        self.connection: Optional[socket.socket] = None
         self.transaction_lock = asyncio.Lock()
-        self.current_transaction = None
+        self.current_transaction: Optional[Dict[str, Any]] = None
 
     async def initialize(self) -> bool:
         """Inicializa o terminal de pagamento."""
@@ -39,7 +45,7 @@ class SiTefTerminal(PaymentTerminal):
             # Tentar conectar ao servidor SiTef
             self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.connection.settimeout(10)
-            self.connection.connect((self.address, self.port))
+            self.connection.connect((self.host, self.port))
 
             # Enviar comando de inicialização
             init_command = {
@@ -87,14 +93,14 @@ class SiTefTerminal(PaymentTerminal):
 
                 try:
                     await self._send_command(end_command)
-                except:
+                except Exception:
                     pass
 
             # Fechar conexão
             if self.connection:
                 try:
                     self.connection.close()
-                except:
+                except Exception:
                     pass
                 self.connection = None
 
