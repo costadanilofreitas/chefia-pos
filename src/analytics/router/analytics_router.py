@@ -17,9 +17,7 @@ from src.analytics.models.dashboard_models import (
     ScheduledReport,
 )
 from src.analytics.services.analytics_service import AnalyticsService
-from src.core.auth.auth_service import User, get_current_user
-from src.core.config.config_service import get_config_service
-from src.core.db.db_service import get_db_service
+from src.auth.auth import User, get_current_user
 from src.core.events.event_bus import get_event_bus
 
 # Cria o router
@@ -32,10 +30,8 @@ router = APIRouter(
 
 # Dependência para obter o serviço de analytics
 def get_analytics_service():
-    db_service = get_db_service()
-    config_service = get_config_service()
     event_bus = get_event_bus()
-    return AnalyticsService(db_service, config_service, event_bus)
+    return AnalyticsService(event_bus)
 
 
 # Rotas para o resumo de analytics

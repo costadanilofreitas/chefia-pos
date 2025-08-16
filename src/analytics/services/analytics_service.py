@@ -24,25 +24,22 @@ from src.analytics.models.dashboard_models import (
     FilterOperator,
     ScheduledReport,
 )
-from src.core.config.config_service import ConfigService
 from src.core.events.event_bus import EventBus
 
 
 class AnalyticsService:
     """Serviço principal para analytics"""
 
-    def __init__(self, config_service: ConfigService, event_bus: EventBus):
-        # db_service removido
-        self.config_service = config_service
+    def __init__(self, event_bus: EventBus):
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
 
         # Inicializa os serviços específicos
-        self.dashboard_service = DashboardService(config_service, event_bus)
-        self.data_source_service = DataSourceService(config_service, event_bus)
-        self.alert_service = AlertService(config_service, event_bus)
-        self.export_service = ExportService(config_service, event_bus)
-        self.report_service = ReportService(config_service, event_bus)
+        self.dashboard_service = DashboardService(event_bus)
+        self.data_source_service = DataSourceService(event_bus)
+        self.alert_service = AlertService(event_bus)
+        self.export_service = ExportService(event_bus)
+        self.report_service = ReportService(event_bus)
 
     def get_analytics_summary(self, restaurant_id: str) -> Dict[str, Any]:
         """Obtém um resumo dos dados analíticos para um restaurante"""
@@ -105,9 +102,7 @@ class AnalyticsService:
 class DashboardService:
     """Serviço para gerenciamento de dashboards"""
 
-    def __init__(self, config_service: ConfigService, event_bus: EventBus):
-        # db_service removido
-        self.config_service = config_service
+    def __init__(self, event_bus: EventBus):
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
 
@@ -528,9 +523,9 @@ class DashboardService:
 class DataSourceService:
     """Serviço para gerenciamento de fontes de dados"""
 
-    def __init__(self, config_service: ConfigService, event_bus: EventBus):
+    def __init__(self, event_bus: EventBus):
         # db_service removido
-        self.config_service = config_service
+        # self.config_service = config_service  # Removido - módulo não existe
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
 
@@ -850,9 +845,9 @@ class DataSourceService:
 class AlertService:
     """Serviço para gerenciamento de alertas"""
 
-    def __init__(self, config_service: ConfigService, event_bus: EventBus):
+    def __init__(self, event_bus: EventBus):
         # db_service removido
-        self.config_service = config_service
+        # self.config_service = config_service  # Removido - módulo não existe
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
 
@@ -1190,9 +1185,9 @@ class AlertService:
 class ExportService:
     """Serviço para exportação de dashboards"""
 
-    def __init__(self, config_service: ConfigService, event_bus: EventBus):
+    def __init__(self, event_bus: EventBus):
         # db_service removido
-        self.config_service = config_service
+        # self.config_service = config_service  # Removido - módulo não existe
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
 
@@ -1397,9 +1392,9 @@ class ExportService:
 class ReportService:
     """Serviço para relatórios agendados"""
 
-    def __init__(self, config_service: ConfigService, event_bus: EventBus):
+    def __init__(self, event_bus: EventBus):
         # db_service removido
-        self.config_service = config_service
+        # self.config_service = config_service  # Removido - módulo não existe
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
 

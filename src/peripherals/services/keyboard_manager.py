@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -32,6 +33,7 @@ class KeyboardManager:
         self.configs: Dict[str, Any] = {}  # Configurações carregadas do arquivo
         self.running = False
         self.threads: List[Any] = []
+        self.main_loop = None  # Referência ao event loop principal
 
         # Carregar configurações
         self._load_configs()
@@ -82,6 +84,13 @@ class KeyboardManager:
             return
 
         self.running = True
+
+        # Captura o event loop principal do asyncio
+        try:
+            self.main_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            # Se não houver loop rodando, não precisamos capturar
+            self.main_loop = None
 
         # Descobrir dispositivos disponíveis
         self._discover_devices()
@@ -352,15 +361,28 @@ class KeyboardManager:
 
             from src.core.events.event_bus import Event, EventType
 
-            # Criar task para publicar evento sem await
-            asyncio.create_task(
-                self.event_bus.publish(
-                    Event(
-                        event_type=EventType.PERIPHERAL_KEYBOARD_COMMAND,
-                        data=event_data.to_dict(),
-                    )
+            # Usar o loop principal se disponível
+            if self.main_loop and not self.main_loop.is_closed():
+                # Agendar a publicação do evento no loop principal
+                future = asyncio.run_coroutine_threadsafe(
+                    self.event_bus.publish(
+                        Event(
+                            event_type=EventType.PERIPHERAL_KEYBOARD_COMMAND,
+                            data=event_data.to_dict(),
+                        )
+                    ),
+                    self.main_loop,
                 )
-            )
+                # Aguarda o resultado para garantir que foi processado
+                try:
+                    future.result(timeout=1.0)
+                except Exception as e:
+                    logger.warning(f"Erro ao publicar evento no EventBus: {e}")
+            else:
+                # Se não houver loop principal, apenas loga o evento
+                logger.debug(
+                    f"EventBus não disponível, evento não publicado: {command}"
+                )
 
             logger.info(f"Comando {command} publicado com sucesso.")
         except Exception as e:

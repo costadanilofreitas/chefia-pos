@@ -771,16 +771,9 @@ class RappiOrderService:
 _rappi_order_service = None
 
 
-def get_rappi_order_service(
-    event_bus: Optional[EventBus] = None,
-    payment_service: Optional[PaymentService] = None,
-) -> RappiOrderService:
+def get_rappi_order_service() -> RappiOrderService:
     """
     Obtém uma instância do serviço de pedidos Rappi.
-
-    Args:
-        event_bus: Instância opcional do barramento de eventos
-        payment_service: Instância opcional do serviço de pagamento
 
     Returns:
         RappiOrderService: Instância do serviço de pedidos Rappi
@@ -791,8 +784,8 @@ def get_rappi_order_service(
         from src.core.events.event_bus import get_event_bus
         from src.payment.services.payment_service import get_payment_service
 
-        _event_bus = event_bus or get_event_bus()
-        _payment_service = payment_service or get_payment_service()
+        _event_bus = get_event_bus()
+        _payment_service = get_payment_service()
 
         _rappi_order_service = RappiOrderService(_event_bus, _payment_service)
 

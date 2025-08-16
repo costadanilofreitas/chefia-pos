@@ -23,7 +23,8 @@
       "Bash(ruff check:*)",
       "Bash(rm:*)",
       "Bash(make:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(uvicorn:*)"
     ],
     "deny": [],
     "ask": [],
