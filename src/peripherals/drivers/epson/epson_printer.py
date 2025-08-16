@@ -11,7 +11,6 @@ except ImportError:
 
 from src.peripherals.models.peripheral_models import (
     BasePeripheralDriver,
-    ConfigurationException,
     PeripheralConfig,
     PeripheralException,
     PeripheralStatus,

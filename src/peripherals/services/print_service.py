@@ -32,7 +32,7 @@ class PrintService:
                             name=template_data.get("name", template_name),
                             content=json.dumps(template_data),
                             variables=template_data.get("variables", []),
-                            options=template_data.get("options", {})
+                            options=template_data.get("options", {}),
                         )
         except Exception as e:
             print(f"Erro ao carregar templates: {str(e)}")

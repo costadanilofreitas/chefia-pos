@@ -99,8 +99,6 @@ class DeliveryService:
         delivery_order = self.delivery_orders[delivery_order_id]
 
         # Verificar se o entregador existe
-        # Get global courier service instance
-        global courier_service
         courier = await courier_service.get_courier(courier_id)
         if not courier:
             raise ValueError(f"Entregador {courier_id} não encontrado")
@@ -187,7 +185,6 @@ class DeliveryService:
 
             # Se o entregador estiver atribuído, atualizar seu status
             if delivery_order.courier_id:
-                global courier_service
                 await courier_service.update_courier_after_delivery(
                     delivery_order.courier_id
                 )
@@ -202,7 +199,6 @@ class DeliveryService:
 
             # Se o entregador estiver atribuído, atualizar seu status
             if delivery_order.courier_id:
-                global courier_service
                 await courier_service.update_courier_after_delivery(
                     delivery_order.courier_id
                 )
@@ -279,7 +275,6 @@ class DeliveryService:
     ) -> float:
         """Calcula a taxa de entrega para um endereço."""
         # Obter zona de entrega para o endereço
-        global zone_service
         zone = await zone_service.get_zone_for_address(address_id)
 
         if not zone:
@@ -306,7 +301,6 @@ class DeliveryService:
     async def estimate_delivery_time(self, address_id: str) -> int:
         """Estima o tempo de entrega em minutos."""
         # Obter zona de entrega para o endereço
-        global zone_service
         zone = await zone_service.get_zone_for_address(address_id)
 
         if not zone:

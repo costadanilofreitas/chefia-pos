@@ -1,17 +1,14 @@
 import asyncio
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, BinaryIO, Dict, Optional
 
 from src.peripherals.models.peripheral_models import (
-    BasePeripheralDriver,
-    BarcodeScanner,
     BarcodeScannerConfig,
+    BasePeripheralDriver,
     PeripheralConfig,
     PeripheralStatus,
 )
-from typing import Optional, BinaryIO
-import asyncio
 
 
 class GenericBarcodeReader(BasePeripheralDriver):

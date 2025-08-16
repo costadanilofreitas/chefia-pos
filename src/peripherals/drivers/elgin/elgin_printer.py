@@ -3,7 +3,6 @@ import logging
 import os
 import re
 from typing import Any, Dict, Optional
-import socket
 
 from src.peripherals.models.peripheral_models import (
     BasePeripheralDriver,
@@ -34,7 +33,9 @@ class ElginThermalPrinter(BasePeripheralDriver):
             options=config.options,
         )
         super().__init__(peripheral_config)
-        self.connection: Optional[Any] = None  # Can be USB device, serial port, or socket
+        self.connection: Optional[Any] = (
+            None  # Can be USB device, serial port, or socket
+        )
         self.encoding = config.options.get(
             "encoding", "cp850"
         )  # Codificação padrão Elgin
@@ -76,7 +77,9 @@ class ElginThermalPrinter(BasePeripheralDriver):
         """Inicializa a impressora."""
         try:
             # Verificar tipo de conexão
-            connection_type = self.thermal_config.options.get("connection_type", "serial")
+            connection_type = self.thermal_config.options.get(
+                "connection_type", "serial"
+            )
             if connection_type == "usb":
                 await self._initialize_usb()
             elif connection_type == "serial":
@@ -108,7 +111,9 @@ class ElginThermalPrinter(BasePeripheralDriver):
             import usb.util
 
             # Identificar porta automaticamente se não especificada
-            if self.thermal_config.options.get("port", "auto") == "auto" or not self.thermal_config.options.get("port", "auto"):
+            if self.thermal_config.options.get(
+                "port", "auto"
+            ) == "auto" or not self.thermal_config.options.get("port", "auto"):
                 # Procurar dispositivos Elgin
                 # VID/PID para Elgin (podem variar por modelo)
                 dev = usb.core.find(idVendor=0x20D1)  # VID Elgin
@@ -119,7 +124,9 @@ class ElginThermalPrinter(BasePeripheralDriver):
                 self.connection = dev
             else:
                 # Usar porta específica
-                port_match = re.match(r"(\d+):(\d+)", self.thermal_config.options.get("port", "auto"))
+                port_match = re.match(
+                    r"(\d+):(\d+)", self.thermal_config.options.get("port", "auto")
+                )
                 if port_match:
                     bus, address = port_match.groups()
                     dev = usb.core.find(bus=int(bus), address=int(address))
@@ -188,7 +195,9 @@ class ElginThermalPrinter(BasePeripheralDriver):
                 baudrate=self.thermal_config.options.get("baudrate", 9600),
                 bytesize=self.thermal_config.options.get("bytesize", serial.EIGHTBITS),
                 parity=self.thermal_config.options.get("parity", serial.PARITY_NONE),
-                stopbits=self.thermal_config.options.get("stopbits", serial.STOPBITS_ONE),
+                stopbits=self.thermal_config.options.get(
+                    "stopbits", serial.STOPBITS_ONE
+                ),
                 timeout=self.thermal_config.options.get("timeout", 1),
             )
 
@@ -238,7 +247,9 @@ class ElginThermalPrinter(BasePeripheralDriver):
             return False
 
         try:
-            connection_type = self.thermal_config.options.get("connection_type", "serial")
+            connection_type = self.thermal_config.options.get(
+                "connection_type", "serial"
+            )
             if connection_type == "usb":
                 self.ep_out.write(command)
             elif connection_type == "serial":
@@ -256,7 +267,9 @@ class ElginThermalPrinter(BasePeripheralDriver):
         """Finaliza a impressora."""
         try:
             if self.connection:
-                connection_type = self.thermal_config.options.get("connection_type", "serial")
+                connection_type = self.thermal_config.options.get(
+                    "connection_type", "serial"
+                )
                 if connection_type == "usb":
                     import usb.util
 
@@ -288,8 +301,10 @@ class ElginThermalPrinter(BasePeripheralDriver):
         try:
             # Enviar comando de status (específico para Elgin)
             status_command = GS + b"r" + b"\x01"
-            
-            connection_type = self.thermal_config.options.get("connection_type", "serial")
+
+            connection_type = self.thermal_config.options.get(
+                "connection_type", "serial"
+            )
             if connection_type == "usb":
                 # Para USB, não é possível ler resposta facilmente
                 # Verificar apenas se o comando foi enviado
@@ -314,7 +329,11 @@ class ElginThermalPrinter(BasePeripheralDriver):
                 await self._send_command(status_command)
                 # Aguardar resposta
                 await asyncio.sleep(0.1)
-                if self.connection and hasattr(self.connection, 'in_waiting') and self.connection.in_waiting > 0:
+                if (
+                    self.connection
+                    and hasattr(self.connection, "in_waiting")
+                    and self.connection.in_waiting > 0
+                ):
                     response = self.connection.read(self.connection.in_waiting)
                     # Interpretar resposta (específico para Elgin)
                     # Simplificado para este exemplo
@@ -630,7 +649,9 @@ class ElginThermalPrinter(BasePeripheralDriver):
 
             # Cortar papel
             if self.thermal_config.options.get("auto_cut", True):
-                await self.cut_paper(self.thermal_config.options.get("cut_type", "partial") == "partial")
+                await self.cut_paper(
+                    self.thermal_config.options.get("cut_type", "partial") == "partial"
+                )
 
             # Enviar comandos
             for cmd in commands:
@@ -710,7 +731,9 @@ class ElginThermalPrinter(BasePeripheralDriver):
 
             # Redimensionar para a largura da impressora
             paper_width_px = (
-                self.thermal_config.options.get("paper_width", 80) * self.thermal_config.options.get("dpi", 203) // 25.4
+                self.thermal_config.options.get("paper_width", 80)
+                * self.thermal_config.options.get("dpi", 203)
+                // 25.4
             )  # mm para pixels
             width_ratio = paper_width_px / img.width
             new_height = int(img.height * width_ratio)
@@ -826,7 +849,9 @@ class ElginThermalPrinter(BasePeripheralDriver):
             await self._send_command(GS + b"w" + bytes([width]))
 
             # Posição do texto (0=não imprimir, 1=acima, 2=abaixo, 3=acima e abaixo)
-            text_position = min(3, self.thermal_config.options.get("barcode_text_position", 2))
+            text_position = min(
+                3, self.thermal_config.options.get("barcode_text_position", 2)
+            )
             await self._send_command(GS + b"H" + bytes([text_position]))
 
             # Imprimir código de barras
@@ -867,7 +892,9 @@ class ElginThermalPrinter(BasePeripheralDriver):
             )
 
             # Nível de correção de erro (L=1, M=0, Q=3, H=2)
-            error_level = min(3, self.thermal_config.options.get("qrcode_error_level", 1))
+            error_level = min(
+                3, self.thermal_config.options.get("qrcode_error_level", 1)
+            )
             await self._send_command(
                 GS + b"(k" + b"\x03\x00" + b"1E" + bytes([error_level])
             )

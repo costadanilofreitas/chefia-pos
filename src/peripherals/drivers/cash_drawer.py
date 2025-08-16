@@ -1,8 +1,8 @@
 import logging
 import os
-import time
-from typing import Any, Dict, Optional, BinaryIO
 import socket
+import time
+from typing import Any, BinaryIO, Dict, Optional
 
 from src.peripherals.models.peripheral_models import (
     BasePeripheralDriver,
