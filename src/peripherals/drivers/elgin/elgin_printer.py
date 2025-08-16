@@ -132,12 +132,12 @@ class ElginThermalPrinter(BasePeripheralDriver):
                     dev = usb.core.find(bus=int(bus), address=int(address))
                     if dev is None:
                         raise PeripheralException(
-                            f"Impressora não encontrada na porta {self.thermal_config.options.get("port", "auto")}"
+                            f"Impressora não encontrada na porta {self.thermal_config.options.get('port', 'auto')}"
                         )
                     self.connection = dev
                 else:
                     raise PeripheralException(
-                        f"Formato de porta inválido: {self.thermal_config.options.get("port", "auto")}"
+                        f"Formato de porta inválido: {self.thermal_config.options.get('port', 'auto')}"
                     )
 
             # Configurar dispositivo

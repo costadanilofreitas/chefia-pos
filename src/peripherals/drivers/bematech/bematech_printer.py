@@ -90,7 +90,7 @@ class BematechThermalPrinter(BasePeripheralDriver):
                 await self._initialize_network()
             else:
                 raise PeripheralException(
-                    f"Tipo de conexão não suportado: {self.thermal_config.options.get("connection_type", "serial")}"
+                    f"Tipo de conexão não suportado: {self.thermal_config.options.get('connection_type', 'serial')}"
                 )
 
             # Enviar comando de inicialização
@@ -134,12 +134,12 @@ class BematechThermalPrinter(BasePeripheralDriver):
                     dev = usb.core.find(bus=int(bus), address=int(address))
                     if dev is None:
                         raise PeripheralException(
-                            f"Impressora não encontrada na porta {self.thermal_config.options.get("port", "auto")}"
+                            f"Impressora não encontrada na porta {self.thermal_config.options.get('port', 'auto')}"
                         )
                     self.connection = dev
                 else:
                     raise PeripheralException(
-                        f"Formato de porta inválido: {self.thermal_config.options.get("port", "auto")}"
+                        f"Formato de porta inválido: {self.thermal_config.options.get('port', 'auto')}"
                     )
 
             # Configurar dispositivo
