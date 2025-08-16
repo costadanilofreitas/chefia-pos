@@ -8,7 +8,6 @@ from typing import Any, Dict, Optional
 
 from src.peripherals.models.peripheral_models import (
     BasePeripheralDriver,
-    PaymentTerminal,
     PaymentTerminalConfig,
     PeripheralException,
     PeripheralFactory,
@@ -27,6 +26,7 @@ class SiTefTerminal(BasePeripheralDriver):
         super().__init__(peripheral_config)
         self.host = config.host
         self.port = config.port
+        self.address = config.host  # Add address attribute for compatibility
         self.company_id = config.options.get("company_id", "00000000")
         self.terminal_id = config.options.get("terminal_id", "00000000")
         self.timeout = config.timeout
@@ -172,8 +172,16 @@ class SiTefTerminal(BasePeripheralDriver):
             await self.update_status(PeripheralStatus.ERROR, str(e))
             return {"status": PeripheralStatus.ERROR, "message": str(e), "details": {}}
 
-    async def process_payment(self, payment_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_payment(
+        self, amount: float, options: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Processa um pagamento."""
+        if options is None:
+            options = {}
+
+        # Build payment_data from amount and options for backward compatibility
+        payment_data = {"amount": amount, **options}
+
         async with self.transaction_lock:
             if not self.initialized:
                 await self.update_status(
@@ -304,8 +312,14 @@ class SiTefTerminal(BasePeripheralDriver):
                     "details": {"transaction": current_tx},
                 }
 
-    async def cancel_transaction(self, transaction_id: str = None) -> Dict[str, Any]:
+    async def cancel_transaction(
+        self, options: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Cancela uma transação."""
+        if options is None:
+            options = {}
+        transaction_id = options.get("transaction_id")
+
         async with self.transaction_lock:
             if not self.initialized:
                 await self.update_status(
@@ -466,15 +480,26 @@ class SiTefTerminal(BasePeripheralDriver):
             raise
 
 
-class SimulatedPaymentTerminal(PaymentTerminal):
+class SimulatedPaymentTerminal(BasePeripheralDriver):
     """Driver para simulação de terminal de pagamento."""
 
     def __init__(self, config: PaymentTerminalConfig):
-        super().__init__(config)
+        # Convert PaymentTerminalConfig to PeripheralConfig for BasePeripheralDriver
+        from src.peripherals.models.peripheral_models import PeripheralConfig
+
+        peripheral_config = PeripheralConfig(
+            id=config.id,
+            type="payment_terminal",
+            driver="simulated_payment_terminal",
+            name=config.name,
+            address=f"{config.host}:{config.port}",
+            options=config.options,
+        )
+        super().__init__(peripheral_config)
         self.initialized = False
         self.transaction_lock = asyncio.Lock()
-        self.current_transaction = None
-        self.transaction_history = []
+        self.current_transaction: Optional[Dict[str, Any]] = None
+        self.transaction_history: list = []
         self.decline_rate = config.options.get("decline_rate", 0.1)  # 10% de recusa
         self.error_rate = config.options.get("error_rate", 0.05)  # 5% de erro
 
@@ -529,8 +554,16 @@ class SimulatedPaymentTerminal(PaymentTerminal):
             },
         }
 
-    async def process_payment(self, payment_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_payment(
+        self, amount: float, options: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Processa um pagamento simulado."""
+        if options is None:
+            options = {}
+
+        # Build payment_data from amount and options for backward compatibility
+        payment_data = {"amount": amount, **options}
+
         async with self.transaction_lock:
             if not self.initialized:
                 await self.update_status(
@@ -609,13 +642,14 @@ class SimulatedPaymentTerminal(PaymentTerminal):
                     authorization_code = f"{random.randint(100000, 999999)}"
 
                 # Atualizar transação
-                self.current_transaction["status"] = status
-                self.current_transaction["end_time"] = time.time()
-                self.current_transaction["message"] = message
-                self.current_transaction["authorization_code"] = authorization_code
+                if self.current_transaction is not None:
+                    self.current_transaction["status"] = status
+                    self.current_transaction["end_time"] = time.time()
+                    self.current_transaction["message"] = message
+                    self.current_transaction["authorization_code"] = authorization_code
 
-                # Adicionar ao histórico
-                self.transaction_history.append(self.current_transaction.copy())
+                    # Adicionar ao histórico
+                    self.transaction_history.append(self.current_transaction.copy())
 
                 # Limpar transação atual
                 current_tx = self.current_transaction
@@ -671,8 +705,14 @@ class SimulatedPaymentTerminal(PaymentTerminal):
                     "details": {"transaction": current_tx},
                 }
 
-    async def cancel_transaction(self, transaction_id: str = None) -> Dict[str, Any]:
+    async def cancel_transaction(
+        self, options: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Cancela uma transação simulada."""
+        if options is None:
+            options = {}
+        transaction_id = options.get("transaction_id")
+
         async with self.transaction_lock:
             if not self.initialized:
                 await self.update_status(
@@ -772,7 +812,7 @@ class SimulatedPaymentTerminal(PaymentTerminal):
                     transaction = tx
                     break
 
-            if not found:
+            if not found or transaction is None:
                 logging.error(f"Transação não encontrada: {transaction_id}")
                 return False
 

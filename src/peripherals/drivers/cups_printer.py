@@ -5,18 +5,27 @@ import tempfile
 from typing import Any, Dict, Optional
 
 from src.peripherals.models.peripheral_models import (
-    ConventionalPrinter,
+    BasePeripheralDriver,
     ConventionalPrinterConfig,
+    PeripheralConfig,
     PeripheralException,
     PeripheralStatus,
 )
 
 
-class CupsPrinter(ConventionalPrinter):
+class CupsPrinter(BasePeripheralDriver):
     """Driver para impressoras convencionais usando CUPS."""
 
     def __init__(self, config: ConventionalPrinterConfig):
-        super().__init__(config)
+        # Convert ConventionalPrinterConfig to PeripheralConfig for BasePeripheralDriver
+        peripheral_config = PeripheralConfig(
+            id=config.id,
+            type="printer",
+            driver="cups_printer",
+            name=config.name,
+            options=config.options,
+        )
+        super().__init__(peripheral_config)
         self.printer_name = config.printer_name
         self.initialized = False
         self.options = config.options

@@ -120,12 +120,12 @@ class PeripheralFactory:
 class PeripheralManager:
     """Gerenciador central de periféricos."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.peripherals: Dict[str, BasePeripheralDriver] = {}
         self.config_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)), "config", "peripherals.json"
         )
-        self.event_callbacks = []
+        self.event_callbacks: List[Any] = []
         self._load_config()
 
     def _load_config(self) -> None:

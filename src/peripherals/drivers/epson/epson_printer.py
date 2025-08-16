@@ -10,26 +10,39 @@ except ImportError:
     ESCPOS_AVAILABLE = False
 
 from src.peripherals.models.peripheral_models import (
-    ConnectionException,
-    PeripheralConnectionType,
+    BasePeripheralDriver,
+    ConfigurationException,
+    PeripheralConfig,
+    PeripheralException,
     PeripheralStatus,
-    Printer,
     PrinterConfig,
 )
 
 
-class EpsonPrinter(Printer):
+class EpsonPrinter(BasePeripheralDriver):
     """Implementação para impressoras Epson usando o protocolo ESC/POS."""
 
     def __init__(self, config: PrinterConfig):
-        super().__init__(config)
+        # Convert PrinterConfig to PeripheralConfig for BasePeripheralDriver
+        peripheral_config = PeripheralConfig(
+            id=config.id,
+            type=config.type,
+            driver=config.driver,
+            name=config.name,
+            device_path=config.device_path,
+            address=config.address,
+            options=config.options,
+        )
+        super().__init__(peripheral_config)
         self.printer = None
-        self.model = config.model
-        self.connection_type = config.connection_type
-        self.port = config.port
-        self.address = config.address
-        self.paper_width = config.paper_width
-        self.encoding = config.encoding
+        self.model = config.options.get("model", "TM-T88V")
+        self.connection_type = config.options.get("connection_type", "usb")
+        self.port = config.options.get("port", "auto")
+        self.address = config.options.get("address")
+        self.printer_config = config
+        self.paper_width = config.options.get("paper_width", 80)
+        self.encoding = config.options.get("encoding", "cp850")
+        self.last_status_check = None
 
         # Verificar se a biblioteca escpos está disponível
         if not ESCPOS_AVAILABLE:
@@ -41,7 +54,7 @@ class EpsonPrinter(Printer):
         """Inicializa a impressora Epson."""
         try:
             # Criar conexão com a impressora
-            if self.connection_type == PeripheralConnectionType.USB:
+            if self.connection_type == "usb":
                 # Para USB, precisamos de vendor_id e product_id
                 # Se port for "auto", tentar descobrir automaticamente
                 if self.port == "auto":
@@ -64,7 +77,7 @@ class EpsonPrinter(Printer):
 
                 self.printer = Usb(vendor_id, product_id)
 
-            elif self.connection_type == PeripheralConnectionType.NETWORK:
+            elif self.connection_type == "network":
                 if not self.address:
                     raise Exception(
                         "Endereço IP não especificado para conexão de rede."
@@ -79,20 +92,20 @@ class EpsonPrinter(Printer):
 
                 self.printer = Network(self.address, port)
 
-            elif self.connection_type == PeripheralConnectionType.SERIAL:
+            elif self.connection_type == "serial":
                 if not self.port or self.port == "auto":
                     # Em uma implementação real, implementaríamos descoberta automática
                     # Para este exemplo, usamos um valor padrão
-                    port = "/dev/ttyS0"
+                    serial_port = "/dev/ttyS0"
                 else:
-                    port = self.port
+                    serial_port = self.port
 
                 # Parâmetros padrão para impressoras Epson
                 baudrate = 9600
-                if "baudrate" in self.config.options:
-                    baudrate = self.config.options["baudrate"]
+                if "baudrate" in self.printer_config.options:
+                    baudrate = self.printer_config.options["baudrate"]
 
-                self.printer = Serial(devfile=port, baudrate=baudrate)
+                self.printer = Serial(devfile=serial_port, baudrate=baudrate)
 
             else:
                 raise Exception(
@@ -100,7 +113,8 @@ class EpsonPrinter(Printer):
                 )
 
             # Testar a conexão
-            self.printer.text("\n")  # Enviar um caractere de nova linha para testar
+            if self.printer:
+                self.printer.text("\n")  # Enviar um caractere de nova linha para testar
 
             # Atualizar status
             await self.update_status(PeripheralStatus.ONLINE)
@@ -111,7 +125,7 @@ class EpsonPrinter(Printer):
         except ESCPOSError as e:
             await self.update_status(PeripheralStatus.ERROR, str(e))
             self.connected = False
-            raise ConnectionException(
+            raise PeripheralException(
                 f"Erro ao conectar à impressora Epson: {str(e)}"
             ) from e
 
@@ -119,7 +133,7 @@ class EpsonPrinter(Printer):
             await self.update_status(PeripheralStatus.ERROR, str(e))
             self.connected = False
             traceback.print_exc()
-            raise ConnectionException(
+            raise PeripheralException(
                 f"Erro ao inicializar impressora Epson: {str(e)}"
             ) from e
 

@@ -2,12 +2,14 @@ import asyncio
 import logging
 import os
 import re
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+import socket
 
 from src.peripherals.models.peripheral_models import (
+    BasePeripheralDriver,
+    PeripheralConfig,
     PeripheralException,
     PeripheralStatus,
-    ThermalPrinter,
     ThermalPrinterConfig,
 )
 
@@ -18,16 +20,26 @@ LF = b"\x0a"
 CR = b"\x0d"
 
 
-class DarumaThermalPrinter(ThermalPrinter):
+class DarumaThermalPrinter(BasePeripheralDriver):
     """Driver para impressoras térmicas Daruma."""
 
     def __init__(self, config: ThermalPrinterConfig):
-        super().__init__(config)
-        self.connection = None
+        # Convert ThermalPrinterConfig to PeripheralConfig for BasePeripheralDriver
+        peripheral_config = PeripheralConfig(
+            id=config.id,
+            type="printer",
+            driver="daruma_thermal",
+            name=config.name,
+            device_path=config.device_path,
+            options=config.options,
+        )
+        super().__init__(peripheral_config)
+        self.connection: Optional[Any] = None  # Can be USB device, serial port, or socket
         self.encoding = config.options.get(
             "encoding", "cp850"
         )  # Codificação padrão Daruma
-        self.model = config.model.upper()
+        self.model = config.options.get("model", "DR800").upper()
+        self.thermal_config = config  # Guardar a configuração específica de thermal
         self.initialized = False
 
         # Mapeamento de modelos para comandos específicos
@@ -64,15 +76,15 @@ class DarumaThermalPrinter(ThermalPrinter):
         """Inicializa a impressora."""
         try:
             # Verificar tipo de conexão
-            if self.config.connection_type == "usb":
+            if self.thermal_config.options.get("connection_type", "serial") == "usb":
                 await self._initialize_usb()
-            elif self.config.connection_type == "serial":
+            elif self.thermal_config.options.get("connection_type", "serial") == "serial":
                 await self._initialize_serial()
-            elif self.config.connection_type == "network":
+            elif self.thermal_config.options.get("connection_type", "serial") == "network":
                 await self._initialize_network()
             else:
                 raise PeripheralException(
-                    f"Tipo de conexão não suportado: {self.config.connection_type}"
+                    f"Tipo de conexão não suportado: {self.thermal_config.options.get("connection_type", "serial")}"
                 )
 
             # Enviar comando de inicialização
@@ -95,7 +107,7 @@ class DarumaThermalPrinter(ThermalPrinter):
             import usb.util
 
             # Identificar porta automaticamente se não especificada
-            if self.config.port == "auto" or not self.config.port:
+            if self.thermal_config.options.get("port", "auto") == "auto" or not self.thermal_config.options.get("port", "auto"):
                 # Procurar dispositivos Daruma
                 # VID/PID para Daruma (podem variar por modelo)
                 dev = usb.core.find(idVendor=0x0483)  # VID Daruma
@@ -106,18 +118,18 @@ class DarumaThermalPrinter(ThermalPrinter):
                 self.connection = dev
             else:
                 # Usar porta específica
-                port_match = re.match(r"(\d+):(\d+)", self.config.port)
+                port_match = re.match(r"(\d+):(\d+)", self.thermal_config.options.get("port", "auto"))
                 if port_match:
                     bus, address = port_match.groups()
                     dev = usb.core.find(bus=int(bus), address=int(address))
                     if dev is None:
                         raise PeripheralException(
-                            f"Impressora não encontrada na porta {self.config.port}"
+                            f"Impressora não encontrada na porta {self.thermal_config.options.get("port", "auto")}"
                         )
                     self.connection = dev
                 else:
                     raise PeripheralException(
-                        f"Formato de porta inválido: {self.config.port}"
+                        f"Formato de porta inválido: {self.thermal_config.options.get("port", "auto")}"
                     )
 
             # Configurar dispositivo
@@ -153,7 +165,7 @@ class DarumaThermalPrinter(ThermalPrinter):
         try:
             import serial
 
-            port = self.config.port
+            port = self.thermal_config.options.get("port", "auto")
             if port == "auto" or not port:
                 # Tentar encontrar porta automaticamente
                 import serial.tools.list_ports
@@ -172,11 +184,11 @@ class DarumaThermalPrinter(ThermalPrinter):
             # Configurar porta serial
             self.connection = serial.Serial(
                 port=port,
-                baudrate=self.config.options.get("baudrate", 9600),
-                bytesize=self.config.options.get("bytesize", serial.EIGHTBITS),
-                parity=self.config.options.get("parity", serial.PARITY_NONE),
-                stopbits=self.config.options.get("stopbits", serial.STOPBITS_ONE),
-                timeout=self.config.options.get("timeout", 1),
+                baudrate=self.thermal_config.options.get("baudrate", 9600),
+                bytesize=self.thermal_config.options.get("bytesize", serial.EIGHTBITS),
+                parity=self.thermal_config.options.get("parity", serial.PARITY_NONE),
+                stopbits=self.thermal_config.options.get("stopbits", serial.STOPBITS_ONE),
+                timeout=self.thermal_config.options.get("timeout", 1),
             )
 
             if not self.connection.is_open:
@@ -196,8 +208,8 @@ class DarumaThermalPrinter(ThermalPrinter):
         try:
             import socket
 
-            address = self.config.address
-            port = self.config.options.get(
+            address = self.thermal_config.options.get("address")
+            port = self.thermal_config.options.get(
                 "port", 9100
             )  # Porta padrão para impressoras
 
@@ -205,8 +217,8 @@ class DarumaThermalPrinter(ThermalPrinter):
                 raise PeripheralException("Endereço de rede não especificado")
 
             # Criar socket
-            self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.connection.settimeout(self.config.options.get("timeout", 5))
+            self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # type: ignore
+            self.connection.settimeout(self.thermal_config.options.get("timeout", 5))
             self.connection.connect((address, port))
 
         except ImportError as e:
@@ -225,11 +237,11 @@ class DarumaThermalPrinter(ThermalPrinter):
             return False
 
         try:
-            if self.config.connection_type == "usb":
+            if self.thermal_config.options.get("connection_type", "serial") == "usb":
                 self.ep_out.write(command)
-            elif self.config.connection_type == "serial":
+            elif self.thermal_config.options.get("connection_type", "serial") == "serial":
                 self.connection.write(command)
-            elif self.config.connection_type == "network":
+            elif self.thermal_config.options.get("connection_type", "serial") == "network":
                 self.connection.send(command)
 
             return True
@@ -242,13 +254,13 @@ class DarumaThermalPrinter(ThermalPrinter):
         """Finaliza a impressora."""
         try:
             if self.connection:
-                if self.config.connection_type == "usb":
+                if self.thermal_config.options.get("connection_type", "serial") == "usb":
                     import usb.util
 
                     usb.util.dispose_resources(self.connection)
-                elif self.config.connection_type == "serial":
+                elif self.thermal_config.options.get("connection_type", "serial") == "serial":
                     self.connection.close()
-                elif self.config.connection_type == "network":
+                elif self.thermal_config.options.get("connection_type", "serial") == "network":
                     self.connection.close()
 
                 self.connection = None
@@ -274,7 +286,7 @@ class DarumaThermalPrinter(ThermalPrinter):
             # Enviar comando de status (específico para Daruma)
             status_command = GS + b"r" + b"\x01"
 
-            if self.config.connection_type == "usb":
+            if self.thermal_config.options.get("connection_type", "serial") == "usb":
                 # Para USB, não é possível ler resposta facilmente
                 # Verificar apenas se o comando foi enviado
                 success = await self._send_command(status_command)
@@ -284,7 +296,7 @@ class DarumaThermalPrinter(ThermalPrinter):
                         "message": "Impressora online",
                         "details": {
                             "model": self.model,
-                            "connection": self.config.connection_type,
+                            "connection": self.thermal_config.options.get("connection_type", "serial"),
                         },
                     }
                 else:
@@ -293,12 +305,12 @@ class DarumaThermalPrinter(ThermalPrinter):
                         "message": "Erro ao verificar status",
                         "details": {},
                     }
-            elif self.config.connection_type == "serial":
+            elif self.thermal_config.options.get("connection_type", "serial") == "serial":
                 # Enviar comando e ler resposta
                 await self._send_command(status_command)
                 # Aguardar resposta
                 await asyncio.sleep(0.1)
-                if self.connection.in_waiting > 0:
+                if self.connection and hasattr(self.connection, 'in_waiting') and self.connection.in_waiting > 0:
                     response = self.connection.read(self.connection.in_waiting)
                     # Interpretar resposta (específico para Daruma)
                     # Simplificado para este exemplo
@@ -308,7 +320,7 @@ class DarumaThermalPrinter(ThermalPrinter):
                             "message": "Impressora online",
                             "details": {
                                 "model": self.model,
-                                "connection": self.config.connection_type,
+                                "connection": self.thermal_config.options.get("connection_type", "serial"),
                                 "raw_status": response.hex(),
                             },
                         }
@@ -318,7 +330,7 @@ class DarumaThermalPrinter(ThermalPrinter):
                     "message": "Status desconhecido",
                     "details": {},
                 }
-            elif self.config.connection_type == "network":
+            elif self.thermal_config.options.get("connection_type", "serial") == "network":
                 # Para rede, verificar apenas se a conexão está ativa
                 if self.connection:
                     return {
@@ -326,8 +338,8 @@ class DarumaThermalPrinter(ThermalPrinter):
                         "message": "Impressora online",
                         "details": {
                             "model": self.model,
-                            "connection": self.config.connection_type,
-                            "address": self.config.address,
+                            "connection": self.thermal_config.options.get("connection_type", "serial"),
+                            "address": self.thermal_config.options.get("address"),
                         },
                     }
                 else:
@@ -613,8 +625,8 @@ class DarumaThermalPrinter(ThermalPrinter):
             commands.append(CR + LF + CR + LF + CR + LF)
 
             # Cortar papel
-            if self.config.options.get("auto_cut", True):
-                await self.cut_paper(self.config.cut_type == "partial")
+            if self.thermal_config.options.get("auto_cut", True):
+                await self.cut_paper(self.thermal_config.options.get("cut_type", "partial") == "partial")
 
             # Enviar comandos
             for cmd in commands:
@@ -657,7 +669,7 @@ class DarumaThermalPrinter(ThermalPrinter):
             )
             return False
 
-        if not self.config.cash_drawer_enabled:
+        if not self.thermal_config.options.get("cash_drawer_enabled", False):
             logging.warning("Gaveta de dinheiro não habilitada na configuração")
             return False
 
@@ -694,14 +706,19 @@ class DarumaThermalPrinter(ThermalPrinter):
 
             # Redimensionar para a largura da impressora
             paper_width_px = (
-                self.config.paper_width * self.config.dpi // 25.4
+                self.thermal_config.options.get("paper_width", 80) * self.thermal_config.options.get("dpi", 203) // 25.4
             )  # mm para pixels
             width_ratio = paper_width_px / img.width
             new_height = int(img.height * width_ratio)
-            img = img.resize((int(paper_width_px), new_height), Image.LANCZOS)
+            # Use Image.Resampling.LANCZOS no Pillow 10.0+ ou Image.LANCZOS em versões antigas
+            try:
+                resample = Image.Resampling.LANCZOS  # type: ignore
+            except AttributeError:
+                resample = Image.LANCZOS  # type: ignore
+            img = img.resize((int(paper_width_px), new_height), resample)  # type: ignore
 
             # Converter para preto e branco
-            img = img.convert("1")
+            img = img.convert("1")  # type: ignore
 
             # Converter para array
             img_array = np.array(img)
@@ -797,15 +814,15 @@ class DarumaThermalPrinter(ThermalPrinter):
             await self._send_command(ESC + b"a" + b"\x01")  # Centralizado
 
             # Altura do código de barras
-            height = min(255, self.config.options.get("barcode_height", 80))
+            height = min(255, self.thermal_config.options.get("barcode_height", 80))
             await self._send_command(GS + b"h" + bytes([height]))
 
             # Largura do código de barras
-            width = min(6, self.config.options.get("barcode_width", 2))
+            width = min(6, self.thermal_config.options.get("barcode_width", 2))
             await self._send_command(GS + b"w" + bytes([width]))
 
             # Posição do texto (0=não imprimir, 1=acima, 2=abaixo, 3=acima e abaixo)
-            text_position = min(3, self.config.options.get("barcode_text_position", 2))
+            text_position = min(3, self.thermal_config.options.get("barcode_text_position", 2))
             await self._send_command(GS + b"H" + bytes([text_position]))
 
             # Imprimir código de barras
@@ -846,7 +863,7 @@ class DarumaThermalPrinter(ThermalPrinter):
             )
 
             # Nível de correção de erro (L=1, M=0, Q=3, H=2)
-            error_level = min(3, self.config.options.get("qrcode_error_level", 1))
+            error_level = min(3, self.thermal_config.options.get("qrcode_error_level", 1))
             await self._send_command(
                 GS + b"(k" + b"\x03\x00" + b"1E" + bytes([error_level])
             )

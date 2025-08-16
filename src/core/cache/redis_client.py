@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class RedisClient:
     """Redis client for caching operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.redis: Optional[redis.Redis] = None
         self.connected = False
 

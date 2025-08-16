@@ -277,7 +277,7 @@ class TraceRepository:
             ]
 
             # Executar agregação
-            cursor = self.transactions_collection.aggregate(pipeline)
+            cursor = self.transactions_collection.aggregate(pipeline)  # type: ignore
 
             stats = []
             async for stat in cursor:

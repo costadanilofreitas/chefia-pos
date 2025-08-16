@@ -98,7 +98,8 @@ class IFoodAPIClient:
             logger.error(f"Erro ao obter eventos do iFood: {str(e)}")
             error_response = None
             try:
-                error_response = e.response.json() if hasattr(e, "response") else None
+                if hasattr(e, "response") and e.response is not None:
+                    error_response = e.response.json()
             except (ValueError, AttributeError, Exception):
                 pass
 
@@ -139,7 +140,8 @@ class IFoodAPIClient:
             logger.error(f"Erro ao confirmar eventos do iFood: {str(e)}")
             error_response = None
             try:
-                error_response = e.response.json() if hasattr(e, "response") else None
+                if hasattr(e, "response") and e.response is not None:
+                    error_response = e.response.json()
             except (ValueError, AttributeError, Exception):
                 pass
 
@@ -177,7 +179,8 @@ class IFoodAPIClient:
             )
             error_response = None
             try:
-                error_response = e.response.json() if hasattr(e, "response") else None
+                if hasattr(e, "response") and e.response is not None:
+                    error_response = e.response.json()
             except (ValueError, AttributeError, Exception):
                 pass
 
@@ -252,7 +255,8 @@ class IFoodAPIClient:
             )
             error_response = None
             try:
-                error_response = e.response.json() if hasattr(e, "response") else None
+                if hasattr(e, "response") and e.response is not None:
+                    error_response = e.response.json()
             except (ValueError, AttributeError, Exception):
                 pass
 

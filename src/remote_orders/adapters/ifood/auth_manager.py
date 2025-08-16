@@ -104,7 +104,8 @@ class IFoodAuthManager:
             logger.error(f"Erro na autenticação com iFood: {str(e)}")
             error_response = None
             try:
-                error_response = e.response.json() if hasattr(e, "response") else None
+                if hasattr(e, "response") and e.response is not None:
+                    error_response = e.response.json()
             except (ValueError, AttributeError, Exception):
                 pass
 

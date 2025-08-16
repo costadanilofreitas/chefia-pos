@@ -10,7 +10,7 @@ from src.peripherals.services.peripheral_service import get_peripheral_manager
 class PrintService:
     """Serviço para operações de impressão."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.peripheral_manager = get_peripheral_manager()
         self.templates: Dict[str, ReceiptTemplate] = {}
         self.initialized = False
@@ -27,7 +27,13 @@ class PrintService:
                     template_name = os.path.splitext(filename)[0]
                     with open(os.path.join(templates_path, filename), "r") as f:
                         template_data = json.load(f)
-                        self.templates[template_name] = ReceiptTemplate(template_data)
+                        self.templates[template_name] = ReceiptTemplate(
+                            id=template_data.get("id", template_name),
+                            name=template_data.get("name", template_name),
+                            content=json.dumps(template_data),
+                            variables=template_data.get("variables", []),
+                            options=template_data.get("options", {})
+                        )
         except Exception as e:
             print(f"Erro ao carregar templates: {str(e)}")
             # Em produção, registrar em log
@@ -52,11 +58,11 @@ class PrintService:
         receipt = self._render_template(template, data)
 
         # Imprimir o recibo
-        success = await printer.print_receipt(receipt)
+        success = await printer.print_receipt(receipt)  # type: ignore
 
         # Cortar o papel
         if success:
-            await printer.cut_paper()
+            await printer.cut_paper()  # type: ignore
 
         return success
 
@@ -68,7 +74,7 @@ class PrintService:
             raise PrinterException(f"Impressora não encontrada: {printer_id}")
 
         # Imprimir o texto
-        return await printer.print_text(text)
+        return await printer.print_text(text)  # type: ignore
 
     async def print_image(self, printer_id: str, image_path: str) -> bool:
         """Imprime uma imagem."""
@@ -82,7 +88,7 @@ class PrintService:
             raise PrinterException(f"Arquivo de imagem não encontrado: {image_path}")
 
         # Imprimir a imagem
-        return await printer.print_image(image_path)
+        return await printer.print_image(image_path)  # type: ignore
 
     async def print_barcode(
         self, printer_id: str, data: str, barcode_type: str = "CODE128"
@@ -94,7 +100,7 @@ class PrintService:
             raise PrinterException(f"Impressora não encontrada: {printer_id}")
 
         # Imprimir o código de barras
-        return await printer.print_barcode(data, barcode_type)
+        return await printer.print_barcode(data, barcode_type)  # type: ignore
 
     async def print_qrcode(self, printer_id: str, data: str, size: int = 6) -> bool:
         """Imprime um QR code."""
@@ -104,7 +110,7 @@ class PrintService:
             raise PrinterException(f"Impressora não encontrada: {printer_id}")
 
         # Imprimir o QR code
-        return await printer.print_qrcode(data, size)
+        return await printer.print_qrcode(data, size)  # type: ignore
 
     async def open_cash_drawer(self, printer_id: str) -> bool:
         """Abre a gaveta de dinheiro conectada à impressora."""
@@ -114,13 +120,13 @@ class PrintService:
             raise PrinterException(f"Impressora não encontrada: {printer_id}")
 
         # Verificar se a impressora suporta gaveta de dinheiro
-        if not printer.config.cash_drawer_enabled:
+        if not printer.config.cash_drawer_enabled:  # type: ignore
             raise PrinterException(
                 f"Impressora {printer_id} não suporta gaveta de dinheiro"
             )
 
         # Abrir a gaveta
-        return await printer.open_cash_drawer()
+        return await printer.open_cash_drawer()  # type: ignore
 
     def _render_template(
         self, template: ReceiptTemplate, data: Dict[str, Any]
@@ -131,12 +137,13 @@ class PrintService:
 
         rendered_receipt = {
             "template_name": template.name,
-            "template_version": template.version,
+            "template_version": template.options.get("version", "1.0"),
             "content": [],
         }
 
         # Processar cada seção do template
-        for section in template.sections:
+        template_content = json.loads(template.content)
+        for section in template_content.get("sections", []):
             section_type = section.get("type", "")
             section_content = section.get("content", [])
 

@@ -1,9 +1,10 @@
+import os
 from typing import Any, Dict, List, Optional
 
 from fastapi import Depends
-from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
-from ...core.database.connection import get_db
 from ..models.db_models import PeripheralDB
 from ..models.peripheral_models import (
     ConfigurationException,
@@ -16,31 +17,56 @@ from ..models.peripheral_models import (
 )
 from ..repositories.peripheral_repository import PeripheralRepository
 
+# Database configuration
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    f"postgresql://{os.getenv('DB_USER', 'posmodern')}:{os.getenv('DB_PASSWORD', 'posmodern123')}@{os.getenv('DB_HOST', 'localhost')}:{os.getenv('DB_PORT', '5432')}/{os.getenv('DB_NAME', 'posmodern')}",
+)
 
-class PeripheralFactory:
+# Create engine and session factory
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+def get_db():
+    """Get database session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+class PeripheralDBFactory:
     """Factory for creating peripheral instances from database data."""
 
     @staticmethod
-    async def create_peripheral_from_db(db_peripheral: PeripheralDB) -> Peripheral:
+    async def create_peripheral_from_db(db_peripheral: PeripheralDB) -> Printer:
         """Creates a peripheral instance from database record."""
-        config = db_peripheral.config.copy() if db_peripheral.config else {}
+        config: Dict[str, Any] = (
+            dict(db_peripheral.config) if db_peripheral.config else {}
+        )
         config.update(
             {
-                "id": db_peripheral.id,
-                "name": db_peripheral.name,
-                "type": db_peripheral.type,
-                "status": db_peripheral.status,
-                "brand": db_peripheral.brand,
-                "model": db_peripheral.model,
-                "connection_type": db_peripheral.connection_type,
+                "id": str(db_peripheral.id),
+                "name": str(db_peripheral.name),
+                "type": str(db_peripheral.type) if db_peripheral.type else None,
+                "status": str(db_peripheral.status) if db_peripheral.status else None,
+                "brand": str(db_peripheral.brand) if db_peripheral.brand else None,
+                "model": str(db_peripheral.model) if db_peripheral.model else None,
+                "connection_type": (
+                    str(db_peripheral.connection_type)
+                    if db_peripheral.connection_type
+                    else None
+                ),
             }
         )
 
         if db_peripheral.connection_params:
-            config.update(db_peripheral.connection_params)
+            config.update(dict(db_peripheral.connection_params))
 
         if db_peripheral.type == PeripheralType.PRINTER:
-            return await PeripheralFactory.create_printer(config)
+            return await PeripheralDBFactory.create_printer(config)
         else:
             raise ConfigurationException(
                 f"Tipo de periférico não suportado: {db_peripheral.type}"
@@ -55,12 +81,16 @@ class PeripheralFactory:
             from ..drivers.epson.epson_printer import EpsonPrinter
 
             printer_config = PrinterConfig(**config)
-            return EpsonPrinter(printer_config)
+            return EpsonPrinter(printer_config)  # type: ignore
         elif brand == "simulated":
             from ..drivers.simulated_printer import SimulatedPrinter
+            from ..models.peripheral_models import PeripheralFactory
 
             printer_config = PrinterConfig(**config)
-            return SimulatedPrinter(printer_config)
+            peripheral_config = PeripheralFactory.create_peripheral_config(
+                printer_config, "printer", "simulated"
+            )
+            return SimulatedPrinter(peripheral_config)  # type: ignore
         # Add support for other brands in the future
 
         raise ConfigurationException(f"Marca de impressora não suportada: {brand}")
@@ -71,7 +101,7 @@ class PeripheralDBService:
 
     def __init__(self, db: Session = Depends(get_db)):
         self.repository = PeripheralRepository(db)
-        self.active_peripherals: Dict[str, Peripheral] = {}
+        self.active_peripherals: Dict[str, Printer] = {}
 
     async def initialize_peripherals(self) -> None:
         """Initialize all enabled peripherals from database."""
@@ -82,19 +112,18 @@ class PeripheralDBService:
                 await self.add_peripheral_from_db(db_peripheral)
             except Exception as e:
                 await self._log_error(
-                    db_peripheral.id, f"Erro ao inicializar periférico: {str(e)}"
+                    str(db_peripheral.id), f"Erro ao inicializar periférico: {str(e)}"
                 )
 
     async def add_peripheral_from_db(self, db_peripheral: PeripheralDB) -> None:
         """Add a peripheral from database record."""
-        if db_peripheral.id in self.active_peripherals:
-            raise ConfigurationException(
-                f"Periférico com ID {db_peripheral.id} já existe"
-            )
+        peripheral_id = str(db_peripheral.id)
+        if peripheral_id in self.active_peripherals:
+            raise ConfigurationException(f"Periférico com ID {peripheral_id} já existe")
 
         try:
             # Create the peripheral instance
-            peripheral = await PeripheralFactory.create_peripheral_from_db(
+            peripheral = await PeripheralDBFactory.create_peripheral_from_db(
                 db_peripheral
             )
 
@@ -102,19 +131,19 @@ class PeripheralDBService:
             success = await peripheral.initialize()
             if not success:
                 raise PeripheralException(
-                    f"Falha ao inicializar periférico: {db_peripheral.id}"
+                    f"Falha ao inicializar periférico: {peripheral_id}"
                 )
 
             # Store the peripheral
-            self.active_peripherals[db_peripheral.id] = peripheral
+            self.active_peripherals[peripheral_id] = peripheral
 
             # Update status in database
             self.repository.update_peripheral_status(
-                db_peripheral.id, PeripheralStatus.CONNECTED
+                peripheral_id, PeripheralStatus.CONNECTED
             )
 
             await self._log_event(
-                db_peripheral.id,
+                peripheral_id,
                 "connection",
                 f"Periférico {db_peripheral.name} conectado com sucesso",
             )
@@ -122,12 +151,12 @@ class PeripheralDBService:
         except Exception as e:
             # Update status in database
             self.repository.update_peripheral_status(
-                db_peripheral.id, PeripheralStatus.ERROR, str(e)
+                peripheral_id, PeripheralStatus.ERROR, str(e)
             )
 
-            await self._log_error(db_peripheral.id, str(e))
+            await self._log_error(peripheral_id, str(e))
             raise PeripheralException(
-                f"Erro ao adicionar periférico {db_peripheral.id}: {str(e)}"
+                f"Erro ao adicionar periférico {peripheral_id}: {str(e)}"
             ) from e
 
     async def create_peripheral(
@@ -169,7 +198,7 @@ class PeripheralDBService:
 
     async def get_peripheral(self, peripheral_id: str) -> Optional[Peripheral]:
         """Get an active peripheral by ID."""
-        return self.active_peripherals.get(peripheral_id)
+        return self.active_peripherals.get(peripheral_id)  # type: ignore
 
     async def get_peripheral_from_db(
         self, peripheral_id: str
@@ -255,7 +284,7 @@ class PeripheralDBService:
             await self._log_event(
                 peripheral_id,
                 "disconnection",
-                f"Periférico {peripheral.config.name} desconectado",
+                f"Periférico {peripheral.config.get('name', peripheral_id)} desconectado",
             )
         except Exception as e:
             await self._log_error(

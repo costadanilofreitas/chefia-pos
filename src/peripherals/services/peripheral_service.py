@@ -2,6 +2,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from src.peripherals.models.peripheral_models import (
+    BasePeripheralDriver,
     ConfigurationException,
     Peripheral,
     PeripheralException,
@@ -16,11 +17,11 @@ class PeripheralFactory:
     """Fábrica para criar instâncias de periféricos."""
 
     @staticmethod
-    async def create_peripheral(config: Dict[str, Any]) -> Peripheral:
+    async def create_peripheral(config: Dict[str, Any]) -> BasePeripheralDriver:
         """Cria uma instância de periférico com base na configuração."""
         peripheral_type = config.get("type", "").lower()
 
-        if peripheral_type == PeripheralType.PRINTER:
+        if peripheral_type == "printer":
             return await PeripheralFactory.create_printer(config)
         # Adicionar suporte para outros tipos no futuro
         else:
@@ -29,7 +30,7 @@ class PeripheralFactory:
             )
 
     @staticmethod
-    async def create_printer(config: Dict[str, Any]) -> Printer:
+    async def create_printer(config: Dict[str, Any]) -> BasePeripheralDriver:
         """Cria uma instância de impressora com base na configuração."""
         brand = config.get("brand", "").lower()
 
@@ -41,9 +42,10 @@ class PeripheralFactory:
             return EpsonPrinter(printer_config)
         elif brand == "simulated":
             from src.peripherals.drivers.simulated_printer import SimulatedPrinter
+            from src.peripherals.models.peripheral_models import PeripheralConfig
 
-            printer_config = PrinterConfig(**config)
-            return SimulatedPrinter(printer_config)
+            peripheral_config = PeripheralConfig(**config)
+            return SimulatedPrinter(peripheral_config)
         # Adicionar suporte para outras marcas no futuro
 
         raise ConfigurationException(f"Marca de impressora não suportada: {brand}")
@@ -52,7 +54,7 @@ class PeripheralFactory:
 class PeripheralManager:
     """Gerenciador central de periféricos."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.peripherals: Dict[str, Peripheral] = {}
         self.config: Dict[str, Any] = {}
         self.initialized = False
@@ -104,7 +106,7 @@ class PeripheralManager:
                 )
 
             # Armazenar o periférico
-            self.peripherals[peripheral_id] = peripheral
+            self.peripherals[peripheral_id] = peripheral  # type: ignore
         except Exception as e:
             raise PeripheralException(
                 f"Erro ao adicionar periférico {peripheral_id}: {str(e)}"
@@ -128,7 +130,7 @@ class PeripheralManager:
         result = []
 
         for peripheral in self.peripherals.values():
-            if peripheral_type is None or peripheral.config.type == peripheral_type:
+            if peripheral_type is None or peripheral.config.type == peripheral_type:  # type: ignore
                 result.append(peripheral.to_dict())
 
         return result

@@ -2,14 +2,16 @@
 Database-backed stock service replacing file-based storage
 """
 
+# Database configuration
+import os
 import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
-from ...core.database.connection import get_db
 from ..models.db_models import MovementTypeEnum
 from ..models.stock_models import (
     StockItem,
@@ -20,11 +22,29 @@ from ..models.stock_models import (
 )
 from ..repositories.stock_repository import StockRepository
 
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    f"postgresql://{os.getenv('DB_USER', 'posmodern')}:{os.getenv('DB_PASSWORD', 'posmodern123')}@{os.getenv('DB_HOST', 'localhost')}:{os.getenv('DB_PORT', '5432')}/{os.getenv('DB_NAME', 'posmodern')}",
+)
+
+# Create engine and session factory
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+def get_db():
+    """Get database session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 
 class StockDatabaseService:
     """Database-backed service for stock management."""
 
-    def __init__(self, db: Session = Depends(get_db)):
+    def __init__(self, db: Session):
         self.repository = StockRepository(db)
 
     def _convert_db_to_pydantic_item(self, db_item) -> StockItem:
@@ -83,7 +103,7 @@ class StockDatabaseService:
             # Record initial quantity as an 'entry' movement if quantity > 0
             if item_create.initial_quantity > 0:
                 self.repository.create_stock_movement(
-                    stock_item_id=db_item.id,
+                    stock_item_id=uuid.UUID(str(db_item.id)),
                     quantity=item_create.initial_quantity,
                     movement_type=MovementTypeEnum.ENTRY,
                     quantity_before=0,
@@ -246,11 +266,15 @@ class StockDatabaseService:
 
                 levels.append(
                     StockLevel(
-                        stock_item_id=item.id,
-                        name=item.name,
-                        current_quantity=item.current_quantity,
-                        unit=item.unit,
-                        low_stock_threshold=item.low_stock_threshold,
+                        stock_item_id=uuid.UUID(str(item.id)),
+                        name=str(item.name),
+                        current_quantity=float(item.current_quantity),
+                        unit=str(item.unit),
+                        low_stock_threshold=(
+                            float(item.low_stock_threshold)
+                            if item.low_stock_threshold is not None
+                            else None
+                        ),
                         is_low=is_low,
                     )
                 )
@@ -322,7 +346,9 @@ class StockDatabaseService:
             alerts = []
             for alert in db_alerts:
                 # Get stock item details
-                db_item = self.repository.get_stock_item_by_id(alert.stock_item_id)
+                db_item = self.repository.get_stock_item_by_id(
+                    uuid.UUID(str(alert.stock_item_id))
+                )
                 if db_item:
                     alerts.append(
                         {

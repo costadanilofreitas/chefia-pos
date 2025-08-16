@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class MessageBroker:
     """RabbitMQ message broker for event-driven architecture."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.connection: Optional[AbstractRobustConnection] = None
         self.channel: Optional[Channel] = None
         self.exchanges: Dict[str, Exchange] = {}

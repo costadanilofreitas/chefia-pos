@@ -1,23 +1,34 @@
 import logging
 import os
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional, BinaryIO
+import socket
 
 from src.peripherals.models.peripheral_models import (
-    CashDrawer,
+    BasePeripheralDriver,
     CashDrawerConfig,
+    PeripheralConfig,
     PeripheralStatus,
 )
 
 
-class StandaloneCashDrawer(CashDrawer):
+class StandaloneCashDrawer(BasePeripheralDriver):
     """Driver para gavetas de dinheiro standalone (conectadas diretamente)."""
 
     def __init__(self, config: CashDrawerConfig):
-        super().__init__(config)
+        # Convert CashDrawerConfig to PeripheralConfig for BasePeripheralDriver
+        peripheral_config = PeripheralConfig(
+            id=config.id,
+            type="cash_drawer",
+            driver="standalone_cash_drawer",
+            name=config.name,
+            device_path=config.device_path,
+            options=config.options,
+        )
+        super().__init__(peripheral_config)
         self.device_path = config.device_path
         self.initialized = False
-        self.device = None
+        self.device: Optional[BinaryIO] = None
         self.open_command = bytes.fromhex(
             config.options.get("open_command", "1B70001919")
         )
@@ -29,7 +40,7 @@ class StandaloneCashDrawer(CashDrawer):
         """Inicializa a gaveta de dinheiro."""
         try:
             # Verificar se o dispositivo existe
-            if not os.path.exists(self.device_path):
+            if not self.device_path or not os.path.exists(self.device_path):
                 logging.error(f"Dispositivo não encontrado: {self.device_path}")
                 await self.update_status(
                     PeripheralStatus.ERROR,
@@ -75,7 +86,7 @@ class StandaloneCashDrawer(CashDrawer):
 
         try:
             # Verificar se o dispositivo ainda existe
-            if not os.path.exists(self.device_path):
+            if not self.device_path or not os.path.exists(self.device_path):
                 await self.update_status(
                     PeripheralStatus.ERROR,
                     f"Dispositivo não encontrado: {self.device_path}",
@@ -88,11 +99,14 @@ class StandaloneCashDrawer(CashDrawer):
 
             # Enviar comando de status (se suportado)
             try:
-                self.device.write(self.status_command)
-                self.device.flush()
+                if self.device:
+                    self.device.write(self.status_command)
+                    self.device.flush()
 
-                # Tentar ler resposta
-                response = self.device.read(1)
+                    # Tentar ler resposta
+                    response = self.device.read(1)
+                else:
+                    response = b""
 
                 if response:
                     # Interpretar resposta (específico para cada modelo)
@@ -140,8 +154,9 @@ class StandaloneCashDrawer(CashDrawer):
 
         try:
             # Enviar comando para abrir gaveta
-            self.device.write(self.open_command)
-            self.device.flush()
+            if self.device:
+                self.device.write(self.open_command)
+                self.device.flush()
 
             # Registrar evento
             logging.info("Comando para abrir gaveta enviado")
@@ -156,15 +171,24 @@ class StandaloneCashDrawer(CashDrawer):
             return False
 
 
-class NetworkCashDrawer(CashDrawer):
+class NetworkCashDrawer(BasePeripheralDriver):
     """Driver para gavetas de dinheiro conectadas via rede."""
 
     def __init__(self, config: CashDrawerConfig):
-        super().__init__(config)
-        self.address = config.address
+        # Convert CashDrawerConfig to PeripheralConfig for BasePeripheralDriver
+        peripheral_config = PeripheralConfig(
+            id=config.id,
+            type="cash_drawer",
+            driver="network_cash_drawer",
+            name=config.name,
+            device_path=config.device_path,
+            options=config.options,
+        )
+        super().__init__(peripheral_config)
+        self.address = config.options.get("address")
         self.port = config.options.get("port", 9100)
         self.initialized = False
-        self.connection = None
+        self.connection: Optional[socket.socket] = None
         self.open_command = bytes.fromhex(
             config.options.get("open_command", "1B70001919")
         )
@@ -251,7 +275,8 @@ class NetworkCashDrawer(CashDrawer):
 
         try:
             # Enviar comando para abrir gaveta
-            self.connection.send(self.open_command)
+            if self.connection:
+                self.connection.send(self.open_command)
 
             # Registrar evento
             logging.info("Comando para abrir gaveta enviado")
@@ -266,14 +291,23 @@ class NetworkCashDrawer(CashDrawer):
             return False
 
 
-class SimulatedCashDrawer(CashDrawer):
+class SimulatedCashDrawer(BasePeripheralDriver):
     """Driver para simulação de gaveta de dinheiro."""
 
     def __init__(self, config: CashDrawerConfig):
-        super().__init__(config)
+        # Convert CashDrawerConfig to PeripheralConfig for BasePeripheralDriver
+        peripheral_config = PeripheralConfig(
+            id=config.id,
+            type="cash_drawer",
+            driver="simulated_cash_drawer",
+            name=config.name,
+            device_path=config.device_path,
+            options=config.options,
+        )
+        super().__init__(peripheral_config)
         self.initialized = False
         self.is_open = False
-        self.last_opened = 0
+        self.last_opened = 0.0
 
     async def initialize(self) -> bool:
         """Inicializa a gaveta simulada."""

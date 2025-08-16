@@ -22,7 +22,8 @@
       "Bash(poetry run ruff:*)",
       "Bash(ruff check:*)",
       "Bash(rm:*)",
-      "Bash(make:*)"
+      "Bash(make:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": [],

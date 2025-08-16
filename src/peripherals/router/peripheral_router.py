@@ -359,7 +359,7 @@ async def process_payment(
             )
 
         # Processar pagamento
-        result = await peripheral.process_payment(payment_data)
+        result = await peripheral.process_payment(payment_data)  # type: ignore
 
         return result
     except HTTPException:

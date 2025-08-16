@@ -1184,7 +1184,7 @@ class WebhookService:
 
             # Envia a requisição
             response = requests.post(
-                webhook.url,
+                str(webhook.url),  # Converter HttpUrl para string
                 json=full_payload,
                 headers=headers,
                 timeout=10,  # Timeout de 10 segundos

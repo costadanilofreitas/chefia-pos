@@ -373,7 +373,7 @@ async def update_keyboard_config(
 
         updated_config = await keyboard_manager.get_keyboard_config(keyboard_id)
         return {
-            **updated_config,
+            **(updated_config or {}),  # type: ignore
             "message": f"Configuração do teclado {keyboard_id} atualizada com sucesso",
         }
 

@@ -4,21 +4,34 @@ import os
 from typing import Any, Dict
 
 from src.peripherals.models.peripheral_models import (
-    BarcodeReader,
-    BarcodeReaderConfig,
+    BasePeripheralDriver,
+    BarcodeScanner,
+    BarcodeScannerConfig,
+    PeripheralConfig,
     PeripheralStatus,
 )
+from typing import Optional, BinaryIO
+import asyncio
 
 
-class GenericBarcodeReader(BarcodeReader):
+class GenericBarcodeReader(BasePeripheralDriver):
     """Driver para leitores de código de barras genéricos (USB HID)."""
 
-    def __init__(self, config: BarcodeReaderConfig):
-        super().__init__(config)
+    def __init__(self, config: BarcodeScannerConfig):
+        # Convert BarcodeScannerConfig to PeripheralConfig for BasePeripheralDriver
+        peripheral_config = PeripheralConfig(
+            id=config.id,
+            type="barcode_scanner",
+            driver="generic_barcode_reader",
+            name=config.name,
+            device_path=config.device_path,
+            options=config.options,
+        )
+        super().__init__(peripheral_config)
         self.device_path = config.device_path
         self.initialized = False
-        self.device = None
-        self.read_thread = None
+        self.device: Optional[BinaryIO] = None
+        self.read_thread: Optional[asyncio.Task] = None
         self.running = False
         self.buffer = ""
         self.callback = None
@@ -27,7 +40,7 @@ class GenericBarcodeReader(BarcodeReader):
         """Inicializa o leitor de código de barras."""
         try:
             # Verificar se o dispositivo existe
-            if not os.path.exists(self.device_path):
+            if not self.device_path or not os.path.exists(self.device_path):
                 logging.error(f"Dispositivo não encontrado: {self.device_path}")
                 await self.update_status(
                     PeripheralStatus.ERROR,
@@ -36,7 +49,8 @@ class GenericBarcodeReader(BarcodeReader):
                 return False
 
             # Abrir dispositivo
-            self.device = open(self.device_path, "rb")
+            if self.device_path:
+                self.device = open(self.device_path, "rb")
 
             # Iniciar thread de leitura
             self.running = True
@@ -87,7 +101,7 @@ class GenericBarcodeReader(BarcodeReader):
 
         try:
             # Verificar se o dispositivo ainda existe
-            if not os.path.exists(self.device_path):
+            if not self.device_path or not os.path.exists(self.device_path):
                 await self.update_status(
                     PeripheralStatus.ERROR,
                     f"Dispositivo não encontrado: {self.device_path}",
@@ -125,7 +139,7 @@ class GenericBarcodeReader(BarcodeReader):
     async def _read_loop(self) -> None:
         """Loop de leitura do dispositivo."""
         try:
-            while self.running:
+            while self.running and self.device is not None:
                 # Ler dados do dispositivo
                 data = self.device.read(8)
 
@@ -225,11 +239,20 @@ class GenericBarcodeReader(BarcodeReader):
             return False
 
 
-class SimulatedBarcodeReader(BarcodeReader):
+class SimulatedBarcodeReader(BasePeripheralDriver):
     """Driver para simulação de leitor de código de barras."""
 
-    def __init__(self, config: BarcodeReaderConfig):
-        super().__init__(config)
+    def __init__(self, config: BarcodeScannerConfig):
+        # Convert BarcodeScannerConfig to PeripheralConfig for BasePeripheralDriver
+        peripheral_config = PeripheralConfig(
+            id=config.id,
+            type="barcode_scanner",
+            driver="simulated_barcode_reader",
+            name=config.name,
+            device_path=config.device_path,
+            options=config.options,
+        )
+        super().__init__(peripheral_config)
         self.initialized = False
         self.callback = None
 

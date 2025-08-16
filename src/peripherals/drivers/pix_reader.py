@@ -10,7 +10,6 @@ from typing import Any, Dict, Optional
 from src.peripherals.models.peripheral_models import (
     BasePeripheralDriver,
     PeripheralStatus,
-    PixReader,
     PixReaderConfig,
 )
 
@@ -325,11 +324,22 @@ class CameraPixReader(BasePeripheralDriver):
             return None
 
 
-class SimulatedPixReader(PixReader):
+class SimulatedPixReader(BasePeripheralDriver):
     """Driver para simulação de leitor de PIX."""
 
     def __init__(self, config: PixReaderConfig):
-        super().__init__(config)
+        # Convert PixReaderConfig to PeripheralConfig for BasePeripheralDriver
+        from src.peripherals.models.peripheral_models import PeripheralConfig
+
+        peripheral_config = PeripheralConfig(
+            id=config.id,
+            type="pix_reader",
+            driver="simulated_pix_reader",
+            name=config.name,
+            device_path=config.device_path,
+            options=config.options,
+        )
+        super().__init__(peripheral_config)
         self.initialized = False
         self.callback = None
 
@@ -458,7 +468,7 @@ class SimulatedPixReader(PixReader):
             try:
                 font = ImageFont.truetype("Arial", 20)
             except (OSError, Exception):
-                font = ImageFont.load_default()
+                font = ImageFont.load_default()  # type: ignore
 
             draw.text((200, 200), "Simulador de PIX", fill=(0, 0, 0), font=font)
             draw.text((180, 240), "Aponte para um QR Code", fill=(0, 0, 0), font=font)

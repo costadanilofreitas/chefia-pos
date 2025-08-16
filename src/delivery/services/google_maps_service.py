@@ -161,7 +161,7 @@ class GoogleMapsService:
             )
 
         if departure_time:
-            params["departure_time"] = departure_time
+            params["departure_time"] = str(departure_time)
 
         if traffic_model and mode == "driving":
             params["traffic_model"] = traffic_model
@@ -260,7 +260,7 @@ class GoogleMapsService:
         }
 
         if departure_time:
-            params["departure_time"] = departure_time
+            params["departure_time"] = str(departure_time)
 
         if traffic_model and mode == "driving":
             params["traffic_model"] = traffic_model
@@ -487,9 +487,9 @@ class GoogleMapsService:
 
         # Preparar requisição
         url = f"{self.base_url}/place/nearbysearch/json"
-        params = {
+        params: Dict[str, Any] = {
             "location": f"{location['lat']},{location['lng']}",
-            "radius": radius,
+            "radius": str(radius),
             "key": self.api_key,
         }
 
@@ -633,7 +633,7 @@ class GoogleMapsService:
         """
         return os.path.join(self.cache_dir, f"{key}.json")
 
-    def _get_from_cache(self, key: str) -> Optional[Dict[str, Any]]:
+    def _get_from_cache(self, key: str) -> Optional[Any]:
         """
         Obtém dados do cache.
 
@@ -664,7 +664,7 @@ class GoogleMapsService:
             logger.warning(f"Error reading cache: {str(e)}")
             return None
 
-    def _save_to_cache(self, key: str, data: Dict[str, Any]) -> None:
+    def _save_to_cache(self, key: str, data: Any) -> None:
         """
         Salva dados no cache.
 

@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class SeatService:
     """Serviço para gerenciar assentos."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.seats: Dict[str, Seat] = {}
         self.seat_order_items: Dict[str, List[SeatOrderItem]] = {}
         self.seat_payments: Dict[str, List[SeatPayment]] = {}
@@ -495,7 +495,7 @@ class SeatPaymentService:
         # Por enquanto, vamos criar uma divisão personalizada com valores iguais
         amount_per_seat = session.total_amount / len(seat_ids)
 
-        parts = []
+        parts: List[Dict[str, Any]] = []
         for seat_id in seat_ids:
             seat = await self.seat_service.get_seat(seat_id)
             parts.append(
@@ -509,13 +509,11 @@ class SeatPaymentService:
         # Criar divisão personalizada
         formatted_parts: List[Dict[str, Union[str, float]]] = []
         for p in parts:
-            name = p["name"]
-            amount = p["amount"]
             # Cast explicitamente para os tipos esperados
             formatted_parts.append(
                 {
-                    "name": str(name),
-                    "amount": amount,  # Use the original typed variable
+                    "name": str(p["name"]),
+                    "amount": float(p["amount"]),  # amount_per_seat is already float
                 }
             )
 
