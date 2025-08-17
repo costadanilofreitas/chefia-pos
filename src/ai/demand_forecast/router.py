@@ -86,13 +86,7 @@ async def get_alerts(
     """
     try:
         logger.info(f"Getting alerts for restaurant {restaurant_id}")
-        alerts = await service.get_alerts(
-            restaurant_id=restaurant_id,
-            start_date=start_date,
-            end_date=end_date,
-            alert_type=alert_type,
-            dimension_type=dimension_type,
-        )
+        alerts = await service.get_alerts(restaurant_id)
         return alerts
     except Exception as e:
         logger.error(f"Error getting alerts: {str(e)}", exc_info=True)
@@ -114,9 +108,7 @@ async def get_recommendations(
     """
     try:
         logger.info(f"Getting recommendations for restaurant {restaurant_id}")
-        recommendations = await service.get_recommendations(
-            restaurant_id=restaurant_id, product_ids=product_ids
-        )
+        recommendations = await service.get_recommendations(restaurant_id)
         return recommendations
     except Exception as e:
         logger.error(f"Error getting recommendations: {str(e)}", exc_info=True)

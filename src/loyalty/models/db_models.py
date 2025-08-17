@@ -69,14 +69,14 @@ class CouponDB(Base):
     description = Column(Text, nullable=False)
 
     # Discount details
-    discount_type = Column(SqlEnum(CouponTypeEnum), nullable=False)
+    discount_type: Column = Column(SqlEnum(CouponTypeEnum), nullable=False)
     discount_value = Column(Float, nullable=False)  # Percentage or fixed amount
     max_discount = Column(
         Float, nullable=True
     )  # Maximum discount for percentage coupons
 
     # Application scope
-    scope = Column(
+    scope: Column = Column(
         SqlEnum(CouponScopeEnum), nullable=False, default=CouponScopeEnum.ORDER
     )
     product_id = Column(
@@ -156,7 +156,7 @@ class LoyaltyProgramDB(Base):
     # Program details
     name = Column(String, nullable=False, index=True)
     description = Column(Text)
-    program_type = Column(
+    program_type: Column = Column(
         SqlEnum(LoyaltyProgramTypeEnum),
         nullable=False,
         default=LoyaltyProgramTypeEnum.POINTS,
@@ -206,7 +206,7 @@ class LoyaltyCampaignDB(Base):
     # Campaign details
     name = Column(String, nullable=False, index=True)
     description = Column(Text)
-    campaign_type = Column(SqlEnum(CampaignTypeEnum), nullable=False)
+    campaign_type: Column = Column(SqlEnum(CampaignTypeEnum), nullable=False)
 
     # Timing
     start_date = Column(DateTime, nullable=False, index=True)
@@ -228,7 +228,7 @@ class LoyaltyCampaignDB(Base):
     current_redemptions = Column(Integer, default=0)
 
     # Status
-    status = Column(
+    status: Column = Column(
         SqlEnum(CampaignStatusEnum),
         nullable=False,
         default=CampaignStatusEnum.DRAFT,

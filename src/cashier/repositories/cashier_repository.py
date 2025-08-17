@@ -63,7 +63,7 @@ class CashierRepository:
             # Log opening operation
             await self._log_operation(
                 session,
-                db_cashier.cashier_id,
+                UUID(str(db_cashier.cashier_id)),
                 OperationType.OPENING,
                 Decimal(str(cashier_data.opening_balance)),
                 operator_id,
@@ -132,9 +132,8 @@ class CashierRepository:
             now = datetime.utcnow()
 
             # Calculate cash difference
-            cash_difference = close_data.physical_cash_amount - (
-                await self._get_expected_cash_balance(session, cashier_id)
-            )
+            expected_balance = await self._get_expected_cash_balance(session, cashier_id)
+            cash_difference = Decimal(str(close_data.physical_cash_amount)) - expected_balance
 
             await session.execute(
                 update(DBCashier)
@@ -233,6 +232,8 @@ class CashierRepository:
                 operation_type=OperationType.WITHDRAWAL,
                 amount=withdrawal.amount,
                 operator_id=withdrawal.operator_id,
+                payment_method=None,
+                related_entity_id=None,
                 notes=withdrawal.notes,
             )
 
@@ -369,7 +370,7 @@ class CashierRepository:
         """Convert database model to Pydantic model."""
         return Cashier(
             id=str(db_cashier.cashier_id),
-            terminal_id=db_cashier.terminal_id,
+            terminal_id=str(db_cashier.terminal_id),
             business_day_id=str(db_cashier.business_day_id),
             status=CashierStatus(db_cashier.status),
             current_operator_id=(
@@ -398,14 +399,14 @@ class CashierRepository:
             ),
             created_at=db_cashier.created_at.isoformat(),
             updated_at=db_cashier.updated_at.isoformat(),
-            notes=db_cashier.notes,
+            notes=str(db_cashier.notes) if db_cashier.notes else None,
         )
 
     def _db_to_summary(self, db_cashier: DBCashier) -> CashierSummary:
         """Convert database model to summary model."""
         return CashierSummary(
             id=str(db_cashier.cashier_id),
-            terminal_id=db_cashier.terminal_id,
+            terminal_id=str(db_cashier.terminal_id),
             business_day_id=str(db_cashier.business_day_id),
             status=CashierStatus(db_cashier.status),
             current_operator_id=(

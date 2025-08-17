@@ -77,7 +77,7 @@ class OperationalOptimizationService:
 
         try:
             # Inicializar resultados
-            results = {
+            results: Dict[str, Any] = {
                 "restaurant_id": restaurant_id,
                 "generated_at": datetime.now(),
                 "period": {"start_date": start_date, "end_date": end_date},
@@ -182,7 +182,7 @@ class OperationalOptimizationService:
         Returns:
             Dict[str, Any]: Métricas e estatísticas
         """
-        metrics = {
+        metrics: Dict[str, Any] = {
             "total_recommendations": 0,
             "potential_savings": 0.0,
             "potential_revenue_increase": 0.0,

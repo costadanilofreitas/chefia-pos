@@ -116,7 +116,7 @@ class StockMovementDB(Base):
     quantity = Column(
         Float, nullable=False
     )  # Positive for entry, negative for exit/adjustment
-    movement_type = Column(SqlEnum(MovementTypeEnum), nullable=False, index=True)
+    movement_type: Column = Column(SqlEnum(MovementTypeEnum), nullable=False, index=True)
     reason = Column(String, nullable=True)
     description = Column(Text, nullable=True)
 

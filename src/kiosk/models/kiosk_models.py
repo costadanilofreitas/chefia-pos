@@ -154,7 +154,7 @@ class KioskAnalytics(BaseModel):
     """Model for kiosk usage analytics."""
 
     kiosk_id: str
-    date: datetime = Field(default_factory=lambda: datetime.utcnow().date())
+    date: datetime = Field(default_factory=lambda: datetime.utcnow())
     total_sessions: int = 0
     completed_orders: int = 0
     abandoned_sessions: int = 0

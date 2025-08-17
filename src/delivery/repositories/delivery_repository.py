@@ -153,7 +153,7 @@ class DeliveryRepository:
             if hasattr(db_order, field):
                 setattr(db_order, field, value)
 
-        db_order.updated_at = datetime.utcnow()
+        setattr(db_order, 'updated_at', datetime.utcnow())
         self.db.commit()
         self.db.refresh(db_order)
         return db_order
@@ -172,8 +172,9 @@ class DeliveryRepository:
         self, delivery_order_id: uuid.UUID, status: DeliveryOrderStatusEnum
     ) -> Optional[DeliveryOrderDB]:
         """Update delivery order status."""
-
-        updates = {"status": status}
+        from typing import Any
+        
+        updates: Dict[str, Any] = {"status": status}
 
         # Set actual delivery time if delivered
         if status == DeliveryOrderStatusEnum.DELIVERED:
@@ -252,7 +253,7 @@ class DeliveryRepository:
             if hasattr(db_courier, field):
                 setattr(db_courier, field, value)
 
-        db_courier.updated_at = datetime.utcnow()
+        setattr(db_courier, 'updated_at', datetime.utcnow())
         self.db.commit()
         self.db.refresh(db_courier)
         return db_courier
@@ -361,7 +362,7 @@ class DeliveryRepository:
             if hasattr(db_zone, field):
                 setattr(db_zone, field, value)
 
-        db_zone.updated_at = datetime.utcnow()
+        setattr(db_zone, 'updated_at', datetime.utcnow())
         self.db.commit()
         self.db.refresh(db_zone)
         return db_zone
@@ -425,7 +426,7 @@ class DeliveryRepository:
             if hasattr(db_route, field):
                 setattr(db_route, field, value)
 
-        db_route.updated_at = datetime.utcnow()
+        setattr(db_route, 'updated_at', datetime.utcnow())
         self.db.commit()
         self.db.refresh(db_route)
         return db_route
@@ -482,8 +483,8 @@ class DeliveryRepository:
 
         if cache_entry:
             # Update access statistics
-            cache_entry.hit_count += 1
-            cache_entry.last_accessed = now
+            setattr(cache_entry, 'hit_count', cache_entry.hit_count + 1)
+            setattr(cache_entry, 'last_accessed', now)
             self.db.commit()
 
         return cache_entry
@@ -509,9 +510,9 @@ class DeliveryRepository:
 
         if existing:
             # Update existing entry
-            existing.response_data = response_data
-            existing.expires_at = expires_at
-            existing.last_accessed = datetime.utcnow()
+            setattr(existing, 'response_data', response_data)
+            setattr(existing, 'expires_at', expires_at)
+            setattr(existing, 'last_accessed', datetime.utcnow())
             db_cache = existing
         else:
             # Create new entry

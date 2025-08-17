@@ -217,7 +217,7 @@ class CupsPrinter(BasePeripheralDriver):
             await self.update_status(PeripheralStatus.ERROR, str(e))
             return False
 
-    async def print_pdf(self, pdf_path: str, options: Dict[str, Any] = None) -> bool:
+    async def print_pdf(self, pdf_path: str, options: Optional[Dict[str, Any]] = None) -> bool:
         """Imprime um arquivo PDF."""
         if not self.initialized:
             await self.update_status(
@@ -328,7 +328,7 @@ class CupsPrinter(BasePeripheralDriver):
             # Configurar documento
             doc = SimpleDocTemplate(pdf_path, pagesize=A4)
             styles = getSampleStyleSheet()
-            elements = []
+            elements: list[Any] = []
 
             # Título do relatório
             if "title" in report_data:

@@ -25,9 +25,9 @@ class KDSEventHandler(EventHandler):
     def __init__(self, waiter_service):
         self.waiter_service = waiter_service
 
-    async def handle(self, event: Event) -> None:
+    async def handle(self, event: Event) -> bool:
         """Processa eventos do KDS."""
-        if event.type == KDS_ORDER_STATUS_CHANGED:
+        if event.event_type == EventType.KDS_ORDERS_UPDATED:
             # Atualizar o status do pedido no módulo de garçom
             order_id = event.data["order_id"]
             new_status = event.data["status"]
@@ -47,6 +47,7 @@ class KDSEventHandler(EventHandler):
                 await self.waiter_service.update_order_status_from_event(
                     order_id, waiter_status
                 )
+        return True
 
 
 class OrderEventHandler(EventHandler):
@@ -55,12 +56,13 @@ class OrderEventHandler(EventHandler):
     def __init__(self, waiter_service):
         self.waiter_service = waiter_service
 
-    async def handle(self, event: Event) -> None:
+    async def handle(self, event: Event) -> bool:
         """Processa eventos de pedidos."""
-        # Assuming EventType.ORDER_UPDATED is defined elsewhere (e.g., core events)
-        if event.type == EventType.ORDER_UPDATED:
+        # Use event_type attribute instead of type
+        if event.event_type == EventType.ORDER_UPDATED:
             # Atualizar o pedido no módulo de garçom
             await self.waiter_service.update_order_from_event(event.data)
+        return True
 
 
 class WaiterEventPublisher:
@@ -71,7 +73,11 @@ class WaiterEventPublisher:
 
     async def publish_order_created(self, waiter_order: WaiterOrder) -> None:
         """Publica evento de pedido criado no módulo de garçom."""
-        event = Event(event_type=WAITER_ORDER_CREATED, data=waiter_order.dict())
+        event = Event(
+            event_type=EventType.ORDER_CREATED,
+            data=waiter_order.dict(),
+            metadata={"source": "waiter", "event_subtype": WAITER_ORDER_CREATED}
+        )
         await self.event_bus.publish(event)
 
     async def publish_order_updated(
@@ -79,7 +85,8 @@ class WaiterEventPublisher:
     ) -> None:
         """Publica evento de pedido atualizado no módulo de garçom."""
         event = Event(
-            event_type=WAITER_ORDER_UPDATED,
+            event_type=EventType.ORDER_UPDATED,
+            metadata={"source": "waiter", "event_subtype": WAITER_ORDER_UPDATED},
             data={
                 "order_id": order_id,
                 "updates": updates,
@@ -90,7 +97,11 @@ class WaiterEventPublisher:
 
     async def publish_order_sent(self, waiter_order: WaiterOrder) -> None:
         """Publica evento de pedido enviado para a cozinha."""
-        event = Event(event_type=WAITER_ORDER_SENT, data=waiter_order.dict())
+        event = Event(
+            event_type=EventType.ORDER_STATUS_CHANGED,
+            data=waiter_order.dict(),
+            metadata={"source": "waiter", "event_subtype": WAITER_ORDER_SENT}
+        )
         await self.event_bus.publish(event)
 
     async def publish_order_cancelled(
@@ -98,7 +109,8 @@ class WaiterEventPublisher:
     ) -> None:
         """Publica evento de pedido cancelado."""
         event = Event(
-            event_type=WAITER_ORDER_CANCELLED,
+            event_type=EventType.ORDER_CANCELLED,
+            metadata={"source": "waiter", "event_subtype": WAITER_ORDER_CANCELLED},
             data={
                 "order_id": order_id,
                 "reason": reason,
@@ -109,23 +121,36 @@ class WaiterEventPublisher:
 
     async def publish_session_created(self, session_data: Dict[str, Any]) -> None:
         """Publica evento de criação de sessão do garçom."""
-        event = Event(event_type=WAITER_SESSION_CREATED, data=session_data)
+        event = Event(
+            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+            data=session_data,
+            metadata={"source": "waiter", "event_subtype": WAITER_SESSION_CREATED}
+        )
         await self.event_bus.publish(event)
 
     async def publish_session_updated(self, session_data: Dict[str, Any]) -> None:
         """Publica evento de atualização de sessão do garçom."""
-        event = Event(event_type=WAITER_SESSION_UPDATED, data=session_data)
+        event = Event(
+            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+            data=session_data,
+            metadata={"source": "waiter", "event_subtype": WAITER_SESSION_UPDATED}
+        )
         await self.event_bus.publish(event)
 
     async def publish_table_updated(self, table_data: Dict[str, Any]) -> None:
         """Publica evento de atualização de mesa."""
-        event = Event(event_type=WAITER_TABLE_UPDATED, data=table_data)
+        event = Event(
+            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+            data=table_data,
+            metadata={"source": "waiter", "event_subtype": WAITER_TABLE_UPDATED}
+        )
         await self.event_bus.publish(event)
 
     async def publish_sync_requested(self, device_id: str) -> None:
         """Publica evento de solicitação de sincronização."""
         event = Event(
-            event_type=WAITER_SYNC_REQUESTED,
+            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+            metadata={"source": "waiter", "event_subtype": WAITER_SYNC_REQUESTED},
             data={"device_id": device_id, "timestamp": datetime.now().isoformat()},
         )
         await self.event_bus.publish(event)
@@ -135,7 +160,8 @@ class WaiterEventPublisher:
     ) -> None:
         """Publica evento de sincronização concluída."""
         event = Event(
-            event_type=WAITER_SYNC_COMPLETED,
+            event_type=EventType.SYSTEM_CONFIG_CHANGED,
+            metadata={"source": "waiter", "event_subtype": WAITER_SYNC_COMPLETED},
             data={
                 "device_id": device_id,
                 "sync_stats": sync_stats,

@@ -7,7 +7,7 @@ processando mensagens recebidas e gerando respostas apropriadas.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from ...core.messaging import (
     BaseChatbotService,
@@ -323,16 +323,16 @@ class MessengerChatbotService(BaseChatbotService):
                 item_id = payload.replace("add_item_", "")
 
                 # Obter detalhes do item
-                item = self._get_item_by_id(item_id)
+                add_item_details: Optional[Dict[str, Any]] = self._get_item_by_id(item_id)
 
-                if item:
+                if add_item_details:
                     # Adicionar item ao carrinho
                     await self.add_to_cart(
                         user_id,
                         {
-                            "id": item["id"],
-                            "name": item["name"],
-                            "price": item["price"],
+                            "id": add_item_details["id"],
+                            "name": add_item_details["name"],
+                            "price": add_item_details["price"],
                             "quantity": 1,
                         },
                     )
@@ -345,13 +345,13 @@ class MessengerChatbotService(BaseChatbotService):
                         user_id,
                         {
                             "role": "assistant",
-                            "content": f"{item['name']} adicionado ao seu pedido!",
+                            "content": f"{add_item_details['name']} adicionado ao seu pedido!",
                         },
                     )
 
                     return {
                         "type": MessageType.INTERACTIVE_BUTTONS,
-                        "body": f"{item['name']} adicionado ao seu pedido! Seu carrinho tem {len(cart)} item(s). O que deseja fazer agora?",
+                        "body": f"{add_item_details['name']} adicionado ao seu pedido! Seu carrinho tem {len(cart)} item(s). O que deseja fazer agora?",
                         "options": [
                             {"id": "continue_shopping", "title": "Continuar Comprando"},
                             {"id": "view_cart", "title": "Ver Carrinho"},
@@ -370,9 +370,9 @@ class MessengerChatbotService(BaseChatbotService):
                 item_id = payload.replace("view_item_", "")
 
                 # Obter detalhes do item
-                item = self._get_item_by_id(item_id)
+                view_item_details: Optional[Dict[str, Any]] = self._get_item_by_id(item_id)
 
-                if item:
+                if view_item_details:
                     # Atualizar estado para seleção de item
                     await self.update_conversation_state(
                         user_id, ConversationState.ITEM_SELECTION
@@ -380,7 +380,7 @@ class MessengerChatbotService(BaseChatbotService):
 
                     # Atualizar contexto com item selecionado
                     await self.update_conversation_context(
-                        user_id, {"selected_item": item}
+                        user_id, {"selected_item": view_item_details}
                     )
 
                     # Responder com detalhes do item
@@ -388,16 +388,16 @@ class MessengerChatbotService(BaseChatbotService):
                         user_id,
                         {
                             "role": "assistant",
-                            "content": f"Detalhes do item: {item['name']}\n{item['description']}\nPreço: R$ {item['price']:.2f}",
+                            "content": f"Detalhes do item: {view_item_details['name']}\n{view_item_details['description']}\nPreço: R$ {view_item_details['price']:.2f}",
                         },
                     )
 
                     return {
                         "type": MessageType.INTERACTIVE_BUTTONS,
-                        "body": f"**{item['name']}**\n\n{item['description']}\n\nPreço: R$ {item['price']:.2f}",
+                        "body": f"**{view_item_details['name']}**\n\n{view_item_details['description']}\n\nPreço: R$ {view_item_details['price']:.2f}",
                         "options": [
                             {
-                                "id": f"add_item_{item['id']}",
+                                "id": f"add_item_{view_item_details['id']}",
                                 "title": "Adicionar ao Pedido",
                             },
                             {"id": "back_to_menu", "title": "Voltar ao Cardápio"},
@@ -565,6 +565,12 @@ class MessengerChatbotService(BaseChatbotService):
                         {"id": "checkout", "title": "Finalizar Pedido"},
                     ],
                 }
+        
+        # Return padrão caso nenhuma condição seja atendida
+        return {
+            "type": MessageType.TEXT,
+            "text": "Desculpe, não entendi sua mensagem. Por favor, tente novamente."
+        }
 
     async def _handle_item_selection(
         self, user_id: str, message_data: Dict[str, Any]
@@ -618,6 +624,12 @@ class MessengerChatbotService(BaseChatbotService):
                         {"id": "category_sobremesas", "title": "Sobremesas"},
                         {"id": "category_bebidas", "title": "Bebidas"},
                     ],
+                }
+            else:
+                # Payload não reconhecido, voltar ao menu
+                return {
+                    "type": MessageType.TEXT,
+                    "text": "Desculpe, não entendi. Vou te mostrar o cardápio."
                 }
 
         # Mensagem de texto durante seleção de item
@@ -730,6 +742,13 @@ class MessengerChatbotService(BaseChatbotService):
                     "type": MessageType.INTERACTIVE_BUTTONS,
                     "body": "Seu carrinho foi limpo. Deseja ver o cardápio?",
                     "options": [{"id": "continue_shopping", "title": "Ver Cardápio"}],
+                }
+            
+            # Payload não reconhecido
+            else:
+                return {
+                    "type": MessageType.TEXT,
+                    "text": "Desculpe, não entendi. Por favor, escolha uma das opções."
                 }
 
         # Mensagem de texto durante revisão do carrinho
@@ -1129,6 +1148,12 @@ class MessengerChatbotService(BaseChatbotService):
                             {"id": "cancel_order", "title": "Cancelar"},
                         ],
                     }
+        
+        # Return padrão caso nenhuma condição seja atendida
+        return {
+            "type": MessageType.TEXT,
+            "text": "Desculpe, ocorreu um erro no checkout. Por favor, tente novamente."
+        }
 
     async def _handle_payment(
         self, user_id: str, message_data: Dict[str, Any]
@@ -1352,6 +1377,12 @@ class MessengerChatbotService(BaseChatbotService):
                         "type": MessageType.TEXT,
                         "text": "Para verificar o status do seu pedido, por favor, informe o número do pedido.",
                     }
+        
+        # Return padrão
+        return {
+            "type": MessageType.TEXT,
+            "text": "Por favor, informe o número do seu pedido para acompanhamento."
+        }
 
     async def _handle_feedback(
         self, user_id: str, message_data: Dict[str, Any]
@@ -1464,6 +1495,12 @@ class MessengerChatbotService(BaseChatbotService):
                     "timestamp": datetime.now().isoformat(),
                 },
             }
+        
+        # Return padrão
+        return {
+            "type": MessageType.TEXT,
+            "text": "Por favor, avalie nosso atendimento de 1 a 5."
+        }
 
     async def _handle_support(
         self, user_id: str, message_data: Dict[str, Any]
@@ -1500,6 +1537,14 @@ class MessengerChatbotService(BaseChatbotService):
                         {"id": "order", "title": "Fazer Pedido"},
                         {"id": "status", "title": "Status do Pedido"},
                     ],
+                }
+            else:
+                # Payload não reconhecido
+                return {
+                    "type": MessageType.TEXT,
+                    "text": "Vou encaminhar sua mensagem para um atendente.",
+                    "action": "forward_to_human_agent",
+                    "user_id": user_id,
                 }
 
         # Mensagem de texto durante suporte
@@ -1631,7 +1676,7 @@ class MessengerChatbotService(BaseChatbotService):
         else:
             return []
 
-    def _get_item_by_id(self, item_id: str) -> Dict[str, Any]:
+    def _get_item_by_id(self, item_id: str) -> Optional[Dict[str, Any]]:
         """
         Obtém detalhes de um item pelo ID.
 

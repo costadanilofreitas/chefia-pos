@@ -144,7 +144,7 @@ class AnalyticsRepository:
             if hasattr(db_dashboard, field):
                 setattr(db_dashboard, field, value)
 
-        db_dashboard.updated_at = datetime.utcnow()
+        setattr(db_dashboard, 'updated_at', datetime.utcnow())
         self.db.commit()
         self.db.refresh(db_dashboard)
         return db_dashboard
@@ -173,9 +173,9 @@ class AnalyticsRepository:
         if not db_dashboard:
             return None
 
-        db_dashboard.view_count += 1
-        db_dashboard.last_viewed_at = datetime.utcnow()
-        db_dashboard.updated_at = datetime.utcnow()
+        setattr(db_dashboard, 'view_count', db_dashboard.view_count + 1)
+        setattr(db_dashboard, 'last_viewed_at', datetime.utcnow())
+        setattr(db_dashboard, 'updated_at', datetime.utcnow())
         self.db.commit()
         self.db.refresh(db_dashboard)
         return db_dashboard
@@ -352,9 +352,9 @@ class AnalyticsRepository:
         if not db_alert:
             return None
 
-        db_alert.trigger_count += 1
-        db_alert.last_triggered_at = datetime.utcnow()
-        db_alert.updated_at = datetime.utcnow()
+        setattr(db_alert, 'trigger_count', db_alert.trigger_count + 1)
+        setattr(db_alert, 'last_triggered_at', datetime.utcnow())
+        setattr(db_alert, 'updated_at', datetime.utcnow())
         self.db.commit()
         self.db.refresh(db_alert)
         return db_alert
@@ -412,13 +412,13 @@ class AnalyticsRepository:
         if not db_export:
             return None
 
-        db_export.status = status
+        setattr(db_export, 'status', status)
         if file_url:
-            db_export.file_url = file_url
+            setattr(db_export, 'file_url', file_url)
         if error_message:
-            db_export.error_message = error_message
+            setattr(db_export, 'error_message', error_message)
         if status == "completed":
-            db_export.completed_at = datetime.utcnow()
+            setattr(db_export, 'completed_at', datetime.utcnow())
 
         for key, value in kwargs.items():
             if hasattr(db_export, key):
@@ -537,12 +537,12 @@ class AnalyticsRepository:
         if not db_report:
             return None
 
-        db_report.last_run_at = datetime.utcnow()
-        db_report.last_run_status = status
-        db_report.run_count += 1
+        setattr(db_report, 'last_run_at', datetime.utcnow())
+        setattr(db_report, 'last_run_status', status)
+        setattr(db_report, 'run_count', db_report.run_count + 1)
 
         if next_run_at:
-            db_report.next_run_at = next_run_at
+            setattr(db_report, 'next_run_at', next_run_at)
 
         self.db.commit()
         self.db.refresh(db_report)
@@ -627,7 +627,7 @@ class AnalyticsRepository:
             for key, value in preferences.items():
                 if hasattr(db_prefs, key):
                     setattr(db_prefs, key, value)
-            db_prefs.updated_at = datetime.utcnow()
+            setattr(db_prefs, 'updated_at', datetime.utcnow())
         else:
             # Create new preferences
             db_prefs = UserDashboardPreferenceDB(user_id=user_id, **preferences)

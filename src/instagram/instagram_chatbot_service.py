@@ -6,7 +6,7 @@ processando mensagens recebidas e gerando respostas apropriadas.
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from ...core.messaging import (
     BaseChatbotService,
@@ -346,9 +346,10 @@ class InstagramChatbotService(BaseChatbotService):
                 item_id = payload.replace("add_item_", "")
 
                 # Obter detalhes do item
-                item = self._get_item_by_id(item_id)
+                item_result = self._get_item_by_id(item_id)
 
-                if item:
+                if item_result:
+                    item = item_result
                     # Adicionar item ao carrinho
                     await self.add_to_cart(
                         user_id,
@@ -393,9 +394,10 @@ class InstagramChatbotService(BaseChatbotService):
                 item_id = payload.replace("view_item_", "")
 
                 # Obter detalhes do item
-                item = self._get_item_by_id(item_id)
+                item_result = self._get_item_by_id(item_id)
 
-                if item:
+                if item_result:
+                    item = item_result
                     # Atualizar estado para seleção de item
                     await self.update_conversation_state(
                         user_id, ConversationState.ITEM_SELECTION
@@ -606,6 +608,12 @@ class InstagramChatbotService(BaseChatbotService):
                         {"id": "checkout", "title": "Finalizar Pedido"},
                     ],
                 }
+        
+        # Return padrão caso nenhuma condição seja atendida
+        return {
+            "type": MessageType.TEXT,
+            "text": "Desculpe, não entendi sua mensagem. Por favor, tente novamente."
+        }
 
     # Os métodos restantes são muito similares aos do MessengerChatbotService
     # com pequenas adaptações para as limitações do Instagram
@@ -688,6 +696,12 @@ class InstagramChatbotService(BaseChatbotService):
                     {"id": "category_bebidas", "title": "Bebidas"},
                 ],
             }
+        
+        # Return padrão
+        return {
+            "type": MessageType.TEXT,
+            "text": "Por favor, escolha uma opção do menu."
+        }
 
     async def _handle_cart_review(
         self, user_id: str, message_data: Dict[str, Any]
@@ -777,6 +791,12 @@ class InstagramChatbotService(BaseChatbotService):
                     "type": MessageType.INTERACTIVE_BUTTONS,
                     "body": "Seu carrinho foi limpo. Deseja ver o cardápio?",
                     "options": [{"id": "continue_shopping", "title": "Ver Cardápio"}],
+                }
+            else:
+                # Payload não reconhecido
+                return {
+                    "type": MessageType.TEXT,
+                    "text": "Por favor, escolha uma das opções disponíveis."
                 }
 
         # Mensagem de texto durante revisão do carrinho
@@ -1063,7 +1083,7 @@ class InstagramChatbotService(BaseChatbotService):
         else:
             return []
 
-    def _get_item_by_id(self, item_id: str) -> Dict[str, Any]:
+    def _get_item_by_id(self, item_id: str) -> Optional[Dict[str, Any]]:
         """
         Obtém detalhes de um item pelo ID.
 

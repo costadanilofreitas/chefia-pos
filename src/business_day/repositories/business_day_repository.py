@@ -263,7 +263,7 @@ class BusinessDayRepository:
         """Convert database model to Pydantic model."""
         return BusinessDay(
             id=str(db_business_day.business_day_id),
-            date=db_business_day.date,
+            date=str(db_business_day.date),
             status=DayStatus(db_business_day.status),
             opened_by=str(db_business_day.opened_by),
             closed_by=(
@@ -276,8 +276,8 @@ class BusinessDayRepository:
                 else None
             ),
             total_sales=float(db_business_day.total_sales),
-            total_orders=db_business_day.total_orders,
-            notes=db_business_day.notes,
+            total_orders=int(db_business_day.total_orders),
+            notes=str(db_business_day.notes) if db_business_day.notes else None,
             created_at=db_business_day.created_at.isoformat(),
             updated_at=db_business_day.updated_at.isoformat(),
         )
@@ -286,7 +286,7 @@ class BusinessDayRepository:
         """Convert database model to summary model."""
         return BusinessDaySummary(
             id=str(db_business_day.business_day_id),
-            date=db_business_day.date,
+            date=str(db_business_day.date),
             status=DayStatus(db_business_day.status),
             opened_at=db_business_day.opened_at.isoformat(),
             closed_at=(
@@ -295,5 +295,5 @@ class BusinessDayRepository:
                 else None
             ),
             total_sales=float(db_business_day.total_sales),
-            total_orders=db_business_day.total_orders,
+            total_orders=int(db_business_day.total_orders),
         )

@@ -105,17 +105,18 @@ class OrderRepository:
             total_amount = Decimal("0.0")
             if hasattr(order_data, "items") and order_data.items:
                 for item_data in order_data.items:
-                    await self._add_order_item(session, db_order.order_id, item_data)
-                    total_amount += Decimal(str(item_data.subtotal))
+                    await self._add_order_item(session, UUID(str(db_order.order_id)), item_data)
+                    item_subtotal = Decimal(str(item_data.unit_price)) * Decimal(str(item_data.quantity))
+                    total_amount += item_subtotal
 
             # Update totals
-            db_order.subtotal = total_amount
-            db_order.total = total_amount
+            setattr(db_order, 'subtotal', total_amount)
+            setattr(db_order, 'total', total_amount)
 
             # Log order creation
             await self._log_order_history(
                 session,
-                db_order.order_id,
+                UUID(str(db_order.order_id)),
                 None,
                 OrderStatus.PENDING.value,
                 getattr(order_data, "created_by", None) or "system",
@@ -321,7 +322,7 @@ class OrderRepository:
             ),
             quantity=Decimal(str(item_data.quantity)),
             unit_price=Decimal(str(item_data.unit_price)),
-            subtotal=Decimal(str(item_data.subtotal)),
+            subtotal=Decimal(str(item_data.unit_price)) * Decimal(str(item_data.quantity)),
             status=OrderStatus.PENDING.value,
             notes=getattr(item_data, "notes", None),
             customizations=getattr(item_data, "customizations", None),
@@ -386,54 +387,54 @@ class OrderRepository:
 
         return Order(
             id=str(db_order.order_id),
-            order_number=db_order.order_number,
-            status=OrderStatus(db_order.status),
+            order_number=str(db_order.order_number) if db_order.order_number else None,
+            status=OrderStatus(str(db_order.status)),
             order_type=(
-                OrderType(db_order.order_type)
+                OrderType(str(db_order.order_type))
                 if db_order.order_type
                 else OrderType.DINE_IN
             ),
-            customer_id=str(db_order.customer_id) if db_order.customer_id else None,
-            waiter_id=str(db_order.waiter_id) if db_order.waiter_id else None,
-            table_id=str(db_order.table_id) if db_order.table_id else None,
-            business_day_id=(
-                str(db_order.business_day_id) if db_order.business_day_id else None
-            ),
+            customer_id=str(db_order.customer_id) if db_order.customer_id else "",
+            waiter_id=str(db_order.waiter_id) if db_order.waiter_id else "",
+            # table_id and business_day_id are not in the Order model
+            # table_id=str(db_order.table_id) if db_order.table_id else None,
+            # business_day_id=(
+            #     str(db_order.business_day_id) if db_order.business_day_id else None
+            # ),
             cashier_id=str(db_order.cashier_id) if db_order.cashier_id else None,
             subtotal=float(db_order.subtotal),
             tax=float(db_order.tax),
             discount=float(db_order.discount),
-            service_fee=float(db_order.service_fee) if db_order.service_fee else 0.0,
+            # service_fee is not in the Order model
+            # service_fee=float(db_order.service_fee) if db_order.service_fee else 0.0,
             delivery_fee=float(db_order.delivery_fee) if db_order.delivery_fee else 0.0,
             total=float(db_order.total),
-            payment_status=PaymentStatus(db_order.payment_status),
-            payment_method=(
-                PaymentMethod(db_order.payment_method)
-                if db_order.payment_method
-                else None
-            ),
-            notes=db_order.notes,
-            delivery_address=db_order.delivery_address,
-            estimated_preparation_time=db_order.estimated_preparation_time,
+            payment_status=PaymentStatus(str(db_order.payment_status)),
+            payment_method=str(db_order.payment_method) if db_order.payment_method else None,
+            notes=str(db_order.notes) if db_order.notes else "",
+            delivery_address=dict(db_order.delivery_address) if db_order.delivery_address else {},
+            # estimated_preparation_time is not in the Order model
+            # estimated_preparation_time=db_order.estimated_preparation_time,
             items=items,
-            created_at=db_order.created_at,
-            updated_at=db_order.updated_at,
+            created_at=db_order.created_at.isoformat() if db_order.created_at else "",
+            updated_at=db_order.updated_at.isoformat() if db_order.updated_at else "",
         )
 
     def _db_order_item_to_model(self, db_item: DBOrderItem) -> OrderItem:
         """Convert database order item to Pydantic model."""
         return OrderItem(
             id=str(db_item.item_id),
-            order_id=str(db_item.order_id),
             product_id=str(db_item.product_id),
-            product_name=db_item.product_name,
-            quantity=float(db_item.quantity),
+            product_name=str(db_item.product_name),
+            quantity=int(float(db_item.quantity)),
             unit_price=float(db_item.unit_price),
-            subtotal=float(db_item.subtotal),
-            status=OrderStatus(db_item.status),
-            notes=db_item.notes,
-            customizations=db_item.customizations,
-            preparation_time=db_item.preparation_time,
-            created_at=db_item.created_at,
-            updated_at=db_item.updated_at,
+            total_price=float(db_item.subtotal),  # OrderItem uses total_price not subtotal
+            # status is not in the OrderItem model
+            # status=OrderStatus(str(db_item.status)),
+            notes=str(db_item.notes) if db_item.notes else "",
+            customizations=list(db_item.customizations) if db_item.customizations else [],
+            # preparation_time is not in the OrderItem model
+            # preparation_time=db_item.preparation_time,
+            created_at=db_item.created_at.isoformat() if db_item.created_at else "",
+            updated_at=db_item.updated_at.isoformat() if db_item.updated_at else "",
         )

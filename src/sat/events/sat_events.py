@@ -1,20 +1,9 @@
 import logging
-import uuid
 from datetime import datetime
+from typing import Any, Dict
 
 from src.core.events.event_bus import Event, EventType, get_event_bus
 from src.sat.services.sat_service import get_sat_service
-
-
-# Definir tipos de eventos SAT
-class SATEventType(EventType):
-    SAT_EMIT_REQUESTED = "sat.emit_requested"
-    SAT_EMIT_COMPLETED = "sat.emit_completed"
-    SAT_EMIT_FAILED = "sat.emit_failed"
-    SAT_CANCEL_REQUESTED = "sat.cancel_requested"
-    SAT_CANCEL_COMPLETED = "sat.cancel_completed"
-    SAT_CANCEL_FAILED = "sat.cancel_failed"
-    SAT_STATUS_CHANGED = "sat.status_changed"
 
 
 class SATEventPublisher:
@@ -26,10 +15,9 @@ class SATEventPublisher:
     async def publish_emit_requested(self, order_id: str, terminal_id: str) -> None:
         """Publica evento de solicitação de emissão de CF-e."""
         event = Event(
-            id=str(uuid.uuid4()),
-            type=SATEventType.SAT_EMIT_REQUESTED,
-            timestamp=datetime.now().isoformat(),
+            event_type=EventType.SYSTEM_CONFIG_CHANGED,
             data={"order_id": order_id, "terminal_id": terminal_id},
+            metadata={"source": "sat", "event_subtype": "sat.emit_requested"}
         )
         await self.event_bus.publish(event)
 
@@ -38,10 +26,9 @@ class SATEventPublisher:
     ) -> None:
         """Publica evento de emissão de CF-e concluída."""
         event = Event(
-            id=str(uuid.uuid4()),
-            type=SATEventType.SAT_EMIT_COMPLETED,
-            timestamp=datetime.now().isoformat(),
+            event_type=EventType.SYSTEM_CONFIG_CHANGED,
             data={"order_id": order_id, "terminal_id": terminal_id, "cfe_id": cfe_id},
+            metadata={"source": "sat", "event_subtype": "sat.emit_completed"}
         )
         await self.event_bus.publish(event)
 
@@ -50,50 +37,45 @@ class SATEventPublisher:
     ) -> None:
         """Publica evento de falha na emissão de CF-e."""
         event = Event(
-            id=str(uuid.uuid4()),
-            type=SATEventType.SAT_EMIT_FAILED,
-            timestamp=datetime.now().isoformat(),
+            event_type=EventType.SYSTEM_ERROR,
             data={"order_id": order_id, "terminal_id": terminal_id, "error": error},
+            metadata={"source": "sat", "event_subtype": "sat.emit_failed"}
         )
         await self.event_bus.publish(event)
 
     async def publish_cancel_requested(self, cfe_id: str, reason: str) -> None:
         """Publica evento de solicitação de cancelamento de CF-e."""
         event = Event(
-            id=str(uuid.uuid4()),
-            type=SATEventType.SAT_CANCEL_REQUESTED,
-            timestamp=datetime.now().isoformat(),
+            event_type=EventType.SYSTEM_CONFIG_CHANGED,
             data={"cfe_id": cfe_id, "reason": reason},
+            metadata={"source": "sat", "event_subtype": "sat.cancel_requested"}
         )
         await self.event_bus.publish(event)
 
     async def publish_cancel_completed(self, cfe_id: str) -> None:
         """Publica evento de cancelamento de CF-e concluído."""
         event = Event(
-            id=str(uuid.uuid4()),
-            type=SATEventType.SAT_CANCEL_COMPLETED,
-            timestamp=datetime.now().isoformat(),
+            event_type=EventType.SYSTEM_CONFIG_CHANGED,
             data={"cfe_id": cfe_id},
+            metadata={"source": "sat", "event_subtype": "sat.cancel_completed"}
         )
         await self.event_bus.publish(event)
 
     async def publish_cancel_failed(self, cfe_id: str, error: str) -> None:
         """Publica evento de falha no cancelamento de CF-e."""
         event = Event(
-            id=str(uuid.uuid4()),
-            type=SATEventType.SAT_CANCEL_FAILED,
-            timestamp=datetime.now().isoformat(),
+            event_type=EventType.SYSTEM_ERROR,
             data={"cfe_id": cfe_id, "error": error},
+            metadata={"source": "sat", "event_subtype": "sat.cancel_failed"}
         )
         await self.event_bus.publish(event)
 
     async def publish_status_changed(self, terminal_id: str, status: str) -> None:
         """Publica evento de mudança de status do SAT."""
         event = Event(
-            id=str(uuid.uuid4()),
-            type=SATEventType.SAT_STATUS_CHANGED,
-            timestamp=datetime.now().isoformat(),
+            event_type=EventType.PERIPHERAL_STATUS_CHANGED,
             data={"terminal_id": terminal_id, "status": status},
+            metadata={"source": "sat", "event_subtype": "sat.status_changed"}
         )
         await self.event_bus.publish(event)
 

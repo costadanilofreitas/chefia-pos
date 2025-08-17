@@ -68,7 +68,7 @@ async def get_dashboard(
     dashboard = analytics_service.dashboard_service.get_dashboard(dashboard_id)
 
     # Registra a visualização
-    analytics_service.dashboard_service.record_dashboard_view(
+    await analytics_service.dashboard_service.record_dashboard_view(
         dashboard_id, current_user.id
     )
 
@@ -78,7 +78,7 @@ async def get_dashboard(
 @router.put("/dashboards/{dashboard_id}", response_model=Dashboard)
 async def update_dashboard(
     dashboard_id: str = Path(..., description="ID do dashboard"),
-    update_data: Dict[str, Any] = None,
+    update_data: Dict[str, Any] = {},
     current_user: User = Depends(get_current_user),
     analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
@@ -116,7 +116,7 @@ async def list_dashboards(
 ):
     """Lista dashboards com filtros e paginação"""
     # Constrói os filtros
-    filters = {}
+    filters: Dict[str, Any] = {}
     if is_template is not None:
         filters["is_template"] = is_template
     if is_public is not None:
@@ -143,12 +143,14 @@ async def list_dashboards(
 @router.post("/dashboards/{dashboard_id}/share", response_model=DashboardShare)
 async def share_dashboard(
     dashboard_id: str = Path(..., description="ID do dashboard"),
-    share_data: Dict[str, Any] = None,
+    share_data: Dict[str, Any] = {},
     current_user: User = Depends(get_current_user),
     analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Compartilha um dashboard com usuários ou papéis"""
     # Adiciona o usuário atual como criador do compartilhamento
+    if share_data is None:
+        share_data = {}
     share_data["created_by"] = current_user.id
     return analytics_service.dashboard_service.share_dashboard(dashboard_id, share_data)
 
@@ -247,12 +249,14 @@ async def get_alert(
 @router.put("/alerts/{alert_id}", response_model=DashboardAlert)
 async def update_alert(
     alert_id: str = Path(..., description="ID do alerta"),
-    update_data: Dict[str, Any] = None,
+    update_data: Dict[str, Any] = {},
     current_user: User = Depends(get_current_user),
     analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Atualiza um alerta existente"""
     # Adiciona o usuário atual como atualizador
+    if update_data is None:
+        update_data = {}
     update_data["updated_by"] = current_user.id
     return analytics_service.alert_service.update_alert(alert_id, update_data)
 
@@ -379,12 +383,14 @@ async def get_scheduled_report(
 @router.put("/reports/{report_id}", response_model=ScheduledReport)
 async def update_scheduled_report(
     report_id: str = Path(..., description="ID do relatório"),
-    update_data: Dict[str, Any] = None,
+    update_data: Dict[str, Any] = {},
     current_user: User = Depends(get_current_user),
     analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Atualiza um relatório agendado existente"""
     # Adiciona o usuário atual como atualizador
+    if update_data is None:
+        update_data = {}
     update_data["updated_by"] = current_user.id
     return analytics_service.report_service.update_scheduled_report(
         report_id, update_data

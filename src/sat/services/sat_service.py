@@ -164,21 +164,21 @@ class SATService:
 
                 return SimulatedSATDriver(config)
             elif config.driver_type == SATDriverType.DIMEP:
-                from src.sat.drivers.dimep_driver import DimepSATDriver
+                from src.sat.drivers.dimep_driver import DimepDriver
 
-                return DimepSATDriver(config)
+                return DimepDriver(config)
             elif config.driver_type == SATDriverType.BEMATECH:
-                from src.sat.drivers.bematech_driver import BematechSATDriver
+                from src.sat.drivers.bematech_driver import BematechDriver
 
-                return BematechSATDriver(config)
+                return BematechDriver(config)
             elif config.driver_type == SATDriverType.ELGIN:
-                from src.sat.drivers.elgin_driver import ElginSATDriver
+                from src.sat.drivers.elgin_driver import ElginDriver
 
-                return ElginSATDriver(config)
+                return ElginDriver(config)
             elif config.driver_type == SATDriverType.GENERIC:
-                from src.sat.drivers.generic_driver import GenericSATDriver
+                from src.sat.drivers.generic_driver import GenericDriver
 
-                return GenericSATDriver(config)
+                return GenericDriver(config)
             else:
                 logging.error(f"Tipo de driver SAT não suportado: {config.driver_type}")
                 return None

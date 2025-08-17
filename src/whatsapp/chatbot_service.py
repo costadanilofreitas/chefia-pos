@@ -331,6 +331,8 @@ class WhatsAppChatbotService:
             customer = await self._get_or_create_customer(from_number)
 
             # Identificar ou criar conversação
+            if customer.id is None:
+                customer.id = str(uuid.uuid4())
             conversation = await self._get_or_create_conversation(customer.id)
 
             # Atualizar estado da conversação
@@ -814,11 +816,14 @@ class WhatsAppChatbotService:
 
             elif selected_id == "add_to_cart":
                 # Adicionar ao carrinho sem customizações
-                await self._add_to_cart(customer.id, selected_item, [])
-                conversation.state = ConversationState.CART_REVIEW
+                if customer.id:
+                    await self._add_to_cart(customer.id, selected_item, [])
+                    conversation.state = ConversationState.CART_REVIEW
 
-                # Mostrar carrinho
-                return await self._create_cart_review(customer.id)
+                    # Mostrar carrinho
+                    return await self._create_cart_review(customer.id)
+                else:
+                    return await self._create_error_message("Erro ao identificar cliente")
 
             elif selected_id == "back_to_category":
                 # Voltar para categoria
@@ -853,9 +858,10 @@ class WhatsAppChatbotService:
             selected_item = conversation.context.get("selected_item")
             selected_customizations = conversation.context.get("customizations", [])
 
-            await self._add_to_cart(
-                conversation.customer_id, selected_item, selected_customizations
-            )
+            if selected_item:
+                await self._add_to_cart(
+                    conversation.customer_id, selected_item, selected_customizations
+                )
             conversation.state = ConversationState.CART_REVIEW
 
             # Mostrar carrinho
@@ -999,7 +1005,7 @@ class WhatsAppChatbotService:
 
         # Verificar se cliente já tem carrinho
         cart = None
-        for existing_cart in self.carts.items():
+        for cart_id, existing_cart in self.carts.items():
             if existing_cart.customer_id == customer_id:
                 cart = existing_cart
                 break
@@ -1131,7 +1137,8 @@ class WhatsAppChatbotService:
 
             elif selected_id == "clear_cart":
                 # Esvaziar carrinho
-                await self._clear_cart(customer.id)
+                if customer.id:
+                    await self._clear_cart(customer.id)
                 conversation.state = ConversationState.MENU_BROWSING
                 return {
                     "type": "text",
@@ -1139,7 +1146,10 @@ class WhatsAppChatbotService:
                 }
 
         # Se não for seleção válida, mostrar carrinho novamente
-        return await self._create_cart_review(customer.id)
+        if customer.id:
+            return await self._create_cart_review(customer.id)
+        else:
+            return await self._create_error_message("Erro ao identificar cliente")
 
     async def _clear_cart(self, customer_id: str) -> None:
         """
@@ -1214,7 +1224,8 @@ class WhatsAppChatbotService:
             # Cliente enviou endereço
             # Em uma implementação real, validaríamos e geocodificaríamos o endereço
             customer.address = message_text
-            self.customers[customer.id] = customer
+            if customer.id:
+                self.customers[customer.id] = customer
 
             # Atualizar taxa de entrega no carrinho
             for cart_id, cart in self.carts.items():
@@ -1304,7 +1315,7 @@ class WhatsAppChatbotService:
             order = WhatsAppOrder(
                 id=order_id,
                 cart_id=cart.id,
-                customer_id=customer.id,
+                customer_id=customer.id if customer.id else "",
                 status="pending",
                 payment_status=(
                     "pending"
@@ -1324,7 +1335,8 @@ class WhatsAppChatbotService:
             self.orders[order_id] = order
 
             # Limpar carrinho
-            await self._clear_cart(customer.id)
+            if customer.id:
+                await self._clear_cart(customer.id)
 
             # Enviar confirmação
             conversation.state = ConversationState.FEEDBACK
@@ -1387,7 +1399,8 @@ class WhatsAppChatbotService:
         if registration_step == "name":
             # Registrar nome
             customer.name = message_text
-            self.customers[customer.id] = customer
+            if customer.id:
+                self.customers[customer.id] = customer
 
             # Avançar para próxima etapa
             conversation.context["registration_step"] = "email"
@@ -1403,7 +1416,8 @@ class WhatsAppChatbotService:
             # Registrar email
             customer.email = message_text
             customer.is_registered = True
-            self.customers[customer.id] = customer
+            if customer.id:
+                self.customers[customer.id] = customer
 
             # Concluir registro
             conversation.state = ConversationState.GREETING
@@ -1488,6 +1502,12 @@ class WhatsAppChatbotService:
                 "type": "text",
                 "text": f"Desculpe, não encontramos nenhum pedido com o número {message_text}. Por favor, verifique o número e tente novamente.",
             }
+        
+        # Default return case
+        return {
+            "type": "text",
+            "text": "Por favor, digite o número do seu pedido para verificar o status."
+        }
 
     async def _process_support(
         self,
@@ -1515,7 +1535,7 @@ class WhatsAppChatbotService:
             ticket_id = str(uuid.uuid4())
             ticket = WhatsAppSupportTicket(
                 id=ticket_id,
-                customer_id=customer.id,
+                customer_id=customer.id if customer.id else "",
                 conversation_id=conversation.id,
                 subject=conversation.context["ticket_subject"],
                 description=message_text,
@@ -1651,6 +1671,21 @@ class WhatsAppChatbotService:
             "text": self.message_templates["greeting"].format(
                 restaurant_name="Restaurante Demo"
             ),
+        }
+
+    async def _create_error_message(self, error_text: str) -> Dict[str, Any]:
+        """
+        Cria uma mensagem de erro.
+        
+        Args:
+            error_text: Texto do erro
+            
+        Returns:
+            Dict[str, Any]: Mensagem de erro formatada
+        """
+        return {
+            "type": "text",
+            "text": f"❌ {error_text}\n\nPor favor, tente novamente ou digite 'ajuda' para mais informações."
         }
 
     async def handle_webhook(self, request: Request) -> Dict[str, Any]:

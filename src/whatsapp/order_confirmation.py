@@ -184,7 +184,7 @@ class WhatsAppOrderConfirmation:
         )
         return order
 
-    async def confirm_order(self, order_id: str) -> Dict[str, Any]:
+    async def confirm_order(self, order_id: str) -> Optional[Dict[str, Any]]:
         """
         Confirma um pedido.
 
@@ -219,7 +219,7 @@ class WhatsAppOrderConfirmation:
         logger.info(f"Pedido {order_id} confirmado com sucesso")
         return order
 
-    async def cancel_order(self, order_id: str, reason: str = None) -> Dict[str, Any]:
+    async def cancel_order(self, order_id: str, reason: str = None) -> Optional[Dict[str, Any]]:
         """
         Cancela um pedido e inicia reembolso se necessário.
 
@@ -286,7 +286,7 @@ class WhatsAppOrderConfirmation:
 
     async def update_order_status(
         self, order_id: str, status: OrderStatus
-    ) -> Dict[str, Any]:
+    ) -> Optional[Dict[str, Any]]:
         """
         Atualiza o status de um pedido e envia notificação.
 
@@ -324,7 +324,7 @@ class WhatsAppOrderConfirmation:
 
     async def update_payment_status(
         self, order_id: str, payment_status: PaymentStatus
-    ) -> Dict[str, Any]:
+    ) -> Optional[Dict[str, Any]]:
         """
         Atualiza o status de pagamento de um pedido.
 
@@ -359,7 +359,7 @@ class WhatsAppOrderConfirmation:
         )
         return order
 
-    async def get_order(self, order_id: str) -> Dict[str, Any]:
+    async def get_order(self, order_id: str) -> Optional[Dict[str, Any]]:
         """
         Obtém os dados de um pedido.
 
@@ -397,7 +397,7 @@ class WhatsAppOrderConfirmation:
 
     async def generate_order_notification(
         self, order_id: str, status: OrderStatus = None
-    ) -> Dict[str, Any]:
+    ) -> Optional[Dict[str, Any]]:
         """
         Gera uma notificação para o cliente sobre o status do pedido.
 

@@ -38,6 +38,7 @@ class EventType(str, Enum):
     PAYMENT_CREATED = "payment.created"
     PAYMENT_UPDATED = "payment.updated"
     PAYMENT_STATUS_CHANGED = "payment.status_changed"
+    PAYMENT_CONFIRMED = "payment.confirmed"
     PAYMENT_REFUNDED = "payment.refunded"
     PAYMENT_FAILED = "payment.failed"
     SPLIT_CONFIG_CREATED = "split_config.created"
@@ -91,6 +92,14 @@ class EventType(str, Enum):
 
     # Eventos do sistema
     SYSTEM_CONFIG_CHANGED = "system.config_changed"
+    SYSTEM_STARTED = "system.started"
+    SYSTEM_STOPPED = "system.stopped"
+    SYSTEM_ERROR = "system.error"
+    
+    # Eventos de autenticação
+    USER_LOGGED_IN = "user.logged_in"
+    USER_LOGGED_OUT = "user.logged_out"
+    USER_PERMISSION_CHANGED = "user.permission_changed"
 
     # Eventos do módulo de caixa
     CASHIER_OPENED = "cashier.opened"
@@ -343,6 +352,15 @@ class EventBus:
             return {event_type_str: self.subscribers.get(event_type_str, [])}
 
         return self.subscribers
+    
+    async def emit(self, event: Event) -> None:
+        """
+        Alias para publish() para manter compatibilidade.
+        
+        Args:
+            event: Evento a ser publicado
+        """
+        await self.publish(event)
 
 
 # Singleton para o barramento de eventos

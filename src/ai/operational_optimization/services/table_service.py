@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException
 
-from ...demand_forecast.models import ForecastResult
+from ...demand_forecast.models import ForecastResult, TimeGranularity, ModelType, ForecastDimension
 from ...demand_forecast.service import DemandForecastService
 from ..models import TableDistributionRecommendation
 
@@ -216,9 +216,9 @@ class TableOptimizationService:
             created_at=datetime.now(),
             start_date=start_date,
             end_date=end_date,
-            granularity="hourly",
-            model_type="auto",
-            dimensions=["restaurant"],
+            granularity=TimeGranularity.HOURLY,
+            model_type=ModelType.AUTO,
+            dimensions=[ForecastDimension.RESTAURANT],
             points=points,
             metrics={"MAPE": 16.8, "RMSE": 9.3},
             data_sources_used=["sales_history", "weather", "events", "holidays"],

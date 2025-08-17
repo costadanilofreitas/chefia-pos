@@ -2,7 +2,17 @@ import unittest
 import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from src.product.models.product import Order, OrderStatus
+from src.order.models.db_models import Order
+from enum import Enum
+
+class OrderStatus(Enum):
+    """Status enum for orders."""
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    PREPARING = "preparing"
+    READY = "ready"
+    DELIVERED = "delivered"
+    CANCELLED = "cancelled"
 from src.remote_orders.models.remote_order_models import (
     RemoteOrder,
     RemoteOrderStatus,

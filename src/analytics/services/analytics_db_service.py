@@ -5,19 +5,20 @@ Database-backed analytics service for dashboards and reporting
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from ...core.database.connection import get_db
+from ...core.database.connection import get_db_session
 from ..repositories.analytics_repository import AnalyticsRepository
 
 
 class AnalyticsDatabaseService:
     """Database-backed service for analytics operations."""
 
-    def __init__(self, db: Session = Depends(get_db)):
+    def __init__(self, db: Session = Depends(get_db_session)):
         self.repository = AnalyticsRepository(db)
         self.logger = logging.getLogger(__name__)
 
@@ -404,7 +405,8 @@ class AnalyticsDatabaseService:
 
             # In a real implementation, this would trigger background processing
             # For now, we'll simulate immediate completion
-            self._process_export_async(db_export.id)
+            export_id = cast(UUID, db_export.id)
+            self._process_export_async(export_id)
 
             return self._convert_export_to_dict(db_export)
 
@@ -497,9 +499,11 @@ class AnalyticsDatabaseService:
             alert_count = 0
             report_count = 0
 
-            for dashboard_id in dashboard_ids:
-                alerts = self.repository.list_dashboard_alerts(dashboard_id)
-                reports = self.repository.list_scheduled_reports(dashboard_id)
+            for db_id in dashboard_ids:
+                # Cast to UUID type for mypy
+                dashboard_uuid = cast(Optional[UUID], db_id)
+                alerts = self.repository.list_dashboard_alerts(dashboard_uuid)
+                reports = self.repository.list_scheduled_reports(dashboard_uuid)
                 alert_count += len(alerts)
                 report_count += len(reports)
 
@@ -701,6 +705,6 @@ class AnalyticsDatabaseService:
 
 
 # Dependency function to get the service
-def get_analytics_service(db: Session = Depends(get_db)) -> AnalyticsDatabaseService:
+def get_analytics_service(db: Session = Depends(get_db_session)) -> AnalyticsDatabaseService:
     """Get AnalyticsDatabaseService instance with database session."""
     return AnalyticsDatabaseService(db)

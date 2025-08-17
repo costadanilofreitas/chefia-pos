@@ -29,7 +29,7 @@ class BusinessDay(Base):
     closed_by = Column(UUID(as_uuid=True), nullable=True)
     opened_at = Column(DateTime(timezone=True), nullable=False)
     closed_at = Column(DateTime(timezone=True), nullable=True)
-    total_sales = Column(DECIMAL(10, 2), default=0.0, nullable=False)
+    total_sales: Column = Column(DECIMAL(10, 2), default=0.0, nullable=False)
     total_orders = Column(Integer, default=0, nullable=False)
     notes = Column(Text, nullable=True)
     meta_data = Column(JSON, nullable=True)
@@ -54,7 +54,7 @@ class BusinessDayOperation(Base):
     business_day_id = Column(UUID(as_uuid=True), nullable=False)
     operation_type = Column(String(20), nullable=False)  # open, close, update
     operator_id = Column(UUID(as_uuid=True), nullable=False)
-    amount = Column(DECIMAL(10, 2), nullable=True)
+    amount: Column = Column(DECIMAL(10, 2), nullable=True)
     notes = Column(Text, nullable=True)
     meta_data = Column(JSON, nullable=True)
     created_at = Column(

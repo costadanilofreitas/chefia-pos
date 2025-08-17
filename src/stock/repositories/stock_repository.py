@@ -128,8 +128,8 @@ class StockRepository:
             if hasattr(db_item, field):
                 setattr(db_item, field, value)
 
-        db_item.updated_at = datetime.utcnow()
-        db_item.last_updated = datetime.utcnow()
+        setattr(db_item, 'updated_at', datetime.utcnow())
+        setattr(db_item, 'last_updated', datetime.utcnow())
         self.db.commit()
         self.db.refresh(db_item)
         return db_item
@@ -161,7 +161,7 @@ class StockRepository:
             return None
 
         # Calculate new quantities
-        old_quantity = db_item.current_quantity
+        old_quantity = float(db_item.current_quantity)
         new_quantity = old_quantity + quantity_change
 
         # Prevent negative stock (unless it's an adjustment)
@@ -171,24 +171,23 @@ class StockRepository:
             )
 
         # Update quantities
-        db_item.current_quantity = max(0, new_quantity)
-        db_item.available_quantity = max(
-            0, db_item.current_quantity - db_item.reserved_quantity
-        )
-        db_item.last_updated = datetime.utcnow()
-        db_item.updated_at = datetime.utcnow()
+        setattr(db_item, 'current_quantity', max(0, new_quantity))
+        available = float(db_item.current_quantity) - float(db_item.reserved_quantity)
+        setattr(db_item, 'available_quantity', max(0, available))
+        setattr(db_item, 'last_updated', datetime.utcnow())
+        setattr(db_item, 'updated_at', datetime.utcnow())
 
         # Update total value if unit cost is available
         if db_item.unit_cost:
-            db_item.total_value = db_item.current_quantity * db_item.unit_cost
+            setattr(db_item, 'total_value', float(db_item.current_quantity * db_item.unit_cost))
 
         # Create movement record
         self.create_stock_movement(
             stock_item_id=item_id,
             quantity=quantity_change,
             movement_type=movement_type,
-            quantity_before=old_quantity,
-            quantity_after=db_item.current_quantity,
+            quantity_before=float(old_quantity),
+            quantity_after=float(db_item.current_quantity),
             reason=reason,
             **kwargs,
         )
@@ -309,7 +308,7 @@ class StockRepository:
                 and_(
                     StockBatchDB.expiration_date.isnot(None),
                     StockBatchDB.expiration_date <= expiry_date,
-                    not StockBatchDB.is_expired,
+                    StockBatchDB.is_expired == False,
                 )
             )
 
@@ -332,8 +331,8 @@ class StockRepository:
                 and_(
                     StockAlertDB.stock_item_id == stock_item_id,
                     StockAlertDB.alert_type == alert_type,
-                    StockAlertDB.is_active,
-                    not StockAlertDB.is_acknowledged,
+                    StockAlertDB.is_active == True,
+                    StockAlertDB.is_acknowledged == False,
                 )
             )
             .first()
@@ -341,8 +340,8 @@ class StockRepository:
 
         if existing_alert:
             # Update existing alert
-            existing_alert.current_quantity = current_quantity
-            existing_alert.created_at = datetime.utcnow()
+            setattr(existing_alert, 'current_quantity', current_quantity)
+            setattr(existing_alert, 'created_at', datetime.utcnow())
             self.db.commit()
             self.db.refresh(existing_alert)
             return existing_alert
@@ -393,9 +392,9 @@ class StockRepository:
         if not db_alert:
             return None
 
-        db_alert.is_acknowledged = True
-        db_alert.acknowledged_by = acknowledged_by
-        db_alert.acknowledged_at = datetime.utcnow()
+        setattr(db_alert, 'is_acknowledged', True)
+        setattr(db_alert, 'acknowledged_by', acknowledged_by)
+        setattr(db_alert, 'acknowledged_at', datetime.utcnow())
 
         self.db.commit()
         self.db.refresh(db_alert)

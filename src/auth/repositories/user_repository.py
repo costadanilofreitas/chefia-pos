@@ -3,7 +3,7 @@ Repository for user authentication operations.
 """
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import delete, select, update
@@ -165,10 +165,13 @@ class UserRepository:
     ) -> OperatorCredential:
         """Create numeric credential."""
         async with self.db_manager.get_session() as session:
+            # Generate a unique operator code if not provided
+            operator_code = credential_data.operator_id[:6]  # Use first 6 chars as code
+            
             db_credential = NumericCredential(
                 credential_id=uuid4(),
-                user_id=UUID(credential_data.user_id),
-                operator_code=credential_data.operator_code,
+                user_id=UUID(credential_data.operator_id),  # operator_id is the user_id
+                operator_code=operator_code,
                 password_hash="",  # Will be set by service
                 is_active=True,
                 failed_attempts="0",
@@ -221,6 +224,24 @@ class UserRepository:
             await session.commit()
 
     # Helper methods
+    
+    def _extract_permissions(self, permissions: Any) -> List[Any]:
+        """Extract permissions from database field."""
+        from ..models.user_models import Permission
+        
+        if not permissions:
+            return []
+        
+        if not isinstance(permissions, list):
+            return []
+            
+        result = []
+        for p in permissions:
+            if isinstance(p, str):
+                result.append(Permission(p))
+            else:
+                result.append(p)
+        return result
 
     def _db_user_to_model(self, db_user: User) -> UserModel:
         """Convert database user to Pydantic model."""
@@ -232,14 +253,10 @@ class UserRepository:
             email=str(db_user.email) if db_user.email else None,
             full_name=str(db_user.name),
             role=UserRole(str(db_user.role)),
-            permissions=[
-                Permission(p)
-                for p in (db_user.permissions or [])
-                if isinstance(db_user.permissions, list)
-            ],
+            permissions=self._extract_permissions(db_user.permissions),
             is_active=bool(db_user.is_active),
-            created_at=db_user.created_at,
-            updated_at=db_user.updated_at,
+            created_at=db_user.created_at if isinstance(db_user.created_at, datetime) else datetime.now(),
+            updated_at=db_user.updated_at if isinstance(db_user.updated_at, datetime) else datetime.now(),
         )
 
     def _db_user_to_user_in_db(self, db_user: User) -> UserInDB:
@@ -252,14 +269,10 @@ class UserRepository:
             email=str(db_user.email) if db_user.email else None,
             full_name=str(db_user.name),
             role=UserRole(str(db_user.role)),
-            permissions=[
-                Permission(p)
-                for p in (db_user.permissions or [])
-                if isinstance(db_user.permissions, list)
-            ],
+            permissions=self._extract_permissions(db_user.permissions),
             is_active=bool(db_user.is_active),
-            created_at=db_user.created_at,
-            updated_at=db_user.updated_at,
+            created_at=db_user.created_at if isinstance(db_user.created_at, datetime) else datetime.now(),
+            updated_at=db_user.updated_at if isinstance(db_user.updated_at, datetime) else datetime.now(),
             hashed_password=str(db_user.password),
         )
 
@@ -269,12 +282,14 @@ class UserRepository:
         """Convert database credential to Pydantic model."""
         return OperatorCredential(
             id=str(db_credential.credential_id),
-            user_id=str(db_credential.user_id),
-            operator_code=db_credential.operator_code,
-            is_active=db_credential.is_active,
-            last_used=db_credential.last_used,
+            operator_id=str(db_credential.operator_code),  # operator_code is used as operator_id
+            password_hash=str(db_credential.password_hash),
+            salt="",  # Not stored separately in DB
             failed_attempts=int(db_credential.failed_attempts),
-            locked_until=db_credential.locked_until,
-            created_at=db_credential.created_at,
-            updated_at=db_credential.updated_at,
+            last_failed_attempt=None,  # Not tracked in current schema
+            is_locked=bool(db_credential.locked_until is not None and db_credential.locked_until > datetime.now()) if db_credential.locked_until else False,
+            lock_expiration=db_credential.locked_until if isinstance(db_credential.locked_until, datetime) else None,
+            last_password_change=db_credential.updated_at if isinstance(db_credential.updated_at, datetime) else datetime.now(),
+            created_at=db_credential.created_at if isinstance(db_credential.created_at, datetime) else datetime.now(),
+            updated_at=db_credential.updated_at if isinstance(db_credential.updated_at, datetime) else datetime.now(),
         )

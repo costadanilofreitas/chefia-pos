@@ -224,7 +224,7 @@ class WhatsAppPaymentIntegration:
             logger.error(f"Erro ao criar cliente no Asaas: {str(e)}")
             error_response = None
             try:
-                error_response = e.response.json() if hasattr(e, "response") else None
+                error_response = e.response.json() if hasattr(e, "response") and e.response else None
             except (ValueError, AttributeError, Exception):
                 pass
 
@@ -267,7 +267,7 @@ class WhatsAppPaymentIntegration:
             logger.error(f"Erro ao buscar cliente no Asaas: {str(e)}")
             error_response = None
             try:
-                error_response = e.response.json() if hasattr(e, "response") else None
+                error_response = e.response.json() if hasattr(e, "response") and e.response else None
             except (ValueError, AttributeError, Exception):
                 pass
 
@@ -338,7 +338,7 @@ class WhatsAppPaymentIntegration:
             logger.error(f"Erro ao criar pagamento PIX no Asaas: {str(e)}")
             error_response = None
             try:
-                error_response = e.response.json() if hasattr(e, "response") else None
+                error_response = e.response.json() if hasattr(e, "response") and e.response else None
             except (ValueError, AttributeError, Exception):
                 pass
 
@@ -418,7 +418,7 @@ class WhatsAppPaymentIntegration:
             logger.error(f"Erro ao criar pagamento com cartão no Asaas: {str(e)}")
             error_response = None
             try:
-                error_response = e.response.json() if hasattr(e, "response") else None
+                error_response = e.response.json() if hasattr(e, "response") and e.response else None
             except (ValueError, AttributeError, Exception):
                 pass
 
@@ -461,7 +461,7 @@ class WhatsAppPaymentIntegration:
             logger.error(f"Erro ao obter status do pagamento no Asaas: {str(e)}")
             error_response = None
             try:
-                error_response = e.response.json() if hasattr(e, "response") else None
+                error_response = e.response.json() if hasattr(e, "response") and e.response else None
             except (ValueError, AttributeError, Exception):
                 pass
 
@@ -493,7 +493,7 @@ class WhatsAppPaymentIntegration:
 
         # Adicionar valor se fornecido
         if value is not None:
-            refund_data["value"] = value
+            refund_data["value"] = str(value)
 
         try:
             # Reembolsar pagamento no Asaas
@@ -516,13 +516,13 @@ class WhatsAppPaymentIntegration:
             logger.error(f"Erro ao reembolsar pagamento no Asaas: {str(e)}")
             error_response = None
             try:
-                error_response = e.response.json() if hasattr(e, "response") else None
+                error_response = e.response.json() if hasattr(e, "response") and e.response else None
             except (ValueError, AttributeError, Exception):
                 pass
 
             return {"success": False, "error": str(e), "error_response": error_response}
 
-    async def generate_payment_link(self, payment_id: str) -> str:
+    async def generate_payment_link(self, payment_id: str) -> Optional[str]:
         """
         Gera um link de pagamento para um pagamento existente.
 
@@ -544,9 +544,11 @@ class WhatsAppPaymentIntegration:
         payment = payment_response.get("payment")
 
         # Verificar tipo de pagamento
-        if payment.get("billingType") == AsaasPaymentMethod.PIX:
-            # Para PIX, retornar o QR code
-            return payment.get("pixQrCode")
-        else:
-            # Para outros tipos, retornar o link da fatura
-            return payment.get("invoiceUrl")
+        if payment:
+            if payment.get("billingType") == AsaasPaymentMethod.PIX:
+                # Para PIX, retornar o QR code
+                return payment.get("pixQrCode")
+            else:
+                # Para outros tipos, retornar o link da fatura
+                return payment.get("invoiceUrl")
+        return None

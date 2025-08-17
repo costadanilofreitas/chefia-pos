@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from ..models import (
+from .models import (
     DeliveryOptimization,
     KioskOptimization,
     OperationalOptimizationConfig,
@@ -24,12 +24,12 @@ from ..models import (
     TableDistributionRecommendation,
     WhatsAppCampaign,
 )
-from ..services.delivery_service import DeliveryOptimizationService
-from ..services.kiosk_service import KioskOptimizationService
-from ..services.optimization_service import OperationalOptimizationService
-from ..services.staff_service import StaffOptimizationService
-from ..services.table_service import TableOptimizationService
-from ..services.whatsapp_service import WhatsAppCampaignService
+from .services.delivery_service import DeliveryOptimizationService
+from .services.kiosk_service import KioskOptimizationService
+from .services.optimization_service import OperationalOptimizationService
+from .services.staff_service import StaffOptimizationService
+from .services.table_service import TableOptimizationService
+from .services.whatsapp_service import WhatsAppCampaignService
 
 # Configurar logging
 logger = logging.getLogger(__name__)

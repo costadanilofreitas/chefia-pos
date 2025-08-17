@@ -43,7 +43,7 @@ class CameraPixReader(BasePeripheralDriver):
     async def initialize(self) -> bool:
         """Inicializa o leitor de PIX."""
         try:
-            import cv2
+            import cv2  # type: ignore
 
             # Verificar se o dispositivo existe
             if (
@@ -173,7 +173,7 @@ class CameraPixReader(BasePeripheralDriver):
     async def _read_loop(self) -> None:
         """Loop de leitura da câmera."""
         try:
-            from pyzbar import pyzbar
+            from pyzbar import pyzbar  # type: ignore
 
             last_scan_time = 0
 
@@ -298,7 +298,7 @@ class CameraPixReader(BasePeripheralDriver):
             return None
 
         try:
-            import cv2
+            import cv2  # type: ignore
 
             # Capturar frame
             if self.device is None:
@@ -458,7 +458,7 @@ class SimulatedPixReader(BasePeripheralDriver):
 
         try:
             # Criar imagem simulada
-            from PIL import Image, ImageDraw, ImageFont
+            from PIL import Image, ImageDraw, ImageFont  # type: ignore
 
             # Criar imagem em branco
             img = Image.new("RGB", (640, 480), color=(240, 240, 240))
@@ -474,7 +474,7 @@ class SimulatedPixReader(BasePeripheralDriver):
             draw.text((180, 240), "Aponte para um QR Code", fill=(0, 0, 0), font=font)
 
             # Desenhar moldura
-            draw.rectangle([(150, 150), (490, 330)], outline=(0, 0, 0), width=2)
+            draw.rectangle((150, 150, 490, 330), outline=(0, 0, 0), width=2)
 
             # Converter para bytes
             img_byte_arr = BytesIO()

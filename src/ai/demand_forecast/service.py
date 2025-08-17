@@ -22,6 +22,8 @@ class DemandForecastService:
             "forecast_role_arn": os.environ.get("FORECAST_ROLE_ARN", ""),
             "s3_bucket": os.environ.get("FORECAST_S3_BUCKET", ""),
         }
+        self._alerts = []  # Store alerts in memory for now
+        self._recommendations = []  # Store recommendations in memory
 
     async def create_forecast(self, request):
         """
@@ -112,3 +114,58 @@ class DemandForecastService:
             raise HTTPException(
                 status_code=500, detail=f"Error creating forecast: {str(e)}"
             ) from e
+
+    async def get_forecast(self, forecast_id: str):
+        """Get a forecast by ID."""
+        # Simulated implementation
+        from .models import ForecastResult, TimeGranularity, ModelType
+        return ForecastResult(
+            request_id=forecast_id,
+            restaurant_id="rest123",
+            created_at=datetime.now(),
+            start_date=datetime.now(),
+            end_date=datetime.now() + timedelta(days=7),
+            granularity=TimeGranularity.DAILY,
+            model_type=ModelType.AUTO,
+            dimensions=[],
+            points=[]
+        )
+
+    async def get_alerts(self, restaurant_id: str):
+        """Get alerts for a restaurant."""
+        from .models import DemandAlert, AlertLevel
+        import uuid
+        
+        # Return stored alerts or generate some sample ones
+        if not self._alerts:
+            self._alerts = [
+                DemandAlert(
+                    alert_id=str(uuid.uuid4()),
+                    timestamp=datetime.now(),
+                    level=AlertLevel.WARNING,
+                    message="High demand expected this weekend",
+                    product_id="prod123",
+                    location_id=restaurant_id
+                )
+            ]
+        return self._alerts
+
+    async def get_recommendations(self, restaurant_id: str):
+        """Get stock recommendations for a restaurant."""
+        from .models import StockRecommendation
+        import uuid
+        
+        # Return stored recommendations or generate sample ones
+        if not self._recommendations:
+            self._recommendations = [
+                StockRecommendation(
+                    recommendation_id=str(uuid.uuid4()),
+                    product_id="prod123",
+                    current_stock=50,
+                    recommended_stock=100,
+                    action="order",
+                    confidence=0.85,
+                    reason="Expected high demand based on forecast"
+                )
+            ]
+        return self._recommendations

@@ -148,7 +148,7 @@ class CustomerRepository:
         for field, value in update_data.items():
             setattr(db_customer, field, value)
 
-        db_customer.last_updated = datetime.utcnow()
+        setattr(db_customer, 'last_updated', datetime.utcnow())
         self.db.commit()
         self.db.refresh(db_customer)
         return db_customer
@@ -247,18 +247,19 @@ class CustomerRepository:
         if not loyalty:
             return None
 
-        loyalty.points = max(0, loyalty.points + points_change)  # Don't go below 0
-        loyalty.last_updated = datetime.utcnow()
+        setattr(loyalty, 'points', max(0, int(loyalty.points) + points_change))  # Don't go below 0
+        setattr(loyalty, 'last_updated', datetime.utcnow())
 
         # Update loyalty level based on points
-        if loyalty.points >= 1000:
-            loyalty.level = "Platinum"
-        elif loyalty.points >= 500:
-            loyalty.level = "Gold"
-        elif loyalty.points >= 100:
-            loyalty.level = "Silver"
+        current_points = int(loyalty.points)
+        if current_points >= 1000:
+            setattr(loyalty, 'level', "Platinum")
+        elif current_points >= 500:
+            setattr(loyalty, 'level', "Gold")
+        elif current_points >= 100:
+            setattr(loyalty, 'level', "Silver")
         else:
-            loyalty.level = "Bronze"
+            setattr(loyalty, 'level', "Bronze")
 
         self.db.commit()
         self.db.refresh(loyalty)
@@ -298,8 +299,8 @@ class CustomerRepository:
             return None
 
         # Deduct points
-        loyalty.points -= points_to_redeem
-        loyalty.last_updated = datetime.utcnow()
+        setattr(loyalty, 'points', int(loyalty.points) - points_to_redeem)
+        setattr(loyalty, 'last_updated', datetime.utcnow())
 
         # Record redemption
         redemption = PointsRedemptionDB(

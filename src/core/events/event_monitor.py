@@ -19,8 +19,8 @@ class EventMonitor:
         """
         self.event_bus = get_event_bus()
         self.max_history_size = max_history_size
-        self.event_history = []
-        self.subscribers = []
+        self.event_history: List[Event] = []
+        self.subscribers: List[Callable] = []
         self.logger = logging.getLogger(__name__)
         self.is_monitoring = False
 
@@ -37,7 +37,7 @@ class EventMonitor:
 
         # Assinar todos os tipos de eventos
         for event_type in EventType:
-            self.event_bus.subscribe(event_type.value, self._handle_event)
+            self.event_bus.subscribe(event_type, self._handle_event)
 
         self.logger.debug(f"Monitor assinado para {len(EventType)} tipos de eventos")
 
@@ -54,7 +54,7 @@ class EventMonitor:
 
         # Cancelar assinaturas
         for event_type in EventType:
-            self.event_bus.unsubscribe(event_type.value, self._handle_event)
+            self.event_bus.unsubscribe(event_type, self._handle_event)
 
         self.logger.debug("Monitor desassinado de todos os tipos de eventos")
 
@@ -184,7 +184,7 @@ class EventMonitor:
         Returns:
             Dict[str, int]: Dicionário com contagem por tipo
         """
-        counts = {}
+        counts: Dict[str, int] = {}
         for event in self.event_history:
             event_type = event.metadata.get("event_type")
             if event_type:

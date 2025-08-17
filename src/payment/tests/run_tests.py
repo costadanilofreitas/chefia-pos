@@ -6,9 +6,9 @@ import unittest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 # Importar testes
-from test_asaas_adapter import TestAsaasAdapter
-from test_payment_router import TestPaymentRouter
-from test_payment_service import TestPaymentService
+from .test_asaas_adapter import TestAsaasAdapter
+from .test_payment_router import TestPaymentRouter
+from .test_payment_service import TestPaymentService
 
 if __name__ == "__main__":
     # Criar suíte de testes

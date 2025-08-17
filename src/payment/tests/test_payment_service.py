@@ -32,12 +32,16 @@ class MockOrderService:
         self.update_order = AsyncMock()
 
 
-# Patch OrderService e OrderUpdate no sys.modules
-sys.modules["src.order.services.order_service"] = MagicMock()
-sys.modules["src.order.services.order_service"].OrderService = MockOrderService
-sys.modules["src.product.models.product"] = MagicMock()
-sys.modules["src.product.models.product"].OrderUpdate = OrderUpdate
-sys.modules["src.product.models.product"].PaymentStatus = MagicMock(PAID="PAID")
+# Criar módulos mock antes de importar
+from unittest.mock import MagicMock
+order_service_mock = MagicMock()
+order_service_mock.OrderService = MockOrderService
+sys.modules["src.order.services.order_service"] = order_service_mock
+
+product_models_mock = MagicMock()
+product_models_mock.OrderUpdate = OrderUpdate
+product_models_mock.PaymentStatus = MagicMock(PAID="PAID")
+sys.modules["src.product.models.product"] = product_models_mock
 
 
 class TestPaymentService(unittest.IsolatedAsyncioTestCase):

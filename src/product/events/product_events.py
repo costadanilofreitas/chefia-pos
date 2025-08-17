@@ -20,7 +20,7 @@ async def publish_product_created(product: Product) -> None:
                 "price": product.price,
                 "type": product.type,
                 "status": product.status,
-                "categories": product.categories,
+                "category_id": product.category_id,
             },
             "timestamp": Event.timestamp,
         },

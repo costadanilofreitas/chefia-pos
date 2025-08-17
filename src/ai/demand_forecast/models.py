@@ -73,3 +73,33 @@ class ForecastResult(BaseModel):
     metrics: Dict[str, float] = {}
     data_sources_used: List[str] = []
     metadata: Optional[Dict[str, Any]] = None
+
+
+class AlertLevel(str, Enum):
+    """Alert severity levels."""
+    INFO = "info"
+    WARNING = "warning"
+    CRITICAL = "critical"
+
+
+class DemandAlert(BaseModel):
+    """Alert for demand issues."""
+    alert_id: str
+    timestamp: datetime
+    level: AlertLevel
+    message: str
+    product_id: Optional[str] = None
+    location_id: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class StockRecommendation(BaseModel):
+    """Stock recommendation."""
+    recommendation_id: str
+    product_id: str
+    current_stock: int
+    recommended_stock: int
+    action: str  # "order", "reduce", "maintain"
+    confidence: float
+    reason: str
+    metadata: Optional[Dict[str, Any]] = None

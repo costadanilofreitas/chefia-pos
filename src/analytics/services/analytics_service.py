@@ -24,7 +24,7 @@ from src.analytics.models.dashboard_models import (
     FilterOperator,
     ScheduledReport,
 )
-from src.core.events.event_bus import EventBus
+from src.core.events.event_bus import EventBus, Event, EventType
 
 
 class AnalyticsService:
@@ -106,7 +106,7 @@ class DashboardService:
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
 
-    def create_dashboard(self, dashboard_data: Dict[str, Any]) -> Dashboard:
+    async def create_dashboard(self, dashboard_data: Dict[str, Any]) -> Dashboard:
         """Cria um novo dashboard"""
         try:
             # Gera um ID único para o dashboard
@@ -120,34 +120,49 @@ class DashboardService:
                 id=dashboard_id,
                 name=dashboard_data.get("name", "Novo Dashboard"),
                 description=dashboard_data.get("description"),
-                owner_id=dashboard_data.get("owner_id"),
-                restaurant_id=dashboard_data.get("restaurant_id"),
+                owner_id=dashboard_data.get("owner_id", ""),
+                restaurant_id=dashboard_data.get("restaurant_id", ""),
                 is_template=dashboard_data.get("is_template", False),
                 is_public=dashboard_data.get("is_public", False),
                 is_favorite=dashboard_data.get("is_favorite", False),
                 category=dashboard_data.get("category"),
                 tags=dashboard_data.get("tags"),
-                layout=dashboard_data.get("layout"),
+                layout=dashboard_data.get("layout", DashboardLayout(
+                    id=str(uuid.uuid4()), 
+                    name="Layout Padrão", 
+                    description="",
+                    grid_columns=12,
+                    grid_rows=10,
+                    is_fluid=True,
+                    is_responsive=True,
+                    breakpoints={},
+                    gap=10
+                )),
                 items=dashboard_data.get("items", []),
-                filters=dashboard_data.get("filters"),
+                filters=dashboard_data.get("filters", []),
                 created_at=now,
                 updated_at=now,
+                last_viewed_at=now,
+                thumbnail_url=dashboard_data.get("thumbnail_url"),
                 view_count=0,
-                permissions=dashboard_data.get("permissions"),
+                permissions=dashboard_data.get("permissions", {}),
             )
 
             # Em um ambiente real, isso seria salvo no banco de dados
             # Aqui estamos simulando o salvamento
 
             # Emite evento de criação de dashboard
-            self.event_bus.emit(
-                "dashboard.created",
-                {
-                    "dashboard_id": dashboard_id,
-                    "restaurant_id": dashboard.restaurant_id,
-                    "owner_id": dashboard.owner_id,
-                    "timestamp": now.isoformat(),
-                },
+            await self.event_bus.emit(
+                Event(
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+                    data={
+                        "dashboard_id": dashboard_id,
+                        "restaurant_id": dashboard.restaurant_id,
+                        "owner_id": dashboard.owner_id,
+                        "timestamp": now.isoformat(),
+                    },
+                    metadata={"source": "analytics", "action": "dashboard_created"}
+                )
             )
 
             return dashboard
@@ -178,7 +193,7 @@ class DashboardService:
                 detail=f"Error getting dashboard: {str(e)}",
             ) from e
 
-    def update_dashboard(
+    async def update_dashboard(
         self, dashboard_id: str, update_data: Dict[str, Any]
     ) -> Dashboard:
         """Atualiza um dashboard existente"""
@@ -198,15 +213,24 @@ class DashboardService:
             # Aqui estamos simulando o salvamento
 
             # Emite evento de atualização de dashboard
-            self.event_bus.emit(
-                "dashboard.updated",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "dashboard_id": dashboard_id,
                     "restaurant_id": dashboard.restaurant_id,
                     "owner_id": dashboard.owner_id,
                     "timestamp": dashboard.updated_at.isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             return dashboard
         except HTTPException:
@@ -218,7 +242,7 @@ class DashboardService:
                 detail=f"Error updating dashboard: {str(e)}",
             ) from e
 
-    def delete_dashboard(self, dashboard_id: str) -> bool:
+    async def delete_dashboard(self, dashboard_id: str) -> bool:
         """Exclui um dashboard"""
         try:
             # Obtém o dashboard existente
@@ -228,15 +252,24 @@ class DashboardService:
             # Aqui estamos simulando a exclusão
 
             # Emite evento de exclusão de dashboard
-            self.event_bus.emit(
-                "dashboard.deleted",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "dashboard_id": dashboard_id,
                     "restaurant_id": dashboard.restaurant_id,
                     "owner_id": dashboard.owner_id,
                     "timestamp": datetime.now().isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             return True
         except HTTPException:
@@ -274,12 +307,24 @@ class DashboardService:
                     category="sales",
                     tags=["vendas", "desempenho"],
                     layout=DashboardLayout(
-                        id=str(uuid.uuid4()), name="Layout Padrão", grid_columns=12
+                        id=str(uuid.uuid4()), 
+                        name="Layout Padrão", 
+                        description="",
+                        grid_columns=12,
+                        grid_rows=10,
+                        is_fluid=True,
+                        is_responsive=True,
+                        breakpoints={},
+                        gap=10
                     ),
                     items=[],
+                    filters=[],
                     created_at=datetime.now() - timedelta(days=i),
                     updated_at=datetime.now() - timedelta(days=i),
+                    last_viewed_at=datetime.now() - timedelta(days=i),
+                    thumbnail_url=None,
                     view_count=100 - i * 10,
+                    permissions={},
                 )
                 for i in range(1, 6)
             ]
@@ -353,7 +398,7 @@ class DashboardService:
             self.logger.error(f"Error getting top dashboards: {str(e)}")
             return []
 
-    def share_dashboard(
+    async def share_dashboard(
         self, dashboard_id: str, share_data: Dict[str, Any]
     ) -> DashboardShare:
         """Compartilha um dashboard com usuários ou papéis"""
@@ -374,7 +419,7 @@ class DashboardService:
                 permission=share_data.get("permission", "view"),
                 created_at=now,
                 expires_at=share_data.get("expires_at"),
-                created_by=share_data.get("created_by"),
+                created_by=share_data.get("created_by", ""),
                 is_active=True,
             )
 
@@ -382,9 +427,13 @@ class DashboardService:
             # Aqui estamos simulando o salvamento
 
             # Emite evento de compartilhamento
-            self.event_bus.emit(
-                "dashboard.shared",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "share_id": share_id,
                     "dashboard_id": dashboard_id,
                     "restaurant_id": dashboard.restaurant_id,
@@ -394,7 +443,12 @@ class DashboardService:
                     "permission": share.permission,
                     "timestamp": now.isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             return share
         except HTTPException:
@@ -406,7 +460,7 @@ class DashboardService:
                 detail=f"Error sharing dashboard: {str(e)}",
             ) from e
 
-    def create_dashboard_from_template(
+    async def create_dashboard_from_template(
         self,
         template_id: str,
         restaurant_id: str,
@@ -446,7 +500,7 @@ class DashboardService:
                         dashboard_data[key] = value
 
             # Cria o novo dashboard
-            return self.create_dashboard(dashboard_data)
+            return await self.create_dashboard(dashboard_data)
         except HTTPException:
             raise
         except Exception as e:
@@ -456,7 +510,7 @@ class DashboardService:
                 detail=f"Error creating dashboard from template: {str(e)}",
             ) from e
 
-    def duplicate_dashboard(self, dashboard_id: str, new_name: str = None) -> Dashboard:
+    async def duplicate_dashboard(self, dashboard_id: str, new_name: str = None) -> Dashboard:
         """Duplica um dashboard existente"""
         try:
             # Obtém o dashboard original
@@ -479,7 +533,7 @@ class DashboardService:
                 dashboard_data["name"] = f"Cópia de {original.name}"
 
             # Cria o novo dashboard
-            return self.create_dashboard(dashboard_data)
+            return await self.create_dashboard(dashboard_data)
         except HTTPException:
             raise
         except Exception as e:
@@ -489,7 +543,7 @@ class DashboardService:
                 detail=f"Error duplicating dashboard: {str(e)}",
             ) from e
 
-    def record_dashboard_view(self, dashboard_id: str, user_id: str) -> None:
+    async def record_dashboard_view(self, dashboard_id: str, user_id: str) -> None:
         """Registra uma visualização de dashboard"""
         try:
             # Obtém o dashboard
@@ -503,15 +557,24 @@ class DashboardService:
             # Aqui estamos simulando o salvamento
 
             # Emite evento de visualização
-            self.event_bus.emit(
-                "dashboard.viewed",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "dashboard_id": dashboard_id,
                     "restaurant_id": dashboard.restaurant_id,
                     "user_id": user_id,
                     "timestamp": dashboard.last_viewed_at.isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
         except HTTPException:
             # Ignora erros de não encontrado para não interromper a experiência do usuário
             pass
@@ -639,10 +702,10 @@ class DataSourceService:
             months = pd.date_range(
                 start=datetime.now() - timedelta(days=180), end=datetime.now(), freq="M"
             )
-            data = []
+            cost_data = []
             for month in months:
                 for category in categories:
-                    data.append(
+                    cost_data.append(
                         {
                             "month": month,
                             "category": category,
@@ -650,7 +713,7 @@ class DataSourceService:
                             "percentage": np.random.uniform(0.05, 0.25),
                         }
                     )
-            df = pd.DataFrame(data)
+            df = pd.DataFrame(cost_data)
 
         else:
             # Dados genéricos
@@ -667,15 +730,19 @@ class DataSourceService:
         # Aplica filtros, se houver
         if filters:
             for filter_item in filters:
-                if filter_item.field in df.columns:
+                if filter_item.field in df.columns and filter_item.value is not None:
                     if filter_item.operator == FilterOperator.EQUALS:
-                        df = df[df[filter_item.field] == filter_item.value.value]
+                        mask = df[filter_item.field] == filter_item.value.value
+                        df = df[mask]
                     elif filter_item.operator == FilterOperator.NOT_EQUALS:
-                        df = df[df[filter_item.field] != filter_item.value.value]
+                        mask = df[filter_item.field] != filter_item.value.value
+                        df = df[mask]
                     elif filter_item.operator == FilterOperator.GREATER_THAN:
-                        df = df[df[filter_item.field] > filter_item.value.value]
+                        mask = df[filter_item.field] > filter_item.value.value
+                        df = df[mask]
                     elif filter_item.operator == FilterOperator.LESS_THAN:
-                        df = df[df[filter_item.field] < filter_item.value.value]
+                        mask = df[filter_item.field] < filter_item.value.value
+                        df = df[mask]
                     # Adicione mais operadores conforme necessário
 
         return df
@@ -687,7 +754,7 @@ class DataSourceService:
         chart_type = chart_config.type
         series = chart_config.series
 
-        result = {
+        result: Dict[str, Any] = {
             "type": chart_type,
             "title": chart_config.title,
             "subtitle": chart_config.subtitle,
@@ -851,7 +918,7 @@ class AlertService:
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
 
-    def create_alert(self, alert_data: Dict[str, Any]) -> DashboardAlert:
+    async def create_alert(self, alert_data: Dict[str, Any]) -> DashboardAlert:
         """Cria um novo alerta"""
         try:
             # Gera um ID único para o alerta
@@ -865,36 +932,46 @@ class AlertService:
                 id=alert_id,
                 name=alert_data.get("name", "Novo Alerta"),
                 description=alert_data.get("description"),
-                dashboard_id=alert_data.get("dashboard_id"),
-                chart_id=alert_data.get("chart_id"),
-                metric=alert_data.get("metric"),
-                condition=alert_data.get("condition"),
-                threshold=alert_data.get("threshold"),
+                dashboard_id=alert_data.get("dashboard_id", ""),
+                chart_id=alert_data.get("chart_id", ""),
+                metric=alert_data.get("metric", ""),
+                condition=alert_data.get("condition", FilterOperator.EQUALS),
+                threshold=alert_data.get("threshold", 0),
                 frequency=alert_data.get("frequency", "realtime"),
-                notification_channels=alert_data.get("notification_channels"),
+                notification_channels=alert_data.get("notification_channels", []),
                 recipients=alert_data.get("recipients"),
                 webhook_url=alert_data.get("webhook_url"),
                 message_template=alert_data.get("message_template"),
                 is_active=alert_data.get("is_active", True),
                 created_at=now,
                 updated_at=now,
-                created_by=alert_data.get("created_by"),
+                created_by=alert_data.get("created_by", "system"),
                 trigger_count=0,
+                last_triggered_at=None,
             )
 
             # Em um ambiente real, isso seria salvo no banco de dados
             # Aqui estamos simulando o salvamento
 
             # Emite evento de criação de alerta
-            self.event_bus.emit(
-                "alert.created",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "alert_id": alert_id,
                     "dashboard_id": alert.dashboard_id,
                     "created_by": alert.created_by,
                     "timestamp": now.isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             return alert
         except Exception as e:
@@ -924,7 +1001,7 @@ class AlertService:
                 detail=f"Error getting alert: {str(e)}",
             ) from e
 
-    def update_alert(
+    async def update_alert(
         self, alert_id: str, update_data: Dict[str, Any]
     ) -> DashboardAlert:
         """Atualiza um alerta existente"""
@@ -944,15 +1021,24 @@ class AlertService:
             # Aqui estamos simulando o salvamento
 
             # Emite evento de atualização de alerta
-            self.event_bus.emit(
-                "alert.updated",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "alert_id": alert_id,
                     "dashboard_id": alert.dashboard_id,
                     "updated_by": update_data.get("updated_by", "unknown"),
                     "timestamp": alert.updated_at.isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             return alert
         except HTTPException:
@@ -964,7 +1050,7 @@ class AlertService:
                 detail=f"Error updating alert: {str(e)}",
             ) from e
 
-    def delete_alert(self, alert_id: str) -> bool:
+    async def delete_alert(self, alert_id: str) -> bool:
         """Exclui um alerta"""
         try:
             # Obtém o alerta existente
@@ -974,15 +1060,24 @@ class AlertService:
             # Aqui estamos simulando a exclusão
 
             # Emite evento de exclusão de alerta
-            self.event_bus.emit(
-                "alert.deleted",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "alert_id": alert_id,
                     "dashboard_id": alert.dashboard_id,
                     "deleted_by": "unknown",
                     "timestamp": datetime.now().isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             return True
         except HTTPException:
@@ -1021,11 +1116,14 @@ class AlertService:
                     frequency="daily",
                     notification_channels=["email", "sms"],
                     recipients=["manager@restaurant.com"],
+                    webhook_url=None,
+                    message_template=None,
                     is_active=i % 2 == 0,
                     created_at=datetime.now() - timedelta(days=i),
                     updated_at=datetime.now() - timedelta(days=i),
                     created_by="user-123",
                     trigger_count=i,
+                    last_triggered_at=None,
                 )
                 for i in range(1, 6)
             ]
@@ -1104,7 +1202,7 @@ class AlertService:
             self.logger.error(f"Error getting recent alerts: {str(e)}")
             return []
 
-    def trigger_alert(self, alert_id: str, value: Union[int, float]) -> bool:
+    async def trigger_alert(self, alert_id: str, value: Union[int, float]) -> bool:
         """Dispara um alerta manualmente"""
         try:
             # Obtém o alerta
@@ -1118,9 +1216,13 @@ class AlertService:
             # Aqui estamos simulando o salvamento
 
             # Emite evento de disparo de alerta
-            self.event_bus.emit(
-                "alert.triggered",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "alert_id": alert_id,
                     "dashboard_id": alert.dashboard_id,
                     "metric": alert.metric,
@@ -1128,7 +1230,12 @@ class AlertService:
                     "actual_value": value,
                     "timestamp": alert.last_triggered_at.isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             # Envia notificações
             self._send_alert_notifications(alert, value)
@@ -1191,7 +1298,7 @@ class ExportService:
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
 
-    def export_dashboard(
+    async def export_dashboard(
         self,
         dashboard_id: str,
         format: str,
@@ -1215,26 +1322,37 @@ class ExportService:
                 created_at=now,
                 created_by=user_id or "unknown",
                 status="pending",
+                file_url=None,
+                error_message=None,
             )
 
             # Em um ambiente real, isso seria salvo no banco de dados
             # Aqui estamos simulando o salvamento
 
             # Emite evento de exportação
-            self.event_bus.emit(
-                "dashboard.export.requested",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "export_id": export_id,
                     "dashboard_id": dashboard_id,
                     "format": format,
                     "user_id": user_id,
                     "timestamp": now.isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             # Inicia o processo de exportação em background
             # Em um ambiente real, isso seria feito por um worker
-            self._process_export(export)
+            await self._process_export(export)
 
             return export
         except Exception as e:
@@ -1244,7 +1362,7 @@ class ExportService:
                 detail=f"Error exporting dashboard: {str(e)}",
             ) from e
 
-    def _process_export(self, export: DashboardExport) -> None:
+    async def _process_export(self, export: DashboardExport) -> None:
         """Processa uma exportação em background"""
         try:
             # Atualiza o status
@@ -1279,16 +1397,25 @@ class ExportService:
             # Aqui estamos simulando o salvamento
 
             # Emite evento de exportação concluída
-            self.event_bus.emit(
-                "dashboard.export.completed",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "export_id": export.id,
                     "dashboard_id": export.dashboard_id,
                     "format": export.format,
                     "file_url": export.file_url,
                     "timestamp": datetime.now().isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
         except Exception as e:
             self.logger.error(f"Error processing export: {str(e)}")
 
@@ -1300,15 +1427,24 @@ class ExportService:
             # Aqui estamos simulando o salvamento
 
             # Emite evento de exportação falha
-            self.event_bus.emit(
-                "dashboard.export.failed",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "export_id": export.id,
                     "dashboard_id": export.dashboard_id,
                     "error": str(e),
                     "timestamp": datetime.now().isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
     def get_export_status(self, export_id: str) -> DashboardExport:
         """Obtém o status de uma exportação"""
@@ -1334,7 +1470,7 @@ class ExportService:
         self,
         dashboard_id: str = None,
         user_id: str = None,
-        status: str = None,
+        export_status: str = None,
         page: int = 1,
         page_size: int = 20,
     ) -> Tuple[List[DashboardExport], int]:
@@ -1349,6 +1485,7 @@ class ExportService:
                     id=str(uuid.uuid4()),
                     dashboard_id=str(uuid.uuid4()),
                     format=["pdf", "excel", "csv", "image"][i % 4],
+                    filters=None,
                     created_at=datetime.now() - timedelta(hours=i),
                     created_by="user-123",
                     status=["pending", "processing", "completed", "failed"][i % 4],
@@ -1398,7 +1535,7 @@ class ReportService:
         self.event_bus = event_bus
         self.logger = logging.getLogger(__name__)
 
-    def create_scheduled_report(self, report_data: Dict[str, Any]) -> ScheduledReport:
+    async def create_scheduled_report(self, report_data: Dict[str, Any]) -> ScheduledReport:
         """Cria um novo relatório agendado"""
         try:
             # Gera um ID único para o relatório
@@ -1412,32 +1549,43 @@ class ReportService:
                 id=report_id,
                 name=report_data.get("name", "Novo Relatório"),
                 description=report_data.get("description"),
-                dashboard_id=report_data.get("dashboard_id"),
+                dashboard_id=report_data.get("dashboard_id", ""),
                 format=report_data.get("format", "pdf"),
-                schedule=report_data.get("schedule"),
-                recipients=report_data.get("recipients"),
+                schedule=report_data.get("schedule", "0 0 * * *"),  # Daily at midnight
+                recipients=report_data.get("recipients", []),
                 subject=report_data.get("subject", "Relatório Agendado"),
                 message=report_data.get("message"),
                 filters=report_data.get("filters"),
                 is_active=report_data.get("is_active", True),
                 created_at=now,
                 updated_at=now,
-                created_by=report_data.get("created_by"),
+                created_by=report_data.get("created_by", "system"),
+                last_run_at=None,
+                last_run_status=None,
             )
 
             # Em um ambiente real, isso seria salvo no banco de dados
             # Aqui estamos simulando o salvamento
 
             # Emite evento de criação de relatório
-            self.event_bus.emit(
-                "report.created",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "report_id": report_id,
                     "dashboard_id": report.dashboard_id,
                     "created_by": report.created_by,
                     "timestamp": now.isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             return report
         except Exception as e:
@@ -1467,7 +1615,7 @@ class ReportService:
                 detail=f"Error getting scheduled report: {str(e)}",
             ) from e
 
-    def update_scheduled_report(
+    async def update_scheduled_report(
         self, report_id: str, update_data: Dict[str, Any]
     ) -> ScheduledReport:
         """Atualiza um relatório agendado existente"""
@@ -1487,15 +1635,24 @@ class ReportService:
             # Aqui estamos simulando o salvamento
 
             # Emite evento de atualização de relatório
-            self.event_bus.emit(
-                "report.updated",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "report_id": report_id,
                     "dashboard_id": report.dashboard_id,
                     "updated_by": update_data.get("updated_by", "unknown"),
                     "timestamp": report.updated_at.isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             return report
         except HTTPException:
@@ -1507,7 +1664,7 @@ class ReportService:
                 detail=f"Error updating scheduled report: {str(e)}",
             ) from e
 
-    def delete_scheduled_report(self, report_id: str) -> bool:
+    async def delete_scheduled_report(self, report_id: str) -> bool:
         """Exclui um relatório agendado"""
         try:
             # Obtém o relatório existente
@@ -1517,15 +1674,24 @@ class ReportService:
             # Aqui estamos simulando a exclusão
 
             # Emite evento de exclusão de relatório
-            self.event_bus.emit(
-                "report.deleted",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "report_id": report_id,
                     "dashboard_id": report.dashboard_id,
                     "deleted_by": "unknown",
                     "timestamp": datetime.now().isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             return True
         except HTTPException:
@@ -1561,10 +1727,14 @@ class ReportService:
                     schedule="0 8 * * *",  # Todos os dias às 8h
                     recipients=["manager@restaurant.com", "owner@restaurant.com"],
                     subject=f"Relatório Diário de Vendas {i} - {datetime.now().strftime('%d/%m/%Y')}",
+                    message=None,
+                    filters=None,
                     is_active=i % 2 == 0,
                     created_at=datetime.now() - timedelta(days=i),
                     updated_at=datetime.now() - timedelta(days=i),
                     created_by="user-123",
+                    last_run_at=datetime.now() - timedelta(hours=i*2) if i % 2 == 0 else None,
+                    last_run_status="success" if i % 2 == 0 else None,
                 )
                 for i in range(1, 6)
             ]
@@ -1611,7 +1781,7 @@ class ReportService:
             self.logger.error(f"Error counting reports: {str(e)}")
             return 0
 
-    def run_scheduled_report(self, report_id: str) -> bool:
+    async def run_scheduled_report(self, report_id: str) -> bool:
         """Executa um relatório agendado manualmente"""
         try:
             # Obtém o relatório
@@ -1625,18 +1795,27 @@ class ReportService:
             # Aqui estamos simulando o salvamento
 
             # Emite evento de execução de relatório
-            self.event_bus.emit(
-                "report.running",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "report_id": report_id,
                     "dashboard_id": report.dashboard_id,
                     "timestamp": report.last_run_at.isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             # Inicia o processo de geração do relatório em background
             # Em um ambiente real, isso seria feito por um worker
-            self._process_report(report)
+            await self._process_report(report)
 
             return True
         except HTTPException:
@@ -1648,7 +1827,7 @@ class ReportService:
                 detail=f"Error running scheduled report: {str(e)}",
             ) from e
 
-    def _process_report(self, report: ScheduledReport) -> None:
+    async def _process_report(self, report: ScheduledReport) -> None:
         """Processa um relatório em background"""
         try:
             # Em um ambiente real, isso seria o processamento real do relatório
@@ -1664,17 +1843,26 @@ class ReportService:
             # Aqui estamos simulando o salvamento
 
             # Emite evento de relatório concluído
-            self.event_bus.emit(
-                "report.completed",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "report_id": report.id,
                     "dashboard_id": report.dashboard_id,
                     "timestamp": datetime.now().isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
 
             # Simula o envio do relatório
-            self._send_report(report)
+            await self._send_report(report)
         except Exception as e:
             self.logger.error(f"Error processing report: {str(e)}")
 
@@ -1685,17 +1873,26 @@ class ReportService:
             # Aqui estamos simulando o salvamento
 
             # Emite evento de relatório falha
-            self.event_bus.emit(
-                "report.failed",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "report_id": report.id,
                     "dashboard_id": report.dashboard_id,
                     "error": str(e),
                     "timestamp": datetime.now().isoformat(),
                 },
-            )
 
-    def _send_report(self, report: ScheduledReport) -> None:
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
+
+    async def _send_report(self, report: ScheduledReport) -> None:
         """Envia um relatório por email"""
         try:
             # Em um ambiente real, isso seria o envio real do relatório
@@ -1704,15 +1901,24 @@ class ReportService:
             self.logger.info(f"Sending report {report.id} to {report.recipients}")
 
             # Emite evento de relatório enviado
-            self.event_bus.emit(
-                "report.sent",
-                {
+            await self.event_bus.emit(
+
+                Event(
+
+                    event_type=EventType.SYSTEM_CONFIG_CHANGED,
+
+                    data={
                     "report_id": report.id,
                     "dashboard_id": report.dashboard_id,
                     "recipients": report.recipients,
                     "timestamp": datetime.now().isoformat(),
                 },
-            )
+
+                        metadata={"source": "analytics", "action": "event"}
+
+                    )
+
+                )
         except Exception as e:
             self.logger.error(f"Error sending report: {str(e)}")
             # Não propaga o erro para não interromper o fluxo principal

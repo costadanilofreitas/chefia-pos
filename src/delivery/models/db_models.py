@@ -90,7 +90,7 @@ class DeliveryOrderDB(Base):
     delivery_notes = Column(Text)
 
     # Status and tracking
-    status = Column(
+    status: Column = Column(
         SqlEnum(DeliveryOrderStatusEnum),
         nullable=False,
         default=DeliveryOrderStatusEnum.PENDING,
@@ -139,13 +139,13 @@ class DeliveryCourierDB(Base):
     vehicle_plate = Column(String, nullable=True)
 
     # Status and availability
-    status = Column(
+    status: Column = Column(
         SqlEnum(CourierStatusEnum),
         nullable=False,
         default=CourierStatusEnum.OFFLINE,
         index=True,
     )
-    courier_type = Column(
+    courier_type: Column = Column(
         SqlEnum(CourierTypeEnum), nullable=False, default=CourierTypeEnum.EMPLOYEE
     )
     is_active = Column(Boolean, default=True, index=True)
@@ -216,7 +216,7 @@ class DeliveryRouteDB(Base):
 
     # Route details
     name = Column(String, nullable=True)
-    status = Column(
+    status: Column = Column(
         SqlEnum(RouteStatusEnum),
         nullable=False,
         default=RouteStatusEnum.PLANNING,
@@ -259,7 +259,7 @@ class DeliveryTrackingDB(Base):
     )
 
     # Event details
-    event_type = Column(SqlEnum(TrackingEventTypeEnum), nullable=False, index=True)
+    event_type: Column = Column(SqlEnum(TrackingEventTypeEnum), nullable=False, index=True)
     timestamp = Column(DateTime, nullable=False, index=True)
     location = Column(JSON)  # {"lat": float, "lng": float}
     notes = Column(Text)

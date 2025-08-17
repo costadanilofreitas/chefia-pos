@@ -435,8 +435,8 @@ class ExternalDataService:
 
             # Adicionar feriados nacionais
             for holiday in national_holidays:
-                holiday_record = {
-                    "date": datetime.strptime(holiday["date"], "%Y-%m-%d"),
+                holiday_record: Dict[str, Any] = {
+                    "date": datetime.strptime(str(holiday["date"]), "%Y-%m-%d"),
                     "name": holiday["name"],
                     "is_national": holiday["is_national"],
                     "is_regional": False,
@@ -460,16 +460,16 @@ class ExternalDataService:
                     },
                 ]
 
-                for holiday in regional_holidays:
-                    holiday_record = {
-                        "date": datetime.strptime(holiday["date"], "%Y-%m-%d"),
-                        "name": holiday["name"],
+                for regional_holiday in regional_holidays:
+                    regional_holiday_record: Dict[str, Any] = {
+                        "date": datetime.strptime(str(regional_holiday["date"]), "%Y-%m-%d"),
+                        "name": regional_holiday["name"],
                         "is_national": False,
                         "is_regional": True,
-                        "region": holiday["region"],
+                        "region": regional_holiday["region"],
                         "impact_level": 4,  # Impacto médio-alto
                     }
-                    holidays_data.append(holiday_record)
+                    holidays_data.append(regional_holiday_record)
 
             # Adicionar feriados móveis (Carnaval, Páscoa, etc.)
             # Em produção, calcular corretamente
@@ -503,7 +503,7 @@ class ExternalDataService:
 
             for holiday in mobile_holidays:
                 holiday_record = {
-                    "date": datetime.strptime(holiday["date"], "%Y-%m-%d"),
+                    "date": datetime.strptime(str(holiday["date"]), "%Y-%m-%d"),
                     "name": holiday["name"],
                     "is_national": holiday["is_national"],
                     "is_regional": False,

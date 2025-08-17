@@ -123,7 +123,7 @@ class SupplierRepository:
             if hasattr(supplier, field) and value is not None:
                 setattr(supplier, field, value)
 
-        supplier.updated_at = datetime.utcnow()
+        setattr(supplier, 'updated_at', datetime.utcnow())
         self.db.commit()
         self.db.refresh(supplier)
         return supplier
@@ -134,8 +134,8 @@ class SupplierRepository:
         if not supplier:
             return False
 
-        supplier.is_active = False
-        supplier.updated_at = datetime.utcnow()
+        setattr(supplier, 'is_active', False)
+        setattr(supplier, 'updated_at', datetime.utcnow())
         self.db.commit()
         return True
 
@@ -213,7 +213,7 @@ class SupplierRepository:
             if hasattr(supplier_product, field) and value is not None:
                 setattr(supplier_product, field, value)
 
-        supplier_product.updated_at = datetime.utcnow()
+        setattr(supplier_product, 'updated_at', datetime.utcnow())
         self.db.commit()
         self.db.refresh(supplier_product)
         return supplier_product
@@ -338,7 +338,7 @@ class SupplierRepository:
             if hasattr(purchase_order, field) and value is not None:
                 setattr(purchase_order, field, value)
 
-        purchase_order.updated_at = datetime.utcnow()
+        setattr(purchase_order, 'updated_at', datetime.utcnow())
         self.db.commit()
         self.db.refresh(purchase_order)
         return purchase_order
@@ -351,19 +351,19 @@ class SupplierRepository:
         if not purchase_order:
             return None
 
-        purchase_order.status = status
-        purchase_order.updated_at = datetime.utcnow()
+        setattr(purchase_order, 'status', status)
+        setattr(purchase_order, 'updated_at', datetime.utcnow())
 
         # Set status-specific timestamps
         now = datetime.utcnow()
         if status == PurchaseOrderStatusEnum.SENT:
-            purchase_order.sent_at = now
+            setattr(purchase_order, 'sent_at', now)
         elif status == PurchaseOrderStatusEnum.CONFIRMED:
-            purchase_order.confirmed_at = now
+            setattr(purchase_order, 'confirmed_at', now)
         elif status == PurchaseOrderStatusEnum.RECEIVED:
-            purchase_order.received_at = now
+            setattr(purchase_order, 'received_at', now)
         elif status == PurchaseOrderStatusEnum.CANCELLED:
-            purchase_order.cancelled_at = now
+            setattr(purchase_order, 'cancelled_at', now)
 
         self.db.commit()
         self.db.refresh(purchase_order)

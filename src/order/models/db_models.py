@@ -44,12 +44,12 @@ class Order(Base):
     table_id = Column(UUID(as_uuid=True), nullable=True)
     business_day_id = Column(UUID(as_uuid=True), nullable=True)
     cashier_id = Column(UUID(as_uuid=True), nullable=True)
-    subtotal = Column(DECIMAL(10, 2), nullable=False)
-    tax = Column(DECIMAL(10, 2), default=0.0, nullable=False)
-    discount = Column(DECIMAL(10, 2), default=0.0, nullable=False)
-    service_fee = Column(DECIMAL(10, 2), default=0.0, nullable=False)
-    delivery_fee = Column(DECIMAL(10, 2), default=0.0, nullable=False)
-    total = Column(DECIMAL(10, 2), nullable=False)
+    subtotal: Column = Column(DECIMAL(10, 2), nullable=False)
+    tax: Column = Column(DECIMAL(10, 2), default=0.0, nullable=False)
+    discount: Column = Column(DECIMAL(10, 2), default=0.0, nullable=False)
+    service_fee: Column = Column(DECIMAL(10, 2), default=0.0, nullable=False)
+    delivery_fee: Column = Column(DECIMAL(10, 2), default=0.0, nullable=False)
+    total: Column = Column(DECIMAL(10, 2), nullable=False)
     payment_status = Column(
         String(20), default="pending", nullable=False
     )  # pending, paid, partial, refunded
@@ -90,9 +90,9 @@ class OrderItem(Base):
     )
     product_id = Column(UUID(as_uuid=True), nullable=False)
     product_name = Column(String(100), nullable=False)  # snapshot for consistency
-    quantity = Column(DECIMAL(10, 3), nullable=False)
-    unit_price = Column(DECIMAL(10, 2), nullable=False)
-    subtotal = Column(DECIMAL(10, 2), nullable=False)
+    quantity: Column = Column(DECIMAL(10, 3), nullable=False)
+    unit_price: Column = Column(DECIMAL(10, 2), nullable=False)
+    subtotal: Column = Column(DECIMAL(10, 2), nullable=False)
     status = Column(
         String(20), default="pending", nullable=False
     )  # pending, preparing, ready, delivered, cancelled
@@ -128,8 +128,8 @@ class OrderDiscount(Base):
         String(20), nullable=False
     )  # coupon, points, percentage, fixed
     discount_code = Column(String(50), nullable=True)
-    discount_amount = Column(DECIMAL(10, 2), nullable=False)
-    discount_percentage = Column(DECIMAL(5, 2), nullable=True)
+    discount_amount: Column = Column(DECIMAL(10, 2), nullable=False)
+    discount_percentage: Column = Column(DECIMAL(5, 2), nullable=True)
     description = Column(String(255), nullable=True)
     applied_by = Column(UUID(as_uuid=True), nullable=True)
     created_at = Column(
@@ -152,7 +152,7 @@ class OrderPayment(Base):
     payment_method = Column(
         String(20), nullable=False
     )  # cash, credit_card, debit_card, pix, voucher
-    amount = Column(DECIMAL(10, 2), nullable=False)
+    amount: Column = Column(DECIMAL(10, 2), nullable=False)
     status = Column(
         String(20), default="pending", nullable=False
     )  # pending, completed, failed, refunded

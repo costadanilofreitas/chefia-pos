@@ -2,6 +2,7 @@
 Repository for product operations.
 """
 
+from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 from uuid import UUID, uuid4
@@ -282,19 +283,19 @@ class ProductRepository:
         """Convert database product to Pydantic model."""
         return Product(
             id=str(db_product.product_id),
-            name=db_product.name,
-            description=db_product.description,
+            name=str(db_product.name),
+            description=str(db_product.description) if db_product.description else None,
             price=float(db_product.price),
             category_id=str(db_product.category_id) if db_product.category_id else None,
-            sku=db_product.sku,
-            barcode=db_product.barcode,
-            status=ProductStatus(db_product.status),
-            type=ProductType(db_product.type),
-            is_featured=db_product.is_featured,
-            weight_based=db_product.weight_based,
-            pricing_strategy=PricingStrategy(db_product.pricing_strategy),
-            created_at=db_product.created_at,
-            updated_at=db_product.updated_at,
+            sku=str(db_product.sku) if db_product.sku else None,
+            barcode=str(db_product.barcode) if db_product.barcode else None,
+            status=ProductStatus(str(db_product.status)),
+            type=ProductType(str(db_product.type)),
+            is_featured=bool(db_product.is_featured),
+            weight_based=bool(db_product.weight_based),
+            pricing_strategy=PricingStrategy(str(db_product.pricing_strategy)),
+            created_at=db_product.created_at if isinstance(db_product.created_at, datetime) else datetime.now(),
+            updated_at=db_product.updated_at if isinstance(db_product.updated_at, datetime) else datetime.now(),
             images=[],  # Will be populated separately if needed
             ingredients=[],  # Will be populated separately if needed
             combo_items=[],  # Will be populated separately if needed
@@ -304,22 +305,22 @@ class ProductRepository:
         """Convert database product to summary model."""
         return ProductSummary(
             id=str(db_product.product_id),
-            name=db_product.name,
+            name=str(db_product.name),
             price=float(db_product.price),
             category_id=str(db_product.category_id) if db_product.category_id else None,
-            status=ProductStatus(db_product.status),
-            type=ProductType(db_product.type),
-            is_featured=db_product.is_featured,
-            image_url=db_product.image_url,
+            status=ProductStatus(str(db_product.status)),
+            type=ProductType(str(db_product.type)),
+            is_featured=bool(db_product.is_featured),
+            image_url=str(db_product.image_url) if db_product.image_url else None,
         )
 
     def _db_category_to_model(self, db_category: DBProductCategory) -> ProductCategory:
         """Convert database category to Pydantic model."""
         return ProductCategory(
             id=str(db_category.category_id),
-            name=db_category.name,
-            description=db_category.description,
-            is_active=db_category.is_active,
-            created_at=db_category.created_at,
-            updated_at=db_category.updated_at,
+            name=str(db_category.name),
+            description=str(db_category.description) if db_category.description else None,
+            is_active=bool(db_category.is_active),
+            created_at=db_category.created_at if isinstance(db_category.created_at, datetime) else datetime.now(),
+            updated_at=db_category.updated_at if isinstance(db_category.updated_at, datetime) else datetime.now(),
         )

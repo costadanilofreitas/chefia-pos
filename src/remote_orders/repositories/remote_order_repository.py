@@ -185,7 +185,7 @@ class RemoteOrderRepository:
                 update_dict["status"] = update_data.status.value
 
             if update_data.internal_order_id:
-                update_dict["order_id"] = UUID(update_data.internal_order_id)
+                update_dict["order_id"] = str(UUID(update_data.internal_order_id))
 
             if update_data.notes is not None:
                 update_dict["notes"] = update_data.notes
@@ -201,7 +201,10 @@ class RemoteOrderRepository:
             await session.commit()
 
             # Retornar pedido atualizado
-            return await self.get_remote_order(order_id)
+            result = await self.get_remote_order(order_id)
+            if result is None:
+                raise ValueError(f"Order {order_id} not found after update")
+            return result
 
     async def delete_remote_order(self, order_id: str) -> bool:
         """Remove um pedido remoto."""
@@ -398,7 +401,10 @@ class RemoteOrderRepository:
                 session.add(db_config)
 
             await session.commit()
-            return await self.get_platform_config(config.platform)
+            result = await self.get_platform_config(config.platform)
+            if result is None:
+                raise ValueError(f"Platform config {config.platform} not found after save")
+            return result
 
     async def list_platform_configs(self) -> List[RemotePlatformConfig]:
         """Lista todas as configurações de plataformas."""
@@ -430,26 +436,26 @@ class RemoteOrderRepository:
 
         # Converter dados do cliente
         customer = RemoteOrderCustomer(
-            name=db_order.customer_name or "Cliente",
-            phone=db_order.customer_phone,
-            email=db_order.customer_email,
-            address=db_order.customer_address,
-            document=db_order.customer_document,
+            name=str(db_order.customer_name or "Cliente"),
+            phone=str(db_order.customer_phone) if db_order.customer_phone else None,
+            email=str(db_order.customer_email) if db_order.customer_email else None,
+            address=dict(db_order.customer_address) if db_order.customer_address else None,
+            document=str(db_order.customer_document) if db_order.customer_document else None,
         )
 
         # Converter dados de pagamento
         payment = RemoteOrderPayment(
-            method=db_order.payment_method or "ONLINE",
-            status=db_order.payment_status or "PAID",
+            method=str(db_order.payment_method or "ONLINE"),
+            status=str(db_order.payment_status or "PAID"),
             total=float(db_order.payment_total or db_order.total),
-            prepaid=db_order.payment_prepaid,
-            online=db_order.payment_online,
+            prepaid=bool(db_order.payment_prepaid),
+            online=bool(db_order.payment_online),
         )
 
         return RemoteOrder(
             id=str(db_order.remote_order_id),
             platform=RemotePlatform(db_order.provider),
-            external_order_id=db_order.provider_order_id,
+            external_order_id=str(db_order.provider_order_id),
             internal_order_id=str(db_order.order_id) if db_order.order_id else None,
             status=RemoteOrderStatus(db_order.status),
             items=items,
@@ -460,11 +466,11 @@ class RemoteOrderRepository:
             service_fee=float(db_order.service_fee or 0),
             discount=float(db_order.discount or 0),
             total=float(db_order.total),
-            notes=db_order.notes,
-            scheduled_for=db_order.scheduled_for,
-            raw_data=db_order.raw_data or {},
-            created_at=db_order.created_at,
-            updated_at=db_order.updated_at,
+            notes=str(db_order.notes) if db_order.notes else None,
+            scheduled_for=db_order.scheduled_for if isinstance(db_order.scheduled_for, datetime) else None,
+            raw_data=dict(db_order.raw_data) if db_order.raw_data else {},
+            created_at=db_order.created_at if isinstance(db_order.created_at, datetime) else datetime.now(),
+            updated_at=db_order.updated_at if isinstance(db_order.updated_at, datetime) else datetime.now(),
         )
 
     async def _db_config_to_model(
@@ -473,12 +479,12 @@ class RemoteOrderRepository:
         """Converte configuração de banco para modelo Pydantic."""
         return RemotePlatformConfig(
             platform=RemotePlatform(db_config.platform),
-            enabled=db_config.enabled,
-            api_key=db_config.api_key,
-            api_secret=db_config.api_secret,
-            webhook_url=db_config.webhook_url,
-            auto_accept=db_config.auto_accept,
-            default_preparation_time=db_config.default_preparation_time,
-            notification_email=db_config.notification_email,
-            notification_phone=db_config.notification_phone,
+            enabled=bool(db_config.enabled),
+            api_key=str(db_config.api_key),
+            api_secret=str(db_config.api_secret),
+            webhook_url=str(db_config.webhook_url),
+            auto_accept=bool(db_config.auto_accept),
+            default_preparation_time=int(db_config.default_preparation_time),
+            notification_email=str(db_config.notification_email) if db_config.notification_email else None,
+            notification_phone=str(db_config.notification_phone) if db_config.notification_phone else None,
         )

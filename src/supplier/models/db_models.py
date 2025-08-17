@@ -2,6 +2,8 @@
 
 import enum
 
+from typing import Any
+
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -15,11 +17,12 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.sql import func
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class PurchaseOrderStatusEnum(str, enum.Enum):
@@ -118,7 +121,7 @@ class PurchaseOrderDB(Base):
     )
     supplier_name = Column(String(255), nullable=False)
     order_number = Column(String(100), nullable=False, unique=True, index=True)
-    status = Column(
+    status: Column = Column(
         Enum(PurchaseOrderStatusEnum),
         nullable=False,
         default=PurchaseOrderStatusEnum.DRAFT,

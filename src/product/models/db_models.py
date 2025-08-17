@@ -64,8 +64,8 @@ class Product(Base):
     barcode = Column(String(50), nullable=True)
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
-    price = Column(DECIMAL(10, 2), nullable=False)
-    cost = Column(DECIMAL(10, 2), nullable=True)
+    price: Column = Column(DECIMAL(10, 2), nullable=False)
+    cost: Column = Column(DECIMAL(10, 2), nullable=True)
     category_id = Column(
         UUID(as_uuid=True),
         ForeignKey("pos_modern.product_categories.category_id"),
@@ -129,9 +129,9 @@ class Ingredient(Base):
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
     unit = Column(String(20), default="unit", nullable=False)
-    cost_per_unit = Column(DECIMAL(10, 4), default=0.0, nullable=False)
-    current_stock = Column(DECIMAL(10, 3), default=0.0, nullable=False)
-    minimum_stock = Column(DECIMAL(10, 3), default=0.0, nullable=False)
+    cost_per_unit: Column = Column(DECIMAL(10, 4), default=0.0, nullable=False)
+    current_stock: Column = Column(DECIMAL(10, 3), default=0.0, nullable=False)
+    minimum_stock: Column = Column(DECIMAL(10, 3), default=0.0, nullable=False)
     supplier = Column(String(100), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(
@@ -162,7 +162,7 @@ class ProductIngredient(Base):
         ForeignKey("pos_modern.ingredients.ingredient_id"),
         nullable=False,
     )
-    quantity = Column(DECIMAL(10, 3), nullable=False)
+    quantity: Column = Column(DECIMAL(10, 3), nullable=False)
     is_optional = Column(Boolean, default=False, nullable=False)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -186,7 +186,7 @@ class ComboItem(Base):
     )
     quantity = Column(Integer, default=1, nullable=False)
     is_optional = Column(Boolean, default=False, nullable=False)
-    price_adjustment = Column(DECIMAL(10, 2), default=0.0, nullable=False)
+    price_adjustment: Column = Column(DECIMAL(10, 2), default=0.0, nullable=False)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -233,7 +233,7 @@ class Option(Base):
         nullable=False,
     )
     name = Column(String(100), nullable=False)
-    price_adjustment = Column(DECIMAL(10, 2), default=0.0, nullable=False)
+    price_adjustment: Column = Column(DECIMAL(10, 2), default=0.0, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

@@ -24,13 +24,17 @@
       "Bash(rm:*)",
       "Bash(make:*)",
       "Bash(taskkill:*)",
-      "Bash(uvicorn:*)"
+      "Bash(uvicorn:*)",
+      "Bash(touch:*)",
+      "Bash(awk:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": [],
     "defaultMode": "acceptEdits",
     "additionalDirectories": [
-      "C:\\c\\Users\\Consultor\\Documents\\projetos\\chefia-pos"
+      "C:\\c\\Users\\Consultor\\Documents\\projetos\\chefia-pos",
+      "C:\\c\\Users\\Consultor\\Documents\\projetos"
     ]
   }
 }

@@ -10,14 +10,15 @@ logger = logging.getLogger(__name__)
 class AuthEventHandler(EventHandler):
     """Handler para eventos de autenticação."""
 
-    async def handle(self, event: Event) -> None:
+    async def handle(self, event: Event) -> bool:
         """Processa eventos de autenticação."""
-        if event.type == EventType.USER_LOGGED_IN:
+        if event.event_type == EventType.USER_LOGGED_IN:
             await self._handle_user_logged_in(event)
-        elif event.type == EventType.USER_LOGGED_OUT:
+        elif event.event_type == EventType.USER_LOGGED_OUT:
             await self._handle_user_logged_out(event)
-        elif event.type == EventType.USER_PERMISSION_CHANGED:
+        elif event.event_type == EventType.USER_PERMISSION_CHANGED:
             await self._handle_user_permission_changed(event)
+        return True
 
     async def _handle_user_logged_in(self, event: Event) -> None:
         """Processa evento de login de usuário."""
@@ -56,16 +57,17 @@ class AuthEventHandler(EventHandler):
 class SystemEventHandler(EventHandler):
     """Handler para eventos de sistema."""
 
-    async def handle(self, event: Event) -> None:
+    async def handle(self, event: Event) -> bool:
         """Processa eventos de sistema."""
-        if event.type == EventType.SYSTEM_STARTED:
+        if event.event_type == EventType.SYSTEM_STARTED:
             await self._handle_system_started(event)
-        elif event.type == EventType.SYSTEM_STOPPED:
+        elif event.event_type == EventType.SYSTEM_STOPPED:
             await self._handle_system_stopped(event)
-        elif event.type == EventType.SYSTEM_ERROR:
+        elif event.event_type == EventType.SYSTEM_ERROR:
             await self._handle_system_error(event)
-        elif event.type == EventType.SYSTEM_CONFIG_CHANGED:
+        elif event.event_type == EventType.SYSTEM_CONFIG_CHANGED:
             await self._handle_system_config_changed(event)
+        return True
 
     async def _handle_system_started(self, event: Event) -> None:
         """Processa evento de início do sistema."""

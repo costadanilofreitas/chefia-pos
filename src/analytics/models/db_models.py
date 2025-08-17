@@ -179,8 +179,8 @@ class ChartConfigurationDB(Base):
     description = Column(Text, nullable=True)
 
     # Chart configuration
-    chart_type = Column(SqlEnum(ChartTypeEnum), nullable=False, index=True)
-    data_source = Column(SqlEnum(DataSourceTypeEnum), nullable=False, index=True)
+    chart_type: Column = Column(SqlEnum(ChartTypeEnum), nullable=False, index=True)
+    data_source: Column = Column(SqlEnum(DataSourceTypeEnum), nullable=False, index=True)
 
     # Chart structure (stored as JSON)
     series = Column(JSON, nullable=False)  # Chart series configuration
@@ -230,7 +230,7 @@ class DashboardAlertDB(Base):
 
     # Alert conditions
     metric = Column(String, nullable=False, index=True)  # Field being monitored
-    condition = Column(SqlEnum(FilterOperatorEnum), nullable=False)
+    condition: Column = Column(SqlEnum(FilterOperatorEnum), nullable=False)
     threshold = Column(Float, nullable=False)  # Threshold value
 
     # Alert frequency
@@ -359,7 +359,7 @@ class DataSourceConfigDB(Base):
     # Data source identification
     name = Column(String, nullable=False, index=True)
     description = Column(Text, nullable=True)
-    data_source_type = Column(SqlEnum(DataSourceTypeEnum), nullable=False, index=True)
+    data_source_type: Column = Column(SqlEnum(DataSourceTypeEnum), nullable=False, index=True)
 
     # Connection configuration
     connection_string = Column(String, nullable=True)

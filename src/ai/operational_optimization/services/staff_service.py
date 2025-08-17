@@ -205,7 +205,7 @@ class StaffOptimizationService:
             )
 
             # Organizar recomendações por período e função
-            optimized_schedule = {
+            optimized_schedule: Dict[str, Any] = {
                 "restaurant_id": restaurant_id,
                 "date": date.strftime("%Y-%m-%d"),
                 "schedule": {},

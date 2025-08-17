@@ -83,8 +83,8 @@ class EmployeeDB(Base):
     address = Column(Text, nullable=True)
 
     # Employment details
-    role = Column(SqlEnum(EmployeeRoleEnum), nullable=False, index=True)
-    employment_type = Column(
+    role: Column = Column(SqlEnum(EmployeeRoleEnum), nullable=False, index=True)
+    employment_type: Column = Column(
         SqlEnum(EmploymentTypeEnum),
         nullable=False,
         default=EmploymentTypeEnum.FULL_TIME,
@@ -95,7 +95,7 @@ class EmployeeDB(Base):
 
     # Salary information
     base_salary = Column(Float, nullable=False, default=0.0)
-    payment_frequency = Column(
+    payment_frequency: Column = Column(
         SqlEnum(PaymentFrequencyEnum),
         nullable=False,
         default=PaymentFrequencyEnum.MONTHLY,
@@ -146,7 +146,7 @@ class SalaryComponentDB(Base):
     # Component details
     name = Column(String, nullable=False)
     description = Column(Text)
-    type = Column(
+    type: Column = Column(
         SqlEnum(SalaryComponentTypeEnum), nullable=False
     )  # earning or deduction
     amount = Column(Float, nullable=False)
@@ -188,7 +188,7 @@ class DeliveryAssignmentDB(Base):
     distance_km = Column(Float, nullable=True)
 
     # Status and timing
-    status = Column(
+    status: Column = Column(
         SqlEnum(DeliveryAssignmentStatusEnum),
         nullable=False,
         default=DeliveryAssignmentStatusEnum.ASSIGNED,

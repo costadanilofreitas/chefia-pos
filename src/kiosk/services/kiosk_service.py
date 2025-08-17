@@ -7,6 +7,15 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from src.core.events.event_bus import Event, EventType, get_event_bus
+from ..events.kiosk_events import (
+    create_kiosk_event,
+    KIOSK_CONFIG_CREATED,
+    KIOSK_CONFIG_UPDATED,
+    KIOSK_CONFIG_DELETED,
+    KIOSK_SESSION_STARTED,
+    KIOSK_SESSION_ENDED,
+    KIOSK_ORDER_CREATED,
+)
 
 from ..models.kiosk_models import KioskAnalytics, KioskConfig, KioskOrder, KioskSession
 
@@ -56,7 +65,7 @@ class KioskService:
 
         event_bus = get_event_bus()
         await event_bus.publish(
-            Event(event_type=EventType.KIOSK_CONFIG_CREATED, data=config_dict)
+            create_kiosk_event(KIOSK_CONFIG_CREATED, config_dict)
         )
 
         return config_data
@@ -99,7 +108,7 @@ class KioskService:
 
         event_bus = get_event_bus()
         await event_bus.publish(
-            Event(event_type=EventType.KIOSK_CONFIG_UPDATED, data=updated_config.dict())
+            create_kiosk_event(KIOSK_CONFIG_UPDATED, updated_config.dict())
         )
 
         return updated_config
@@ -118,9 +127,7 @@ class KioskService:
 
         event_bus = get_event_bus()
         await event_bus.publish(
-            Event(
-                event_type=EventType.KIOSK_CONFIG_DELETED, data={"kiosk_id": kiosk_id}
-            )
+            create_kiosk_event(KIOSK_CONFIG_DELETED, {"kiosk_id": kiosk_id})
         )
 
         return True
@@ -146,7 +153,7 @@ class KioskService:
 
         event_bus = get_event_bus()
         await event_bus.publish(
-            Event(event_type=EventType.KIOSK_SESSION_STARTED, data=session_dict)
+            create_kiosk_event(KIOSK_SESSION_STARTED, session_dict)
         )
 
         return session
@@ -193,7 +200,7 @@ class KioskService:
 
         event_bus = get_event_bus()
         await event_bus.publish(
-            Event(event_type=EventType.KIOSK_SESSION_ENDED, data=ended_session.dict())
+            create_kiosk_event(KIOSK_SESSION_ENDED, ended_session.dict())
         )
 
         return ended_session
@@ -219,7 +226,7 @@ class KioskService:
             # Create new analytics entry
             analytics = KioskAnalytics(
                 kiosk_id=session.kiosk_id,
-                date=datetime.utcnow().date(),
+                date=datetime.utcnow(),
                 total_sessions=1,
                 completed_orders=1 if session.session_completed else 0,
                 abandoned_sessions=0 if session.session_completed else 1,
@@ -307,10 +314,9 @@ class KioskService:
 
         # Convert kiosk order to regular order format
         from src.order.services.order_service import order_service
-        from src.product.models.product import (
+        from src.core.models.core_models import (
             OrderCreate,
             OrderItemCreate,
-            OrderItemCustomization,
             OrderType,
         )
 
@@ -318,9 +324,10 @@ class KioskService:
         order_items = []
         for item in order_data.items:
             customizations = [
-                OrderItemCustomization(
-                    name=c["name"], price_adjustment=c["price_adjustment"]
-                )
+                {
+                    "name": c["name"], 
+                    "price_adjustment": c["price_adjustment"]
+                }
                 for c in item.customizations
             ]
 
@@ -328,17 +335,17 @@ class KioskService:
                 product_id=item.product_id,
                 quantity=item.quantity,
                 customizations=customizations,
-                notes=item.notes,
+                notes=item.notes or "",
             )
             order_items.append(order_item)
 
         # Create order
         order_create = OrderCreate(
-            customer_id=None,  # Anonymous order from kiosk
+            customer_id="",  # Anonymous order from kiosk
             customer_name="Cliente Kiosk",
             cashier_id=None,
             table_number=None,
-            order_type=OrderType.TAKEOUT,  # Default to takeout for kiosk orders
+            order_type=OrderType.TAKEAWAY,  # Default to takeaway for kiosk orders
             notes=f"Pedido do Kiosk {session['kiosk_id']}",
             items=order_items,
         )

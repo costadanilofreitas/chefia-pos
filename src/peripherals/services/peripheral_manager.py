@@ -97,7 +97,7 @@ class PeripheralFactory:
             return None
 
     @classmethod
-    def get_available_drivers(cls, peripheral_type: str = None) -> Dict[str, List[str]]:
+    def get_available_drivers(cls, peripheral_type: Optional[str] = None) -> Dict[str, List[str]]:
         """
         Retorna os drivers disponíveis para cada tipo de periférico.
 

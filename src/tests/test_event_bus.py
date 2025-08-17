@@ -11,9 +11,10 @@ class TestEventHandler(EventHandler):
         self.events = []
         self.event_types_received = set()
 
-    async def handle(self, event: Event) -> None:
+    async def handle(self, event: Event) -> bool:
         self.events.append(event)
-        self.event_types_received.add(event.type)
+        self.event_types_received.add(event.event_type)
+        return True
 
     def clear(self):
         self.events.clear()

@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from src.core.events.event_bus import Event, EventBus
+from src.core.events.event_bus import Event, EventBus, EventType
 
 
 class InventoryEventType(str, Enum):
@@ -26,49 +26,41 @@ class InventoryEventType(str, Enum):
     LOW_STOCK_ALERT = "low_stock_alert"
 
 
-class InventoryEvent(Event):
-    """Base class for inventory events."""
-
-    def __init__(
-        self,
-        event_type: InventoryEventType,
-        data: Dict[str, Any],
-        timestamp: Optional[datetime] = None,
-    ):
-        super().__init__(
-            source="inventory",
-            event_type=event_type,
-            data=data,
-            timestamp=timestamp or datetime.utcnow(),
-        )
-
-
 class InventoryEventPublisher:
     """Publisher for inventory events."""
 
     def __init__(self, event_bus: EventBus):
         self.event_bus = event_bus
 
+    def _create_event(self, event_subtype: str, data: Dict[str, Any]) -> Event:
+        """Helper to create inventory events."""
+        return Event(
+            event_type=EventType.SYSTEM_CONFIG_CHANGED,  # Using generic event type
+            data=data,
+            metadata={"source": "inventory", "event_subtype": event_subtype},
+        )
+
     async def publish_item_created(self, item_id: uuid.UUID, item_data: Dict[str, Any]):
         """Publishes an item created event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.ITEM_CREATED,
-            data={"item_id": str(item_id), "item": item_data},
+        event = self._create_event(
+            InventoryEventType.ITEM_CREATED,
+            {"item_id": str(item_id), "item": item_data, "action": "item_created"},
         )
         await self.event_bus.publish(event)
 
     async def publish_item_updated(self, item_id: uuid.UUID, item_data: Dict[str, Any]):
         """Publishes an item updated event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.ITEM_UPDATED,
-            data={"item_id": str(item_id), "item": item_data},
+        event = self._create_event(
+            InventoryEventType.ITEM_UPDATED,
+            {"item_id": str(item_id), "item": item_data, "action": "item_updated"},
         )
         await self.event_bus.publish(event)
 
     async def publish_item_deleted(self, item_id: uuid.UUID):
         """Publishes an item deleted event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.ITEM_DELETED, data={"item_id": str(item_id)}
+        event = self._create_event(
+            InventoryEventType.ITEM_DELETED,
+            {"item_id": str(item_id), "action": "item_deleted"},
         )
         await self.event_bus.publish(event)
 
@@ -80,9 +72,9 @@ class InventoryEventPublisher:
         transaction_id: Optional[uuid.UUID] = None,
     ):
         """Publishes a stock updated event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.STOCK_UPDATED,
-            data={
+        event = self._create_event(
+            InventoryEventType.STOCK_UPDATED,
+            {
                 "item_id": str(item_id),
                 "previous_stock": previous_stock,
                 "new_stock": new_stock,
@@ -95,9 +87,9 @@ class InventoryEventPublisher:
         self, transaction_id: uuid.UUID, transaction_data: Dict[str, Any]
     ):
         """Publishes a transaction created event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.TRANSACTION_CREATED,
-            data={
+        event = self._create_event(
+            InventoryEventType.TRANSACTION_CREATED,
+            {
                 "transaction_id": str(transaction_id),
                 "transaction": transaction_data,
             },
@@ -108,9 +100,9 @@ class InventoryEventPublisher:
         self, transaction_id: uuid.UUID, transaction_data: Dict[str, Any]
     ):
         """Publishes a transaction approved event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.TRANSACTION_APPROVED,
-            data={
+        event = self._create_event(
+            InventoryEventType.TRANSACTION_APPROVED,
+            {
                 "transaction_id": str(transaction_id),
                 "transaction": transaction_data,
             },
@@ -121,9 +113,9 @@ class InventoryEventPublisher:
         self, transaction_id: uuid.UUID, transaction_data: Dict[str, Any]
     ):
         """Publishes a transaction rejected event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.TRANSACTION_REJECTED,
-            data={
+        event = self._create_event(
+            InventoryEventType.TRANSACTION_REJECTED,
+            {
                 "transaction_id": str(transaction_id),
                 "transaction": transaction_data,
             },
@@ -134,9 +126,9 @@ class InventoryEventPublisher:
         self, loss_id: uuid.UUID, loss_data: Dict[str, Any]
     ):
         """Publishes a loss reported event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.LOSS_REPORTED,
-            data={"loss_id": str(loss_id), "loss": loss_data},
+        event = self._create_event(
+            InventoryEventType.LOSS_REPORTED,
+            {"loss_id": str(loss_id), "loss": loss_data},
         )
         await self.event_bus.publish(event)
 
@@ -144,9 +136,9 @@ class InventoryEventPublisher:
         self, loss_id: uuid.UUID, loss_data: Dict[str, Any]
     ):
         """Publishes a loss approved event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.LOSS_APPROVED,
-            data={"loss_id": str(loss_id), "loss": loss_data},
+        event = self._create_event(
+            InventoryEventType.LOSS_APPROVED,
+            {"loss_id": str(loss_id), "loss": loss_data},
         )
         await self.event_bus.publish(event)
 
@@ -154,9 +146,9 @@ class InventoryEventPublisher:
         self, loss_id: uuid.UUID, loss_data: Dict[str, Any]
     ):
         """Publishes a loss rejected event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.LOSS_REJECTED,
-            data={"loss_id": str(loss_id), "loss": loss_data},
+        event = self._create_event(
+            InventoryEventType.LOSS_REJECTED,
+            {"loss_id": str(loss_id), "loss": loss_data},
         )
         await self.event_bus.publish(event)
 
@@ -164,9 +156,9 @@ class InventoryEventPublisher:
         self, count_id: uuid.UUID, count_data: Dict[str, Any]
     ):
         """Publishes a count created event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.COUNT_CREATED,
-            data={"count_id": str(count_id), "count": count_data},
+        event = self._create_event(
+            InventoryEventType.COUNT_CREATED,
+            {"count_id": str(count_id), "count": count_data},
         )
         await self.event_bus.publish(event)
 
@@ -174,9 +166,9 @@ class InventoryEventPublisher:
         self, count_id: uuid.UUID, count_data: Dict[str, Any]
     ):
         """Publishes a count submitted event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.COUNT_SUBMITTED,
-            data={"count_id": str(count_id), "count": count_data},
+        event = self._create_event(
+            InventoryEventType.COUNT_SUBMITTED,
+            {"count_id": str(count_id), "count": count_data},
         )
         await self.event_bus.publish(event)
 
@@ -184,9 +176,9 @@ class InventoryEventPublisher:
         self, count_id: uuid.UUID, count_data: Dict[str, Any]
     ):
         """Publishes a count approved event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.COUNT_APPROVED,
-            data={"count_id": str(count_id), "count": count_data},
+        event = self._create_event(
+            InventoryEventType.COUNT_APPROVED,
+            {"count_id": str(count_id), "count": count_data},
         )
         await self.event_bus.publish(event)
 
@@ -194,9 +186,9 @@ class InventoryEventPublisher:
         self, count_id: uuid.UUID, count_data: Dict[str, Any]
     ):
         """Publishes a count rejected event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.COUNT_REJECTED,
-            data={"count_id": str(count_id), "count": count_data},
+        event = self._create_event(
+            InventoryEventType.COUNT_REJECTED,
+            {"count_id": str(count_id), "count": count_data},
         )
         await self.event_bus.publish(event)
 
@@ -204,9 +196,9 @@ class InventoryEventPublisher:
         self, item_id: uuid.UUID, current_stock: float, reorder_point: float
     ):
         """Publishes a low stock alert event."""
-        event = InventoryEvent(
-            event_type=InventoryEventType.LOW_STOCK_ALERT,
-            data={
+        event = self._create_event(
+            InventoryEventType.LOW_STOCK_ALERT,
+            {
                 "item_id": str(item_id),
                 "current_stock": current_stock,
                 "reorder_point": reorder_point,

@@ -2,8 +2,8 @@ import traceback
 from typing import Any, Dict
 
 try:
-    from escpos.exceptions import Error as ESCPOSError
-    from escpos.printer import Network, Serial, Usb
+    from escpos.exceptions import Error as ESCPOSError  # type: ignore
+    from escpos.printer import Network, Serial, Usb  # type: ignore
 
     ESCPOS_AVAILABLE = True
 except ImportError:

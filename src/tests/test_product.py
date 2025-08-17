@@ -7,7 +7,6 @@ from fastapi.testclient import TestClient
 
 from src.api.main import app
 from src.product.models.product import (
-    CategoryType,
     Product,
     ProductCategory,
     ProductStatus,

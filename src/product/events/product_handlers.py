@@ -90,14 +90,18 @@ class ProductEventHandlers:
                 return
 
             # Atualizar status com base no estoque
+            from ..models.product import ProductStatus, ProductUpdate
+            
             if quantity <= 0 and product.status != "out_of_stock":
+                update_data = ProductUpdate(status=ProductStatus.OUT_OF_STOCK)
                 await product_service.update_product(
-                    product_id=product_id, update_data={"status": "out_of_stock"}
+                    product_id=product_id, update_data=update_data
                 )
                 logger.info(f"Produto {product_id} marcado como fora de estoque")
             elif quantity > 0 and product.status == "out_of_stock":
+                update_data = ProductUpdate(status=ProductStatus.ACTIVE)
                 await product_service.update_product(
-                    product_id=product_id, update_data={"status": "active"}
+                    product_id=product_id, update_data=update_data
                 )
                 logger.info(f"Produto {product_id} reativado")
         except Exception as e:

@@ -6,9 +6,9 @@ from src.delivery.services.delivery_service import delivery_service
 class OrderCreatedHandler(EventHandler):
     """Handler para eventos de criação de pedido."""
 
-    async def handle(self, event: Event) -> None:
+    async def handle(self, event: Event) -> bool:
         """Processa evento de criação de pedido."""
-        if event.type == EventType.ORDER_CREATED:
+        if event.event_type == EventType.ORDER_CREATED:
             # Verificar se o pedido é para delivery
             order_data = event.data.get("order", {})
             if order_data.get("delivery", False):
@@ -28,14 +28,15 @@ class OrderCreatedHandler(EventHandler):
                     )
                 except Exception as e:
                     print(f"Erro ao criar pedido de delivery: {str(e)}")
+        return True
 
 
 class OrderStatusChangedHandler(EventHandler):
     """Handler para eventos de mudança de status de pedido."""
 
-    async def handle(self, event: Event) -> None:
+    async def handle(self, event: Event) -> bool:
         """Processa evento de mudança de status de pedido."""
-        if event.type == EventType.ORDER_STATUS_CHANGED:
+        if event.event_type == EventType.ORDER_STATUS_CHANGED:
             order_id = event.data.get("order_id")
             new_status = event.data.get("new_status")
 
@@ -61,15 +62,16 @@ class OrderStatusChangedHandler(EventHandler):
                             )
                 except Exception as e:
                     print(f"Erro ao atualizar status do pedido de delivery: {str(e)}")
+        return True
 
 
 class DeliveryOrderStatusChangedHandler(EventHandler):
     """Handler para eventos de mudança de status de pedido de delivery."""
 
-    async def handle(self, event: Event) -> None:
+    async def handle(self, event: Event) -> bool:
         """Processa evento de mudança de status de pedido de delivery."""
         if (
-            event.type == EventType.ORDER_STATUS_CHANGED
+            event.event_type == EventType.ORDER_STATUS_CHANGED
             and event.data.get("source") == "delivery_service"
         ):
             delivery_order_id = event.data.get("delivery_order_id")
@@ -81,13 +83,17 @@ class DeliveryOrderStatusChangedHandler(EventHandler):
             # Por exemplo, se o pedido foi entregue, notificar o módulo de contas
             # para registrar o pagamento (se foi pago na entrega)
             if new_status == DeliveryOrderStatus.DELIVERED.value:
-                delivery_order = await delivery_service.get_delivery_order(
-                    delivery_order_id
-                )
+                if delivery_order_id:
+                    delivery_order = await delivery_service.get_delivery_order(
+                        delivery_order_id
+                    )
+                else:
+                    delivery_order = None
                 if delivery_order and delivery_order.payment_on_delivery:
                     # Aqui seria chamado o serviço de contas para registrar o pagamento
                     # accounts_service.register_payment(...)
                     pass
+        return True
 
 
 # Função para registrar os handlers no barramento de eventos

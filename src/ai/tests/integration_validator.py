@@ -57,14 +57,14 @@ class IntegrationValidator:
         """
         logger.info(f"Validating forecast integration for restaurant {restaurant_id}")
 
-        results = {"success": True, "tests": [], "errors": []}
+        results: Dict[str, Any] = {"success": True, "tests": [], "errors": []}
 
         try:
             # Teste 1: Obter previsão de demanda
             start_date = datetime.now()
             end_date = start_date + timedelta(days=7)
 
-            test_result = {"name": "Obter previsão de demanda", "status": "running"}
+            test_result: Dict[str, Any] = {"name": "Obter previsão de demanda", "status": "running"}
 
             try:
                 forecast = await self.forecast_integration.get_demand_forecast(
@@ -93,7 +93,7 @@ class IntegrationValidator:
             results["tests"].append(test_result)
 
             # Teste 2: Gerar recomendações de escala com base na previsão
-            test_result = {"name": "Gerar recomendações de escala", "status": "running"}
+            test_result_staff: Dict[str, Any] = {"name": "Gerar recomendações de escala", "status": "running"}
 
             try:
                 staff_recommendations = await self.optimization_service.staff_service.generate_staff_recommendations(
@@ -102,8 +102,8 @@ class IntegrationValidator:
                     end_date=end_date,
                 )
 
-                test_result["status"] = "success"
-                test_result["details"] = {
+                test_result_staff["status"] = "success"
+                test_result_staff["details"] = {
                     "recommendations_count": len(staff_recommendations),
                     "first_recommendation": (
                         staff_recommendations[0].dict()
@@ -112,17 +112,17 @@ class IntegrationValidator:
                     ),
                 }
             except Exception as e:
-                test_result["status"] = "failed"
-                test_result["error"] = str(e)
+                test_result_staff["status"] = "failed"
+                test_result_staff["error"] = str(e)
                 results["success"] = False
                 results["errors"].append(
                     {"test": "Gerar recomendações de escala", "error": str(e)}
                 )
 
-            results["tests"].append(test_result)
+            results["tests"].append(test_result_staff)
 
             # Teste 3: Gerar todas as recomendações de otimização
-            test_result = {"name": "Gerar todas as recomendações", "status": "running"}
+            test_result3: Dict[str, Any] = {"name": "Gerar todas as recomendações", "status": "running"}
 
             try:
                 all_recommendations = (
@@ -176,14 +176,14 @@ class IntegrationValidator:
             f"Validating external data integration for restaurant {restaurant_id}"
         )
 
-        results = {"success": True, "tests": [], "errors": []}
+        results: Dict[str, Any] = {"success": True, "tests": [], "errors": []}
 
         try:
             # Localização simulada para o restaurante
             location = {"latitude": -23.5505, "longitude": -46.6333}
 
             # Teste 1: Obter dados climáticos
-            test_result = {"name": "Obter dados climáticos", "status": "running"}
+            test_result: Dict[str, Any] = {"name": "Obter dados climáticos", "status": "running"}
 
             try:
                 weather_data = await self.external_data_service.get_weather_forecast(
@@ -208,7 +208,7 @@ class IntegrationValidator:
             results["tests"].append(test_result)
 
             # Teste 2: Obter dados de eventos
-            test_result = {"name": "Obter dados de eventos", "status": "running"}
+            test_result2: Dict[str, Any] = {"name": "Obter dados de eventos", "status": "running"}
 
             try:
                 start_date = datetime.now()
@@ -222,46 +222,46 @@ class IntegrationValidator:
                     end_date=end_date,
                 )
 
-                test_result["status"] = "success"
-                test_result["details"] = {
+                test_result2["status"] = "success"
+                test_result2["details"] = {
                     "events_count": len(events_data),
                     "first_event": events_data[0] if events_data else None,
                 }
             except Exception as e:
-                test_result["status"] = "failed"
-                test_result["error"] = str(e)
+                test_result2["status"] = "failed"
+                test_result2["error"] = str(e)
                 results["success"] = False
                 results["errors"].append(
                     {"test": "Obter dados de eventos", "error": str(e)}
                 )
 
-            results["tests"].append(test_result)
+            results["tests"].append(test_result2)
 
             # Teste 3: Obter dados de feriados
-            test_result = {"name": "Obter dados de feriados", "status": "running"}
+            test_result3: Dict[str, Any] = {"name": "Obter dados de feriados", "status": "running"}
 
             try:
                 holidays_data = await self.external_data_service.get_holidays(
                     country="BR", year=datetime.now().year, region="SP"
                 )
 
-                test_result["status"] = "success"
-                test_result["details"] = {
+                test_result3["status"] = "success"
+                test_result3["details"] = {
                     "holidays_count": len(holidays_data),
                     "first_holiday": holidays_data[0] if holidays_data else None,
                 }
             except Exception as e:
-                test_result["status"] = "failed"
-                test_result["error"] = str(e)
+                test_result3["status"] = "failed"
+                test_result3["error"] = str(e)
                 results["success"] = False
                 results["errors"].append(
                     {"test": "Obter dados de feriados", "error": str(e)}
                 )
 
-            results["tests"].append(test_result)
+            results["tests"].append(test_result3)
 
             # Teste 4: Enriquecer previsão com dados externos
-            test_result = {
+            test_result4: Dict[str, Any] = {
                 "name": "Enriquecer previsão com dados externos",
                 "status": "running",
             }
@@ -286,8 +286,8 @@ class IntegrationValidator:
                     )
                 )
 
-                test_result["status"] = "success"
-                test_result["details"] = {
+                test_result4["status"] = "success"
+                test_result4["details"] = {
                     "forecast_id": enriched_forecast.request_id,
                     "metadata": (
                         enriched_forecast.metadata
@@ -296,14 +296,14 @@ class IntegrationValidator:
                     ),
                 }
             except Exception as e:
-                test_result["status"] = "failed"
-                test_result["error"] = str(e)
+                test_result4["status"] = "failed"
+                test_result4["error"] = str(e)
                 results["success"] = False
                 results["errors"].append(
                     {"test": "Enriquecer previsão com dados externos", "error": str(e)}
                 )
 
-            results["tests"].append(test_result)
+            results["tests"].append(test_result4)
 
             return results
 
@@ -327,14 +327,14 @@ class IntegrationValidator:
         """
         logger.info(f"Validating end-to-end flow for restaurant {restaurant_id}")
 
-        results = {"success": True, "tests": [], "errors": []}
+        results: Dict[str, Any] = {"success": True, "tests": [], "errors": []}
 
         try:
             # Localização simulada para o restaurante
             location = {"latitude": -23.5505, "longitude": -46.6333}
 
             # Teste 1: Fluxo completo de previsão e otimização
-            test_result = {
+            test_result: Dict[str, Any] = {
                 "name": "Fluxo completo de previsão e otimização",
                 "status": "running",
             }
@@ -430,7 +430,7 @@ class IntegrationValidator:
         """
         logger.info(f"Running all validations for restaurant {restaurant_id}")
 
-        results = {
+        results: Dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
             "restaurant_id": restaurant_id,
             "validations": {},
