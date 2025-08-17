@@ -37,6 +37,9 @@ class TestTerminalService(unittest.TestCase):
                 memory="2GB",
                 storage="16GB",
             ),
+            sync_interval=5,
+            offline_mode_enabled=True,
+            max_offline_orders=50,
             api_key="test-api-key",
             api_secret="test-api-secret",
             merchant_id="test-merchant",
@@ -199,6 +202,10 @@ class TestTerminalService(unittest.TestCase):
                 },
             ],
             total=17.00,
+            synced=False,
+            synced_at=None,
+            server_order_id=None,
+            metadata={},
         )
 
         result = loop.run_until_complete(
@@ -245,6 +252,10 @@ class TestTerminalService(unittest.TestCase):
                 },
             ],
             total=17.00,
+            synced=False,
+            synced_at=None,
+            server_order_id=None,
+            metadata={},
         )
         loop.run_until_complete(self.terminal_service.create_offline_order(order))
 
