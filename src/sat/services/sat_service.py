@@ -96,7 +96,8 @@ class SATService:
         try:
             os.makedirs(os.path.dirname(config_path), exist_ok=True)
             with open(config_path, "w") as f:
-                json.dump(self.config.dict(), f, indent=2)
+                if self.config:
+                    json.dump(self.config.dict(), f, indent=2)
         except Exception as e:
             logging.error(f"Erro ao salvar configuração do SAT: {str(e)}")
 
@@ -192,7 +193,7 @@ class SATService:
     async def is_enabled(self, terminal_id: str) -> bool:
         """Verifica se o SAT está habilitado para um terminal específico."""
         # Verificar configuração global
-        if not self.config.enabled:
+        if not self.config or not self.config.enabled:
             return False
 
         # Verificar configuração do terminal

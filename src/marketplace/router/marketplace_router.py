@@ -17,6 +17,14 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 async def get_current_user() -> Dict[str, Any]:
     """Stub function for get_current_user."""
     return {"id": "user123", "name": "Test User", "roles": ["admin"]}
+
+def get_db_service() -> Any:
+    """Stub function for get_db_service."""
+    return None
+
+def get_config_service() -> Any:
+    """Stub function for get_config_service."""
+    return None
 from src.marketplace.models.marketplace_models import (
     APIKey,
     CRMCustomer,

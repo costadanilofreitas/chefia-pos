@@ -139,7 +139,7 @@ class KDSKeyboardHandler:
             return
 
         current_order = self.orders[self.current_order_index]
-        items = current_order.get("items", [])
+        items = current_order.items if current_order else []
 
         if not items:
             logger.info("Não há itens no pedido atual")
@@ -160,7 +160,7 @@ class KDSKeyboardHandler:
             return
 
         current_order = self.orders[self.current_order_index]
-        items = current_order.get("items", [])
+        items = current_order.items if current_order else []
 
         if not items:
             logger.info("Não há itens no pedido atual")
@@ -181,15 +181,15 @@ class KDSKeyboardHandler:
             return
 
         current_order = self.orders[self.current_order_index]
-        items = current_order.get("items", [])
+        items = current_order.items if current_order else []
 
         if not items or self.current_item_index >= len(items):
             logger.info("Não há item selecionado")
             return
 
         current_item = items[self.current_item_index]
-        item_id = current_item.get("id")
-        current_status = current_item.get("status")
+        item_id = current_item.id
+        current_status = current_item.status
 
         # Determinar próximo status
         next_status = self._get_next_status(current_status)
@@ -197,17 +197,18 @@ class KDSKeyboardHandler:
         if next_status:
             # Publicar evento de atualização de status
             await self.event_bus.publish(
-                "kds.item_status_changed",
                 Event(
+                    event_type=EventType.ORDER_UPDATED,
                     data={
-                        "order_id": current_order.get("id"),
+                        "order_id": current_order.id,
                         "item_id": item_id,
                         "status": next_status,
                         "previous_status": current_status,
                         "updated_by": "keyboard",
                         "timestamp": datetime.now().isoformat(),
-                    }
-                ),
+                    },
+                    metadata={"source": "kds", "action": "item_status_changed"},
+                )
             )
 
             logger.info(
@@ -225,29 +226,30 @@ class KDSKeyboardHandler:
             return
 
         current_order = self.orders[self.current_order_index]
-        items = current_order.get("items", [])
+        items = current_order.items if current_order else []
 
         if not items or self.current_item_index >= len(items):
             logger.info("Não há item selecionado")
             return
 
         current_item = items[self.current_item_index]
-        item_id = current_item.get("id")
-        current_status = current_item.get("status")
+        item_id = current_item.id
+        current_status = current_item.status
 
         # Publicar evento de atualização de status
         await self.event_bus.publish(
-            "kds.item_status_changed",
             Event(
+                event_type=EventType.ORDER_UPDATED,
                 data={
-                    "order_id": current_order.get("id"),
+                    "order_id": current_order.id,
                     "item_id": item_id,
                     "status": ItemStatus.READY,
                     "previous_status": current_status,
                     "updated_by": "keyboard",
                     "timestamp": datetime.now().isoformat(),
-                }
-            ),
+                },
+                metadata={"source": "kds", "action": "item_status_changed"},
+            )
         )
 
         logger.info(f"Item {item_id} marcado como pronto")
@@ -259,7 +261,7 @@ class KDSKeyboardHandler:
             return
 
         current_order = self.orders[self.current_order_index]
-        items = current_order.get("items", [])
+        items = current_order.items if current_order else []
 
         if not items:
             logger.info("Não há itens no pedido atual")
@@ -267,8 +269,8 @@ class KDSKeyboardHandler:
 
         # Publicar eventos de atualização de status para todos os itens
         for item in items:
-            item_id = item.get("id")
-            current_status = item.get("status")
+            item_id = item.id
+            current_status = item.status
 
             # Apenas atualizar itens que não estão prontos ou entregues
             if current_status not in [ItemStatus.READY, ItemStatus.DELIVERED]:
@@ -276,7 +278,7 @@ class KDSKeyboardHandler:
                     "kds.item_status_changed",
                     Event(
                         data={
-                            "order_id": current_order.get("id"),
+                            "order_id": current_order.id,
                             "item_id": item_id,
                             "status": ItemStatus.READY,
                             "previous_status": current_status,
@@ -287,7 +289,7 @@ class KDSKeyboardHandler:
                 )
 
         logger.info(
-            f"Todos os itens do pedido {current_order.get('id')} marcados como prontos"
+            f"Todos os itens do pedido {current_order.id} marcados como prontos"
         )
 
     async def _cancel_item(self):
@@ -297,22 +299,22 @@ class KDSKeyboardHandler:
             return
 
         current_order = self.orders[self.current_order_index]
-        items = current_order.get("items", [])
+        items = current_order.items if current_order else []
 
         if not items or self.current_item_index >= len(items):
             logger.info("Não há item selecionado")
             return
 
         current_item = items[self.current_item_index]
-        item_id = current_item.get("id")
-        current_status = current_item.get("status")
+        item_id = current_item.id
+        current_status = current_item.status
 
         # Publicar evento de atualização de status
         await self.event_bus.publish(
             "kds.item_status_changed",
             Event(
                 data={
-                    "order_id": current_order.get("id"),
+                    "order_id": current_order.id,
                     "item_id": item_id,
                     "status": ItemStatus.CANCELLED,
                     "previous_status": current_status,
@@ -331,12 +333,15 @@ class KDSKeyboardHandler:
             return
 
         current_order = self.orders[self.current_order_index]
-        order_id = current_order.get("id")
+        order_id = current_order.id
 
         # Publicar evento de impressão
         await self.event_bus.publish(
-            "kds.print_order",
-            Event(data={"order_id": order_id, "timestamp": datetime.now().isoformat()}),
+            Event(
+                event_type=EventType.SYSTEM_CONFIG_CHANGED,
+                data={"order_id": order_id, "timestamp": datetime.now().isoformat()},
+                metadata={"source": "kds", "action": "print_order"},
+            )
         )
 
         logger.info(f"Pedido {order_id} enviado para impressão")
@@ -347,24 +352,25 @@ class KDSKeyboardHandler:
             return
 
         current_order = self.orders[self.current_order_index]
-        order_id = current_order.get("id")
+        order_id = current_order.id
 
         item_id = None
-        if current_order.get("items") and self.current_item_index < len(
-            current_order.get("items")
+        if current_order.items and self.current_item_index < len(
+            current_order.items
         ):
-            item_id = current_order.get("items")[self.current_item_index].get("id")
+            item_id = current_order.items[self.current_item_index].id
 
         # Publicar evento de destaque
         await self.event_bus.publish(
-            "kds.highlight_selection",
             Event(
+                event_type=EventType.SYSTEM_CONFIG_CHANGED,
                 data={
                     "order_id": order_id,
                     "item_id": item_id,
                     "timestamp": datetime.now().isoformat(),
-                }
-            ),
+                },
+                metadata={"source": "kds", "action": "highlight_selection"},
+            )
         )
 
     def _get_next_status(self, current_status: str) -> Optional[str]:

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ...core.events.event_bus import EventBus
+from ...core.events.event_bus import Event, EventBus, EventType
 from ...core.exceptions.base_exceptions import ResourceNotFoundException
 from ..models.terminal_models import (
     OfflineOrder,
@@ -49,13 +49,16 @@ class TerminalService:
 
         # Publicar evento de criação
         await self.event_bus.publish(
-            "terminal.config.created",
-            {
-                "terminal_id": config.id,
-                "terminal_type": config.type,
-                "restaurant_id": config.restaurant_id,
-                "store_id": config.store_id,
-            },
+            Event(
+                event_type=EventType.SYSTEM_CONFIG_CHANGED,
+                data={
+                    "terminal_id": config.id,
+                    "terminal_type": config.type,
+                    "restaurant_id": config.restaurant_id,
+                    "store_id": config.store_id,
+                },
+                metadata={"source": "terminal", "action": "config_created"},
+            )
         )
 
         return config
@@ -75,8 +78,11 @@ class TerminalService:
 
         # Publicar evento de atualização
         await self.event_bus.publish(
-            "terminal.config.updated",
-            {"terminal_id": config.id, "terminal_type": config.type},
+            Event(
+                event_type=EventType.SYSTEM_CONFIG_CHANGED,
+                data={"terminal_id": config.id, "terminal_type": config.type},
+                metadata={"source": "terminal", "action": "config_updated"},
+            )
         )
 
         return config
@@ -90,7 +96,11 @@ class TerminalService:
 
         # Publicar evento de remoção
         await self.event_bus.publish(
-            "terminal.config.deleted", {"terminal_id": terminal_id}
+            Event(
+                event_type=EventType.SYSTEM_CONFIG_CHANGED,
+                data={"terminal_id": terminal_id},
+                metadata={"source": "terminal", "action": "config_deleted"},
+            )
         )
 
         return True
@@ -123,12 +133,15 @@ class TerminalService:
 
         # Publicar evento de início de sessão
         await self.event_bus.publish(
-            "terminal.session.started",
-            {
-                "session_id": session_id,
-                "terminal_id": terminal_id,
-                "waiter_id": waiter_id,
-            },
+            Event(
+                event_type=EventType.SYSTEM_STARTED,
+                data={
+                    "session_id": session_id,
+                    "terminal_id": terminal_id,
+                    "waiter_id": waiter_id,
+                },
+                metadata={"source": "terminal", "action": "session_started"},
+            )
         )
 
         return session
@@ -160,14 +173,17 @@ class TerminalService:
 
         # Publicar evento de atualização de status
         await self.event_bus.publish(
-            "terminal.status.updated",
-            {
-                "session_id": session_id,
-                "terminal_id": session.terminal_id,
-                "status": status.value,
-                "battery_level": battery_level,
-                "signal_strength": signal_strength,
-            },
+            Event(
+                event_type=EventType.SYSTEM_CONFIG_CHANGED,
+                data={
+                    "session_id": session_id,
+                    "terminal_id": session.terminal_id,
+                    "status": status.value,
+                    "battery_level": battery_level,
+                    "signal_strength": signal_strength,
+                },
+                metadata={"source": "terminal", "action": "status_updated"},
+            )
         )
 
         return session
@@ -189,14 +205,17 @@ class TerminalService:
 
         # Publicar evento de pedido offline
         await self.event_bus.publish(
-            "terminal.offline_order.created",
-            {
-                "order_id": order.id,
-                "terminal_id": order.terminal_id,
-                "waiter_id": order.waiter_id,
-                "table_id": order.table_id,
-                "total": order.total,
-            },
+            Event(
+                event_type=EventType.ORDER_CREATED,
+                data={
+                    "order_id": order.id,
+                    "terminal_id": order.terminal_id,
+                    "waiter_id": order.waiter_id,
+                    "table_id": order.table_id,
+                    "total": order.total,
+                },
+                metadata={"source": "terminal", "action": "offline_order_created"},
+            )
         )
 
         return order
@@ -254,12 +273,15 @@ class TerminalService:
 
         # Publicar evento de sincronização
         await self.event_bus.publish(
-            "terminal.data.synced",
-            {
-                "session_id": session_id,
-                "terminal_id": terminal_id,
-                "synced_orders_count": len(synced_orders),
-            },
+            Event(
+                event_type=EventType.SYSTEM_CONFIG_CHANGED,
+                data={
+                    "session_id": session_id,
+                    "terminal_id": terminal_id,
+                    "synced_orders_count": len(synced_orders),
+                },
+                metadata={"source": "terminal", "action": "data_synced"},
+            )
         )
 
         # Retornar resultado da sincronização

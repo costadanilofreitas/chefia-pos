@@ -96,6 +96,8 @@ class DatabaseManager:
         if not self.session_factory:
             await self.initialize()
 
+        if not self.session_factory:
+            raise RuntimeError("Database not initialized")
         session = self.session_factory()
         try:
             yield session
@@ -110,6 +112,8 @@ class DatabaseManager:
         """Obtém conexão asyncpg."""
         if not self._pool:
             await self.initialize()
+        if not self._pool:
+            raise RuntimeError("Database pool not initialized")
         return await self._pool.acquire()
 
     async def release_connection(self, connection):
@@ -119,17 +123,23 @@ class DatabaseManager:
 
     async def execute_query(self, query: str, *args) -> list:
         """Executa query e retorna resultados."""
+        if not self._pool:
+            raise RuntimeError("Database pool not initialized")
         async with self._pool.acquire() as connection:
             return await connection.fetch(query, *args)
 
     async def execute_command(self, command: str, *args) -> str:
         """Executa comando e retorna status."""
+        if not self._pool:
+            raise RuntimeError("Database pool not initialized")
         async with self._pool.acquire() as connection:
             return await connection.execute(command, *args)
 
     async def health_check(self) -> bool:
         """Verifica saúde da conexão."""
         try:
+            if not self._pool:
+                raise RuntimeError("Database pool not initialized")
             async with self._pool.acquire() as connection:
                 await connection.fetchval("SELECT 1")
             return True

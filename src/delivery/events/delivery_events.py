@@ -102,10 +102,10 @@ async def register_delivery_event_handlers():
     event_bus = get_event_bus()
 
     # Registrar handlers
-    await event_bus.subscribe(EventType.ORDER_CREATED, OrderCreatedHandler())
-    await event_bus.subscribe(
-        EventType.ORDER_STATUS_CHANGED, OrderStatusChangedHandler()
-    )
-    await event_bus.subscribe(
-        EventType.ORDER_STATUS_CHANGED, DeliveryOrderStatusChangedHandler()
-    )
+    order_created_handler = OrderCreatedHandler()
+    order_status_handler = OrderStatusChangedHandler()
+    delivery_status_handler = DeliveryOrderStatusChangedHandler()
+    
+    await event_bus.subscribe(EventType.ORDER_CREATED, order_created_handler)
+    await event_bus.subscribe(EventType.ORDER_STATUS_CHANGED, order_status_handler)
+    await event_bus.subscribe(EventType.ORDER_STATUS_CHANGED, delivery_status_handler)

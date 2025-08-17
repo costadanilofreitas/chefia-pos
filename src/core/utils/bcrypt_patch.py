@@ -22,7 +22,7 @@ def patch_bcrypt_passlib():
                     bcrypt.__version__ if hasattr(bcrypt, "__version__") else "4.3.0"
                 )
 
-            bcrypt.__about__ = About()
+            bcrypt.__about__ = About()  # type: ignore[attr-defined]
 
     except ImportError:
         # bcrypt não está instalado, não há nada para corrigir
