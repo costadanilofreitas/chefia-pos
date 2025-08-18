@@ -170,13 +170,13 @@ function App() {
                   } />
                             {/* Main POS interface - requires auth and open business day */}
                   <Route path="/pos/:terminalId/main" element={
-                    <AuthGuard requireAuth={true} requireOpenDay={true}>
-                      <ErrorBoundary>
-                        <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
+                        <LayoutRoute title="POS Principal" requireAuth={true} requireOpenDay={true}>
                           <POSMainPage />
-                        </Suspense>
-                      </ErrorBoundary>
-                    </AuthGuard>
+                        </LayoutRoute>
+                      </Suspense>
+                    </ErrorBoundary>
                   } />                  
                   {/* Order management */}
                   <Route path="/pos/:terminalId/order" element={

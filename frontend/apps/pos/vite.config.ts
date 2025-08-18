@@ -145,13 +145,13 @@ export default defineConfig({
     __COMMIT_HASH__: JSON.stringify(process.env.COMMIT_HASH || 'dev')
   },
   
-  // CSS optimization
+  // CSS optimization with PostCSS
   css: {
     devSourcemap: true,
-    preprocessorOptions: {
-      scss: {
-        additionalData: `@import "@/styles/variables.scss";`
-      }
+    postcss: './postcss.config.js',
+    modules: {
+      localsConvention: 'camelCase',
+      generateScopedName: '[name]__[local]__[hash:base64:5]'
     }
   },
   
