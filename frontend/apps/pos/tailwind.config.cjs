@@ -3,14 +3,11 @@ module.exports = {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
-    "../../common/src/**/*.{js,ts,jsx,tsx}"
   ],
-  darkMode: 'class',
+  darkMode: 'class', // Enable dark mode with class strategy
   theme: {
     extend: {
-      // Custom Colors for POS System
       colors: {
-        // Brand Colors
         primary: {
           50: '#e3f2fd',
           100: '#bbdefb',
@@ -23,6 +20,19 @@ module.exports = {
           800: '#1565c0',
           900: '#0d47a1',
           950: '#0a3d8f'
+        },
+        secondary: {
+          50: '#fff3e0',
+          100: '#ffe0b2',
+          200: '#ffcc80',
+          300: '#ffb74d',
+          400: '#ffa726',
+          500: '#ff9800',
+          600: '#fb8c00',
+          700: '#f57c00',
+          800: '#ef6c00',
+          900: '#e65100',
+          950: '#c43e00'
         },
         // Semantic Colors
         success: {
@@ -55,211 +65,95 @@ module.exports = {
           'dark-active': '#475569'
         }
       },
-      
-      // Custom Font Families
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Courier New', 'monospace']
+        mono: ['JetBrains Mono', 'monospace'],
       },
-      
-      // Custom Font Sizes for Touch
-      fontSize: {
-        'touch-sm': ['16px', '24px'],
-        'touch-base': ['18px', '28px'],
-        'touch-lg': ['20px', '30px'],
-        'touch-xl': ['24px', '32px'],
-      },
-      
-      // Custom Spacing for Touch Targets
-      spacing: {
-        'touch': '44px', // Minimum touch target
-        'touch-lg': '56px',
-        'touch-xl': '64px',
-      },
-      
-      // Fast Animations for POS
-      transitionDuration: {
-        'instant': '50ms',
-        'fast': '150ms',
-        'normal': '250ms',
-      },
-      
-      // Custom Shadows
-      boxShadow: {
-        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-        'inner-lg': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.1)',
-      },
-      
-      // Custom Border Radius
-      borderRadius: {
-        'card': '12px',
-        'button': '10px',
-      },
-      
-      // Custom Animations
       animation: {
-        'fade-in': 'fadeIn 0.25s ease-out',
-        'slide-up': 'slideUp 0.25s ease-out',
-        'slide-right': 'slideRight 0.25s ease-out',
-        'scale-in': 'scaleIn 0.15s ease-out',
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'bounce-slow': 'bounce 2s infinite',
-        'spin-fast': 'spin 0.5s linear infinite',
-        'ripple': 'ripple 0.6s ease-out',
+        'slide-in-right': 'slide-in-right 0.3s ease-out',
+        'slide-in-left': 'slide-in-left 0.3s ease-out',
+        'fade-in': 'fade-in 0.2s ease-out',
+        'scale-in': 'scale-in 0.2s ease-out',
       },
-      
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
+        'slide-in-right': {
+          'from': {
+            transform: 'translateX(100%)',
+            opacity: '0',
+          },
+          'to': {
+            transform: 'translateX(0)',
+            opacity: '1',
+          },
         },
-        slideUp: {
-          '0%': { transform: 'translateY(20px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
+        'slide-in-left': {
+          'from': {
+            transform: 'translateX(-100%)',
+            opacity: '0',
+          },
+          'to': {
+            transform: 'translateX(0)',
+            opacity: '1',
+          },
         },
-        slideRight: {
-          '0%': { transform: 'translateX(-20px)', opacity: '0' },
-          '100%': { transform: 'translateX(0)', opacity: '1' },
+        'fade-in': {
+          'from': {
+            opacity: '0',
+          },
+          'to': {
+            opacity: '1',
+          },
         },
-        scaleIn: {
-          '0%': { transform: 'scale(0.9)', opacity: '0' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
-        },
-        ripple: {
-          '0%': { transform: 'scale(0)', opacity: '1' },
-          '100%': { transform: 'scale(4)', opacity: '0' },
+        'scale-in': {
+          'from': {
+            transform: 'scale(0.95)',
+            opacity: '0',
+          },
+          'to': {
+            transform: 'scale(1)',
+            opacity: '1',
+          },
         },
       },
-      
-      // Grid Template Columns for Product Grid
-      gridTemplateColumns: {
-        'products-sm': 'repeat(auto-fill, minmax(150px, 1fr))',
-        'products-md': 'repeat(auto-fill, minmax(180px, 1fr))',
-        'products-lg': 'repeat(auto-fill, minmax(200px, 1fr))',
-        'products-xl': 'repeat(auto-fill, minmax(220px, 1fr))',
+      // Custom spacing
+      spacing: {
+        '18': '4.5rem',
+        '88': '22rem',
+        '128': '32rem',
       },
-      
-      // Custom Screens for POS Devices
-      screens: {
-        'tablet': '768px',
-        'pos': '1024px',
-        'pos-lg': '1280px',
-        'pos-xl': '1536px',
-      },
-      
-      // Z-Index Scale
+      // Custom z-index
       zIndex: {
-        'dropdown': '1000',
-        'sticky': '1020',
-        'fixed': '1030',
-        'modal-backdrop': '1040',
-        'modal': '1050',
-        'popover': '1060',
-        'tooltip': '1070',
-        'toast': '1080',
+        '60': '60',
+        '70': '70',
+        '80': '80',
+        '90': '90',
+        '100': '100',
       },
-      
-      // Backdrop Filters
+      // Custom shadows for dark mode
+      boxShadow: {
+        'dark-sm': '0 1px 2px 0 rgba(255, 255, 255, 0.05)',
+        'dark': '0 1px 3px 0 rgba(255, 255, 255, 0.1), 0 1px 2px 0 rgba(255, 255, 255, 0.06)',
+        'dark-md': '0 4px 6px -1px rgba(255, 255, 255, 0.1), 0 2px 4px -1px rgba(255, 255, 255, 0.06)',
+        'dark-lg': '0 10px 15px -3px rgba(255, 255, 255, 0.1), 0 4px 6px -2px rgba(255, 255, 255, 0.05)',
+        'dark-xl': '0 20px 25px -5px rgba(255, 255, 255, 0.1), 0 10px 10px -5px rgba(255, 255, 255, 0.04)',
+      },
+      // Custom backdrop blur
       backdropBlur: {
         xs: '2px',
-        sm: '4px',
-        md: '8px',
-        lg: '12px',
-        xl: '16px',
+      },
+      // Custom transitions
+      transitionProperty: {
+        'height': 'height',
+        'spacing': 'margin, padding',
       },
     },
   },
   plugins: [
-    // Forms plugin for better form styles
     require('@tailwindcss/forms')({
-      strategy: 'class',
+      strategy: 'class', // Use class strategy for form styles
     }),
-    
-    // Typography plugin
     require('@tailwindcss/typography'),
-    
-    // Aspect ratio plugin
     require('@tailwindcss/aspect-ratio'),
-    
-    // Container queries plugin
     require('@tailwindcss/container-queries'),
-    
-    // Custom plugin for POS-specific utilities
-    function({ addUtilities, addComponents, theme }) {
-      // Touch-friendly utilities
-      addUtilities({
-        '.touch-target': {
-          minHeight: '44px',
-          minWidth: '44px',
-        },
-        '.touch-target-lg': {
-          minHeight: '56px',
-          minWidth: '56px',
-        },
-        '.no-tap-highlight': {
-          '-webkit-tap-highlight-color': 'transparent',
-        },
-        '.smooth-scroll': {
-          'scroll-behavior': 'smooth',
-        },
-        '.hide-scrollbar': {
-          '-ms-overflow-style': 'none',
-          'scrollbar-width': 'none',
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
-        },
-        '.glass': {
-          background: 'rgba(255, 255, 255, 0.1)',
-          'backdrop-filter': 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-        },
-      });
-      
-      // POS-specific components
-      addComponents({
-        '.btn-pos': {
-          '@apply inline-flex items-center justify-center px-6 py-3 text-touch-base font-medium rounded-button transition-all duration-fast no-tap-highlight touch-target': {},
-          '&:hover': {
-            '@apply transform -translate-y-0.5 shadow-card-hover': {},
-          },
-          '&:active': {
-            '@apply transform translate-y-0': {},
-          },
-        },
-        '.btn-pos-primary': {
-          '@apply btn-pos bg-primary-500 text-white hover:bg-primary-600': {},
-        },
-        '.btn-pos-success': {
-          '@apply btn-pos bg-success text-white hover:bg-success-dark': {},
-        },
-        '.btn-pos-danger': {
-          '@apply btn-pos bg-danger text-white hover:bg-danger-dark': {},
-        },
-        '.card-pos': {
-          '@apply bg-white dark:bg-surface-dark rounded-card shadow-card overflow-hidden transition-all duration-fast': {},
-          '&:hover': {
-            '@apply shadow-card-hover transform -translate-y-1': {},
-          },
-        },
-        '.product-card': {
-          '@apply card-pos cursor-pointer min-h-[240px] flex flex-col': {},
-          '&:active': {
-            '@apply transform scale-95': {},
-          },
-        },
-        '.input-pos': {
-          '@apply w-full px-4 py-3 text-touch-base bg-surface-hover dark:bg-surface-dark-hover rounded-button border-2 border-transparent focus:border-primary-500 focus:outline-none transition-all duration-fast': {},
-        },
-        '.badge-pos': {
-          '@apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium': {},
-        },
-        '.sidebar-pos': {
-          '@apply w-20 lg:w-24 bg-surface dark:bg-surface-dark border-r border-gray-200 dark:border-gray-700 flex flex-col': {},
-        },
-      });
-    },
   ],
 }

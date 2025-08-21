@@ -38,6 +38,7 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
   const [opening, setOpening] = useState(false);
   const [closing, setClosing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Computed values
   const isOpen = currentBusinessDay?.status === 'OPEN';
@@ -61,9 +62,11 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
       
       const businessDay = await businessDayService.getCurrentBusinessDay();
       setCurrentBusinessDay(businessDay);
+      setHasInitialized(true);
     } catch (err: any) {
       console.error('Erro ao carregar dia operacional atual:', err);
       setError(err.response?.data?.detail || 'Erro ao carregar dia operacional');
+      setHasInitialized(true); // Marcar como inicializado mesmo com erro
     } finally {
       setLoading(false);
     }
@@ -154,10 +157,44 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
     }
   }, []);
 
-  // Carregar dia operacional atual na inicialização
+  // Carregar dia operacional atual na inicialização (apenas uma vez)
   useEffect(() => {
-    refreshCurrentBusinessDay();
-  }, [refreshCurrentBusinessDay]);
+    let isMounted = true;
+    let hasRun = false;
+    
+    const loadInitial = async () => {
+      if (!isMounted || hasRun) return;
+      hasRun = true;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const businessDay = await businessDayService.getCurrentBusinessDay();
+        
+        if (isMounted) {
+          setCurrentBusinessDay(businessDay);
+          setHasInitialized(true);
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          console.error('Erro ao carregar dia operacional atual:', err);
+          setError(err.response?.data?.detail || 'Erro ao carregar dia operacional');
+          setHasInitialized(true);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadInitial();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Executar apenas uma vez na montagem
 
   return {
     // Estado

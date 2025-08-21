@@ -21,55 +21,9 @@ export interface User {
   permissions: string[];
 }
 
-// Mock data for offline mode
-const mockData = {
-  cashier: {
-    open: {
-      id: 'cashier-001',
-      operator_id: 'user-001',
-      business_day_id: 'day-001',
-      terminal_id: '1',
-      initial_amount: 100,
-      current_amount: 100,
-      status: 'open' as const,
-      opened_at: new Date().toISOString()
-    },
-    status: {
-      id: 'cashier-001',
-      status: 'open' as const,
-      current_amount: 100,
-      transactions_count: 0
-    }
-  },
-  businessDay: {
-    current: {
-      id: 'day-001',
-      store_id: 'store-001',
-      date: new Date().toISOString().split('T')[0],
-      status: 'open' as const,
-      opened_at: new Date().toISOString()
-    }
-  },
-  auth: {
-    login: {
-      access_token: 'mock-token-123',
-      token_type: 'bearer' as const,
-      expires_in: 3600
-    },
-    user: {
-      id: 'user-001',
-      username: 'admin',
-      full_name: 'Administrador',
-      role: 'gerente' as const,
-      disabled: false,
-      permissions: ['MANAGER_ACCESS', 'CASHIER_ACCESS', 'ORDERS_ACCESS']
-    }
-  }
-};
 
 export class ApiClient {
   private config: TerminalConfig;
-  private isOfflineMode: boolean = false;
   
   constructor(config: TerminalConfig) {
     this.config = config;
@@ -105,69 +59,16 @@ export class ApiClient {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        // Se for erro de conectividade (503, 500, 404, etc.), ativar modo offline
-        if (response.status >= 400) {
-          console.warn(`Service ${service} unavailable (${response.status}), switching to offline mode`);
-          this.isOfflineMode = true;
-          return this.getMockResponse(service, endpoint, options?.method || 'GET');
-        }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      // Se chegou aqui, o serviço está online
-      this.isOfflineMode = false;
       return response.json();
     } catch (error) {
       clearTimeout(timeoutId);
-      
-      // Se for erro de rede/timeout/404, usar modo offline
-      if (error instanceof Error && (
-        error.name === 'AbortError' || 
-        error.message.includes('fetch') ||
-        error.message.includes('Failed to fetch') ||
-        error.message.includes('404')
-      )) {
-        console.warn(`Service ${service} unreachable, using offline mode:`, error.message);
-        this.isOfflineMode = true;
-        return this.getMockResponse(service, endpoint, options?.method || 'GET');
-      }
-      
       throw error;
     }
   }
 
-  private getMockResponse(service: string, endpoint: string, method: string) {
-    console.log(`🔄 Mock response for ${method} ${service}${endpoint}`);
-    
-    // Simular delay de rede
-    return new Promise(resolve => {
-      setTimeout(() => {
-        switch (service) {
-          case 'cashier':
-            if (method === 'POST' && endpoint === '/open') {
-              resolve(mockData.cashier.open);
-            } else if (endpoint.includes('/status')) {
-              resolve(mockData.cashier.status);
-            }
-            break;
-          case 'businessDay':
-            if (endpoint === '/current') {
-              resolve(mockData.businessDay.current);
-            }
-            break;
-          case 'auth':
-            if (endpoint === '/token') {
-              resolve(mockData.auth.login);
-            } else if (endpoint === '/me') {
-              resolve(mockData.auth.user);
-            }
-            break;
-          default:
-            resolve({ success: true, data: null });
-        }
-      }, 200); // Simular 200ms de delay
-    });
-  }
 
   // Auth methods
   auth = {
@@ -285,9 +186,6 @@ export class ApiClient {
       })
   };
 
-  // Utility methods
-  isOnline = () => !this.isOfflineMode;
-  isOffline = () => this.isOfflineMode;
 }
 
 export const createApiClient = (config: TerminalConfig) => new ApiClient(config);

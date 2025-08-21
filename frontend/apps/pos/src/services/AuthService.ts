@@ -86,65 +86,14 @@ class AuthService {
     } catch (error: any) {
       console.error('❌ Erro no login:', error);
       
-      // Se falhar, tentar fallback para mock
       if (error.response?.status === 401) {
         throw new Error('Credenciais inválidas');
       } else {
-        console.warn('⚠️ Erro de conexão, usando fallback mock');
-        return this.mockLogin(credentials);
+        throw new Error('Erro de conexão com o servidor');
       }
     }
   }
 
-  /**
-   * Mock temporário do login para fallback
-   */
-  private async mockLogin(credentials: LoginRequest): Promise<AuthUser> {
-    // Simular delay de rede
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // Validações básicas (simulando o backend)
-    if (!credentials.operator_id || !credentials.password) {
-      throw new Error('Operador e senha são obrigatórios');
-    }
-
-    // Credenciais válidas conhecidas (compatíveis com o servidor real)
-    const validCredentials = [
-      { operator_id: '123', password: '456789', name: 'Gerente Principal', roles: ['manager'], permissions: ['cashier:open', 'cashier:close', 'product:read', 'order:create', 'order:read'] },
-      { operator_id: '456', password: '123456', name: 'Admin', roles: ['admin'], permissions: ['read', 'write', 'delete'] },
-      { operator_id: '789', password: '654321', name: 'Cashier', roles: ['cashier'], permissions: ['read'] },
-      { operator_id: 'manager', password: '123456789', name: 'Manager', roles: ['manager'], permissions: ['read', 'write'] },
-      { operator_id: 'admin', password: '456123456', name: 'Admin', roles: ['admin'], permissions: ['read', 'write', 'delete'] },
-      { operator_id: 'cashier', password: '789654321', name: 'Cashier', roles: ['cashier'], permissions: ['read'] }
-    ];
-
-    const validUser = validCredentials.find(
-      cred => cred.operator_id === credentials.operator_id && cred.password === credentials.password
-    );
-
-    if (!validUser) {
-      throw new Error('Credenciais inválidas');
-    }
-
-    // Gerar token mock (em produção viria do backend)
-    const mockToken = `mock_jwt_token_${validUser.operator_id}_${Date.now()}`;
-
-    // Criar AuthUser e salvar no storage
-    const user: AuthUser = {
-      operator_id: validUser.operator_id,
-      operator_name: validUser.name,
-      roles: validUser.roles,
-      permissions: validUser.permissions,
-      access_token: mockToken,
-      expires_at: new Date(Date.now() + 28800 * 1000) // 8 horas
-    };
-
-    this.currentUser = user;
-    this.saveUserToStorage(user);
-    
-    console.log('✅ Login mock realizado com sucesso:', user.operator_name);
-    return user;
-  }
 
   /**
    * Cria novas credenciais para um operador

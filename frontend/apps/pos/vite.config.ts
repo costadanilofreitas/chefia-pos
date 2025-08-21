@@ -23,22 +23,24 @@ export default defineConfig({
           // Feature chunks
           'pos-core': [
             './src/ui/POSMainPage.tsx',
-            './src/ui/POSOrderPage.tsx',
-            './src/ui/POSPaymentPage.tsx'
+            './src/ui/POSPaymentPageModern.tsx',
+            './src/ui/CounterOrdersPageModern.tsx'
           ],
           'management': [
-            './src/ui/ManagerScreen.tsx',
-            './src/ui/BusinessDayPage.tsx',
-            './src/ui/CashierOpeningClosingPage.tsx'
+            './src/ui/ManagerScreenComplete.tsx',
+            './src/ui/BusinessDayPageModern.tsx',
+            './src/ui/CashierOpeningClosingPageModern.tsx',
+            './src/ui/CashWithdrawalPageModern.tsx'
           ],
           'restaurant': [
-            './src/ui/TableLayoutScreen.tsx',
-            './src/ui/DeliveryScreen.tsx',
-            './src/ui/WaiterScreen.tsx'
+            './src/ui/TableLayoutScreenModern.tsx',
+            './src/ui/DeliveryScreenKanban.tsx',
+            './src/ui/WaiterScreenModern.tsx',
+            './src/ui/RemoteOrdersScreenModern.tsx'
           ],
           'loyalty-fiscal': [
-            './src/ui/LoyaltyScreen.tsx',
-            './src/ui/FiscalScreen.tsx'
+            './src/ui/LoyaltyScreenModern.tsx',
+            './src/ui/FiscalScreenModern.tsx'
           ],
           'services': [
             './src/services/OfflineStorage.ts',
@@ -148,7 +150,7 @@ export default defineConfig({
   // CSS optimization with PostCSS
   css: {
     devSourcemap: true,
-    postcss: './postcss.config.js',
+    postcss: './postcss.config.cjs',
     modules: {
       localsConvention: 'camelCase',
       generateScopedName: '[name]__[local]__[hash:base64:5]'

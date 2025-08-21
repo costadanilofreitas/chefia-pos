@@ -1,2 +1,159 @@
-/* Import PostCSS with Tailwind */ 
-@import './index.postcss'; 
+/* Import fonts first (before any other statements) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* Import Tailwind layers */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global styles */
+@layer base {
+  /* Prevent text selection on UI elements */
+  button, nav, header, footer, aside, label {
+    @apply select-none;
+  }
+  
+  /* Allow text selection only on specific elements */
+  input, textarea, .selectable {
+    @apply select-text;
+  }
+}
+
+/* Custom animations */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes scale-up {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-left {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+.animate-slide-out-right {
+  animation: slide-out-right 0.3s ease-in;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out;
+}
+
+.animate-slide-out-left {
+  animation: slide-out-left 0.3s ease-in;
+}
+
+.animate-scale-up {
+  animation: scale-up 0.2s ease-out;
+}
+
+/* Prevent text selection on non-input elements */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Print styles */
+@media print {
+  .print\:hidden {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  
+  /* Clean print layout */
+  .dark\:bg-gray-700, .dark\:bg-gray-800 {
+    background: #f9f9f9 !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  /* Hide navigation and controls in print */
+  button, nav, header, footer {
+    display: none !important;
+  }
+  
+  /* Show content clearly */
+  .bg-gray-50, .dark\:bg-gray-700 {
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+    page-break-inside: avoid !important;
+  }
+  
+  /* Ensure text is readable */
+  .text-gray-600, .dark\:text-gray-400 {
+    color: #666 !important;
+  }
+  
+  .text-gray-900, .dark\:text-white {
+    color: #000 !important;
+    font-weight: 500;
+  }
+  
+  /* Color for status indicators */
+  .text-green-600, .dark\:text-green-400 {
+    color: #16a34a !important;
+  }
+  
+  .text-red-600, .dark\:text-red-400 {
+    color: #dc2626 !important;
+  }
+  
+  .text-blue-600, .dark\:text-blue-400 {
+    color: #2563eb !important;
+  }
+}

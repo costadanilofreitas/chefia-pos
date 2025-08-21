@@ -27,7 +27,9 @@
       "Bash(uvicorn:*)",
       "Bash(touch:*)",
       "Bash(awk:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": [],

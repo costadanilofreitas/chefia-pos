@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import { apiInterceptor, TokenData } from '../services/ApiInterceptor';
+import TerminalService from '../services/TerminalService';
 
 export enum UserRole {
   ADMIN = "admin",
@@ -40,10 +42,12 @@ export interface LoginCredentials {
 }
 
 export const useAuth = () => {
+  const { terminalId } = useParams<{ terminalId: string }>();
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const currentTerminal = terminalId || '1';
 
   // Convert JWT token data to User format
   const tokenToUser = useCallback((tokenData: TokenData): User => {
@@ -57,29 +61,50 @@ export const useAuth = () => {
     };
   }, []);
 
-  // Initialize auth state from stored token
+  // Initialize auth state from terminal session
   useEffect(() => {
-    const initializeAuth = () => {
-      console.log('🔄 Initializing auth...');
-      const tokenData = apiInterceptor.getToken();
+    const initializeAuth = async () => {
+      console.log(`🔄 Initializing auth for terminal ${currentTerminal}...`);
       
-      if (tokenData && apiInterceptor.isTokenValid()) {
-        // Convert token data inline to avoid dependency issues
-        const userData: User = {
-          id: tokenData.operator_id,
-          operator_id: tokenData.operator_id, // Adicionar operator_id explicitamente
-          username: tokenData.operator_id,
-          name: tokenData.operator_name,
-          role: tokenData.roles?.[0] as UserRole,
-          permissions: tokenData.permissions as Permission[],
-          requirePasswordChange: tokenData.require_password_change
-        };
+      // Check if terminal is configured
+      const isConfigured = await TerminalService.isTerminalConfigured(currentTerminal);
+      if (!isConfigured) {
+        console.error(`❌ Terminal ${currentTerminal} is not configured`);
+        setError(`Terminal ${currentTerminal} não está configurado`);
+        setLoading(false);
+        return;
+      }
+      
+      // Get session for this terminal
+      const session = TerminalService.getSession(currentTerminal);
+      
+      if (session && session.token) {
+        // Try to restore session
+        const tokenData = apiInterceptor.getToken();
         
-        setUser(userData);
-        setIsAuthenticated(true);
-        console.log('✅ Auth initialized from stored token:', userData.name);
+        if (tokenData && apiInterceptor.isTokenValid()) {
+          const userData: User = {
+            id: tokenData.operator_id,
+            operator_id: tokenData.operator_id,
+            username: tokenData.operator_id,
+            name: tokenData.operator_name,
+            role: tokenData.roles?.[0] as UserRole,
+            permissions: tokenData.permissions as Permission[],
+            requirePasswordChange: tokenData.require_password_change
+          };
+          
+          setUser(userData);
+          setIsAuthenticated(true);
+          console.log(`✅ Auth restored for terminal ${currentTerminal}:`, userData.name);
+        } else {
+          // Session expired, clear it
+          TerminalService.clearSession(currentTerminal);
+          console.log(`❌ Session expired for terminal ${currentTerminal}`);
+          setUser(null);
+          setIsAuthenticated(false);
+        }
       } else {
-        console.log('❌ No valid token found, user not authenticated');
+        console.log(`❌ No session found for terminal ${currentTerminal}`);
         setUser(null);
         setIsAuthenticated(false);
       }
@@ -87,9 +112,8 @@ export const useAuth = () => {
       setLoading(false);
     };
     
-    // Execute immediately without timeout to avoid delays
     initializeAuth();
-  }, []); // Empty dependencies to run only once
+  }, [currentTerminal]); // Re-run when terminal changes
 
   // Listen for auth events
   useEffect(() => {
@@ -210,10 +234,19 @@ export const useAuth = () => {
       };
       console.log('👤 LOGIN DEBUG: User formatted:', userFormatted);
       
+      // Save session for this terminal
+      TerminalService.saveSession(currentTerminal, {
+        operatorId: userData.username,
+        operatorName: userData.full_name,
+        token: loginResponse.access_token,
+        loginTime: new Date()
+      });
+      
       setUser(userFormatted);
       setIsAuthenticated(true);
       
       console.log('🎉 LOGIN DEBUG: Login successful, state updated');
+      console.log(`🎉 LOGIN DEBUG: Session saved for terminal ${currentTerminal}`);
       console.log('🎉 LOGIN DEBUG: Final user:', userFormatted.name);
       return userFormatted;
     } catch (error: any) {
@@ -234,10 +267,14 @@ export const useAuth = () => {
 
   const logout = useCallback(async (terminalId?: string): Promise<void> => {
     setLoading(true);
+    const terminal = terminalId || currentTerminal;
     
     try {
+      // Clear session for this terminal
+      TerminalService.clearSession(terminal);
+      
       // Verificar se é um POS de mesa (pode deslogar sem fechar caixa)
-      const isTablePOS = terminalId?.includes('mesa') || terminalId?.includes('table');
+      const isTablePOS = terminal?.includes('mesa') || terminal?.includes('table');
       
       if (!isTablePOS) {
         // Para POS normais, verificar se há caixa aberto

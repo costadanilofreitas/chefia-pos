@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, CircularProgress, Box } from '@mui/material';
-import ErrorBoundary from './components/ErrorBoundary';
+import ErrorBoundaryModern from './components/ErrorBoundaryModern';
 import AuthGuard from './components/AuthGuard';
 import TerminalValidator from './components/TerminalValidator';
 import POSLayout from './components/POSLayout';
@@ -11,19 +11,18 @@ import { useAuth, UserRole } from './hooks/useAuth';
 
 // Lazy load components for better performance
 const POSMainPage = lazy(() => import('./ui/POSMainPage'));
-const POSOrderPage = lazy(() => import('./ui/POSOrderPage'));
-const CounterOrdersPage = lazy(() => import('./ui/CounterOrdersPage'));
-const POSPaymentPage = lazy(() => import('./ui/POSPaymentPage'));
-const ManagerScreen = lazy(() => import('./ui/ManagerScreen'));
-const BusinessDayPage = lazy(() => import('./ui/BusinessDayPage'));
-const CashWithdrawalPage = lazy(() => import('./ui/CashWithdrawalPage'));
-const CashierOpeningClosingPage = lazy(() => import('./ui/CashierOpeningClosingPage'));
-const TableLayoutScreen = lazy(() => import('./ui/TableLayoutScreen'));
-const DeliveryScreen = lazy(() => import('./ui/DeliveryScreen'));
-const RemoteOrdersScreen = lazy(() => import('./ui/RemoteOrdersScreen'));
-const WaiterScreen = lazy(() => import('./ui/WaiterScreen'));
-const LoyaltyScreen = lazy(() => import('./ui/LoyaltyScreen'));
-const FiscalScreen = lazy(() => import('./ui/FiscalScreen'));
+const CounterOrdersPage = lazy(() => import('./ui/CounterOrdersPageModern'));
+const POSPaymentPage = lazy(() => import('./ui/POSPaymentPageModern'));
+const ManagerScreen = lazy(() => import('./ui/ManagerScreenComplete'));
+const BusinessDayPage = lazy(() => import('./ui/BusinessDayPageModern'));
+const CashWithdrawalPage = lazy(() => import('./ui/CashWithdrawalPageModern'));
+const CashierOpeningClosingPage = lazy(() => import('./ui/CashierOpeningClosingPageModern'));
+const TableLayoutScreen = lazy(() => import('./ui/TableLayoutScreenModern'));
+const DeliveryScreen = lazy(() => import('./ui/DeliveryScreenKanban'));
+const RemoteOrdersScreen = lazy(() => import('./ui/RemoteOrdersScreenModern'));
+const WaiterScreen = lazy(() => import('./ui/WaiterScreenModern'));
+const LoyaltyScreen = lazy(() => import('./ui/LoyaltyScreenModern'));
+const FiscalScreen = lazy(() => import('./ui/FiscalScreenModern'));
 
 // Loading component
 const LoadingFallback: React.FC<{ message?: string }> = ({ message = 'Carregando...' }) => (
@@ -140,7 +139,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <ErrorBoundary>
+      <ErrorBoundaryModern>
         <AuthProvider>
           <Router>
             <Suspense fallback={<LoadingFallback message="Inicializando sistema POS..." />}>
@@ -160,148 +159,138 @@ function App() {
                   
                   {/* Cashier - Entry point, allows free access to products */}
                   <Route path="/pos/:terminalId/cashier" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando caixa..." />}>
                         <LayoutRoute title="Caixa" requireAuth={false}>
                           <CashierOpeningClosingPage />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                             {/* Main POS interface - requires auth and open business day */}
                   <Route path="/pos/:terminalId/main" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando POS..." />}>
                         <LayoutRoute title="POS Principal" requireAuth={true} requireOpenDay={true}>
                           <POSMainPage />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
-                  } />                  
-                  {/* Order management */}
-                  <Route path="/pos/:terminalId/order" element={
-                    <ErrorBoundary>
-                      <Suspense fallback={<LoadingFallback message="Carregando pedidos..." />}>
-                        <LayoutRoute title="Pedidos">
-                          <POSOrderPage />
-                        </LayoutRoute>
-                      </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   {/* Counter Orders - Pedidos do Balcão */}
                   <Route path="/pos/:terminalId/counter-orders" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando pedidos do balcão..." />}>
                         <LayoutRoute title="Pedidos do Balcão" requireAuth={true}>
                           <CounterOrdersPage />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   <Route path="/pos/:terminalId/payment" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando pagamento..." />}>
                         <LayoutRoute title="Pagamento">
                           <POSPaymentPage />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   {/* Management routes - Requires authentication for reports */}
                   <Route path="/pos/:terminalId/manager" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando painel gerencial..." />}>
                         <LayoutRoute requireAuth={true} requiredRole={UserRole.MANAGER} title="Gestão Gerencial">
                           <ManagerScreen />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   {/* Business Day - Requires authentication to open/close day */}
                   <Route path="/pos/:terminalId/business-day" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando dia operacional..." />}>
                         <LayoutRoute requireAuth={true} title="Dia Operacional">
                           <BusinessDayPage />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   <Route path="/pos/:terminalId/cash-withdrawal" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando sangria..." />}>
                         <LayoutRoute title="Sangria">
                           <CashWithdrawalPage />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   {/* Restaurant management */}
                   <Route path="/pos/:terminalId/tables" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando layout das mesas..." />}>
                         <LayoutRoute title="Layout das Mesas">
                           <TableLayoutScreen />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   <Route path="/pos/:terminalId/delivery" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando delivery..." />}>
                         <LayoutRoute title="Delivery">
                           <DeliveryScreen />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   <Route path="/pos/:terminalId/remote-orders" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando pedidos remotos..." />}>
                         <LayoutRoute title="Pedidos Remotos" requireAuth={true}>
                           <RemoteOrdersScreen />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   <Route path="/pos/:terminalId/waiter/table/:tableId" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando interface do garçom..." />}>
                         <LayoutRoute requiredRole={UserRole.WAITER} title="Interface do Garçom">
                           <WaiterScreen />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   {/* Customer & Fiscal */}
                   <Route path="/pos/:terminalId/loyalty" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando fidelidade..." />}>
                         <LayoutRoute title="Sistema de Fidelidade">
                           <LoyaltyScreen />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   <Route path="/pos/:terminalId/fiscal" element={
-                    <ErrorBoundary>
+                    <ErrorBoundaryModern>
                       <Suspense fallback={<LoadingFallback message="Carregando módulo fiscal..." />}>
                         <LayoutRoute title="Módulo Fiscal">
                           <FiscalScreen />
                         </LayoutRoute>
                       </Suspense>
-                    </ErrorBoundary>
+                    </ErrorBoundaryModern>
                   } />
                   
                   {/* Legacy routes - redirect to new structure */}
@@ -315,7 +304,7 @@ function App() {
               </Suspense>
             </Router>
           </AuthProvider>
-        </ErrorBoundary>
+        </ErrorBoundaryModern>
       </ThemeProvider>
     );
   }

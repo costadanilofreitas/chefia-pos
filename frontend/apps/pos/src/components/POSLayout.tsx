@@ -1,10 +1,11 @@
 // src/components/POSLayout.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import '../index.css'; // Import Tailwind CSS
-import LoginDialog from './LoginDialog';
+import NumericLoginModal from './NumericLoginModal';
+import Toast, { useToast } from './Toast';
 
 interface POSLayoutProps {
   children: React.ReactNode;
@@ -23,7 +24,9 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
   const navigate = useNavigate();
   const { terminalId } = useParams<{ terminalId: string }>();
   const location = useLocation();
-  const { user, logout, hasPermission, hasRole, isAuthenticated } = useAuth();
+  const { user, logout, hasPermission, hasRole, isAuthenticated, login } = useAuth();
+  const { toasts, removeToast, success, error } = useToast();
+  const menuRef = useRef<HTMLDivElement>(null);
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
@@ -31,21 +34,21 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return localStorage.getItem('pos-theme') === 'dark';
   });
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Menu items
   const menuItems: MenuItem[] = [
     { label: 'POS Principal', path: `/pos/${terminalId}/main`, icon: '🏪', shortcut: 'Alt+H' },
-    { label: 'Pedidos', path: `/pos/${terminalId}/order`, icon: '📋', shortcut: 'Alt+P' },
     { label: 'Balcão', path: `/pos/${terminalId}/counter-orders`, icon: '🛒', shortcut: 'Alt+B' },
     { label: 'Mesas', path: `/pos/${terminalId}/tables`, icon: '🪑', shortcut: 'Alt+M' },
     { label: 'Delivery', path: `/pos/${terminalId}/delivery`, icon: '🛵', shortcut: 'Alt+D' },
-    { label: 'Pedidos Remotos', path: `/pos/${terminalId}/remote-orders`, icon: '📱' },
+    { label: 'Pedidos Remotos', path: `/pos/${terminalId}/remote-orders`, icon: '📱' , shortcut: 'Alt+R'},
     { label: 'Fidelidade', path: `/pos/${terminalId}/loyalty`, icon: '⭐', shortcut: 'Alt+F' },
     { label: 'Fiscal', path: `/pos/${terminalId}/fiscal`, icon: '📊', shortcut: 'Alt+I' },
     { label: 'Caixa', path: `/pos/${terminalId}/cashier`, icon: '💰', shortcut: 'Alt+C' },
     { label: 'Sangria', path: `/pos/${terminalId}/cash-withdrawal`, icon: '💸', shortcut: 'Alt+S' },
     { label: 'Dia Operacional', path: `/pos/${terminalId}/business-day`, icon: '📅', shortcut: 'Alt+O' },
-    { label: 'Gerencial', path: `/pos/${terminalId}/manager`, icon: '👔', shortcut: 'Alt+G', permission: 'admin' },
+    { label: 'Gerencial', path: `/pos/${terminalId}/manager`, icon: '👔', shortcut: 'Alt+G', permission: 'manager' },
   ];
 
   // Update clock
@@ -61,6 +64,20 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMenuOpen]);
+
   // Theme management
   useEffect(() => {
     if (isDarkMode) {
@@ -72,9 +89,57 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
     }
   }, [isDarkMode]);
 
+  // Fullscreen management
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.() ||
+      (document.documentElement as any).webkitRequestFullscreen?.() ||
+      (document.documentElement as any).mozRequestFullScreen?.() ||
+      (document.documentElement as any).msRequestFullscreen?.();
+    } else {
+      document.exitFullscreen?.() ||
+      (document as any).webkitExitFullscreen?.() ||
+      (document as any).mozCancelFullScreen?.() ||
+      (document as any).msExitFullscreen?.();
+    }
+  }, []);
+
   const handleLogout = () => {
     logout();
+    success('Logout realizado com sucesso!');
     navigate(`/pos/${terminalId}/cashier`);
+  };
+
+  const handleLogin = async (operatorId: string, password: string) => {
+    try {
+      await login({ operator_id: operatorId, password });
+      success('Login realizado com sucesso!');
+      // Pequeno delay para garantir que o estado seja atualizado
+      setTimeout(() => {
+        navigate(`/pos/${terminalId}/main`);
+      }, 100);
+    } catch (err: any) {
+      error(err.message || 'Erro ao fazer login');
+      throw err;
+    }
   };
 
   const handleNavigation = (path: string) => {
@@ -103,7 +168,6 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
 
   // Keyboard shortcuts for navigation
   useHotkeys('alt+h', () => handleNavigation(`/pos/${terminalId}/main`));
-  useHotkeys('alt+p', () => handleNavigation(`/pos/${terminalId}/order`));
   useHotkeys('alt+b', () => handleNavigation(`/pos/${terminalId}/counter-orders`));
   useHotkeys('alt+m', () => handleNavigation(`/pos/${terminalId}/tables`));
   useHotkeys('alt+d', () => handleNavigation(`/pos/${terminalId}/delivery`));
@@ -115,9 +179,16 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
   useHotkeys('alt+o', () => handleNavigation(`/pos/${terminalId}/business-day`));
   useHotkeys('escape', () => setIsMenuOpen(false));
   useHotkeys('ctrl+d', () => setIsDarkMode(!isDarkMode));
+  useHotkeys('f11', () => {
+    toggleFullscreen();
+  });
 
   // Filter menu items based on permissions
   const visibleMenuItems = menuItems.filter(item => {
+    if (item.permission === 'manager') {
+      // Check if user is manager or admin
+      return hasRole('manager') || hasRole('admin');
+    }
     if (item.permission && !hasRole(item.permission)) {
       return false;
     }
@@ -167,11 +238,64 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
             </div>
             
             <div className="flex items-center gap-3">
+              {/* Fullscreen Toggle */}
+              <button
+                onClick={toggleFullscreen}
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                aria-label="Toggle fullscreen"
+                title="Tela cheia (F11)"
+              >
+                {isFullscreen ? (
+                  /* Exit fullscreen icon */
+                  <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <g strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                      {/* Top left corner - arrow pointing inward */}
+                      <path d="M8 3v5H3" />
+                      <path d="M3 3l5 5" />
+                      
+                      {/* Top right corner - arrow pointing inward */}
+                      <path d="M16 3v5h5" />
+                      <path d="M21 3l-5 5" />
+                      
+                      {/* Bottom left corner - arrow pointing inward */}
+                      <path d="M8 21v-5H3" />
+                      <path d="M3 21l5-5" />
+                      
+                      {/* Bottom right corner - arrow pointing inward */}
+                      <path d="M16 21v-5h5" />
+                      <path d="M21 21l-5-5" />
+                    </g>
+                  </svg>
+                ) : (
+                  /* Enter fullscreen icon */
+                  <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <g strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                      {/* Top left corner - arrow pointing outward */}
+                      <path d="M3 8V3h5" />
+                      <path d="M3 3l5 5" />
+                      
+                      {/* Top right corner - arrow pointing outward */}
+                      <path d="M21 8V3h-5" />
+                      <path d="M21 3l-5 5" />
+                      
+                      {/* Bottom left corner - arrow pointing outward */}
+                      <path d="M3 16v5h5" />
+                      <path d="M3 21l5-5" />
+                      
+                      {/* Bottom right corner - arrow pointing outward */}
+                      <path d="M21 16v5h-5" />
+                      <path d="M21 21l-5-5" />
+                    </g>
+                  </svg>
+                )}
+              </button>
+              
               {/* Theme Toggle */}
               <button
                 onClick={() => setIsDarkMode(!isDarkMode)}
                 className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 aria-label="Toggle theme"
+                title="Alternar tema (Ctrl+D)"
               >
                 {isDarkMode ? '☀️' : '🌙'}
               </button>
@@ -191,6 +315,7 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
                     onClick={handleLogout}
                     className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
                     aria-label="Logout"
+                    title="Sair do sistema"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -211,7 +336,9 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
         
         {/* Navigation Menu Dropdown */}
         {isMenuOpen && (
-          <div className="absolute top-16 left-4 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-2 min-w-[280px] max-h-[calc(100vh-5rem)] overflow-y-auto">
+          <div 
+            ref={menuRef}
+            className="absolute top-16 left-4 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-2 min-w-[280px] max-h-[calc(100vh-5rem)] overflow-y-auto animate-scale-up">
             {visibleMenuItems.map((item) => (
               <button
                 key={item.path}
@@ -260,15 +387,15 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
         </div>
       </footer>
 
-      {/* Login Dialog */}
-      <LoginDialog
+      {/* Login Modal */}
+      <NumericLoginModal
         open={loginDialogOpen}
         onClose={() => setLoginDialogOpen(false)}
-        onSuccess={() => {
-          setLoginDialogOpen(false);
-          navigate(`/pos/${terminalId}/main`);
-        }}
+        onLogin={handleLogin}
       />
+
+      {/* Toast Messages */}
+      <Toast messages={toasts} onRemove={removeToast} />
     </div>
   );
 };
