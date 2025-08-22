@@ -1,190 +1,198 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
+import react from "@vitejs/plugin-react";
+import { resolve } from "path";
+import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react()],
-  
+
   // Build optimization
   build: {
-    target: 'es2015',
-    minify: 'terser',
+    target: "es2015",
+    minify: "terser",
     sourcemap: true,
-    
+
     // Chunk splitting strategy
     rollupOptions: {
       output: {
         manualChunks: {
           // Vendor chunks
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-mui': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
-          'vendor-utils': ['axios', 'date-fns'],
-          
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-utils": ["axios", "date-fns"],
+
           // Feature chunks
-          'pos-core': [
-            './src/ui/POSMainPage.tsx',
-            './src/ui/POSPaymentPageModern.tsx',
-            './src/ui/CounterOrdersPageModern.tsx'
+          "pos-core": [
+            "./src/ui/MainPage.tsx",
+            "./src/ui/PaymentPage.tsx",
+            "./src/ui/CounterOrdersPage.tsx",
           ],
-          'management': [
-            './src/ui/ManagerScreenComplete.tsx',
-            './src/ui/BusinessDayPageModern.tsx',
-            './src/ui/CashierOpeningClosingPageModern.tsx',
-            './src/ui/CashWithdrawalPageModern.tsx'
+          management: [
+            "./src/ui/ManagerPage.tsx",
+            "./src/ui/BusinessDayPage.tsx",
+            "./src/ui/CashierOpeningClosingPage.tsx",
+            "./src/ui/CashWithdrawalPage.tsx",
           ],
-          'restaurant': [
-            './src/ui/TableLayoutScreenModern.tsx',
-            './src/ui/DeliveryScreenKanban.tsx',
-            './src/ui/WaiterScreenModern.tsx',
-            './src/ui/RemoteOrdersScreenModern.tsx'
+          restaurant: [
+            "./src/ui/TablePage.tsx",
+            "./src/ui/DeliveryPage.tsx",
+            "./src/ui/WaiterPage.tsx",
+            "./src/ui/RemoteOrdersPage.tsx",
           ],
-          'loyalty-fiscal': [
-            './src/ui/LoyaltyScreenModern.tsx',
-            './src/ui/FiscalScreenModern.tsx'
+          "loyalty-fiscal": [
+            "./src/ui/LoyaltyPage.tsx",
+            "./src/ui/FiscalPage.tsx",
           ],
-          'services': [
-            './src/services/OfflineStorage.ts',
-            './src/services/SyncManager.ts',
-            './src/services/ApiClient.ts'
-          ]
+          services: [
+            "./src/services/OfflineStorage.ts",
+            "./src/services/SyncManager.ts",
+            "./src/services/ApiClient.ts",
+          ],
         },
-        
+
         // Optimize chunk names
         chunkFileNames: (chunkInfo) => {
-          const facadeModuleId = chunkInfo.facadeModuleId 
-            ? chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '') 
-            : 'chunk';
+          const facadeModuleId = chunkInfo.facadeModuleId
+            ? chunkInfo.facadeModuleId
+                .split("/")
+                .pop()
+                ?.replace(".tsx", "")
+                .replace(".ts", "")
+            : "chunk";
           return `assets/${facadeModuleId}-[hash].js`;
         },
-        
+
         // Optimize asset names
         assetFileNames: (assetInfo) => {
-          const info = assetInfo.name?.split('.') || [];
+          const info = assetInfo.name?.split(".") || [];
           const ext = info[info.length - 1];
-          
-          if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name || '')) {
+
+          if (
+            /\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name || "")
+          ) {
             return `assets/images/[name]-[hash].${ext}`;
           }
-          
-          if (/\.(css)$/i.test(assetInfo.name || '')) {
+
+          if (/\.(css)$/i.test(assetInfo.name || "")) {
             return `assets/styles/[name]-[hash].${ext}`;
           }
-          
+
           return `assets/[name]-[hash].${ext}`;
-        }
-      }
+        },
+      },
     },
-    
+
     // Terser options for better minification
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug'],
-        passes: 2
+        pure_funcs: ["console.log", "console.info", "console.debug"],
+        passes: 2,
       },
       mangle: {
-        safari10: true
+        safari10: true,
       },
       format: {
-        comments: false
-      }
+        comments: false,
+      },
     },
-    
+
     // Chunk size warnings
     chunkSizeWarningLimit: 1000,
-    
+
     // Optimize dependencies
     commonjsOptions: {
       include: [/node_modules/],
-      transformMixedEsModules: true
-    }
+      transformMixedEsModules: true,
+    },
   },
-  
+
   // Development optimization
   server: {
     port: 3000,
     host: true,
     hmr: {
-      overlay: false
+      overlay: false,
     },
     proxy: {
-      '/api': {
-        target: 'http://localhost:8001',
+      "/api": {
+        target: "http://localhost:8001",
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
+          proxy.on("error", (err, _req, _res) => {
+            console.log("proxy error", err);
           });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
+          proxy.on("proxyReq", (proxyReq, req, _res) => {
+            console.log("Sending Request to the Target:", req.method, req.url);
           });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+          proxy.on("proxyRes", (proxyRes, req, _res) => {
+            console.log(
+              "Received Response from the Target:",
+              proxyRes.statusCode,
+              req.url
+            );
           });
         },
-      }
-    }
+      },
+    },
   },
-  
+
   // Path resolution
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
-      '@components': resolve(__dirname, 'src/components'),
-      '@ui': resolve(__dirname, 'src/ui'),
-      '@services': resolve(__dirname, 'src/services'),
-      '@hooks': resolve(__dirname, 'src/hooks'),
-      '@utils': resolve(__dirname, 'src/utils')
-    }
+      "@": resolve(__dirname, "src"),
+      "@components": resolve(__dirname, "src/components"),
+      "@ui": resolve(__dirname, "src/ui"),
+      "@services": resolve(__dirname, "src/services"),
+      "@hooks": resolve(__dirname, "src/hooks"),
+      "@utils": resolve(__dirname, "src/utils"),
+    },
   },
-  
+
   // Environment variables
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
-    __COMMIT_HASH__: JSON.stringify(process.env.COMMIT_HASH || 'dev')
+    __COMMIT_HASH__: JSON.stringify(process.env.COMMIT_HASH || "dev"),
   },
-  
+
   // CSS optimization with PostCSS
   css: {
     devSourcemap: true,
-    postcss: './postcss.config.cjs',
+    postcss: "./postcss.config.cjs",
     modules: {
-      localsConvention: 'camelCase',
-      generateScopedName: '[name]__[local]__[hash:base64:5]'
-    }
+      localsConvention: "camelCase",
+      generateScopedName: "[name]__[local]__[hash:base64:5]",
+    },
   },
-  
+
   // Preview configuration
   preview: {
     port: 4173,
-    host: true
+    host: true,
   },
-  
+
   // Dependency optimization
   optimizeDeps: {
     include: [
-      'react',
-      'react-dom',
-      'react-router-dom',
-      '@mui/material',
-      '@mui/icons-material',
-      '@emotion/react',
-      '@emotion/styled'
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "@mui/material",
+      "@mui/icons-material",
+      "@emotion/react",
+      "@emotion/styled",
     ],
-    exclude: ['@vite/client', '@vite/env']
+    exclude: ["@vite/client", "@vite/env"],
   },
-  
+
   // Experimental features
   experimental: {
     renderBuiltUrl(filename, { hostType }) {
-      if (hostType === 'js') {
+      if (hostType === "js") {
         return { js: `/${filename}` };
       }
       return { relative: true };
-    }
-  }
+    },
+  },
 });
-

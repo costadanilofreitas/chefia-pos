@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#gradient)"/>
+  
+  <!-- POS Terminal Screen -->
+  <rect x="120" y="100" width="272" height="180" rx="12" fill="white" opacity="0.95"/>
+  <rect x="140" y="120" width="232" height="140" rx="8" fill="#1e293b"/>
+  
+  <!-- Screen Content -->
+  <rect x="160" y="140" width="60" height="8" rx="4" fill="#60a5fa"/>
+  <rect x="230" y="140" width="40" height="8" rx="4" fill="#60a5fa"/>
+  <rect x="280" y="140" width="72" height="8" rx="4" fill="#60a5fa"/>
+  
+  <rect x="160" y="160" width="192" height="4" rx="2" fill="#475569"/>
+  <rect x="160" y="170" width="192" height="4" rx="2" fill="#475569"/>
+  <rect x="160" y="180" width="140" height="4" rx="2" fill="#475569"/>
+  
+  <rect x="160" y="200" width="80" height="24" rx="4" fill="#10b981"/>
+  <rect x="252" y="200" width="80" height="24" rx="4" fill="#f59e0b"/>
+  
+  <rect x="160" y="236" width="192" height="12" rx="6" fill="#3b82f6"/>
+  
+  <!-- Keyboard Base -->
+  <path d="M100 280 L120 280 L120 360 L392 360 L392 280 L412 280 L412 380 L100 380 Z" fill="white" opacity="0.95"/>
+  
+  <!-- Keyboard Keys -->
+  <g opacity="0.8">
+    <!-- First Row -->
+    <rect x="130" y="300" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="162" y="300" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="194" y="300" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="226" y="300" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="258" y="300" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="290" y="300" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="322" y="300" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="354" y="300" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    
+    <!-- Second Row -->
+    <rect x="130" y="332" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="162" y="332" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="194" y="332" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="226" y="332" width="56" height="24" rx="4" fill="#3b82f6"/>
+    <rect x="290" y="332" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="322" y="332" width="24" height="24" rx="4" fill="#e2e8f0"/>
+    <rect x="354" y="332" width="24" height="24" rx="4" fill="#e2e8f0"/>
+  </g>
+  
+  <!-- Dollar Sign Symbol -->
+  <circle cx="380" cy="140" r="32" fill="#10b981" opacity="0.9"/>
+  <text x="380" y="152" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="white">$</text>
+  
+  <!-- Gradient Definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>

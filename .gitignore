@@ -55,3 +55,6 @@ bower_components/
 
 # TypeScript
 *.tsbuildinfo
+
+*storybook.log
+storybook-static

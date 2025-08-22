@@ -3,6 +3,9 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../contexts/ThemeContext';
+import ThemeToggle from './ThemeToggle';
+import { SimpleTooltip } from './Tooltip';
 import '../index.css'; // Import Tailwind CSS
 import NumericLoginModal from './NumericLoginModal';
 import Toast, { useToast } from './Toast';
@@ -26,15 +29,14 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
   const location = useLocation();
   const { user, logout, hasPermission, hasRole, isAuthenticated, login } = useAuth();
   const { toasts, removeToast, success, error } = useToast();
+  const { mode: themeMode } = useTheme();
   const menuRef = useRef<HTMLDivElement>(null);
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('pos-theme') === 'dark';
-  });
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const isDarkMode = themeMode === 'dark';
 
   // Menu items
   const menuItems: MenuItem[] = [
@@ -178,7 +180,7 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
   useHotkeys('alt+s', () => handleNavigation(`/pos/${terminalId}/cash-withdrawal`));
   useHotkeys('alt+o', () => handleNavigation(`/pos/${terminalId}/business-day`));
   useHotkeys('escape', () => setIsMenuOpen(false));
-  useHotkeys('ctrl+d', () => setIsDarkMode(!isDarkMode));
+  // Theme toggle is handled by ThemeContext now
   useHotkeys('f11', () => {
     toggleFullscreen();
   });
@@ -202,29 +204,27 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {/* Menu Button */}
+              {/* Menu Button Mobile */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors lg:hidden"
+                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 hover:scale-105 active:scale-95 lg:hidden"
                 aria-label="Menu"
               >
-                <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
                 </svg>
               </button>
               
               {/* Desktop Menu */}
-              <nav className="hidden lg:flex items-center gap-2">
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  aria-label="Menu"
-                >
-                  <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-              </nav>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="hidden lg:block p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 hover:scale-105 active:scale-95"
+                aria-label="Menu"
+              >
+                <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
               
               {/* Page Title */}
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -239,66 +239,65 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
             
             <div className="flex items-center gap-3">
               {/* Fullscreen Toggle */}
-              <button
-                onClick={toggleFullscreen}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                aria-label="Toggle fullscreen"
-                title="Tela cheia (F11)"
+              <SimpleTooltip 
+                title={isFullscreen ? "Sair da tela cheia (F11)" : "Tela cheia (F11)"}
+                position="bottom"
               >
-                {isFullscreen ? (
-                  /* Exit fullscreen icon */
-                  <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <g strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
-                      {/* Top left corner - arrow pointing inward */}
-                      <path d="M8 3v5H3" />
-                      <path d="M3 3l5 5" />
-                      
-                      {/* Top right corner - arrow pointing inward */}
-                      <path d="M16 3v5h5" />
-                      <path d="M21 3l-5 5" />
-                      
-                      {/* Bottom left corner - arrow pointing inward */}
-                      <path d="M8 21v-5H3" />
-                      <path d="M3 21l5-5" />
-                      
-                      {/* Bottom right corner - arrow pointing inward */}
-                      <path d="M16 21v-5h5" />
-                      <path d="M21 21l-5-5" />
-                    </g>
-                  </svg>
-                ) : (
-                  /* Enter fullscreen icon */
-                  <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <g strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
-                      {/* Top left corner - arrow pointing outward */}
-                      <path d="M3 8V3h5" />
-                      <path d="M3 3l5 5" />
-                      
-                      {/* Top right corner - arrow pointing outward */}
-                      <path d="M21 8V3h-5" />
-                      <path d="M21 3l-5 5" />
-                      
-                      {/* Bottom left corner - arrow pointing outward */}
-                      <path d="M3 16v5h5" />
-                      <path d="M3 21l5-5" />
-                      
-                      {/* Bottom right corner - arrow pointing outward */}
-                      <path d="M21 16v5h-5" />
-                      <path d="M21 21l-5-5" />
-                    </g>
-                  </svg>
-                )}
-              </button>
+                <button
+                  onClick={toggleFullscreen}
+                  className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 hover:scale-105 active:scale-95"
+                  aria-label="Toggle fullscreen"
+                >
+                  {isFullscreen ? (
+                    /* Exit fullscreen icon */
+                    <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <g strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                        {/* Top left corner - arrow pointing inward */}
+                        <path d="M8 3v5H3" />
+                        <path d="M3 3l5 5" />
+                        
+                        {/* Top right corner - arrow pointing inward */}
+                        <path d="M16 3v5h5" />
+                        <path d="M21 3l-5 5" />
+                        
+                        {/* Bottom left corner - arrow pointing inward */}
+                        <path d="M8 21v-5H3" />
+                        <path d="M3 21l5-5" />
+                        
+                        {/* Bottom right corner - arrow pointing inward */}
+                        <path d="M16 21v-5h5" />
+                        <path d="M21 21l-5-5" />
+                      </g>
+                    </svg>
+                  ) : (
+                    /* Enter fullscreen icon */
+                    <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <g strokeLinecap="round" strokeLinejoin="round" strokeWidth="2">
+                        {/* Top left corner - arrow pointing outward */}
+                        <path d="M3 8V3h5" />
+                        <path d="M3 3l5 5" />
+                        
+                        {/* Top right corner - arrow pointing outward */}
+                        <path d="M21 8V3h-5" />
+                        <path d="M21 3l-5 5" />
+                        
+                        {/* Bottom left corner - arrow pointing outward */}
+                        <path d="M3 16v5h5" />
+                        <path d="M3 21l5-5" />
+                        
+                        {/* Bottom right corner - arrow pointing outward */}
+                        <path d="M21 16v5h-5" />
+                        <path d="M21 21l-5-5" />
+                      </g>
+                    </svg>
+                  )}
+                </button>
+              </SimpleTooltip>
               
               {/* Theme Toggle */}
-              <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                aria-label="Toggle theme"
-                title="Alternar tema (Ctrl+D)"
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
+              <div className="flex items-center">
+                <ThemeToggle showTooltip={true} size="medium" />
+              </div>
               
               {/* User Menu */}
               {isAuthenticated ? (
@@ -311,16 +310,17 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
                       {user?.role || 'Operador'}
                     </div>
                   </div>
-                  <button
-                    onClick={handleLogout}
-                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-                    aria-label="Logout"
-                    title="Sair do sistema"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                  </button>
+                  <SimpleTooltip title="Sair do sistema" position="bottom">
+                    <button
+                      onClick={handleLogout}
+                      className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-all duration-200 hover:scale-105 active:scale-95"
+                      aria-label="Logout"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                    </button>
+                  </SimpleTooltip>
                 </div>
               ) : (
                 <button
@@ -338,7 +338,7 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
         {isMenuOpen && (
           <div 
             ref={menuRef}
-            className="absolute top-16 left-4 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-2 min-w-[280px] max-h-[calc(100vh-5rem)] overflow-y-auto animate-scale-up">
+            className="absolute top-14 left-4 lg:left-4 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-2 min-w-[280px] max-h-[calc(100vh-5rem)] overflow-y-auto animate-scale-up">
             {visibleMenuItems.map((item) => (
               <button
                 key={item.path}

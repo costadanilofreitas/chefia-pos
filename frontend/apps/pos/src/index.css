@@ -7,11 +7,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom utility classes */
+@layer utilities {
+  /* Glass morphism effect */
+  .glass-morphism {
+    @apply backdrop-blur-md bg-white/5 border border-white/10;
+  }
+  
+  /* Smooth theme transitions */
+  .theme-transition {
+    @apply transition-colors duration-300 ease-in-out;
+  }
+}
+
 /* Global styles */
 @layer base {
-  /* Prevent text selection on UI elements */
+  /* Prevent text selection and unwanted mobile interactions */
   button, nav, header, footer, aside, label {
     @apply select-none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
   }
   
   /* Allow text selection only on specific elements */
@@ -94,6 +110,43 @@
 
 .animate-scale-up {
   animation: scale-up 0.2s ease-out;
+}
+
+/* Performance optimizations for POS */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Fast transitions for POS operations */
+.transition-fast {
+  transition-duration: 75ms;
+}
+
+.transition-instant {
+  transition-duration: 50ms;
+}
+
+/* Optimize rendering for product grid */
+.product-grid {
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hardware acceleration for animations */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Disable tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Optimize button responsiveness */
+button {
+  -webkit-touch-callout: none;
 }
 
 /* Prevent text selection on non-input elements */

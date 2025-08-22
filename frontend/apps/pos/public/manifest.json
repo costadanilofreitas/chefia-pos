@@ -1,23 +1,29 @@
 {
-  "name": "POS Modern - Sistema de Ponto de Venda",
-  "short_name": "POS Modern",
+  "name": "Chefia POS - Sistema de Ponto de Venda",
+  "short_name": "Chefia POS",
   "description": "Sistema completo de ponto de venda para restaurantes",
   "start_url": "/pos/1",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2196f3",
+  "theme_color": "#2563eb",
   "orientation": "any",
   "scope": "/",
   "lang": "pt-BR",
   "categories": ["business", "productivity"],
   "icons": [
     {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
       "src": "/favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/logo192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"

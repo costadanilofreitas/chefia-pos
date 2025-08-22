@@ -1,9 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import ErrorBoundary from './components/ErrorBoundary';
+import ErrorBoundaryModern from './components/ErrorBoundaryModern';
 import { offlineStorage } from './services/OfflineStorage';
-import { syncManager } from './services/SyncManager';
 
 // Initialize offline storage
 offlineStorage.init().then(() => {
@@ -51,8 +50,8 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <ErrorBoundary>
+    <ErrorBoundaryModern>
       <App />
-    </ErrorBoundary>
+    </ErrorBoundaryModern>
   </React.StrictMode>
 );

@@ -1,118 +1,41 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { CssBaseline, CircularProgress, Box } from '@mui/material';
-import ErrorBoundaryModern from './components/ErrorBoundaryModern';
+import React, { lazy, Suspense } from 'react';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import AuthGuard from './components/AuthGuard';
-import TerminalValidator from './components/TerminalValidator';
+import ErrorBoundaryModern from './components/ErrorBoundaryModern';
 import POSLayout from './components/POSLayout';
+import TerminalValidator from './components/TerminalValidator';
 import { AuthProvider } from './contexts/AuthContext';
-import { useAuth, UserRole } from './hooks/useAuth';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { ToastProvider } from './contexts/ToastContext';
+import { UserRole } from './hooks/useAuth';
 
 // Lazy load components for better performance
-const POSMainPage = lazy(() => import('./ui/POSMainPage'));
-const CounterOrdersPage = lazy(() => import('./ui/CounterOrdersPageModern'));
-const POSPaymentPage = lazy(() => import('./ui/POSPaymentPageModern'));
-const ManagerScreen = lazy(() => import('./ui/ManagerScreenComplete'));
-const BusinessDayPage = lazy(() => import('./ui/BusinessDayPageModern'));
-const CashWithdrawalPage = lazy(() => import('./ui/CashWithdrawalPageModern'));
-const CashierOpeningClosingPage = lazy(() => import('./ui/CashierOpeningClosingPageModern'));
-const TableLayoutScreen = lazy(() => import('./ui/TableLayoutScreenModern'));
-const DeliveryScreen = lazy(() => import('./ui/DeliveryScreenKanban'));
-const RemoteOrdersScreen = lazy(() => import('./ui/RemoteOrdersScreenModern'));
-const WaiterScreen = lazy(() => import('./ui/WaiterScreenModern'));
-const LoyaltyScreen = lazy(() => import('./ui/LoyaltyScreenModern'));
-const FiscalScreen = lazy(() => import('./ui/FiscalScreenModern'));
+const POSMainPage = lazy(() => import('./ui/MainPage'));
+const CounterOrdersPage = lazy(() => import('./ui/CounterOrdersPage'));
+const POSPaymentPage = lazy(() => import('./ui/PaymentPage'));
+const ManagerScreen = lazy(() => import('./ui/ManagerPage'));
+const BusinessDayPage = lazy(() => import('./ui/BusinessDayPage'));
+const CashWithdrawalPage = lazy(() => import('./ui/CashWithdrawalPage'));
+const CashierOpeningClosingPage = lazy(() => import('./ui/CashierOpeningClosingPage'));
+const TableLayoutScreen = lazy(() => import('./ui/TablePage'));
+const DeliveryScreen = lazy(() => import('./ui/DeliveryPage'));
+const RemoteOrdersScreen = lazy(() => import('./ui/RemoteOrdersPage'));
+const WaiterScreen = lazy(() => import('./ui/WaiterPage'));
+const LoyaltyScreen = lazy(() => import('./ui/LoyaltyPage'));
+const FiscalScreen = lazy(() => import('./ui/FiscalPage'));
 
 // Loading component
 const LoadingFallback: React.FC<{ message?: string }> = ({ message = 'Carregando...' }) => (
-  <Box
-    display="flex"
-    flexDirection="column"
-    alignItems="center"
-    justifyContent="center"
-    minHeight="100vh"
-    gap={2}
-  >
-    <CircularProgress size={40} />
-    <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+  <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-gray-50 dark:bg-gray-900">
+    <div className="relative">
+      <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 rounded-full animate-spin border-t-blue-500 dark:border-t-blue-400"></div>
+    </div>
+    <p className="text-sm text-gray-600 dark:text-gray-400">
       {message}
-    </Box>
-  </Box>
+    </p>
+  </div>
 );
 
-// Theme configuration
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#2196f3',
-      light: '#64b5f6',
-      dark: '#1976d2',
-    },
-    secondary: {
-      main: '#ff9800',
-      light: '#ffb74d',
-      dark: '#f57c00',
-    },
-    background: {
-      default: '#f5f5f5',
-      paper: '#ffffff',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontSize: '2.5rem',
-      fontWeight: 500,
-    },
-    h2: {
-      fontSize: '2rem',
-      fontWeight: 500,
-    },
-    h3: {
-      fontSize: '1.75rem',
-      fontWeight: 500,
-    },
-    h4: {
-      fontSize: '1.5rem',
-      fontWeight: 500,
-    },
-    h5: {
-      fontSize: '1.25rem',
-      fontWeight: 500,
-    },
-    h6: {
-      fontSize: '1rem',
-      fontWeight: 500,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          borderRadius: 8,
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        },
-      },
-    },
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        },
-      },
-    },
-  },
-});
 
 // Route wrapper with layout
 const LayoutRoute: React.FC<{
@@ -137,11 +60,11 @@ const LayoutRoute: React.FC<{
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <ThemeProvider>
       <ErrorBoundaryModern>
         <AuthProvider>
-          <Router>
+          <ToastProvider>
+            <Router>
             <Suspense fallback={<LoadingFallback message="Inicializando sistema POS..." />}>
             <Routes>
                   {/* Root redirects */}
@@ -303,6 +226,7 @@ function App() {
                 </Routes>
               </Suspense>
             </Router>
+          </ToastProvider>
           </AuthProvider>
         </ErrorBoundaryModern>
       </ThemeProvider>

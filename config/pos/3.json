@@ -1,0 +1,22 @@
+{
+  "terminal_id": "POS003",
+  "terminal_name": "Caixa Drive-Thru",
+  "printer_configs": [
+    {
+      "name": "Recibo",
+      "type": "receipt",
+      "model": "Generic Thermal",
+      "connection_type": "network",
+      "connection_params": {"ip_address": "192.168.1.102", "port": 9100}
+    }
+  ],
+  "default_printer": "Recibo",
+  "allow_discounts": false,
+  "max_discount_percent": 0,
+  "allow_price_override": false,
+  "allow_returns": false,
+  "default_payment_method": "card",
+  "tax_included": true,
+  "currency_symbol": "R$",
+  "decimal_places": 2
+}

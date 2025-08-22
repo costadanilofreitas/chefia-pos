@@ -1,11 +1,11 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { useAuth } from '../hooks/mocks/useAuth';
 import { useCashier } from '../hooks/mocks/useCashier';
 import { useOrder } from '../hooks/mocks/useOrder';
-import POSPaymentPage from '../ui/POSPaymentPage';
 import PrinterService from '../services/PrinterService';
+import POSPaymentPage from '../ui/PaymentPage';
 
 // Mocking hooks and services
 jest.mock('../hooks/mocks/useAuth');

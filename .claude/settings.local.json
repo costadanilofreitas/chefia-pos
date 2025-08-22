@@ -29,7 +29,9 @@
       "Bash(awk:*)",
       "Bash(sed:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(npx storybook@latest init:*)",
+      "Bash(dir)"
     ],
     "deny": [],
     "ask": [],

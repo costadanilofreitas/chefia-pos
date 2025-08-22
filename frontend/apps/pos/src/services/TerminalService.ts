@@ -4,10 +4,28 @@
  */
 
 interface TerminalConfig {
-  id: string;
-  name: string;
-  enabled: boolean;
+  id?: string;
+  terminal_id?: string;
+  name?: string;
+  terminal_name?: string;
+  enabled?: boolean;
   maxOperators?: number;
+  printer_configs?: Array<{
+    name: string;
+    type: string;
+    model: string;
+    connection_type: string;
+    connection_params: Record<string, any>;
+  }>;
+  default_printer?: string;
+  allow_discounts?: boolean;
+  max_discount_percent?: number;
+  allow_price_override?: boolean;
+  allow_returns?: boolean;
+  default_payment_method?: string;
+  tax_included?: boolean;
+  currency_symbol?: string;
+  decimal_places?: number;
 }
 
 interface TerminalSession {
@@ -21,6 +39,7 @@ interface TerminalSession {
 class TerminalService {
   private static STORAGE_PREFIX = 'pos_terminal_';
   private static CONFIG_CACHE: Map<string, TerminalConfig> = new Map();
+  private static AVAILABLE_TERMINALS_CACHE: string[] | null = null;
 
   /**
    * Get session key for a specific terminal
@@ -30,38 +49,47 @@ class TerminalService {
   }
 
   /**
-   * Check if terminal is configured
+   * Get list of available terminals by importing config modules
+   * This is very fast because Vite statically analyzes the glob at build time
    */
-  static async isTerminalConfigured(terminalId: string): Promise<boolean> {
-    try {
-      // Check cache first
-      if (this.CONFIG_CACHE.has(terminalId)) {
-        return this.CONFIG_CACHE.get(terminalId)?.enabled || false;
-      }
-
-      // Try to fetch configuration from backend
-      const response = await fetch(`/config/pos/${terminalId}.json`);
-      if (response.ok) {
-        const config = await response.json();
-        this.CONFIG_CACHE.set(terminalId, config);
-        return config.enabled !== false;
-      }
-      
-      // For development, allow terminals 1-5 by default
-      if (process.env.NODE_ENV === 'development') {
-        const terminalNum = parseInt(terminalId);
-        return !isNaN(terminalNum) && terminalNum >= 1 && terminalNum <= 5;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('Error checking terminal configuration:', error);
-      // In development, be permissive
-      if (process.env.NODE_ENV === 'development') {
-        return true;
-      }
-      return false;
+  static getAvailableTerminals(): string[] {
+    if (this.AVAILABLE_TERMINALS_CACHE) {
+      return this.AVAILABLE_TERMINALS_CACHE;
     }
+
+    const possibleTerminals: string[] = [];
+
+    // Import all config files statically
+    // Vite will handle this with glob import at build time - very fast!
+    const modules = import.meta.glob('../config/pos/*.json', { eager: false });
+    
+    for (const path in modules) {
+      // Extract terminal ID from path (e.g., "../config/pos/1.json" -> "1")
+      const match = path.match(/\/(\d+)\.json$/);
+      if (match) {
+        possibleTerminals.push(match[1]);
+      }
+    }
+
+    // Sort terminals numerically
+    possibleTerminals.sort((a, b) => {
+      const numA = parseInt(a);
+      const numB = parseInt(b);
+      return numA - numB;
+    });
+
+    // Cache and return results
+    // If no terminals found, return empty array - system should block access
+    this.AVAILABLE_TERMINALS_CACHE = possibleTerminals;
+    return this.AVAILABLE_TERMINALS_CACHE;
+  }
+
+  /**
+   * Check if terminal is configured - FAST synchronous check
+   */
+  static isTerminalConfigured(terminalId: string): boolean {
+    const availableTerminals = this.getAvailableTerminals();
+    return availableTerminals.includes(terminalId);
   }
 
   /**
@@ -80,7 +108,7 @@ class TerminalService {
         }
         return session;
       } catch (error) {
-        console.error('Error parsing terminal session:', error);
+        // Error parsing session
         return null;
       }
     }
@@ -158,27 +186,16 @@ class TerminalService {
     }
 
     try {
-      const response = await fetch(`/config/pos/${terminalId}.json`);
-      if (response.ok) {
-        const config = await response.json();
-        this.CONFIG_CACHE.set(terminalId, config);
-        return config;
-      }
+      // Dynamic import of the config file
+      const configModule = await import(`../config/pos/${terminalId}.json`);
+      const config = configModule.default || configModule;
+      this.CONFIG_CACHE.set(terminalId, config);
+      return config;
     } catch (error) {
-      console.error('Error loading terminal config:', error);
+      // Error loading config - terminal doesn't exist
+      // NO DEFAULT CONFIG - if terminal doesn't exist, it should be blocked
+      return null;
     }
-
-    // Return default config for development
-    if (process.env.NODE_ENV === 'development') {
-      return {
-        id: terminalId,
-        name: `Terminal ${terminalId}`,
-        enabled: true,
-        maxOperators: 1
-      };
-    }
-
-    return null;
   }
 }
 
