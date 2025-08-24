@@ -980,6 +980,9 @@ class POSAudit {
 
 ## 12. Testes e Qualidade
 
+Temos testes em /tests
+Temos mocks em /hooks/mocks
+
 ### 12.1 Estratégia de Testes
 
 ```typescript

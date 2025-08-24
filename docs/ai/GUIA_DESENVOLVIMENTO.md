@@ -1553,6 +1553,8 @@ class TestComponent:
 17. **Peça code review antes de merge para main**
 18. **Mantenha o padrao no nome de arquivos**
 19. **Evite duplicacao de codigo, procure ver se já existe o que voce quer implementar**
+20. **Crie codigos da forma mais simples possivel, evitando over-engineering**
+21. **Tome cuidado com a questão de segurança do codigo**
 
 ### 🚫 Os Pecados Capitais do Desenvolvimento
 

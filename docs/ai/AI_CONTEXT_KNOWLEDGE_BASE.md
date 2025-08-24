@@ -1,6 +1,6 @@
 # 🧠 AI Context & Knowledge Base - Chefia POS System
 
-You are a dev full stack especialyst with pos restaurant focus
+You are a dev full stack specialyst with pos restaurant focus, with full knowledge on React/Typescript/Tailwind + FastApi with Python
 
 ## 🎯 Purpose
 
@@ -444,11 +444,6 @@ technical_questions:
   kds_specific: "Check KDS_COMPLETO_NEGOCIO_TECNICO.md"
   backend_details: "Check BACKEND_COMPLETO_NEGOCIO_TECNICO.md"
 
-urgent_help:
-  blocker: "Post in #pos-blockers channel"
-  architecture: "Tag @tech-lead"
-  business: "Tag @product-manager"
-
 code_review:
   pr_template: "Use .github/pull_request_template.md"
   reviewers: "Auto-assigned based on CODEOWNERS"
@@ -478,6 +473,10 @@ read_these_files:
   1: "AI_CONTEXT_KNOWLEDGE_BASE.md" (this file)
   2: "MVP_ANALISE_ROADMAP.md" (roadmap details)
   3: "GUIA_DESENVOLVIMENTO.md" (dev practices)
+  4: "REGRAS_NEGOCIO_CONSOLIDADAS.md" (business details)
+  5: "ARQUITETURA_TECNICA_COMPLETA.md" (arch details)
+  6: "POS_COMPLETO_NEGOCIO_TECNICO.md" (pos details)
+  7: "BACKEND_COMPLETO_NEGOCIO_TECNICO.md" (backend details)
 ```
 
 ### Step 2: Pick a Task
@@ -760,16 +759,6 @@ metrics:
   interactive: <1000ms
   api_response: <150ms
   database_query: <50ms
-```
-
-### Emergency Contacts
-
-```yaml
-system_down: "@oncall-engineer"
-architecture_question: "@tech-lead"
-business_logic: "@product-manager"
-deployment_issue: "@devops"
-customer_complaint: "@support-lead"
 ```
 
 ---
