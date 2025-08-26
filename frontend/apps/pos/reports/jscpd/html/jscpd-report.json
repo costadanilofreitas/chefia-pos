@@ -1,0 +1,3734 @@
+{
+  "statistics": {
+    "detectionDate": "2025-08-26T23:07:09.146Z",
+    "formats": {
+      "typescript": {
+        "sources": {
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/mocks/useProduct.ts": {
+            "lines": 46,
+            "tokens": 484,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/mocks/useOrder.ts": {
+            "lines": 122,
+            "tokens": 1135,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/mocks/useCashier.ts": {
+            "lines": 106,
+            "tokens": 1000,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/mocks/useAuth.ts": {
+            "lines": 49,
+            "tokens": 531,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/index.ts": {
+            "lines": 16,
+            "tokens": 229,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/utils/formatters.ts": {
+            "lines": 17,
+            "tokens": 196,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/utils/EventBus.ts": {
+            "lines": 62,
+            "tokens": 473,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/utils/cn.ts": {
+            "lines": 5,
+            "tokens": 66,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/order.ts": {
+            "lines": 185,
+            "tokens": 1372,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/common.ts": {
+            "lines": 88,
+            "tokens": 643,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/stories/Page.stories.ts": {
+            "lines": 30,
+            "tokens": 328,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/stories/Header.stories.ts": {
+            "lines": 31,
+            "tokens": 259,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/stories/Button.stories.ts": {
+            "lines": 51,
+            "tokens": 389,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/TerminalService.ts": {
+            "lines": 202,
+            "tokens": 1691,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/TableService.ts": {
+            "lines": 228,
+            "tokens": 2026,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 12,
+            "duplicatedTokens": 162,
+            "percentage": 5.26,
+            "percentageTokens": 8,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/TableLayoutConfig.ts": {
+            "lines": 851,
+            "tokens": 8201,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/SyncManager.ts": {
+            "lines": 353,
+            "tokens": 3754,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/RemoteOrdersService.ts": {
+            "lines": 191,
+            "tokens": 1730,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/ProductService.ts": {
+            "lines": 138,
+            "tokens": 1245,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/PrinterService.ts": {
+            "lines": 188,
+            "tokens": 1551,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/PerformanceService.ts": {
+            "lines": 575,
+            "tokens": 4754,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OrderService.ts": {
+            "lines": 427,
+            "tokens": 3120,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 18,
+            "duplicatedTokens": 222,
+            "percentage": 4.22,
+            "percentageTokens": 7.12,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts": {
+            "lines": 356,
+            "tokens": 4248,
+            "sources": 1,
+            "clones": 6,
+            "duplicatedLines": 36,
+            "duplicatedTokens": 588,
+            "percentage": 10.11,
+            "percentageTokens": 13.84,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/NotificationService.ts": {
+            "lines": 600,
+            "tokens": 4885,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/LocalLoggerService.ts": {
+            "lines": 453,
+            "tokens": 3517,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/FiscalService.ts": {
+            "lines": 345,
+            "tokens": 3547,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/EmployeeService.ts": {
+            "lines": 386,
+            "tokens": 3554,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/DeliveryService.ts": {
+            "lines": 343,
+            "tokens": 2720,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/CustomerService.ts": {
+            "lines": 167,
+            "tokens": 1334,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/CouponsService.ts": {
+            "lines": 137,
+            "tokens": 1322,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 9,
+            "duplicatedTokens": 89,
+            "percentage": 6.57,
+            "percentageTokens": 6.73,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/CashierService.ts": {
+            "lines": 243,
+            "tokens": 2143,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/CacheService.ts": {
+            "lines": 95,
+            "tokens": 858,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/BusinessDayService.ts": {
+            "lines": 220,
+            "tokens": 2117,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/BillsService.ts": {
+            "lines": 146,
+            "tokens": 1285,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 9,
+            "duplicatedTokens": 89,
+            "percentage": 6.16,
+            "percentageTokens": 6.93,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/AuthService.ts": {
+            "lines": 270,
+            "tokens": 2112,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/ApiInterceptor.ts": {
+            "lines": 335,
+            "tokens": 2678,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/ApiClient.ts": {
+            "lines": 186,
+            "tokens": 1954,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/AnalyticsService.ts": {
+            "lines": 400,
+            "tokens": 3364,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/AIService.ts": {
+            "lines": 155,
+            "tokens": 1385,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useVoiceCommands.ts": {
+            "lines": 293,
+            "tokens": 2836,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useTokenExpiration.ts": {
+            "lines": 251,
+            "tokens": 2056,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useTerminalConfig.ts": {
+            "lines": 94,
+            "tokens": 938,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useTable.ts": {
+            "lines": 149,
+            "tokens": 1576,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useSupplier.ts": {
+            "lines": 53,
+            "tokens": 567,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useStock.ts": {
+            "lines": 46,
+            "tokens": 431,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useReport.ts": {
+            "lines": 133,
+            "tokens": 1537,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useRemoteOrders.ts": {
+            "lines": 198,
+            "tokens": 1972,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useProduct.ts": {
+            "lines": 222,
+            "tokens": 1803,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/usePerformance.ts": {
+            "lines": 236,
+            "tokens": 2359,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useOrder.ts": {
+            "lines": 351,
+            "tokens": 2986,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useLoyalty.ts": {
+            "lines": 216,
+            "tokens": 1856,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useKeyboardShortcuts.ts": {
+            "lines": 288,
+            "tokens": 2729,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useGestures.ts": {
+            "lines": 279,
+            "tokens": 2839,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 26,
+            "duplicatedTokens": 216,
+            "percentage": 9.32,
+            "percentageTokens": 7.61,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useFiscal.ts": {
+            "lines": 345,
+            "tokens": 3103,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts": {
+            "lines": 409,
+            "tokens": 4459,
+            "sources": 1,
+            "clones": 8,
+            "duplicatedLines": 76,
+            "duplicatedTokens": 1004,
+            "percentage": 18.58,
+            "percentageTokens": 22.52,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useDelivery.ts": {
+            "lines": 524,
+            "tokens": 5404,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 14,
+            "duplicatedTokens": 176,
+            "percentage": 2.67,
+            "percentageTokens": 3.26,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts": {
+            "lines": 273,
+            "tokens": 3057,
+            "sources": 1,
+            "clones": 6,
+            "duplicatedLines": 62,
+            "duplicatedTokens": 826,
+            "percentage": 22.71,
+            "percentageTokens": 27.02,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCoupons.ts": {
+            "lines": 118,
+            "tokens": 1329,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCashier.ts": {
+            "lines": 222,
+            "tokens": 1793,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useBusinessDay.ts": {
+            "lines": 223,
+            "tokens": 2078,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useBills.ts": {
+            "lines": 171,
+            "tokens": 1458,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useAuth.ts": {
+            "lines": 359,
+            "tokens": 3099,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useAnalytics.ts": {
+            "lines": 157,
+            "tokens": 1353,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useAI.ts": {
+            "lines": 168,
+            "tokens": 1913,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/config/api.ts": {
+            "lines": 95,
+            "tokens": 831,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/vite-env.d.ts": {
+            "lines": 27,
+            "tokens": 213,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 14698,
+          "tokens": 134775,
+          "sources": 66,
+          "clones": 15,
+          "duplicatedLines": 131,
+          "duplicatedTokens": 1686,
+          "percentage": 0.89,
+          "percentageTokens": 1.25,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "javascript": {
+        "sources": {
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Select.tsx": {
+            "lines": 66,
+            "tokens": 513,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Loading.tsx": {
+            "lines": 77,
+            "tokens": 533,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Input.tsx": {
+            "lines": 59,
+            "tokens": 421,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx": {
+            "lines": 69,
+            "tokens": 461,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Card.tsx": {
+            "lines": 62,
+            "tokens": 401,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Card.stories.tsx": {
+            "lines": 0,
+            "tokens": 3,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Button.tsx": {
+            "lines": 9,
+            "tokens": 43,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Button.stories.tsx": {
+            "lines": 11,
+            "tokens": 122,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx": {
+            "lines": 495,
+            "tokens": 4612,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx": {
+            "lines": 611,
+            "tokens": 5827,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 41,
+            "duplicatedTokens": 411,
+            "percentage": 6.71,
+            "percentageTokens": 7.05,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/PaymentPage.tsx": {
+            "lines": 325,
+            "tokens": 2893,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/MainPage.tsx": {
+            "lines": 283,
+            "tokens": 2336,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx": {
+            "lines": 621,
+            "tokens": 5564,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 41,
+            "duplicatedTokens": 411,
+            "percentage": 6.6,
+            "percentageTokens": 7.39,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx": {
+            "lines": 296,
+            "tokens": 2900,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CounterOrdersPage.tsx": {
+            "lines": 347,
+            "tokens": 3173,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashWithdrawalPage.tsx": {
+            "lines": 286,
+            "tokens": 2616,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashierOpeningClosingPage.tsx": {
+            "lines": 415,
+            "tokens": 3628,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx": {
+            "lines": 335,
+            "tokens": 3095,
+            "sources": 1,
+            "clones": 6,
+            "duplicatedLines": 30,
+            "duplicatedTokens": 420,
+            "percentage": 8.96,
+            "percentageTokens": 13.57,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/stories/Page.tsx": {
+            "lines": 3,
+            "tokens": 57,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/stories/Header.tsx": {
+            "lines": 5,
+            "tokens": 74,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/stories/Button.tsx": {
+            "lines": 1,
+            "tokens": 27,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/contexts/ToastContext.tsx": {
+            "lines": 2,
+            "tokens": 27,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/contexts/ThemeContext.tsx": {
+            "lines": 0,
+            "tokens": 9,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/contexts/AuthContext.tsx": {
+            "lines": 0,
+            "tokens": 3,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx": {
+            "lines": 133,
+            "tokens": 1372,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VirtualList.tsx": {
+            "lines": 56,
+            "tokens": 427,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/Tooltip.tsx": {
+            "lines": 54,
+            "tokens": 295,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/Toast.tsx": {
+            "lines": 78,
+            "tokens": 749,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ThemeToggle.tsx": {
+            "lines": 62,
+            "tokens": 286,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/TerminalValidator.tsx": {
+            "lines": 89,
+            "tokens": 704,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/SwipeableCard.tsx": {
+            "lines": 7,
+            "tokens": 120,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/POSLayout.tsx": {
+            "lines": 189,
+            "tokens": 1706,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/PerformanceMonitor.tsx": {
+            "lines": 145,
+            "tokens": 1334,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/OptimizedImage.tsx": {
+            "lines": 37,
+            "tokens": 348,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/NumericLoginModal.tsx": {
+            "lines": 110,
+            "tokens": 954,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ErrorBoundaryModern.tsx": {
+            "lines": 59,
+            "tokens": 497,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ConfirmDialog.tsx": {
+            "lines": 150,
+            "tokens": 1176,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/App.tsx": {
+            "lines": 175,
+            "tokens": 1414,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 5722,
+          "tokens": 50720,
+          "sources": 38,
+          "clones": 4,
+          "duplicatedLines": 56,
+          "duplicatedTokens": 621,
+          "percentage": 0.98,
+          "percentageTokens": 1.22,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "tsx": {
+        "sources": {
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Select.tsx": {
+            "lines": 121,
+            "tokens": 945,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 33,
+            "duplicatedTokens": 256,
+            "percentage": 27.27,
+            "percentageTokens": 27.09,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Loading.tsx": {
+            "lines": 131,
+            "tokens": 954,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Input.tsx": {
+            "lines": 99,
+            "tokens": 736,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 33,
+            "duplicatedTokens": 256,
+            "percentage": 33.33,
+            "percentageTokens": 34.78,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx": {
+            "lines": 146,
+            "tokens": 1124,
+            "sources": 1,
+            "clones": 7,
+            "duplicatedLines": 42,
+            "duplicatedTokens": 560,
+            "percentage": 28.77,
+            "percentageTokens": 49.82,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Card.tsx": {
+            "lines": 105,
+            "tokens": 731,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Card.stories.tsx": {
+            "lines": 182,
+            "tokens": 1762,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Button.tsx": {
+            "lines": 75,
+            "tokens": 654,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Button.stories.tsx": {
+            "lines": 164,
+            "tokens": 1407,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx": {
+            "lines": 843,
+            "tokens": 8143,
+            "sources": 1,
+            "clones": 15,
+            "duplicatedLines": 149,
+            "duplicatedTokens": 1640,
+            "percentage": 17.67,
+            "percentageTokens": 20.14,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx": {
+            "lines": 766,
+            "tokens": 7487,
+            "sources": 1,
+            "clones": 7,
+            "duplicatedLines": 90,
+            "duplicatedTokens": 831,
+            "percentage": 11.75,
+            "percentageTokens": 11.1,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/PaymentPage.tsx": {
+            "lines": 613,
+            "tokens": 5942,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/MainPage.tsx": {
+            "lines": 541,
+            "tokens": 4959,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx": {
+            "lines": 865,
+            "tokens": 8084,
+            "sources": 1,
+            "clones": 6,
+            "duplicatedLines": 74,
+            "duplicatedTokens": 743,
+            "percentage": 8.55,
+            "percentageTokens": 9.19,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx": {
+            "lines": 568,
+            "tokens": 5391,
+            "sources": 1,
+            "clones": 5,
+            "duplicatedLines": 36,
+            "duplicatedTokens": 410,
+            "percentage": 6.34,
+            "percentageTokens": 7.61,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CounterOrdersPage.tsx": {
+            "lines": 562,
+            "tokens": 5316,
+            "sources": 1,
+            "clones": 4,
+            "duplicatedLines": 25,
+            "duplicatedTokens": 313,
+            "percentage": 4.45,
+            "percentageTokens": 5.89,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashWithdrawalPage.tsx": {
+            "lines": 466,
+            "tokens": 4289,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 21,
+            "duplicatedTokens": 213,
+            "percentage": 4.51,
+            "percentageTokens": 4.97,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashierOpeningClosingPage.tsx": {
+            "lines": 635,
+            "tokens": 6032,
+            "sources": 1,
+            "clones": 3,
+            "duplicatedLines": 60,
+            "duplicatedTokens": 528,
+            "percentage": 9.45,
+            "percentageTokens": 8.75,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx": {
+            "lines": 414,
+            "tokens": 3905,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 12,
+            "duplicatedTokens": 170,
+            "percentage": 2.9,
+            "percentageTokens": 4.35,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/stories/Page.tsx": {
+            "lines": 71,
+            "tokens": 807,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/stories/Header.tsx": {
+            "lines": 53,
+            "tokens": 482,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/stories/Button.tsx": {
+            "lines": 34,
+            "tokens": 249,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/contexts/ToastContext.tsx": {
+            "lines": 58,
+            "tokens": 875,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 17,
+            "duplicatedTokens": 379,
+            "percentage": 29.31,
+            "percentageTokens": 43.31,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/contexts/ThemeContext.tsx": {
+            "lines": 67,
+            "tokens": 651,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/contexts/AuthContext.tsx": {
+            "lines": 82,
+            "tokens": 785,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx": {
+            "lines": 311,
+            "tokens": 2981,
+            "sources": 1,
+            "clones": 7,
+            "duplicatedLines": 78,
+            "duplicatedTokens": 872,
+            "percentage": 25.08,
+            "percentageTokens": 29.25,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VirtualList.tsx": {
+            "lines": 121,
+            "tokens": 920,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/Tooltip.tsx": {
+            "lines": 143,
+            "tokens": 1156,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/Toast.tsx": {
+            "lines": 129,
+            "tokens": 1419,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 17,
+            "duplicatedTokens": 379,
+            "percentage": 13.18,
+            "percentageTokens": 26.71,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ThemeToggle.tsx": {
+            "lines": 96,
+            "tokens": 536,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/TerminalValidator.tsx": {
+            "lines": 134,
+            "tokens": 1067,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/SwipeableCard.tsx": {
+            "lines": 107,
+            "tokens": 980,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/POSLayout.tsx": {
+            "lines": 399,
+            "tokens": 4262,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/PerformanceMonitor.tsx": {
+            "lines": 247,
+            "tokens": 2265,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 6,
+            "duplicatedTokens": 75,
+            "percentage": 2.43,
+            "percentageTokens": 3.31,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/OptimizedImage.tsx": {
+            "lines": 135,
+            "tokens": 1188,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/NumericLoginModal.tsx": {
+            "lines": 281,
+            "tokens": 2508,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 5,
+            "duplicatedTokens": 73,
+            "percentage": 1.78,
+            "percentageTokens": 2.91,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ErrorBoundaryModern.tsx": {
+            "lines": 174,
+            "tokens": 1385,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ConfirmDialog.tsx": {
+            "lines": 201,
+            "tokens": 1640,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/AuthGuard.tsx": {
+            "lines": 47,
+            "tokens": 351,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/index.tsx": {
+            "lines": 46,
+            "tokens": 364,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/App.tsx": {
+            "lines": 235,
+            "tokens": 2136,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 10467,
+          "tokens": 96868,
+          "sources": 40,
+          "clones": 34,
+          "duplicatedLines": 349,
+          "duplicatedTokens": 3849,
+          "percentage": 3.33,
+          "percentageTokens": 3.97,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "css": {
+        "sources": {
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx": {
+            "lines": 0,
+            "tokens": 2,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 0,
+          "tokens": 2,
+          "sources": 1,
+          "clones": 0,
+          "duplicatedLines": 0,
+          "duplicatedTokens": 0,
+          "percentage": 0,
+          "percentageTokens": 0,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      }
+    },
+    "total": {
+      "lines": 30887,
+      "tokens": 282365,
+      "sources": 145,
+      "clones": 53,
+      "duplicatedLines": 536,
+      "duplicatedTokens": 6156,
+      "percentage": 1.74,
+      "percentageTokens": 2.18,
+      "newDuplicatedLines": 0,
+      "newClones": 0
+    }
+  },
+  "duplicates": [
+    {
+      "format": "tsx",
+      "lines": 16,
+      "fragment": ";\r\n    \r\n    return (\r\n      <div className={cn('relative', fullWidth && 'w-full')}>\r\n        {label && (\r\n          <label \r\n            htmlFor={inputId}\r\n            className=\"block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1\"\r\n          >\r\n            {label}\r\n            {required && <span className=\"text-red-500 ml-1\" aria-label=\"required\">*</span>}\r\n          </label>\r\n        )}\r\n        \r\n        <div className=\"relative\">\r\n          {",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Input.tsx",
+        "start": 27,
+        "end": 42,
+        "startLoc": {
+          "line": 27,
+          "column": 2,
+          "position": 234
+        },
+        "endLoc": {
+          "line": 42,
+          "column": 2,
+          "position": 353
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Select.tsx",
+        "start": 42,
+        "end": 57,
+        "startLoc": {
+          "line": 42,
+          "column": 2,
+          "position": 351
+        },
+        "endLoc": {
+          "line": 57,
+          "column": 2,
+          "position": 470
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 19,
+      "fragment": "</div>\r\n        \r\n        {error && (\r\n          <p id={`${inputId}-error`} className=\"mt-1 text-sm text-red-600 dark:text-red-400\" role=\"alert\">\r\n            {error}\r\n          </p>\r\n        )}\r\n        \r\n        {helperText && !error && (\r\n          <p id={`${inputId}-helper`} className=\"mt-1 text-sm text-gray-500 dark:text-gray-400\">\r\n            {helperText}\r\n          </p>\r\n        )}\r\n      </div>\r\n    );\r\n  }\r\n);\r\n\r\nInput",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Input.tsx",
+        "start": 80,
+        "end": 98,
+        "startLoc": {
+          "line": 80,
+          "column": 9,
+          "position": 582
+        },
+        "endLoc": {
+          "line": 98,
+          "column": 6,
+          "position": 719
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Select.tsx",
+        "start": 102,
+        "end": 120,
+        "startLoc": {
+          "line": 102,
+          "column": 9,
+          "position": 791
+        },
+        "endLoc": {
+          "line": 120,
+          "column": 7,
+          "position": 928
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 6,
+      "fragment": "\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                              <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n                            </svg>\r\n                          </button>\r\n                        </div>\r\n                        <",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 506,
+        "end": 511,
+        "startLoc": {
+          "line": 506,
+          "column": 21,
+          "position": 4931
+        },
+        "endLoc": {
+          "line": 511,
+          "column": 2,
+          "position": 5003
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx",
+        "start": 125,
+        "end": 130,
+        "startLoc": {
+          "line": 125,
+          "column": 8,
+          "position": 942
+        },
+        "endLoc": {
+          "line": 130,
+          "column": 3,
+          "position": 1014
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 12,
+      "fragment": "1);\r\n                                const updatedCart = cart.map(cartItem => \r\n                                  cartItem.id === item.id \r\n                                    ? { ...cartItem, quantity: newQuantity }\r\n                                    : cartItem\r\n                                );\r\n                                setCart(updatedCart);\r\n                              }}\r\n                              className=\"w-7 h-7 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors flex items-center justify-center\"\r\n                            >\r\n                              <svg className=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                                <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M12 4v16m8-8H4",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 545,
+        "end": 556,
+        "startLoc": {
+          "line": 545,
+          "column": 2,
+          "position": 5409
+        },
+        "endLoc": {
+          "line": 556,
+          "column": 15,
+          "position": 5548
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 515,
+        "end": 526,
+        "startLoc": {
+          "line": 515,
+          "column": 2,
+          "position": 5063
+        },
+        "endLoc": {
+          "line": 526,
+          "column": 9,
+          "position": 5202
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 7,
+      "fragment": "\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                    <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n                  </svg>\r\n                </button>\r\n              </div>\r\n              \r\n              <div className=\"space-y-4",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 767,
+        "end": 773,
+        "startLoc": {
+          "line": 767,
+          "column": 22,
+          "position": 7449
+        },
+        "endLoc": {
+          "line": 773,
+          "column": 10,
+          "position": 7529
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx",
+        "start": 125,
+        "end": 511,
+        "startLoc": {
+          "line": 125,
+          "column": 8,
+          "position": 942
+        },
+        "endLoc": {
+          "line": 511,
+          "column": 39,
+          "position": 5009
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 6,
+      "fragment": "<button\r\n                      onClick={() => setQuantity(quantity + 1)}\r\n                      className=\"p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors\"\r\n                    >\r\n                      <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                        <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M12 4v16m8-8H4",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 797,
+        "end": 802,
+        "startLoc": {
+          "line": 797,
+          "column": 21,
+          "position": 7772
+        },
+        "endLoc": {
+          "line": 802,
+          "column": 15,
+          "position": 7856
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 783,
+        "end": 788,
+        "startLoc": {
+          "line": 783,
+          "column": 21,
+          "position": 7603
+        },
+        "endLoc": {
+          "line": 788,
+          "column": 9,
+          "position": 7694
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 6,
+      "fragment": "\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                        <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M12 4v16m8-8H4\" />\r\n                      </svg>\r\n                    </button>\r\n                  </div>\r\n                </",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 801,
+        "end": 806,
+        "startLoc": {
+          "line": 801,
+          "column": 8,
+          "position": 7809
+        },
+        "endLoc": {
+          "line": 806,
+          "column": 3,
+          "position": 7881
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 555,
+        "end": 560,
+        "startLoc": {
+          "line": 555,
+          "column": 8,
+          "position": 5501
+        },
+        "endLoc": {
+          "line": 560,
+          "column": 2,
+          "position": 5573
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 17,
+      "fragment": ";\r\n\r\n  const formatCurrency = (value: number) => {\r\n    return new Intl.NumberFormat('pt-BR', {\r\n      style: 'currency',\r\n      currency: 'BRL'\r\n    }).format(value);\r\n  };\r\n\r\n  const formatTime = (date: Date) => {\r\n    return new Intl.DateTimeFormat('pt-BR', {\r\n      hour: '2-digit',\r\n      minute: '2-digit'\r\n    }).format(date);\r\n  };\r\n\r\n  const filteredOrders",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx",
+        "start": 110,
+        "end": 126,
+        "startLoc": {
+          "line": 110,
+          "column": 2,
+          "position": 1245
+        },
+        "endLoc": {
+          "line": 126,
+          "column": 15,
+          "position": 1387
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 171,
+        "end": 187,
+        "startLoc": {
+          "line": 171,
+          "column": 2,
+          "position": 1875
+        },
+        "endLoc": {
+          "line": 187,
+          "column": 15,
+          "position": 2017
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 20,
+      "fragment": "}\r\n          ].map(tab => (\r\n            <button\r\n              key={tab.key}\r\n              onClick={() => setSelectedTab(tab.key as any)}\r\n              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${\r\n                selectedTab === tab.key\r\n                  ? 'bg-blue-500 text-white shadow-lg'\r\n                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'\r\n              }`}\r\n            >\r\n              <span className=\"text-lg\">{tab.icon}</span>\r\n              {tab.label}\r\n            </button>\r\n          ))}\r\n        </div>\r\n      </div>\r\n      \r\n      {/* Content */}\r\n      <div className=\"flex-1 overflow-auto p-6",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx",
+        "start": 186,
+        "end": 205,
+        "startLoc": {
+          "line": 186,
+          "column": 2,
+          "position": 2026
+        },
+        "endLoc": {
+          "line": 205,
+          "column": 25,
+          "position": 2164
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 362,
+        "end": 381,
+        "startLoc": {
+          "line": 362,
+          "column": 2,
+          "position": 3713
+        },
+        "endLoc": {
+          "line": 381,
+          "column": 28,
+          "position": 3859
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 13,
+      "fragment": ">\r\n                <button\r\n                  onClick={() => setShowOrderModal(false)}\r\n                  className=\"p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors\"\r\n                >\r\n                  <svg className=\"w-5 h-5 text-gray-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                    <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n                  </svg>\r\n                </button>\r\n              </div>\r\n              \r\n              <div className=\"space-y-4\">\r\n                {",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx",
+        "start": 547,
+        "end": 559,
+        "startLoc": {
+          "line": 547,
+          "column": 4,
+          "position": 5418
+        },
+        "endLoc": {
+          "line": 559,
+          "column": 2,
+          "position": 5542
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 762,
+        "end": 774,
+        "startLoc": {
+          "line": 762,
+          "column": 3,
+          "position": 7411
+        },
+        "endLoc": {
+          "line": 774,
+          "column": 2,
+          "position": 7535
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 42,
+      "fragment": "} fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15\" />\r\n              </svg>\r\n            </button>\r\n          </div>\r\n        </div>\r\n        \r\n        {/* Tabs */}\r\n        <div className=\"flex gap-2 mt-4\">\r\n          {[\r\n            { key: 'documents', label: 'Documentos', icon: '📄' },\r\n            { key: 'config', label: 'Configurações', icon: '⚙️' },\r\n            { key: 'contingency', label: 'Contingência', icon: '⚠️' },\r\n            { key: 'reports', label: 'Relatórios', icon: '📊' }\r\n          ].map(tab => (\r\n            <button\r\n              key={tab.key}\r\n              onClick={() => setSelectedTab(tab.key as any)}\r\n              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${\r\n                selectedTab === tab.key\r\n                  ? 'bg-blue-500 text-white shadow-lg'\r\n                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'\r\n              }`}\r\n            >\r\n              <span className=\"text-lg\">{tab.icon}</span>\r\n              {tab.label}\r\n            </button>\r\n          ))}\r\n        </div>\r\n      </div>\r\n      \r\n      {/* Content */}\r\n      <div className=\"flex-1 overflow-auto p-6\">\r\n        {selectedTab === 'documents' && (\r\n          <div className=\"space-y-4\">\r\n            {/* Filters */}\r\n            <div className=\"bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4\">\r\n              <div className=\"flex flex-wrap gap-3\">\r\n                <input\r\n                  type=\"text\"\r\n                  placeholder=\"Buscar por número, cliente ou chave...\"\r\n                  value={searchTerm",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx",
+        "start": 253,
+        "end": 294,
+        "startLoc": {
+          "line": 253,
+          "column": 2,
+          "position": 2615
+        },
+        "endLoc": {
+          "line": 294,
+          "column": 11,
+          "position": 3026
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx",
+        "start": 166,
+        "end": 212,
+        "startLoc": {
+          "line": 166,
+          "column": 2,
+          "position": 1790
+        },
+        "endLoc": {
+          "line": 212,
+          "column": 17,
+          "position": 2231
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 11,
+      "fragment": " fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15\" />\r\n              </svg>\r\n            </button>\r\n          </div>\r\n        </div>\r\n        \r\n        {/* Tabs */}\r\n        <div className=\"flex gap-2 mt-4\">\r\n          {[\r\n            { key: 'documents'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx",
+        "start": 253,
+        "end": 263,
+        "startLoc": {
+          "line": 253,
+          "column": 2,
+          "position": 2616
+        },
+        "endLoc": {
+          "line": 263,
+          "column": 12,
+          "position": 2723
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx",
+        "start": 174,
+        "end": 184,
+        "startLoc": {
+          "line": 174,
+          "column": 2,
+          "position": 1857
+        },
+        "endLoc": {
+          "line": 184,
+          "column": 9,
+          "position": 1964
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 21,
+      "fragment": ", icon: '📊' }\r\n          ].map(tab => (\r\n            <button\r\n              key={tab.key}\r\n              onClick={() => setSelectedTab(tab.key as any)}\r\n              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${\r\n                selectedTab === tab.key\r\n                  ? 'bg-blue-500 text-white shadow-lg'\r\n                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'\r\n              }`}\r\n            >\r\n              <span className=\"text-lg\">{tab.icon}</span>\r\n              {tab.label}\r\n            </button>\r\n          ))}\r\n        </div>\r\n      </div>\r\n      \r\n      {/* Content */}\r\n      <div className=\"flex-1 overflow-auto p-6\">\r\n        {selectedTab === 'documents'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx",
+        "start": 266,
+        "end": 286,
+        "startLoc": {
+          "line": 266,
+          "column": 13,
+          "position": 2802
+        },
+        "endLoc": {
+          "line": 286,
+          "column": 12,
+          "position": 2958
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx",
+        "start": 186,
+        "end": 206,
+        "startLoc": {
+          "line": 186,
+          "column": 12,
+          "position": 2019
+        },
+        "endLoc": {
+          "line": 206,
+          "column": 9,
+          "position": 2175
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 6,
+      "fragment": ">\r\n                                <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                                  <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n                                </svg>\r\n                              </button>\r\n                            <",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx",
+        "start": 433,
+        "end": 438,
+        "startLoc": {
+          "line": 433,
+          "column": 31,
+          "position": 4471
+        },
+        "endLoc": {
+          "line": 438,
+          "column": 2,
+          "position": 4548
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx",
+        "start": 124,
+        "end": 129,
+        "startLoc": {
+          "line": 124,
+          "column": 9,
+          "position": 931
+        },
+        "endLoc": {
+          "line": 129,
+          "column": 3,
+          "position": 1008
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 13,
+      "fragment": "</h2>\r\n                <button\r\n                  onClick={() => setShowCancelModal(false)}\r\n                  className=\"p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors\"\r\n                >\r\n                  <svg className=\"w-5 h-5 text-gray-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                    <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n                  </svg>\r\n                </button>\r\n              </div>\r\n              \r\n              <div className=\"space-y-4\">\r\n                <div",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx",
+        "start": 650,
+        "end": 662,
+        "startLoc": {
+          "line": 650,
+          "column": 17,
+          "position": 6266
+        },
+        "endLoc": {
+          "line": 662,
+          "column": 4,
+          "position": 6393
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 762,
+        "end": 774,
+        "startLoc": {
+          "line": 762,
+          "column": 17,
+          "position": 7409
+        },
+        "endLoc": {
+          "line": 774,
+          "column": 2,
+          "position": 7536
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 13,
+      "fragment": "</h2>\r\n                <button\r\n                  onClick={() => setShowReportModal(false)}\r\n                  className=\"p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors\"\r\n                >\r\n                  <svg className=\"w-5 h-5 text-gray-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                    <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n                  </svg>\r\n                </button>\r\n              </div>\r\n              \r\n              <div className=\"space-y-4\">\r\n                <div>",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx",
+        "start": 723,
+        "end": 735,
+        "startLoc": {
+          "line": 723,
+          "column": 17,
+          "position": 6934
+        },
+        "endLoc": {
+          "line": 735,
+          "column": 2,
+          "position": 7062
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 762,
+        "end": 662,
+        "startLoc": {
+          "line": 762,
+          "column": 17,
+          "position": 7409
+        },
+        "endLoc": {
+          "line": 662,
+          "column": 2,
+          "position": 6394
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 16,
+      "fragment": "}\r\n                </h2>\r\n                <button\r\n                  onClick={() => setShowDocumentModal(false)}\r\n                  className=\"p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors\"\r\n                >\r\n                  <svg className=\"w-5 h-5 text-gray-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                    <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n                  </svg>\r\n                </button>\r\n              </div>\r\n              \r\n              <div className=\"space-y-4\">\r\n                <div>\r\n                  <label className=\"block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1\">\r\n                    Chave",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx",
+        "start": 786,
+        "end": 801,
+        "startLoc": {
+          "line": 786,
+          "column": 7,
+          "position": 7459
+        },
+        "endLoc": {
+          "line": 801,
+          "column": 6,
+          "position": 7607
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 761,
+        "end": 737,
+        "startLoc": {
+          "line": 761,
+          "column": 5,
+          "position": 7405
+        },
+        "endLoc": {
+          "line": 737,
+          "column": 5,
+          "position": 7078
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 8,
+      "fragment": ">\r\n                <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                  <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n                </svg>\r\n              </button>\r\n            </div>\r\n            \r\n            {",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx",
+        "start": 482,
+        "end": 489,
+        "startLoc": {
+          "line": 482,
+          "column": 15,
+          "position": 4422
+        },
+        "endLoc": {
+          "line": 489,
+          "column": 2,
+          "position": 4507
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx",
+        "start": 124,
+        "end": 130,
+        "startLoc": {
+          "line": 124,
+          "column": 9,
+          "position": 931
+        },
+        "endLoc": {
+          "line": 130,
+          "column": 3,
+          "position": 1014
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 11,
+      "fragment": "\">\r\n                    <span className=\"text-gray-700 dark:text-gray-300\">\r\n                      {item.quantity}x {item.name}\r\n                    </span>\r\n                    <span className=\"font-medium text-gray-900 dark:text-white\">\r\n                      {formatCurrency(item.price * item.quantity)}\r\n                    </span>\r\n                  </div>\r\n                ))}\r\n              </div>\r\n            </",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx",
+        "start": 502,
+        "end": 512,
+        "startLoc": {
+          "line": 502,
+          "column": 61,
+          "position": 4696
+        },
+        "endLoc": {
+          "line": 512,
+          "column": 3,
+          "position": 4787
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx",
+        "start": 670,
+        "end": 681,
+        "startLoc": {
+          "line": 670,
+          "column": 21,
+          "position": 6601
+        },
+        "endLoc": {
+          "line": 681,
+          "column": 2,
+          "position": 6694
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 6,
+      "fragment": "\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z\" />\r\n              </svg>\r\n            </div>\r\n            \r\n            {",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CounterOrdersPage.tsx",
+        "start": 210,
+        "end": 215,
+        "startLoc": {
+          "line": 210,
+          "column": 63,
+          "position": 2133
+        },
+        "endLoc": {
+          "line": 215,
+          "column": 2,
+          "position": 2201
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx",
+        "start": 274,
+        "end": 278,
+        "startLoc": {
+          "line": 274,
+          "column": 46,
+          "position": 2516
+        },
+        "endLoc": {
+          "line": 278,
+          "column": 3,
+          "position": 2582
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 7,
+      "fragment": ">\r\n              <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15\" />\r\n              </svg>\r\n            </button>\r\n            \r\n            {",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CounterOrdersPage.tsx",
+        "start": 220,
+        "end": 226,
+        "startLoc": {
+          "line": 220,
+          "column": 13,
+          "position": 2228
+        },
+        "endLoc": {
+          "line": 226,
+          "column": 2,
+          "position": 2307
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx",
+        "start": 173,
+        "end": 178,
+        "startLoc": {
+          "line": 173,
+          "column": 2,
+          "position": 1845
+        },
+        "endLoc": {
+          "line": 178,
+          "column": 3,
+          "position": 1922
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 7,
+      "fragment": "{/* Order Details Modal */}\r\n      {showOrderDetails && selectedOrder && (\r\n        <div className=\"fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50\">\r\n          <div className=\"bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto\">\r\n            <div className=\"flex items-center justify-between mb-4\">\r\n              <h3 className=\"text-xl font-bold text-gray-900 dark:text-white\">\r\n                Detalhes do Pedido #{selectedOrder.id.",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CounterOrdersPage.tsx",
+        "start": 416,
+        "end": 422,
+        "startLoc": {
+          "line": 416,
+          "column": 7,
+          "position": 4024
+        },
+        "endLoc": {
+          "line": 422,
+          "column": 2,
+          "position": 4102
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx",
+        "start": 471,
+        "end": 477,
+        "startLoc": {
+          "line": 471,
+          "column": 7,
+          "position": 4311
+        },
+        "endLoc": {
+          "line": 477,
+          "column": 2,
+          "position": 4389
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 9,
+      "fragment": "\"\r\n              >\r\n                <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                  <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n                </svg>\r\n              </button>\r\n            </div>\r\n            \r\n            {/* Order Info */",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CounterOrdersPage.tsx",
+        "start": 426,
+        "end": 434,
+        "startLoc": {
+          "line": 426,
+          "column": 63,
+          "position": 4143
+        },
+        "endLoc": {
+          "line": 434,
+          "column": 17,
+          "position": 4231
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx",
+        "start": 481,
+        "end": 489,
+        "startLoc": {
+          "line": 481,
+          "column": 56,
+          "position": 4420
+        },
+        "endLoc": {
+          "line": 489,
+          "column": 20,
+          "position": 4508
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 8,
+      "fragment": ">\r\n                <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                  <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15\" />\r\n                </svg>\r\n              </button>\r\n            </div>\r\n            \r\n            <",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashWithdrawalPage.tsx",
+        "start": 305,
+        "end": 312,
+        "startLoc": {
+          "line": 305,
+          "column": 15,
+          "position": 2736
+        },
+        "endLoc": {
+          "line": 312,
+          "column": 2,
+          "position": 2821
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx",
+        "start": 173,
+        "end": 179,
+        "startLoc": {
+          "line": 173,
+          "column": 2,
+          "position": 1845
+        },
+        "endLoc": {
+          "line": 179,
+          "column": 3,
+          "position": 1928
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 15,
+      "fragment": "\"\r\n                />\r\n                \r\n                {/* Numeric Keypad */}\r\n                <div className=\"grid grid-cols-3 gap-2 mt-3\">\r\n                  {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.', '←'].map(key => (\r\n                    <button\r\n                      key={key}\r\n                      onClick={() => handleKeypadInput(key, 'opening')}\r\n                      className=\"p-3 text-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors\"\r\n                    >\r\n                      {key}\r\n                    </button>\r\n                  ))}\r\n                </",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashierOpeningClosingPage.tsx",
+        "start": 453,
+        "end": 467,
+        "startLoc": {
+          "line": 453,
+          "column": 5,
+          "position": 4584
+        },
+        "endLoc": {
+          "line": 467,
+          "column": 3,
+          "position": 4712
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashWithdrawalPage.tsx",
+        "start": 222,
+        "end": 236,
+        "startLoc": {
+          "line": 222,
+          "column": 8,
+          "position": 2045
+        },
+        "endLoc": {
+          "line": 236,
+          "column": 2,
+          "position": 2170
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 24,
+      "fragment": "</label>\r\n                <input\r\n                  type=\"text\"\r\n                  value={closingAmount}\r\n                  onChange={(e) => setClosingAmount(e.target.value.replace(/[^0-9.]/g, ''))}\r\n                  className=\"w-full px-4 py-3 text-xl font-bold text-center bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white\"\r\n                  placeholder=\"0.00\"\r\n                />\r\n                \r\n                {/* Numeric Keypad */}\r\n                <div className=\"grid grid-cols-3 gap-2 mt-3\">\r\n                  {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.', '←'].map(key => (\r\n                    <button\r\n                      key={key}\r\n                      onClick={() => handleKeypadInput(key, 'closing')}\r\n                      className=\"p-3 text-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors\"\r\n                    >\r\n                      {key}\r\n                    </button>\r\n                  ))}\r\n                </div>\r\n              </div>\r\n\r\n              {",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashierOpeningClosingPage.tsx",
+        "start": 528,
+        "end": 551,
+        "startLoc": {
+          "line": 528,
+          "column": 17,
+          "position": 5127
+        },
+        "endLoc": {
+          "line": 551,
+          "column": 2,
+          "position": 5327
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashierOpeningClosingPage.tsx",
+        "start": 447,
+        "end": 470,
+        "startLoc": {
+          "line": 447,
+          "column": 17,
+          "position": 4526
+        },
+        "endLoc": {
+          "line": 470,
+          "column": 2,
+          "position": 4726
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 6,
+      "fragment": "}\r\n          color=\"blue\"\r\n          loading={loading}\r\n          icon={\r\n            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n              <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx",
+        "start": 294,
+        "end": 299,
+        "startLoc": {
+          "line": 294,
+          "column": 5,
+          "position": 2770
+        },
+        "endLoc": {
+          "line": 299,
+          "column": 43,
+          "position": 2840
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx",
+        "start": 281,
+        "end": 286,
+        "startLoc": {
+          "line": 281,
+          "column": 7,
+          "position": 2655
+        },
+        "endLoc": {
+          "line": 286,
+          "column": 172,
+          "position": 2725
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 6,
+      "fragment": "}\r\n          color=\"purple\"\r\n          loading={loading}\r\n          icon={\r\n            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n              <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx",
+        "start": 307,
+        "end": 312,
+        "startLoc": {
+          "line": 307,
+          "column": 4,
+          "position": 2894
+        },
+        "endLoc": {
+          "line": 312,
+          "column": 147,
+          "position": 2964
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx",
+        "start": 281,
+        "end": 286,
+        "startLoc": {
+          "line": 281,
+          "column": 7,
+          "position": 2655
+        },
+        "endLoc": {
+          "line": 286,
+          "column": 172,
+          "position": 2725
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 6,
+      "fragment": "}\r\n          color=\"orange\"\r\n          loading={loading}\r\n          icon={\r\n            <svg className=\"w-6 h-6\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n              <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx",
+        "start": 320,
+        "end": 325,
+        "startLoc": {
+          "line": 320,
+          "column": 4,
+          "position": 3018
+        },
+        "endLoc": {
+          "line": 325,
+          "column": 85,
+          "position": 3088
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx",
+        "start": 281,
+        "end": 286,
+        "startLoc": {
+          "line": 281,
+          "column": 7,
+          "position": 2655
+        },
+        "endLoc": {
+          "line": 286,
+          "column": 172,
+          "position": 2725
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 7,
+      "fragment": ">\r\n                  <button\r\n                    onClick={() => handleExport('json')}\r\n                    className=\"w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center\"\r\n                  >\r\n                    <svg className=\"w-4 h-4 mr-2\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx",
+        "start": 259,
+        "end": 265,
+        "startLoc": {
+          "line": 259,
+          "column": 7,
+          "position": 2447
+        },
+        "endLoc": {
+          "line": 265,
+          "column": 38,
+          "position": 2532
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx",
+        "start": 250,
+        "end": 256,
+        "startLoc": {
+          "line": 250,
+          "column": 2,
+          "position": 2341
+        },
+        "endLoc": {
+          "line": 256,
+          "column": 117,
+          "position": 2426
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 7,
+      "fragment": "try {\r\n      const layoutResponse = await apiInterceptor.get<{ id: string; tables: Table[] }>(\r\n        `${this.baseURL}/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`\r\n      );\r\n      \r\n      const layout = layoutResponse.data;\r\n      layout",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/TableService.ts",
+        "start": 163,
+        "end": 169,
+        "startLoc": {
+          "line": 163,
+          "column": 5,
+          "position": 1509
+        },
+        "endLoc": {
+          "line": 169,
+          "column": 7,
+          "position": 1590
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/TableService.ts",
+        "start": 132,
+        "end": 138,
+        "startLoc": {
+          "line": 132,
+          "column": 5,
+          "position": 1163
+        },
+        "endLoc": {
+          "line": 138,
+          "column": 6,
+          "position": 1244
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 10,
+      "fragment": "const params = new URLSearchParams();\r\n    if (filters) {\r\n      Object.entries(filters).forEach(([key, value]) => {\r\n        if (value !== undefined && value !== null) {\r\n          params.append(key, value.toString());\r\n        }\r\n      });\r\n    }\r\n\r\n    const response: AxiosResponse<OrderStats",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OrderService.ts",
+        "start": 354,
+        "end": 363,
+        "startLoc": {
+          "line": 354,
+          "column": 5,
+          "position": 2572
+        },
+        "endLoc": {
+          "line": 363,
+          "column": 11,
+          "position": 2683
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OrderService.ts",
+        "start": 98,
+        "end": 107,
+        "startLoc": {
+          "line": 98,
+          "column": 7,
+          "position": 656
+        },
+        "endLoc": {
+          "line": 107,
+          "column": 6,
+          "position": 767
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 7,
+      "fragment": "> {\r\n    if (!this.db) throw new Error('Database not initialized');\r\n\r\n    return new Promise((resolve, reject) => {\r\n      const transaction = this.db!.transaction([storeName], 'readonly');\r\n      const store = transaction.objectStore(storeName);\r\n      const request = store.getAll",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts",
+        "start": 128,
+        "end": 134,
+        "startLoc": {
+          "line": 128,
+          "column": 2,
+          "position": 1482
+        },
+        "endLoc": {
+          "line": 134,
+          "column": 7,
+          "position": 1578
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts",
+        "start": 115,
+        "end": 121,
+        "startLoc": {
+          "line": 115,
+          "column": 8,
+          "position": 1306
+        },
+        "endLoc": {
+          "line": 121,
+          "column": 4,
+          "position": 1402
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 7,
+      "fragment": "> {\r\n    if (!this.db) throw new Error('Database not initialized');\r\n\r\n    return new Promise((resolve, reject) => {\r\n      const transaction = this.db!.transaction([storeName], 'readwrite');\r\n      const store = transaction.objectStore(storeName);\r\n      const request = store.put",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts",
+        "start": 141,
+        "end": 147,
+        "startLoc": {
+          "line": 141,
+          "column": 5,
+          "position": 1661
+        },
+        "endLoc": {
+          "line": 147,
+          "column": 4,
+          "position": 1757
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts",
+        "start": 98,
+        "end": 104,
+        "startLoc": {
+          "line": 98,
+          "column": 7,
+          "position": 1079
+        },
+        "endLoc": {
+          "line": 104,
+          "column": 4,
+          "position": 1175
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 7,
+      "fragment": "): Promise<void> {\r\n    if (!this.db) throw new Error('Database not initialized');\r\n\r\n    return new Promise((resolve, reject) => {\r\n      const transaction = this.db!.transaction([storeName], 'readwrite');\r\n      const store = transaction.objectStore(storeName);\r\n      const request = store.delete",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts",
+        "start": 157,
+        "end": 163,
+        "startLoc": {
+          "line": 157,
+          "column": 7,
+          "position": 1867
+        },
+        "endLoc": {
+          "line": 163,
+          "column": 7,
+          "position": 1969
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts",
+        "start": 141,
+        "end": 104,
+        "startLoc": {
+          "line": 141,
+          "column": 4,
+          "position": 1655
+        },
+        "endLoc": {
+          "line": 104,
+          "column": 4,
+          "position": 1175
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 10,
+      "fragment": "${id}`, {\r\n      method: 'PATCH',\r\n      headers: {\r\n        'Content-Type': 'application/json',\r\n        'Authorization': `Bearer ${localStorage.getItem('token')}`\r\n      },\r\n      body: JSON.stringify(updates)\r\n    });\r\n    \r\n    if (!response.ok) throw new Error('Failed to update bill'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/BillsService.ts",
+        "start": 84,
+        "end": 93,
+        "startLoc": {
+          "line": 84,
+          "column": 8,
+          "position": 732
+        },
+        "endLoc": {
+          "line": 93,
+          "column": 24,
+          "position": 821
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/CouponsService.ts",
+        "start": 82,
+        "end": 91,
+        "startLoc": {
+          "line": 82,
+          "column": 10,
+          "position": 744
+        },
+        "endLoc": {
+          "line": 91,
+          "column": 26,
+          "position": 833
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 14,
+      "fragment": "});\r\n    element.addEventListener('touchend', handleTouchEnd, { passive: true });\r\n\r\n    return () => {\r\n      element.removeEventListener('touchstart', handleTouchStart);\r\n      element.removeEventListener('touchmove', handleTouchMove);\r\n      element.removeEventListener('touchend', handleTouchEnd);\r\n    };\r\n  }, [elementRef, handlers, options]);\r\n};\r\n\r\n/**\r\n * Hook for detecting long press\r\n */",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useGestures.ts",
+        "start": 166,
+        "end": 179,
+        "startLoc": {
+          "line": 166,
+          "column": 2,
+          "position": 1823
+        },
+        "endLoc": {
+          "line": 179,
+          "column": 4,
+          "position": 1931
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useGestures.ts",
+        "start": 100,
+        "end": 113,
+        "startLoc": {
+          "line": 100,
+          "column": 2,
+          "position": 1061
+        },
+        "endLoc": {
+          "line": 113,
+          "column": 4,
+          "position": 1169
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 13,
+      "fragment": ");\r\n      setState(prev => ({ \r\n        ...prev, \r\n        employees: prev.employees.map(e => e.id === employeeId ? updatedEmployee : e),\r\n        currentEmployee: prev.currentEmployee?.id === employeeId ? updatedEmployee : prev.currentEmployee,\r\n        updating: false \r\n      }));\r\n      return updatedEmployee;\r\n    } catch (error) {\r\n      setState(prev => ({ \r\n        ...prev, \r\n        updating: false, \r\n        error: (error instanceof Error ? error.message : 'Erro ao ativar funcionário'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts",
+        "start": 189,
+        "end": 201,
+        "startLoc": {
+          "line": 189,
+          "column": 11,
+          "position": 2096
+        },
+        "endLoc": {
+          "line": 201,
+          "column": 29,
+          "position": 2254
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts",
+        "start": 143,
+        "end": 155,
+        "startLoc": {
+          "line": 143,
+          "column": 13,
+          "position": 1550
+        },
+        "endLoc": {
+          "line": 155,
+          "column": 32,
+          "position": 1708
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 13,
+      "fragment": "(employeeId);\r\n      setState(prev => ({ \r\n        ...prev, \r\n        employees: prev.employees.map(e => e.id === employeeId ? updatedEmployee : e),\r\n        currentEmployee: prev.currentEmployee?.id === employeeId ? updatedEmployee : prev.currentEmployee,\r\n        updating: false \r\n      }));\r\n      return updatedEmployee;\r\n    } catch (error) {\r\n      setState(prev => ({ \r\n        ...prev, \r\n        updating: false, \r\n        error: (error instanceof Error ? error.message : 'Erro ao desativar funcionário'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts",
+        "start": 212,
+        "end": 224,
+        "startLoc": {
+          "line": 212,
+          "column": 19,
+          "position": 2376
+        },
+        "endLoc": {
+          "line": 224,
+          "column": 32,
+          "position": 2536
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts",
+        "start": 189,
+        "end": 155,
+        "startLoc": {
+          "line": 189,
+          "column": 17,
+          "position": 2094
+        },
+        "endLoc": {
+          "line": 155,
+          "column": 32,
+          "position": 1708
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 8,
+      "fragment": ");\r\n      setState(prev => ({ ...prev, loading: false }));\r\n      return employees;\r\n    } catch (error) {\r\n      setState(prev => ({ \r\n        ...prev, \r\n        loading: false, \r\n        error: (error instanceof Error ? error.message : 'Erro ao buscar funcionários por cargo'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts",
+        "start": 339,
+        "end": 346,
+        "startLoc": {
+          "line": 339,
+          "column": 5,
+          "position": 3816
+        },
+        "endLoc": {
+          "line": 346,
+          "column": 40,
+          "position": 3908
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts",
+        "start": 321,
+        "end": 328,
+        "startLoc": {
+          "line": 321,
+          "column": 7,
+          "position": 3601
+        },
+        "endLoc": {
+          "line": 328,
+          "column": 30,
+          "position": 3693
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 8,
+      "fragment": ");\r\n      setState(prev => ({ ...prev, loading: false }));\r\n      return employees;\r\n    } catch (error) {\r\n      setState(prev => ({ \r\n        ...prev, \r\n        loading: false, \r\n        error: (error instanceof Error ? error.message : 'Erro ao buscar funcionários ativos'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts",
+        "start": 357,
+        "end": 364,
+        "startLoc": {
+          "line": 357,
+          "column": 2,
+          "position": 4026
+        },
+        "endLoc": {
+          "line": 364,
+          "column": 37,
+          "position": 4118
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts",
+        "start": 321,
+        "end": 328,
+        "startLoc": {
+          "line": 321,
+          "column": 7,
+          "position": 3601
+        },
+        "endLoc": {
+          "line": 328,
+          "column": 30,
+          "position": 3693
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 8,
+      "fragment": ");\n      setState(prev => ({ ...prev, loading: false }));\n      return orders;\n    } catch (error) {\n      setState(prev => ({ \n        ...prev, \n        loading: false, \n        error: (error instanceof Error ? error.message : 'Erro ao buscar entregas do entregador'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useDelivery.ts",
+        "start": 454,
+        "end": 461,
+        "startLoc": {
+          "line": 454,
+          "column": 5,
+          "position": 4877
+        },
+        "endLoc": {
+          "line": 461,
+          "column": 40,
+          "position": 4965
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useDelivery.ts",
+        "start": 436,
+        "end": 443,
+        "startLoc": {
+          "line": 436,
+          "column": 7,
+          "position": 4665
+        },
+        "endLoc": {
+          "line": 443,
+          "column": 36,
+          "position": 4753
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 8,
+      "fragment": ");\r\n      setState(prev => ({ ...prev, loading: false }));\r\n      return customers;\r\n    } catch (error) {\r\n      setState(prev => ({ \r\n        ...prev, \r\n        loading: false, \r\n        error: (error instanceof Error ? error.message : 'Erro ao buscar por email'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts",
+        "start": 180,
+        "end": 187,
+        "startLoc": {
+          "line": 180,
+          "column": 6,
+          "position": 2067
+        },
+        "endLoc": {
+          "line": 187,
+          "column": 27,
+          "position": 2159
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts",
+        "start": 162,
+        "end": 169,
+        "startLoc": {
+          "line": 162,
+          "column": 6,
+          "position": 1852
+        },
+        "endLoc": {
+          "line": 169,
+          "column": 30,
+          "position": 1944
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 13,
+      "fragment": ");\r\n      setState(prev => ({ \r\n        ...prev, \r\n        customers: prev.customers.map(c => c.id === customerId ? updatedCustomer : c),\r\n        currentCustomer: prev.currentCustomer?.id === customerId ? updatedCustomer : prev.currentCustomer,\r\n        updating: false \r\n      }));\r\n      return updatedCustomer;\r\n    } catch (error) {\r\n      setState(prev => ({ \r\n        ...prev, \r\n        updating: false, \r\n        error: (error instanceof Error ? error.message : 'Erro ao adicionar pontos'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts",
+        "start": 198,
+        "end": 210,
+        "startLoc": {
+          "line": 198,
+          "column": 7,
+          "position": 2293
+        },
+        "endLoc": {
+          "line": 210,
+          "column": 27,
+          "position": 2451
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts",
+        "start": 116,
+        "end": 128,
+        "startLoc": {
+          "line": 116,
+          "column": 13,
+          "position": 1308
+        },
+        "endLoc": {
+          "line": 128,
+          "column": 28,
+          "position": 1466
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 13,
+      "fragment": "(customerId, points);\r\n      setState(prev => ({ \r\n        ...prev, \r\n        customers: prev.customers.map(c => c.id === customerId ? updatedCustomer : c),\r\n        currentCustomer: prev.currentCustomer?.id === customerId ? updatedCustomer : prev.currentCustomer,\r\n        updating: false \r\n      }));\r\n      return updatedCustomer;\r\n    } catch (error) {\r\n      setState(prev => ({ \r\n        ...prev, \r\n        updating: false, \r\n        error: (error instanceof Error ? error.message : 'Erro ao resgatar pontos'",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts",
+        "start": 221,
+        "end": 233,
+        "startLoc": {
+          "line": 221,
+          "column": 20,
+          "position": 2579
+        },
+        "endLoc": {
+          "line": 233,
+          "column": 26,
+          "position": 2742
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts",
+        "start": 198,
+        "end": 128,
+        "startLoc": {
+          "line": 198,
+          "column": 17,
+          "position": 2288
+        },
+        "endLoc": {
+          "line": 128,
+          "column": 28,
+          "position": 1466
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 9,
+      "fragment": ">\r\n                  <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                    <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n                  </svg>\r\n                </button>\r\n              </div>\r\n\r\n              <div className=\"space-y-4\">\r\n                {/* Navigation Commands */",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx",
+        "start": 226,
+        "end": 234,
+        "startLoc": {
+          "line": 226,
+          "column": 17,
+          "position": 2063
+        },
+        "endLoc": {
+          "line": 234,
+          "column": 26,
+          "position": 2161
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx",
+        "start": 124,
+        "end": 559,
+        "startLoc": {
+          "line": 124,
+          "column": 9,
+          "position": 931
+        },
+        "endLoc": {
+          "line": 559,
+          "column": 20,
+          "position": 5543
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 13,
+      "fragment": ".map((cmd, i) => (\r\n                      <div key={i} className=\"flex items-center gap-2 text-sm\">\r\n                        <span className=\"text-gray-400\">•</span>\r\n                        <span className=\"font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded\">\r\n                          &quot;{cmd.phrases[0]}&quot;\r\n                        </span>\r\n                        <span className=\"text-gray-500\">→ {cmd.description}</span>\r\n                      </div>\r\n                    ))}\r\n                  </div>\r\n                </div>\r\n\r\n                {/* Payment Commands */",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx",
+        "start": 254,
+        "end": 266,
+        "startLoc": {
+          "line": 254,
+          "column": 6,
+          "position": 2381
+        },
+        "endLoc": {
+          "line": 266,
+          "column": 23,
+          "position": 2511
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx",
+        "start": 238,
+        "end": 250,
+        "startLoc": {
+          "line": 238,
+          "column": 11,
+          "position": 2206
+        },
+        "endLoc": {
+          "line": 250,
+          "column": 21,
+          "position": 2336
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 13,
+      "fragment": ".map((cmd, i) => (\r\n                      <div key={i} className=\"flex items-center gap-2 text-sm\">\r\n                        <span className=\"text-gray-400\">•</span>\r\n                        <span className=\"font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded\">\r\n                          &quot;{cmd.phrases[0]}&quot;\r\n                        </span>\r\n                        <span className=\"text-gray-500\">→ {cmd.description}</span>\r\n                      </div>\r\n                    ))}\r\n                  </div>\r\n                </div>\r\n\r\n                {/* Search Commands */",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx",
+        "start": 270,
+        "end": 282,
+        "startLoc": {
+          "line": 270,
+          "column": 8,
+          "position": 2556
+        },
+        "endLoc": {
+          "line": 282,
+          "column": 22,
+          "position": 2686
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx",
+        "start": 238,
+        "end": 250,
+        "startLoc": {
+          "line": 238,
+          "column": 11,
+          "position": 2206
+        },
+        "endLoc": {
+          "line": 250,
+          "column": 21,
+          "position": 2336
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 12,
+      "fragment": ".map((cmd, i) => (\r\n                      <div key={i} className=\"flex items-center gap-2 text-sm\">\r\n                        <span className=\"text-gray-400\">•</span>\r\n                        <span className=\"font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded\">\r\n                          &quot;{cmd.phrases[0]}&quot;\r\n                        </span>\r\n                        <span className=\"text-gray-500\">→ {cmd.description}</span>\r\n                      </div>\r\n                    ))}\r\n                  </div>\r\n                </div>\r\n              </",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx",
+        "start": 286,
+        "end": 297,
+        "startLoc": {
+          "line": 286,
+          "column": 7,
+          "position": 2731
+        },
+        "endLoc": {
+          "line": 297,
+          "column": 3,
+          "position": 2858
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx",
+        "start": 238,
+        "end": 250,
+        "startLoc": {
+          "line": 238,
+          "column": 11,
+          "position": 2206
+        },
+        "endLoc": {
+          "line": 250,
+          "column": 2,
+          "position": 2335
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 13,
+      "fragment": ") => {\r\n  const [toasts, setToasts] = useState<ToastMessage[]>([]);\r\n\r\n  const showToast = useCallback((message: string, type: ToastMessage['type'] = 'info', duration?: number) => {\r\n    const id = Date.now().toString() + Math.random().toString(36);\r\n    setToasts(prev => [...prev, { id, message, type, duration }]);\r\n  }, []);\r\n\r\n  const removeToast = useCallback((id: string) => {\r\n    setToasts(prev => prev.filter(t => t.id !== id));\r\n  }, []);\r\n\r\n  return",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/Toast.tsx",
+        "start": 109,
+        "end": 121,
+        "startLoc": {
+          "line": 109,
+          "column": 2,
+          "position": 1018
+        },
+        "endLoc": {
+          "line": 121,
+          "column": 7,
+          "position": 1229
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/contexts/ToastContext.tsx",
+        "start": 20,
+        "end": 32,
+        "startLoc": {
+          "line": 20,
+          "column": 2,
+          "position": 256
+        },
+        "endLoc": {
+          "line": 32,
+          "column": 6,
+          "position": 467
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 6,
+      "fragment": "success: useCallback((message: string, duration?: number) => showToast(message, 'success', duration), [showToast]),\r\n    error: useCallback((message: string, duration?: number) => showToast(message, 'error', duration), [showToast]),\r\n    warning: useCallback((message: string, duration?: number) => showToast(message, 'warning', duration), [showToast]),\r\n    info: useCallback((message: string, duration?: number) => showToast(message, 'info', duration), [showToast]),\r\n  };\r\n}",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/Toast.tsx",
+        "start": 125,
+        "end": 130,
+        "startLoc": {
+          "line": 125,
+          "column": 5,
+          "position": 1250
+        },
+        "endLoc": {
+          "line": 130,
+          "column": 2,
+          "position": 1418
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/contexts/ToastContext.tsx",
+        "start": 33,
+        "end": 39,
+        "startLoc": {
+          "line": 33,
+          "column": 5,
+          "position": 477
+        },
+        "endLoc": {
+          "line": 39,
+          "column": 7,
+          "position": 648
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 7,
+      "fragment": "\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n            <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n          </svg>\r\n        </button>\r\n      </div>\r\n\r\n      {/* Métricas */",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/PerformanceMonitor.tsx",
+        "start": 128,
+        "end": 134,
+        "startLoc": {
+          "line": 128,
+          "column": 8,
+          "position": 1174
+        },
+        "endLoc": {
+          "line": 134,
+          "column": 15,
+          "position": 1249
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx",
+        "start": 125,
+        "end": 489,
+        "startLoc": {
+          "line": 125,
+          "column": 8,
+          "position": 942
+        },
+        "endLoc": {
+          "line": 489,
+          "column": 20,
+          "position": 4508
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 6,
+      "fragment": "\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\r\n                <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\r\n              </svg>\r\n            </button>\r\n          </div>\r\n          <p",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/NumericLoginModal.tsx",
+        "start": 161,
+        "end": 166,
+        "startLoc": {
+          "line": 161,
+          "column": 19,
+          "position": 1440
+        },
+        "endLoc": {
+          "line": 166,
+          "column": 2,
+          "position": 1513
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx",
+        "start": 125,
+        "end": 511,
+        "startLoc": {
+          "line": 125,
+          "column": 8,
+          "position": 942
+        },
+        "endLoc": {
+          "line": 511,
+          "column": 4,
+          "position": 5004
+        }
+      }
+    }
+  ],
+  "filename": "C:\\Users\\Consultor\\Documents\\projetos\\chefia-pos\\frontend\\node_modules\\@jscpd\\html-reporter\\dist\\templates\\main.pug"
+}

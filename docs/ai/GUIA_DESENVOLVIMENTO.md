@@ -1532,7 +1532,7 @@ class TestComponent:
 
 ## 🎯 Resumo - Regras de Ouro
 
-### Os 19 Mandamentos do Desenvolvedor Chefia POS
+### Os 23 Mandamentos do Desenvolvedor Chefia POS
 
 1. **TERMINE O QUE COMEÇOU - Uma tarefa por vez, 100% completa**
 2. **NUNCA finalize uma tarefa com bugs conhecidos**
@@ -1543,7 +1543,7 @@ class TestComponent:
 7. **Commits pequenos e frequentes com mensagens descritivas**
 8. **Teste localmente antes de fazer push**
 9. **Documente o que você fez**
-10. **Remova código morto e imports não usados**
+10. **Remova código morto e imports não usados observando os lint**
 11. **Siga os padrões de código estabelecidos**
 12. **Escreva testes para seu código (mocks só em testes!)**
 13. **Valide que nada quebrou antes do commit**
@@ -1555,6 +1555,8 @@ class TestComponent:
 19. **Evite duplicacao de codigo, procure ver se já existe o que voce quer implementar**
 20. **Crie codigos da forma mais simples possivel, evitando over-engineering**
 21. **Tome cuidado com a questão de segurança do codigo**
+22. **Evitar alteracoes em lote por meio de scripts pois se perde o contexto**
+23. **Lembrar de ter logs inteligentes no modelo já usado pelo projeto, que é gerado localmente**
 
 ### 🚫 Os Pecados Capitais do Desenvolvimento
 

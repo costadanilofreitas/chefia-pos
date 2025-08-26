@@ -1,11 +1,18 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import Toast, { ToastMessage } from '../components/Toast';
+import Toast from '../components/Toast';
+
+interface ToastMessage {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  duration?: number;
+}
 
 interface ToastContextType {
-  success: (message: string, duration?: number) => void;
-  error: (message: string, duration?: number) => void;
-  warning: (message: string, duration?: number) => void;
-  info: (message: string, duration?: number) => void;
+  success: (__message: string, _duration?: number) => void;
+  error: (__message: string, _duration?: number) => void;
+  warning: (__message: string, _duration?: number) => void;
+  info: (__message: string, _duration?: number) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -42,10 +49,10 @@ export const useToast = () => {
   if (!context) {
     // Return a safe fallback that does nothing instead of throwing
     return {
-      success: (message: string, duration?: number) => {},
-      error: (message: string, duration?: number) => {},
-      warning: (message: string, duration?: number) => {},
-      info: (message: string, duration?: number) => {},
+      success: (__message: string, _duration?: number) => {},
+      error: (__message: string, _duration?: number) => {},
+      warning: (__message: string, _duration?: number) => {},
+      info: (__message: string, _duration?: number) => {},
     };
   }
   return context;

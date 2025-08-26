@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+// import { useNavigate, useParams } from 'react-router-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useDelivery } from '../hooks/useDelivery';
 import { formatCurrency } from '../utils/formatters';
-import Toast, { useToast } from '../components/Toast';
 import '../index.css';
+import Toast from '../components/Toast';
+import { useToast } from '../components/Toast';
 
 // Custom styles for scrollbar
 const customStyles = `
@@ -49,14 +50,14 @@ interface DeliveryOrder {
   createdAt: string;
 }
 
-interface Courier {
-  id: string;
-  name: string;
-  phone: string;
-  status: 'available' | 'busy' | 'offline';
-  currentDeliveries: number;
-  vehicle: 'bike' | 'motorcycle' | 'car';
-}
+// interface Courier {
+//   id: string;
+//   name: string;
+//   phone: string;
+//   status: 'available' | 'busy' | 'offline';
+//   currentDeliveries: number;
+//   vehicle: 'bike' | 'motorcycle' | 'car';
+// } // TODO: usar quando implementar entregadores
 
 interface StatusColumn {
   status: DeliveryOrder['status'];
@@ -67,13 +68,13 @@ interface StatusColumn {
 }
 
 export default function DeliveryPage() {
-  const navigate = useNavigate();
-  const { terminalId } = useParams();
-  const { toasts, removeToast, success, error, info, warning } = useToast();
+  // const _navigate = useNavigate(); // TODO: usar para navegação
+  // const _params = useParams(); // terminalId = _params.terminalId quando necessário
+  const { toasts, removeToast, success, /* info, */ warning, error } = useToast();
   const { 
     deliveryOrders = [], 
     couriers = [], 
-    loading,
+    // loading, // TODO: usar para indicador de carregamento
     loadDeliveryOrders,
     loadCouriers,
     assignCourier,
@@ -124,7 +125,7 @@ export default function DeliveryPage() {
   ];
 
   // Use couriers from hook or provide empty array
-  const availableCouriers = couriers || [];
+  const availableCouriers = useMemo(() => couriers || [], [couriers]);
 
   // Drag and Drop handlers
   const handleDragStart = useCallback((e: React.DragEvent, order: DeliveryOrder) => {
@@ -141,7 +142,7 @@ export default function DeliveryPage() {
     setDragOverStatus(null);
   }, []);
   
-  const handleDragOver = useCallback((e: React.DragEvent, status: string) => {
+  const handleDragOver = useCallback((e: React.DragEvent, _status: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDragOverStatus(status);
@@ -189,12 +190,12 @@ export default function DeliveryPage() {
       } else {
         // For other status changes, we need to update via API
         // This would require adding an updateOrderStatus method to useDelivery hook
-        console.log('Status update:', draggedOrder.id, newStatus);
+// console.log('Status update:', draggedOrder.id, newStatus);
       }
       await loadDeliveryOrders(); // Reload to show updated status
-    } catch (err) {
+    } catch {
       error('Erro ao atualizar status do pedido');
-      console.error(err);
+// console.error(err);
       return;
     }
     
@@ -217,7 +218,7 @@ export default function DeliveryPage() {
       return;
     }
     
-    const courier = availableCouriers.find((c: any) => c.id === selectedCourier);
+    const courier = availableCouriers.find((c) => c.id === selectedCourier);
     if (courier) {
       try {
         await assignCourier(selectedOrder.id, selectedCourier);
@@ -227,12 +228,12 @@ export default function DeliveryPage() {
         setSelectedCourier('');
         setSelectedOrder(null);
         success(`Pedido atribuído para ${courier.name}`);
-      } catch (err) {
+      } catch {
         error('Erro ao atribuir entregador');
-        console.error(err);
+// console.error(err);
       }
     }
-  }, [selectedOrder, selectedCourier, availableCouriers, warning, success, assignCourier, startDelivery, loadDeliveryOrders, error]);
+  }, [selectedOrder, selectedCourier, availableCouriers, warning, success, error, assignCourier, startDelivery, loadDeliveryOrders]);
 
   // Filter orders
   const filteredOrders = orders.filter(order => {
@@ -414,7 +415,7 @@ export default function DeliveryPage() {
             </div>
             
             <div className="space-y-2 mb-4">
-              {availableCouriers.map((courier: any) => (
+              {availableCouriers.map((courier) => (
                 <button
                   key={courier.id}
                   onClick={() => setSelectedCourier(courier.id)}
@@ -427,10 +428,10 @@ export default function DeliveryPage() {
                   <div className="text-left">
                     <p className="font-medium text-gray-900 dark:text-white">{courier.name}</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {courier.vehicle === 'bike' && '🚴 Bicicleta'}
-                      {courier.vehicle === 'motorcycle' && '🏍️ Moto'}
-                      {courier.vehicle === 'car' && '🚗 Carro'}
-                      {' • '}{courier.currentDeliveries} entregas
+                      {(courier as any).vehicle_type === 'bike' && '🚴 Bicicleta'}
+                      {(courier as any).vehicle_type === 'motorcycle' && '🏍️ Moto'}
+                      {(courier as any).vehicle_type === 'car' && '🚗 Carro'}
+                      {' • '}{(courier as any).currentDeliveries || 0} entregas
                     </p>
                   </div>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${

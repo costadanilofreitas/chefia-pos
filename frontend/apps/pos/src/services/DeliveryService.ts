@@ -174,7 +174,7 @@ export class DeliveryService {
     if (courier_id) params.courier_id = courier_id;
     if (date) params.date = date;
 
-    const response = await apiInterceptor.get(API_ENDPOINTS.DELIVERY.LIST, { params });
+    const response = await apiInterceptor.get<DeliveryOrder[]>(API_ENDPOINTS.DELIVERY.LIST, { params });
     return response.data;
   }
 
@@ -182,7 +182,7 @@ export class DeliveryService {
    * Busca um pedido de delivery por ID
    */
   async getDeliveryOrder(deliveryId: string): Promise<DeliveryOrder> {
-    const response = await apiInterceptor.get(
+    const response = await apiInterceptor.get<DeliveryOrder>(
       API_ENDPOINTS.DELIVERY.GET.replace(':id', deliveryId)
     );
     return response.data;
@@ -192,7 +192,7 @@ export class DeliveryService {
    * Cria um novo pedido de delivery
    */
   async createDeliveryOrder(orderData: DeliveryOrderCreate): Promise<DeliveryOrder> {
-    const response = await apiInterceptor.post(
+    const response = await apiInterceptor.post<DeliveryOrder>(
       API_ENDPOINTS.DELIVERY.CREATE,
       orderData
     );
@@ -203,7 +203,7 @@ export class DeliveryService {
    * Atualiza um pedido de delivery
    */
   async updateDeliveryOrder(deliveryId: string, orderData: DeliveryOrderUpdate): Promise<DeliveryOrder> {
-    const response = await apiInterceptor.put(
+    const response = await apiInterceptor.put<DeliveryOrder>(
       API_ENDPOINTS.DELIVERY.UPDATE.replace(':id', deliveryId),
       orderData
     );
@@ -214,7 +214,7 @@ export class DeliveryService {
    * Cancela um pedido de delivery
    */
   async cancelDeliveryOrder(deliveryId: string, reason?: string): Promise<DeliveryOrder> {
-    const response = await apiInterceptor.post(
+    const response = await apiInterceptor.post<DeliveryOrder>(
       API_ENDPOINTS.DELIVERY.CANCEL.replace(':id', deliveryId),
       { reason }
     );
@@ -225,7 +225,7 @@ export class DeliveryService {
    * Atribui um entregador a um pedido
    */
   async assignCourier(deliveryId: string, courierId: string): Promise<DeliveryOrder> {
-    const response = await apiInterceptor.post(
+    const response = await apiInterceptor.post<DeliveryOrder>(
       API_ENDPOINTS.DELIVERY.ASSIGN.replace(':id', deliveryId),
       { courier_id: courierId }
     );
@@ -236,7 +236,7 @@ export class DeliveryService {
    * Inicia a entrega (entregador pegou o pedido)
    */
   async startDelivery(deliveryId: string): Promise<DeliveryOrder> {
-    const response = await apiInterceptor.post(
+    const response = await apiInterceptor.post<DeliveryOrder>(
       API_ENDPOINTS.DELIVERY.START.replace(':id', deliveryId)
     );
     return response.data;
@@ -246,7 +246,7 @@ export class DeliveryService {
    * Completa a entrega
    */
   async completeDelivery(deliveryId: string, notes?: string): Promise<DeliveryOrder> {
-    const response = await apiInterceptor.post(
+    const response = await apiInterceptor.post<DeliveryOrder>(
       API_ENDPOINTS.DELIVERY.COMPLETE.replace(':id', deliveryId),
       { notes }
     );
@@ -261,7 +261,7 @@ export class DeliveryService {
     if (status) params.status = status;
     if (is_active !== undefined) params.is_active = is_active;
 
-    const response = await apiInterceptor.get('/api/v1/delivery/couriers', { params });
+    const response = await apiInterceptor.get<DeliveryCourier[]>('/api/v1/delivery/couriers', { params });
     return response.data;
   }
 
@@ -269,7 +269,7 @@ export class DeliveryService {
    * Cria um novo entregador
    */
   async createCourier(courierData: CourierCreate): Promise<DeliveryCourier> {
-    const response = await apiInterceptor.post('/api/v1/delivery/couriers', courierData);
+    const response = await apiInterceptor.post<DeliveryCourier>('/api/v1/delivery/couriers', courierData);
     return response.data;
   }
 
@@ -277,7 +277,7 @@ export class DeliveryService {
    * Atualiza um entregador
    */
   async updateCourier(courierId: string, courierData: CourierUpdate): Promise<DeliveryCourier> {
-    const response = await apiInterceptor.put(
+    const response = await apiInterceptor.put<DeliveryCourier>(
       `/api/v1/delivery/couriers/${courierId}`,
       courierData
     );
@@ -305,7 +305,7 @@ export class DeliveryService {
    * Lista zonas de entrega
    */
   async listDeliveryZones(): Promise<DeliveryZone[]> {
-    const response = await apiInterceptor.get('/api/v1/delivery/zones');
+    const response = await apiInterceptor.get<DeliveryZone[]>('/api/v1/delivery/zones');
     return response.data;
   }
 
@@ -313,7 +313,7 @@ export class DeliveryService {
    * Calcula taxa de entrega para um endereço
    */
   async calculateDeliveryFee(address: string): Promise<{ fee: number; zone_id: string; estimated_time: number }> {
-    const response = await apiInterceptor.post('/api/v1/delivery/calculate-fee', { address });
+    const response = await apiInterceptor.post<{ fee: number; zone_id: string; estimated_time: number }>('/api/v1/delivery/calculate-fee', { address });
     return response.data;
   }
 
@@ -321,7 +321,7 @@ export class DeliveryService {
    * Busca histórico de rastreamento de um pedido
    */
   async getDeliveryTracking(deliveryId: string): Promise<DeliveryTracking[]> {
-    const response = await apiInterceptor.get(`/api/v1/delivery/${deliveryId}/tracking`);
+    const response = await apiInterceptor.get<DeliveryTracking[]>(`/api/v1/delivery/${deliveryId}/tracking`);
     return response.data;
   }
 

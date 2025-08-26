@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from './useToast';
@@ -17,7 +17,7 @@ export const useKeyboardShortcuts = () => {
   const { info } = useToast();
 
   // Define all shortcuts
-  const shortcuts: ShortcutConfig[] = [
+  const shortcuts: ShortcutConfig[] = useMemo(() => [
     // Navigation shortcuts
     {
       key: 'alt+h',
@@ -240,17 +240,21 @@ export const useKeyboardShortcuts = () => {
       action: () => document.dispatchEvent(new CustomEvent('pos:confirm')),
       category: 'system'
     }
-  ];
+  ], [navigate, terminalId, info]);
 
-  // Register all shortcuts
-  shortcuts.forEach(shortcut => {
-    useHotkeys(shortcut.key, (e) => {
-      e.preventDefault();
+  // Create a combined key string for all shortcuts
+  const allKeys = shortcuts.map(s => s.key).join(', ');
+  
+  // Register all shortcuts with a single useHotkeys call
+  useHotkeys(allKeys, (e, handler) => {
+    e.preventDefault();
+    const shortcut = shortcuts.find(s => s.key === handler.keys?.join('+'));
+    if (shortcut) {
       shortcut.action();
-    }, {
-      enableOnFormTags: false,
-      preventDefault: true
-    });
+    }
+  }, {
+    enableOnFormTags: false,
+    preventDefault: true
   });
 
   // Show shortcuts modal
@@ -271,15 +275,15 @@ export const useKeyboardShortcuts = () => {
 };
 
 // Custom hook for listening to keyboard events in components
-export const useKeyboardEvent = (eventName: string, handler: (detail?: any) => void) => {
+export const useKeyboardEvent = (eventName: string, handler: (detail?: unknown) => void) => {
   useEffect(() => {
     const handleEvent = (e: CustomEvent) => {
       handler(e.detail);
     };
 
-    document.addEventListener(eventName as any, handleEvent);
+    document.addEventListener(eventName as unknown as keyof DocumentEventMap, handleEvent as EventListener);
     return () => {
-      document.removeEventListener(eventName as any, handleEvent);
+      document.removeEventListener(eventName as unknown as keyof DocumentEventMap, handleEvent as EventListener);
     };
   }, [eventName, handler]);
 };

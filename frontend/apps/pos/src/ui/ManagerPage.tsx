@@ -1,34 +1,70 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useEmployee } from '../hooks/useEmployee';
-import type { Employee } from '../services/EmployeeService';
-import { useSupplier } from '../hooks/useSupplier';
-import { useStock } from '../hooks/useStock';
-import { useReport } from '../hooks/useReport';
-import { useBills } from '../hooks/useBills';
-import { formatCurrency, formatDate } from '../utils/formatters';
-import Toast, { useToast } from '../components/Toast';
+import { useEffect, useState } from 'react';
+// import { useNavigate } from 'react-router-dom';
 import { useConfirmDialog } from '../components/ConfirmDialog';
+import Toast, { useToast } from '../components/Toast';
+import { useBills } from '../hooks/useBills';
+import { useEmployee } from '../hooks/useEmployee';
+import { useReport } from '../hooks/useReport';
+import { useStock } from '../hooks/useStock';
+import { useSupplier } from '../hooks/useSupplier';
 import '../index.css';
+import { formatCurrency } from '../utils/formatters';
 
 type TabType = 'dashboard' | 'employees' | 'suppliers' | 'stock' | 'bills' | 'reports';
 
+interface Employee {
+  id: string;
+  name: string;
+  role?: string;
+  phone?: string;
+  salary?: number;
+  is_active?: boolean;
+}
+
+interface Supplier {
+  id: string;
+  name: string;
+  cnpj?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+}
+
+interface Stock {
+  id: string;
+  name: string;
+  sku?: string;
+  quantity: number;
+  min_quantity?: number;
+  unit?: string;
+  price?: number;
+}
+
+interface Bill {
+  id: string;
+  description: string;
+  supplier?: string;
+  amount: number;
+  due_date?: string;
+  status?: string;
+  category?: string;
+}
+
 export default function ManagerPage() {
-  const navigate = useNavigate();
-  const { terminalId } = useParams();
-  const { toasts, removeToast, success, error, warning } = useToast();
+  // const _navigate = useNavigate(); // TODO: usar para navegação
+  const { toasts, removeToast, success, warning, error } = useToast();
   const { showConfirm, ConfirmDialogComponent } = useConfirmDialog();
   
   // Hooks
-  const { employees, loading: loadingEmployees, createEmployee, updateEmployee, deleteEmployee, loadEmployees } = useEmployee();
-  const { suppliers, loading: loadingSuppliers, createSupplier, updateSupplier, deleteSupplier, loadSuppliers } = useSupplier();
-  const { stocks, loading: loadingStock, updateStock, loadStocks } = useStock();
-  const { generateReport, loading: loadingReport } = useReport();
+  const { employees, createEmployee, updateEmployee, deleteEmployee, loadEmployees } = useEmployee();
+  const { suppliers, createSupplier, updateSupplier, deleteSupplier, loadSuppliers } = useSupplier();
+  const { stocks, updateStock, loadStocks } = useStock();
+  const { generateReport } = useReport();
   const { 
     bills, 
-    loading: loadingBills, 
+    // loading: loadingBills, // TODO: usar para indicador de carregamento
     summary: billsSummary,
-    loadBills, 
+    // loadBills, // TODO: usar quando implementar carregamento de contas 
     createBill, 
     updateBill, 
     deleteBill, 
@@ -42,9 +78,9 @@ export default function ManagerPage() {
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showBillModal, setShowBillModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
-  const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
-  const [selectedBill, setSelectedBill] = useState<any>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<unknown>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<unknown>(null);
+  const [selectedBill, setSelectedBill] = useState<unknown>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [billsFilter, setBillsFilter] = useState<'all' | 'pending' | 'overdue' | 'paid'>('all');
   const [employeeModalTab, setEmployeeModalTab] = useState(0);
@@ -104,7 +140,7 @@ export default function ManagerPage() {
     loadEmployees().catch(console.error);
     loadSuppliers().catch(console.error);
     loadStocks().catch(console.error);
-  }, []);
+  }, [loadEmployees, loadSuppliers, loadStocks]);
 
   // Dashboard stats
   const billsStats = getStatistics();
@@ -123,7 +159,7 @@ export default function ManagerPage() {
   const handleSaveEmployee = async () => {
     try {
       if (selectedEmployee) {
-        await updateEmployee(selectedEmployee.id, {
+        await updateEmployee((selectedEmployee as any).id, {
           name: employeeForm.name,
           phone: employeeForm.phone,
           email: employeeForm.email
@@ -133,21 +169,22 @@ export default function ManagerPage() {
         // For creation, map to required fields
         const newEmployee = {
           name: employeeForm.name,
-          role: employeeForm.role,
-          document: employeeForm.operator_id, // Use operator_id as document
+          role: employeeForm.role as any,
+          document: employeeForm.operator_id || '00000000000',
           email: employeeForm.email,
           phone: employeeForm.phone,
           employment_type: employeeForm.contract_type as any,
           hire_date: employeeForm.admission_date,
-          salary: employeeForm.salary
+          salary: employeeForm.salary,
+          password: '123456' // Default password
         };
-        await createEmployee(newEmployee as any);
+        await createEmployee(newEmployee);
         success('Funcionário criado com sucesso!');
       }
       setShowEmployeeModal(false);
       resetEmployeeForm();
       loadEmployees();
-    } catch (err) {
+    } catch {
       error('Erro ao salvar funcionário');
     }
   };
@@ -161,7 +198,7 @@ export default function ManagerPage() {
           await deleteEmployee(id);
           success('Funcionário excluído com sucesso!');
           loadEmployees();
-        } catch (err) {
+        } catch {
           error('Erro ao excluir funcionário');
         }
       },
@@ -201,7 +238,7 @@ export default function ManagerPage() {
   const handleSaveSupplier = async () => {
     try {
       if (selectedSupplier) {
-        await updateSupplier(selectedSupplier.id, supplierForm);
+        await updateSupplier((selectedSupplier as any).id, supplierForm);
         success('Fornecedor atualizado com sucesso!');
       } else {
         await createSupplier(supplierForm);
@@ -210,7 +247,7 @@ export default function ManagerPage() {
       setShowSupplierModal(false);
       resetSupplierForm();
       loadSuppliers();
-    } catch (err) {
+    } catch {
       error('Erro ao salvar fornecedor');
     }
   };
@@ -224,7 +261,7 @@ export default function ManagerPage() {
           await deleteSupplier(id);
           success('Fornecedor excluído com sucesso!');
           loadSuppliers();
-        } catch (err) {
+        } catch {
           error('Erro ao excluir fornecedor');
         }
       },
@@ -248,7 +285,7 @@ export default function ManagerPage() {
   const handleSaveBill = async () => {
     try {
       if (selectedBill) {
-        await updateBill(selectedBill.id, {
+        await updateBill((selectedBill as any).id, {
           description: billForm.description,
           supplier: billForm.supplier,
           amount: billForm.amount,
@@ -263,7 +300,7 @@ export default function ManagerPage() {
       }
       setShowBillModal(false);
       resetBillForm();
-    } catch (err) {
+    } catch {
       error('Erro ao salvar conta');
     }
   };
@@ -276,7 +313,7 @@ export default function ManagerPage() {
         try {
           await deleteBill(id);
           success('Conta excluída com sucesso!');
-        } catch (err) {
+        } catch {
           error('Erro ao excluir conta');
         }
       },
@@ -288,12 +325,12 @@ export default function ManagerPage() {
     if (!selectedBill) return;
     
     try {
-      await payBill(selectedBill.id, paymentMethod);
+      await payBill((selectedBill as any).id, paymentMethod);
       success('Conta paga com sucesso!');
       setShowPaymentModal(false);
       setSelectedBill(null);
       setPaymentMethod('Dinheiro');
-    } catch (err) {
+    } catch {
       error('Erro ao pagar conta');
     }
   };
@@ -343,7 +380,7 @@ export default function ManagerPage() {
       }
       
       // Get all employees with salary information
-      const employeesWithSalary = employees?.filter((emp: Employee) => (emp.salary || 0) > 0) || [];
+      const employeesWithSalary = employees?.filter((emp: any) => (emp.salary || 0) > 0) || [];
       
       if (employeesWithSalary.length === 0) {
         warning('Nenhum funcionário com salário cadastrado');
@@ -352,9 +389,9 @@ export default function ManagerPage() {
       
       // Calculate total payroll
       let totalPayroll = 0;
-      let payrollDetails: string[] = [];
+      const payrollDetails: string[] = [];
       
-      employeesWithSalary.forEach((emp: Employee) => {
+      employeesWithSalary.forEach((emp: any) => {
         const totalCost = (emp.salary || 0);
         totalPayroll += totalCost;
         payrollDetails.push(`${emp.name}: ${formatCurrency(totalCost)}`);
@@ -399,40 +436,40 @@ export default function ManagerPage() {
         },
         { type: 'info' }
       );
-    } catch (err) {
+    } catch {
       error('Erro ao gerar folha de pagamento');
-      console.error(err);
+// console.error(err);
     }
   };
 
   // Handle Stock Update
-  const handleUpdateStock = async (item: any, newQuantity: number) => {
+  const handleUpdateStock = async (item: Stock, newQuantity: number) => {
     try {
       await updateStock(item.id, { quantity: newQuantity });
       success('Estoque atualizado com sucesso!');
       loadStocks();
-    } catch (err) {
+    } catch {
       error('Erro ao atualizar estoque');
     }
   };
 
   // Filter data based on search
-  const filteredEmployees = employees?.filter((e: Employee) => 
+  const filteredEmployees = (employees as Employee[])?.filter((e: Employee) => 
     e.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     e.id?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
-  const filteredSuppliers = suppliers?.filter((s: any) =>
+  const filteredSuppliers = (suppliers as Supplier[])?.filter((s: Supplier) =>
     s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.cnpj?.includes(searchTerm)
   ) || [];
 
-  const filteredStock = stocks?.filter((s: any) =>
+  const filteredStock = (stocks as Stock[])?.filter((s: Stock) =>
     s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.sku?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
-  const filteredBills = bills?.filter((b: any) => {
+  const filteredBills = (bills as Bill[])?.filter((b: Bill) => {
     const matchesSearch = b.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           b.supplier?.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -586,7 +623,7 @@ export default function ManagerPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredEmployees.map((employee: Employee) => (
+                  {filteredEmployees.map((employee: any) => (
                     <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{employee.name}</td>
                       <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{employee.id}</td>
@@ -614,7 +651,7 @@ export default function ManagerPage() {
                               email: employee.email,
                               phone: employee.phone || '',
                               salary: employee.salary || 0,
-                              role: employee.role as any
+                              role: employee.role as string
                             });
                             setShowEmployeeModal(true);
                           }}
@@ -667,7 +704,14 @@ export default function ManagerPage() {
                       <button
                         onClick={() => {
                           setSelectedSupplier(supplier);
-                          setSupplierForm(supplier);
+                          setSupplierForm({
+                            name: supplier.name,
+                            cnpj: supplier.cnpj,
+                            phone: supplier.phone,
+                            email: supplier.email,
+                            address: supplier.address || '',
+                            contact_person: supplier.contact_person || ''
+                          });
                           setShowSupplierModal(true);
                         }}
                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400"
@@ -716,7 +760,7 @@ export default function ManagerPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredStock.map((item: any) => (
+                  {filteredStock.map((item: Stock) => (
                     <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{item.name}</td>
                       <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{item.sku}</td>
@@ -878,7 +922,7 @@ export default function ManagerPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredBills.map((bill: any) => {
+                  {filteredBills.map((bill) => {
                     const dueDate = new Date(bill.due_date);
                     const isOverdue = bill.status === 'pending' && dueDate < new Date();
                     
@@ -1606,10 +1650,10 @@ export default function ManagerPage() {
             
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">Conta</p>
-              <p className="font-semibold text-gray-900 dark:text-white">{selectedBill.description}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Fornecedor: {selectedBill.supplier}</p>
+              <p className="font-semibold text-gray-900 dark:text-white">{(selectedBill as any).description}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Fornecedor: {(selectedBill as any).supplier}</p>
               <p className="text-lg font-bold text-gray-900 dark:text-white mt-2">
-                {formatCurrency(selectedBill.amount)}
+                {formatCurrency((selectedBill as any).amount)}
               </p>
             </div>
             

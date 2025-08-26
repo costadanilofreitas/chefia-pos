@@ -3,19 +3,19 @@ import axios from 'axios';
 const API_BASE_URL = '/api/v1/peripherals/printers'; // Base URL for the printer API
 
 const PrinterService = {
-  async printReceipt(data: {
+  async printReceipt(_data: {
     order_id: string;
     cashier_id?: string;
     terminal_id: string;
     operator_name: string;
-    items: any[];
+    items: Array<unknown>;
     total: number;
     payment_method: string;
     change: number;
     date: Date;
   }) {
     // Lógica para enviar os dados para a impressora
-    console.log('Imprimindo recibo:', data);
+// console.log('Imprimindo recibo:', data);
     // Simulação de sucesso
     return Promise.resolve();
   },
@@ -33,20 +33,16 @@ const PrinterService = {
     date: Date;
     notes: string;
   }): Promise<void> {
-    try {
-      const receiptData = {
-        title: 'Abertura do Dia de Operação',
-        business_day_id,
-        store_id,
-        user_name,
-        date: date.toLocaleString(),
-        notes,
-      };
-      await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
-    } catch (error) {
-      console.error('Error printing opening receipt:', error);
-      throw error;
-    }
+    const receiptData = {
+      title: 'Abertura do Dia de Operação',
+      business_day_id,
+      store_id,
+      user_name,
+      date: date.toLocaleString(),
+      notes,
+    };
+    await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
+    
   },
 
   async printBusinessDayClosingReceipt({
@@ -68,23 +64,19 @@ const PrinterService = {
     total_orders: number;
     notes: string;
   }): Promise<void> {
-    try {
-      const receiptData = {
-        title: 'Fechamento do Dia de Operação',
-        business_day_id,
-        store_id,
-        user_name,
-        opened_at: opened_at.toLocaleString(),
-        closed_at: closed_at.toLocaleString(),
-        total_sales: total_sales.toFixed(2),
-        total_orders,
-        notes,
-      };
-      await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
-    } catch (error) {
-      console.error('Error printing closing receipt:', error);
-      throw error;
-    }
+    const receiptData = {
+      title: 'Fechamento do Dia de Operação',
+      business_day_id,
+      store_id,
+      user_name,
+      opened_at: opened_at.toLocaleString(),
+      closed_at: closed_at.toLocaleString(),
+      total_sales: total_sales.toFixed(2),
+      total_orders,
+      notes,
+    };
+    await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
+    
   },
 
   async printOpeningReceipt({
@@ -111,13 +103,8 @@ const PrinterService = {
       date: date.toLocaleString(),
       notes
     };
-
-    try {
-      await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
-    } catch (error) {
-      console.error('Error printing opening receipt:', error);
-      throw error;
-    }
+    await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
+    
   },
 
   async printClosingReceipt({
@@ -171,13 +158,8 @@ const PrinterService = {
       date: date.toLocaleString(),
       notes
     };
-
-    try {
-      await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
-    } catch (error) {
-      console.error('Error printing closing receipt:', error);
-      throw error;
-    }
+    await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
+    
   },
 
   async printCashWithdrawalReceipt(data: {
@@ -188,22 +170,19 @@ const PrinterService = {
     reason: string;
     date: Date;
   }): Promise<void> {
-    try {
-      const response = await fetch('/api/printer/cash-withdrawal-receipt', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+    
+    const response = await fetch('/api/printer/cash-withdrawal-receipt', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
 
-      if (!response.ok) {
-        throw new Error('Failed to print cash withdrawal receipt');
-      }
-    } catch (error) {
-      console.error('Error printing cash withdrawal receipt:', error);
-      throw error;
+    if (!response.ok) {
+      throw new Error('Failed to print cash withdrawal receipt');
     }
+  
   }
 };
 

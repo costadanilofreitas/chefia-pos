@@ -24,10 +24,10 @@ export const useAuth = () => ({
       requirePasswordChange: false,
     };
   },
-  logout: async (terminalId?: string): Promise<void> => {
+  logout: async (_terminalId?: string): Promise<void> => {
     return Promise.resolve();
   },
-  hasPermission: (permission: Permission | string): boolean => {
+  hasPermission: (_permission: Permission | string): boolean => {
     return true;
   },
   hasRole: (role: UserRole | string): boolean => {
@@ -39,7 +39,7 @@ export const useAuth = () => ({
   getTokenExpirationTime: (): number => {
     return Date.now() + 3600000; // 1 hour from now
   },
-  isTokenExpiringSoon: (minutesThreshold: number = 5): boolean => {
+  isTokenExpiringSoon: (_minutesThreshold: number = 5): boolean => {
     return false;
   },
   clearError: (): void => {

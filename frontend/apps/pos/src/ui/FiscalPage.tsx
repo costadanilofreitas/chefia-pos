@@ -31,7 +31,7 @@ export default function FiscalPage() {
     config: fiscalConfig,
     contingency: contingencyMode,
     loading,
-    error,
+    // error, // TODO: usar para tratamento de erros
     loadDocuments,
     cancelDocument,
     downloadXML,
@@ -48,7 +48,7 @@ export default function FiscalPage() {
   
   // Load documents with filters
   useEffect(() => {
-    // Clear any pending timeout
+    // Clear unknown pending timeout
     if (loadTimeoutRef.current) {
       clearTimeout(loadTimeoutRef.current);
     }
@@ -152,7 +152,7 @@ export default function FiscalPage() {
     try {
       await generateFiscalReport(selectedReport, reportDateRange);
       setShowReportModal(false);
-    } catch (error) {
+    } catch {
       // Erro ao gerar relatório silenciado
     }
   };
@@ -160,7 +160,7 @@ export default function FiscalPage() {
   const handleSync = async () => {
     try {
       await syncDocuments();
-    } catch (error) {
+    } catch {
       // Erro ao sincronizar silenciado
     }
   };
@@ -169,7 +169,7 @@ export default function FiscalPage() {
     try {
       await toggleContingency(!contingencyMode.active, contingencyReason);
       setContingencyReason('');
-    } catch (error) {
+    } catch {
       // Erro ao alterar contingência silenciado
     }
   };
@@ -190,7 +190,7 @@ export default function FiscalPage() {
       setShowCancelModal(false);
       setCancelReason('');
       setCancelDocumentId('');
-    } catch (error) {
+    } catch {
       // Erro ao cancelar documento silenciado
     }
   };
@@ -208,7 +208,7 @@ export default function FiscalPage() {
         hour: '2-digit',
         minute: '2-digit'
       }).format(dateObj);
-    } catch (error) {
+    } catch {
       return 'Data inválida';
     }
   };

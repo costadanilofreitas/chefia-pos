@@ -1,4 +1,3 @@
-// src/services/ApiClient.ts
 import { TerminalConfig } from '../hooks/useTerminalConfig';
 
 export interface LoginRequest {
@@ -45,28 +44,25 @@ export class ApiClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), serviceConfig.timeout);
     
-    try {
-      const response = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-          ...options?.headers
-        }
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options?.headers
       }
+    });
 
-      return response.json();
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
+
+    return response.json();
+  
   }
 
 
@@ -134,7 +130,7 @@ export class ApiClient {
 
   // Orders methods
   orders = {
-    create: (data: any) =>
+    create: (data) =>
       this.request('orders', '/', {
         method: 'POST',
         body: JSON.stringify(data)

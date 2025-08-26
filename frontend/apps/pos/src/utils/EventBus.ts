@@ -2,7 +2,7 @@
  * Simple Event Bus for decoupled communication between components
  */
 
-type EventCallback = (...args: any[]) => void;
+type EventCallback = (...args: unknown[]) => void;
 
 class EventBus {
   private events: Map<string, EventCallback[]> = new Map();
@@ -33,13 +33,13 @@ class EventBus {
   /**
    * Emit an event
    */
-  emit(event: string, ...args: any[]): void {
+  emit(event: string, ...args: unknown[]): void {
     const callbacks = this.events.get(event);
     if (callbacks) {
       callbacks.forEach(callback => {
         try {
           callback(...args);
-        } catch (error) {
+        } catch {
           // Silent fail to prevent one listener from breaking others
         }
       });

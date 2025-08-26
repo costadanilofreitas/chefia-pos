@@ -1,14 +1,14 @@
-// src/components/POSLayout.tsx
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../components/Toast';
+import Toast from '../components/Toast';
 import ThemeToggle from './ThemeToggle';
 import { SimpleTooltip } from './Tooltip';
 import '../index.css'; // Import Tailwind CSS
 import NumericLoginModal from './NumericLoginModal';
-import Toast, { useToast } from './Toast';
 
 interface POSLayoutProps {
   children: React.ReactNode;
@@ -27,8 +27,8 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
   const navigate = useNavigate();
   const { terminalId } = useParams<{ terminalId: string }>();
   const location = useLocation();
-  const { user, logout, hasPermission, hasRole, isAuthenticated, login } = useAuth();
-  const { toasts, removeToast, success, error } = useToast();
+  const { user, logout, hasRole, isAuthenticated, login } = useAuth();
+  const { toasts, removeToast, success } = useToast();
   const { mode: themeMode } = useTheme();
   const menuRef = useRef<HTMLDivElement>(null);
   
@@ -112,15 +112,15 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen?.() ||
-      (document.documentElement as any).webkitRequestFullscreen?.() ||
-      (document.documentElement as any).mozRequestFullScreen?.() ||
-      (document.documentElement as any).msRequestFullscreen?.();
+      document.documentElement.requestFullscreen?.();
+      (document.documentElement as any)?.webkitRequestFullscreen?.();
+      (document.documentElement as any)?.mozRequestFullScreen?.();
+      (document.documentElement as any)?.msRequestFullscreen?.();
     } else {
-      document.exitFullscreen?.() ||
-      (document as any).webkitExitFullscreen?.() ||
-      (document as any).mozCancelFullScreen?.() ||
-      (document as any).msExitFullscreen?.();
+      document.exitFullscreen?.();
+      (document as any)?.webkitExitFullscreen?.();
+      (document as any)?.mozCancelFullScreen?.();
+      (document as any)?.msExitFullscreen?.();
     }
   }, []);
 
@@ -131,17 +131,14 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
   };
 
   const handleLogin = async (operatorId: string, password: string) => {
-    try {
-      await login({ operator_id: operatorId, password });
-      success('Login realizado com sucesso!');
-      // Pequeno delay para garantir que o estado seja atualizado
-      setTimeout(() => {
-        navigate(`/pos/${terminalId}/main`);
-      }, 100);
-    } catch (err: any) {
-      error(err.message || 'Erro ao fazer login');
-      throw err;
-    }
+    
+    await login({ operator_id: operatorId, password });
+    success('Login realizado com sucesso!');
+    // Pequeno delay para garantir que o estado seja atualizado
+    setTimeout(() => {
+      navigate(`/pos/${terminalId}/main`);
+    }, 100);
+  
   };
 
   const handleNavigation = (path: string) => {

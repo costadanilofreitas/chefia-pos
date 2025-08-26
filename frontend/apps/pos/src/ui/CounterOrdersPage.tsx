@@ -4,18 +4,18 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { useAuth } from '../hooks/useAuth';
 import { useOrder } from '../hooks/useOrder';
 import { formatCurrency } from '../utils/formatters';
-import { Order, OrderStatus, OrderType, OrderItem } from '../types/order';
+import { Order, OrderStatus, OrderType } from '../types/order';
 import '../index.css';
 
 export default function CounterOrdersPage() {
   const navigate = useNavigate();
   const { terminalId } = useParams();
-  const { user, isAuthenticated } = useAuth();
+  const { /* user, */ isAuthenticated } = useAuth();
   
   const {
     orders,
     loading,
-    error,
+    // error, // TODO: usar para tratamento de erros
     getOrders,
     updateOrder,
     cancelOrder,
@@ -37,19 +37,21 @@ export default function CounterOrdersPage() {
       return;
     }
     loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, navigate, terminalId]);
   
   // Auto-refresh orders
   useEffect(() => {
     const interval = setInterval(loadOrders, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   const loadOrders = useCallback(async () => {
     try {
       await getOrders();
-    } catch (err) {
-      console.error('Error loading orders:', err);
+    } catch {
+// console.error('Error loading orders:', err);
     }
   }, [getOrders]);
   
@@ -79,8 +81,8 @@ export default function CounterOrdersPage() {
       await updateOrder(order.id, { status: OrderStatus.PREPARING });
       await loadOrders();
       alert('Pedido confirmado e enviado para preparo!');
-    } catch (error) {
-      console.error('Error confirming order:', error);
+    } catch {
+// console.error('Error confirming order:', error);
       alert('Erro ao confirmar pedido');
     }
   }, [updateOrder, loadOrders]);
@@ -90,8 +92,8 @@ export default function CounterOrdersPage() {
       await updateOrder(order.id, { status: OrderStatus.READY });
       await loadOrders();
       alert('Pedido marcado como pronto!');
-    } catch (error) {
-      console.error('Error marking order as ready:', error);
+    } catch {
+// console.error('Error marking order as ready:', error);
       alert('Erro ao marcar pedido como pronto');
     }
   }, [updateOrder, loadOrders]);
@@ -101,8 +103,8 @@ export default function CounterOrdersPage() {
       await completeOrder(order.id);
       await loadOrders();
       alert('Pedido finalizado com sucesso!');
-    } catch (error) {
-      console.error('Error completing order:', error);
+    } catch {
+// console.error('Error completing order:', error);
       alert('Erro ao finalizar pedido');
     }
   }, [completeOrder, loadOrders]);
@@ -120,8 +122,8 @@ export default function CounterOrdersPage() {
       setCancelReason('');
       setSelectedOrder(null);
       alert('Pedido cancelado com sucesso');
-    } catch (error) {
-      console.error('Error canceling order:', error);
+    } catch {
+// console.error('Error canceling order:', error);
       alert('Erro ao cancelar pedido');
     }
   }, [selectedOrder, cancelReason, cancelOrder, loadOrders]);

@@ -3,18 +3,18 @@
  */
 
 import React, { useRef, useCallback } from 'react';
-import { useVirtualScroll } from '../hooks/usePerformance';
-import { cn } from '../utils/cn';
+import {useVirtualScroll} from '../hooks/usePerformance';
+import {cn} from '../utils/cn';
 
 interface VirtualListProps<T> {
   items: T[];
-  renderItem: (item: T, index: number) => React.ReactNode;
+  renderItem: (item: T, _index: number) => React.ReactNode;
   itemHeight: number;
   height: number;
   className?: string;
   emptyMessage?: string;
   loading?: boolean;
-  onScroll?: (scrollTop: number) => void;
+  onScroll?: (_scrollTop: number) => void;
 }
 
 function VirtualList<T>({

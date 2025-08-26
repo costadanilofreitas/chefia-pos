@@ -19,7 +19,7 @@ interface UseAnalyticsReturn {
   
   // Utilitários
   formatCurrency: (value: number) => string;
-  formatPercentage: (value: number) => string;
+  formatPercentage: (__value: number) => string;
 }
 
 export const useAnalytics = (autoRefresh: boolean = true, refreshInterval: number = 30000): UseAnalyticsReturn => {
@@ -43,7 +43,7 @@ export const useAnalytics = (autoRefresh: boolean = true, refreshInterval: numbe
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar métricas';
       setError(errorMessage);
-      console.error('Erro ao carregar métricas:', err);
+// console.error('Erro ao carregar métricas:', err);
     } finally {
       setLoading(false);
     }
@@ -55,14 +55,48 @@ export const useAnalytics = (autoRefresh: boolean = true, refreshInterval: numbe
       setLoading(true);
       setError(null);
       
-      const newSummary = await analyticsService.getAnalyticsSummary();
+      const metrics = await analyticsService.getDashboardMetrics();
+      // Convert DashboardMetrics to AnalyticsSummary format
+      const newSummary: AnalyticsSummary = {
+        revenue: {
+          total: metrics.totalRevenue,
+          today: metrics.totalRevenue,
+          yesterday: 0,
+          thisWeek: 0,
+          thisMonth: 0,
+          growth: {
+            daily: 0,
+            weekly: 0,
+            monthly: 0
+          }
+        },
+        orders: {
+          total: metrics.todayOrders,
+          today: metrics.todayOrders,
+          yesterday: 0,
+          thisWeek: 0,
+          thisMonth: 0,
+          averagePerDay: metrics.todayOrders,
+          growth: {
+            daily: 0,
+            weekly: 0,
+            monthly: 0
+          }
+        },
+        cashiers: {
+          openCashiers: metrics.openCashiers,
+          totalCashiers: 0,
+          cashierDetails: []
+        },
+        lastUpdated: new Date().toISOString()
+      };
       setSummary(newSummary);
       setLastUpdated(new Date());
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar resumo';
       setError(errorMessage);
-      console.error('Erro ao carregar resumo:', err);
+// console.error('Erro ao carregar resumo:', err);
     } finally {
       setLoading(false);
     }

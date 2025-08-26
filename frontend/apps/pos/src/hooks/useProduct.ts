@@ -8,7 +8,7 @@ export interface Product {
   price: number;
   category_id?: string;
   is_combo?: boolean;
-  combo_items?: any[];
+  combo_items?: Array<unknown>;
   type?: string;
   description?: string;
   image_url?: string;
@@ -44,41 +44,40 @@ export const useProduct = () => {
       if (useCache) {
         const cachedProducts = cacheService.getProducts();
         if (cachedProducts) {
-          console.log("🗄️ Products loaded from cache");
-          setProducts(cachedProducts);
+// console.log("🗄️ Products loaded from cache");
+          setProducts(cachedProducts as Product[]);
           setLoading(false);
           return;
         }
       }
-
-      console.log("🌐 Loading products from backend...");
+// console.log("🌐 Loading products from backend...");
       // Carregar produtos reais do backend
       const backendProducts = await productService.getProducts();
 
       // Converter para formato esperado pelo frontend
-      const convertedProducts = backendProducts.map((p) => ({
+      const convertedProducts = backendProducts.map((p: any) => ({
         id: p.id,
         name: p.name,
         price: p.price,
         category_id: p.category_id,
-        is_combo: (p as any).type === "COMBO",
-        combo_items: (p as any).combo_items || [],
-        description: (p as any).description || "",
-        image_url: (p as any).image_url || "",
+        is_combo: p.type === "COMBO",
+        combo_items: p.combo_items || [],
+        description: p.description || "",
+        image_url: p.image_url || "",
         is_available:
-          (p as any).status === "ACTIVE" && (p as any).is_available !== false,
-        created_at: (p as any).created_at,
-        updated_at: (p as any).updated_at,
+          p.status === "ACTIVE" && p.is_available !== false,
+        created_at: p.created_at,
+        updated_at: p.updated_at,
       }));
 
       setProducts(convertedProducts);
 
       // Salvar no cache
       cacheService.setProducts(convertedProducts);
-      console.log(`✅ Products loaded: ${convertedProducts.length} items`);
-    } catch (err: any) {
-      console.error("❌ Error loading products:", err);
-      setError(err.message);
+// console.log(`✅ Products loaded: ${convertedProducts.length} items`);
+    } catch (error: any) {
+// console.error("❌ Error loading products:", error);
+      setError(error.message);
       setProducts([]); // Sem fallback mock - mostrar erro real
     } finally {
       setLoading(false);
@@ -94,14 +93,13 @@ export const useProduct = () => {
       if (useCache) {
         const cachedCategories = cacheService.getCategories();
         if (cachedCategories) {
-          console.log("🗄️ Categories loaded from cache");
-          setCategories(cachedCategories);
+// console.log("🗄️ Categories loaded from cache");
+          setCategories(cachedCategories as Category[]);
           setLoading(false);
           return;
         }
       }
-
-      console.log("🌐 Loading categories from backend...");
+// console.log("🌐 Loading categories from backend...");
       // Carregar categorias reais do backend
       const backendCategories = await productService.getCategories();
 
@@ -117,10 +115,10 @@ export const useProduct = () => {
 
       // Salvar no cache
       cacheService.setCategories(convertedCategories);
-      console.log(`✅ Categories loaded: ${convertedCategories.length} items`);
-    } catch (err: any) {
-      console.error("❌ Error loading categories:", err);
-      setError(err.message);
+// console.log(`✅ Categories loaded: ${convertedCategories.length} items`);
+    } catch (error: any) {
+// console.error("❌ Error loading categories:", error);
+      setError(error.message);
       setCategories([]);
     } finally {
       setLoading(false);
@@ -156,9 +154,9 @@ export const useProduct = () => {
           (p) => p.category_id === categoryId
         );
         return filteredProducts;
-      } catch (err: any) {
-        console.error("❌ Erro ao buscar produtos por categoria:", err);
-        setError(err.message);
+      } catch (error: any) {
+// console.error("❌ Erro ao buscar produtos por categoria:", error);
+        setError(error.message);
         return [];
       } finally {
         setLoading(false);
@@ -174,9 +172,9 @@ export const useProduct = () => {
       try {
         const product = products.find((p) => p.id === productId);
         return product;
-      } catch (err: any) {
-        console.error("❌ Erro ao buscar produto:", err);
-        setError(err.message);
+      } catch (error: any) {
+// console.error("❌ Erro ao buscar produto:", error);
+        setError(error.message);
         return undefined;
       } finally {
         setLoading(false);
@@ -194,9 +192,9 @@ export const useProduct = () => {
           p.name.toLowerCase().includes(query.toLowerCase())
         );
         return filteredProducts;
-      } catch (err: any) {
-        console.error("❌ Erro ao pesquisar produtos:", err);
-        setError(err.message);
+      } catch (error: any) {
+// console.error("❌ Erro ao pesquisar produtos:", error);
+        setError(error.message);
         return [];
       } finally {
         setLoading(false);

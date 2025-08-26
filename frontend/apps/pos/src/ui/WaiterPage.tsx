@@ -4,10 +4,11 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { useAuth } from '../hooks/useAuth';
 import { useProduct } from '../hooks/useProduct';
 import { useOrder } from '../hooks/useOrder';
-import { Order, OrderCreate, OrderUpdate, OrderType, OrderStatus } from '../types/order';
-import { Product, ProductCategory } from '../services/ProductService';
-import Toast, { useToast } from '../components/Toast';
+import { OrderType, OrderStatus } from '../types/order';
+import { Product } from '../services/ProductService';
 import '../index.css';
+import Toast from '../components/Toast';
+import { useToast } from '../components/Toast';
 
 interface TableOrder {
   id: string;
@@ -44,13 +45,13 @@ interface OrderItem {
   servedAt?: Date;
 }
 
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  products?: Product[];
-}
+// interface Category {
+//   id: string;
+//   name: string;
+//   icon: string;
+//   color: string;
+//   products?: Product[];
+// } // TODO: usar quando implementar categorias
 
 // Using the Product interface from ProductService with extended properties
 interface ExtendedProduct extends Omit<Product, 'status'> {
@@ -72,8 +73,8 @@ export default function WaiterPage() {
   const { terminalId, tableId } = useParams();
   const { user } = useAuth();
   const { products, categories: backendCategories, loading: productsLoading } = useProduct();
-  const { orders, createOrder, updateOrder, loading: ordersLoading } = useOrder();
-  const { toasts, removeToast, success, error, warning, info } = useToast();
+  const { orders, createOrder, updateOrder /* , loading: ordersLoading */ } = useOrder();
+  const { toasts, removeToast, success, warning, info, error } = useToast();
   const [selectedTab, setSelectedTab] = useState<'order' | 'items' | 'payment'>('order');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [currentOrder, setCurrentOrder] = useState<TableOrder | null>(null);
@@ -270,9 +271,9 @@ export default function WaiterPage() {
 
       setCart([]);
       success('Pedido enviado para a cozinha!');
-    } catch (err) {
+    } catch {
       error('Erro ao enviar pedido');
-      console.error(err);
+// console.error(err);
     }
   };
 
@@ -362,7 +363,7 @@ export default function WaiterPage() {
           ].map(tab => (
             <button
               key={tab.key}
-              onClick={() => setSelectedTab(tab.key as any)}
+              onClick={() => setSelectedTab(tab.key as 'order' | 'items' | 'payment')}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 selectedTab === tab.key
                   ? 'bg-blue-500 text-white shadow-lg'

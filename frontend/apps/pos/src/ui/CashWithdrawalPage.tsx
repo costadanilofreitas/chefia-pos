@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useCashier } from '../hooks/useCashier';
-import { formatCurrency } from '../utils/formatters';
 import '../index.css';
+import { formatCurrency } from '../utils/formatters';
 
 interface CashMovement {
   id: string;
@@ -21,7 +21,7 @@ export default function CashWithdrawalPage() {
   const navigate = useNavigate();
   const { terminalId } = useParams();
   const { user } = useAuth();
-  const { currentCashier, registerWithdrawal } = useCashier();
+  const { currentCashier, registerWithdrawal, loading } = useCashier();
   
   // State
   const [amount, setAmount] = useState('');
@@ -29,7 +29,7 @@ export default function CashWithdrawalPage() {
   const [notes, setNotes] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [movements, setMovements] = useState<CashMovement[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
   
   // Predefined reasons
   const predefinedReasons = [
@@ -44,6 +44,7 @@ export default function CashWithdrawalPage() {
   // Load movements on mount
   useEffect(() => {
     loadMovements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   // Load cash movements
@@ -99,7 +100,7 @@ export default function CashWithdrawalPage() {
       await loadMovements();
       
       alert('Sangria realizada com sucesso!');
-    } catch (error) {
+    } catch {
       // Error registering withdrawal silenciado
       alert('Erro ao realizar sangria');
     } finally {
@@ -284,7 +285,7 @@ export default function CashWithdrawalPage() {
               {/* Action Button */}
               <button
                 onClick={() => setShowConfirmDialog(true)}
-                disabled={!amount || parseFloat(amount) <= 0 || !reason || loading}
+                disabled={!amount || parseFloat(amount) <= 0 || !reason || loading || isLoading}
                 className="w-full py-3 px-4 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Realizar Sangria (F12)

@@ -64,12 +64,12 @@ export const useAuth = () => {
   // Initialize auth state from terminal session
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log(`🔄 Initializing auth for terminal ${currentTerminal}...`);
+      // console.log(`🔄 Initializing auth for terminal ${currentTerminal}...`);
       
       // Check if terminal is configured
       const isConfigured = await TerminalService.isTerminalConfigured(currentTerminal);
       if (!isConfigured) {
-        console.error(`❌ Terminal ${currentTerminal} is not configured`);
+      // console.error(`❌ Terminal ${currentTerminal} is not configured`);
         setError(`Terminal ${currentTerminal} não está configurado`);
         setLoading(false);
         return;
@@ -95,16 +95,16 @@ export const useAuth = () => {
           
           setUser(userData);
           setIsAuthenticated(true);
-          console.log(`✅ Auth restored for terminal ${currentTerminal}:`, userData.name);
+      // console.log(`✅ Auth restored for terminal ${currentTerminal}:`, userData.name);
         } else {
           // Session expired, clear it
           TerminalService.clearSession(currentTerminal);
-          console.log(`❌ Session expired for terminal ${currentTerminal}`);
+      // console.log(`❌ Session expired for terminal ${currentTerminal}`);
           setUser(null);
           setIsAuthenticated(false);
         }
       } else {
-        console.log(`❌ No session found for terminal ${currentTerminal}`);
+      // console.log(`❌ No session found for terminal ${currentTerminal}`);
         setUser(null);
         setIsAuthenticated(false);
       }
@@ -123,21 +123,21 @@ export const useAuth = () => {
       setUser(userData);
       setIsAuthenticated(true);
       setError(null);
-      console.log('User logged in:', userData.name);
+      // console.log('User logged in:', userData.name);
     };
 
     const handleLogout = () => {
       setUser(null);
       setIsAuthenticated(false);
       setError(null);
-      console.log('User logged out');
+      // console.log('User logged out');
     };
 
     const handleTokenExpired = () => {
       setUser(null);
       setIsAuthenticated(false);
       setError('Sessão expirada. Faça login novamente.');
-      console.log('Token expired, user logged out');
+      // console.log('Token expired, user logged out');
     };
 
     window.addEventListener('auth:login', handleLogin as EventListener);
@@ -152,8 +152,8 @@ export const useAuth = () => {
   }, [tokenToUser]);
 
   const login = useCallback(async (credentials: LoginCredentials): Promise<User> => {
-    console.log('🚀 LOGIN DEBUG: Starting login process...');
-    console.log('📋 LOGIN DEBUG: Credentials:', { operator_id: credentials.operator_id, password: '***' });
+      // console.log('🚀 LOGIN DEBUG: Starting login process...');
+      // console.log('📋 LOGIN DEBUG: Credentials:', { operator_id: credentials.operator_id, password: '***' });
     
     setLoading(true);
     setError(null);
@@ -164,44 +164,44 @@ export const useAuth = () => {
       formData.append('username', credentials.operator_id);
       formData.append('password', credentials.password);
       
-      console.log('📋 LOGIN DEBUG: FormData prepared');
-      console.log('🌐 LOGIN DEBUG: Making request to http://localhost:8001/api/v1/auth/token');
+      // console.log('📋 LOGIN DEBUG: FormData prepared');
+      // console.log('🌐 LOGIN DEBUG: Making request to http://localhost:8001/api/v1/auth/token');
       
       const response = await fetch('http://localhost:8001/api/v1/auth/token', {
         method: 'POST',
         body: formData,
       });
       
-      console.log('📡 LOGIN DEBUG: Response status:', response.status);
-      console.log('📡 LOGIN DEBUG: Response headers:', Object.fromEntries(response.headers.entries()));
+      // console.log('📡 LOGIN DEBUG: Response status:', response.status);
+      // console.log('📡 LOGIN DEBUG: Response headers:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
-        console.log('❌ LOGIN DEBUG: Response not OK, reading error...');
+      // console.log('❌ LOGIN DEBUG: Response not OK, reading error...');
         const errorData = await response.json().catch(() => ({}));
-        console.log('❌ LOGIN DEBUG: Error data:', errorData);
+      // console.log('❌ LOGIN DEBUG: Error data:', errorData);
         throw new Error(errorData.error?.message || 'Credenciais inválidas');
       }
       
       const loginResponse = await response.json();
-      console.log('✅ LOGIN DEBUG: Token received from backend:', loginResponse);
+      // console.log('✅ LOGIN DEBUG: Token received from backend:', loginResponse);
       
       // Get user info from /me endpoint
-      console.log('📡 LOGIN DEBUG: Getting user info from /me endpoint...');
+      // console.log('📡 LOGIN DEBUG: Getting user info from /me endpoint...');
       const userResponse = await fetch('http://localhost:8001/api/v1/auth/me', {
         headers: {
           'Authorization': `Bearer ${loginResponse.access_token}`
         }
       });
       
-      console.log('📡 LOGIN DEBUG: User response status:', userResponse.status);
+      // console.log('📡 LOGIN DEBUG: User response status:', userResponse.status);
       
       if (!userResponse.ok) {
-        console.log('❌ LOGIN DEBUG: User response not OK');
+      // console.log('❌ LOGIN DEBUG: User response not OK');
         throw new Error('Erro ao obter informações do usuário');
       }
       
       const userData = await userResponse.json();
-      console.log('✅ LOGIN DEBUG: User data received:', userData);
+      // console.log('✅ LOGIN DEBUG: User data received:', userData);
       
       // Create token data structure
       const tokenData: TokenData = {
@@ -215,12 +215,12 @@ export const useAuth = () => {
         require_password_change: false
       };
       
-      console.log('🔧 LOGIN DEBUG: TokenData created:', tokenData);
+      // console.log('🔧 LOGIN DEBUG: TokenData created:', tokenData);
       
       // Set token in interceptor
-      console.log('💾 LOGIN DEBUG: Saving token to ApiInterceptor...');
+      // console.log('💾 LOGIN DEBUG: Saving token to ApiInterceptor...');
       apiInterceptor.setToken(tokenData);
-      console.log('✅ LOGIN DEBUG: Token saved to ApiInterceptor');
+      // console.log('✅ LOGIN DEBUG: Token saved to ApiInterceptor');
       
       // Convert to user format - use userData directly instead of tokenToUser
       const userFormatted: User = {
@@ -232,7 +232,7 @@ export const useAuth = () => {
         permissions: userData.permissions as Permission[],
         requirePasswordChange: false
       };
-      console.log('👤 LOGIN DEBUG: User formatted:', userFormatted);
+      // console.log('👤 LOGIN DEBUG: User formatted:', userFormatted);
       
       // Save session for this terminal
       TerminalService.saveSession(currentTerminal, {
@@ -245,25 +245,25 @@ export const useAuth = () => {
       setUser(userFormatted);
       setIsAuthenticated(true);
       
-      console.log('🎉 LOGIN DEBUG: Login successful, state updated');
-      console.log(`🎉 LOGIN DEBUG: Session saved for terminal ${currentTerminal}`);
-      console.log('🎉 LOGIN DEBUG: Final user:', userFormatted.name);
+      // console.log('🎉 LOGIN DEBUG: Login successful, state updated');
+      // console.log(`🎉 LOGIN DEBUG: Session saved for terminal ${currentTerminal}`);
+      // console.log('🎉 LOGIN DEBUG: Final user:', userFormatted.name);
       return userFormatted;
-    } catch (error: any) {
-      console.log('❌ LOGIN DEBUG: Error caught in login method');
-      console.log('❌ LOGIN DEBUG: Error details:', error);
-      console.log('❌ LOGIN DEBUG: Error message:', error.message);
-      console.log('❌ LOGIN DEBUG: Error stack:', error.stack);
+    } catch (error) {
+      // console.log('❌ LOGIN DEBUG: Error caught in login method');
+      // console.log('❌ LOGIN DEBUG: Error details:', error);
+      // console.log('❌ LOGIN DEBUG: Error message:', error.message);
+      // console.log('❌ LOGIN DEBUG: Error stack:', error.stack);
       
       const errorMessage = error.message || 'Falha no login. Verifique suas credenciais.';
       setError(errorMessage);
-      console.error('❌ LOGIN DEBUG: Final error message:', errorMessage);
+      // console.error('❌ LOGIN DEBUG: Final error message:', errorMessage);
       throw new Error(errorMessage);
     } finally {
-      console.log('🏁 LOGIN DEBUG: Login process completed, setting loading to false');
+      // console.log('🏁 LOGIN DEBUG: Login process completed, setting loading to false');
       setLoading(false);
     }
-  }, [tokenToUser]);
+  }, [currentTerminal]);
 
   const logout = useCallback(async (terminalId?: string): Promise<void> => {
     setLoading(true);
@@ -280,17 +280,17 @@ export const useAuth = () => {
         // Para POS normais, verificar se há caixa aberto
         try {
           const response = await apiInterceptor.get(`http://localhost:8001/api/v1/cashier/terminal/${terminalId}/status`);
-          const cashierStatus = response.data;
+          const cashierStatus = response.data as { has_open_cashier: boolean };
           
           if (cashierStatus.has_open_cashier) {
             throw new Error('Não é possível fazer logout com caixa aberto. Feche o caixa primeiro.');
           }
-        } catch (error: any) {
+        } catch (error) {
           // Se não conseguir verificar o status do caixa, permitir logout
           if (error.message.includes('caixa aberto')) {
             throw error; // Re-throw se for erro de caixa aberto
           }
-          console.warn('Não foi possível verificar status do caixa, permitindo logout:', error);
+      // console.warn('Não foi possível verificar status do caixa, permitindo logout:', error);
         }
       }
       
@@ -302,15 +302,15 @@ export const useAuth = () => {
       setIsAuthenticated(false);
       setError(null);
       
-      console.log('Logout successful');
-    } catch (error: any) {
-      console.error('Logout error:', error);
+      // console.log('Logout successful');
+    } catch (error) {
+      // console.error('Logout error:', error);
       setError(error.message || 'Erro ao fazer logout');
       throw error;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentTerminal]);
 
   const hasPermission = useCallback((permission: Permission | string): boolean => {
     if (!user || !isAuthenticated) return false;

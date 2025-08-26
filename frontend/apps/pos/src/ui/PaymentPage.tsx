@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useCashier } from '../hooks/useCashier';
-import { formatCurrency } from '../utils/formatters';
 import '../index.css';
+import { formatCurrency } from '../utils/formatters';
 
 interface OrderItem {
   id: string;
@@ -47,7 +46,6 @@ export default function PaymentPage() {
   const location = useLocation();
   const { terminalId } = useParams();
   const { user } = useAuth();
-  const { currentCashier } = useCashier();
 
   // State
   const [order, setOrder] = useState<Order | null>(null);
@@ -93,7 +91,7 @@ export default function PaymentPage() {
       // No order available - redirect to main page
       navigate(`/pos/${terminalId}/main`);
     }
-  }, [location.state]);
+  }, [location.state, navigate, terminalId]);
 
   // Calculate change
   useEffect(() => {
@@ -166,13 +164,13 @@ export default function PaymentPage() {
         // Receipt printing logic would go here
       }, 500);
 
-    } catch (error) {
+    } catch {
       // Payment error silenciado
       alert('Erro ao processar pagamento');
     } finally {
       setLoading(false);
     }
-  }, [order, selectedPayment, paymentAmount, changeAmount, isSplitPayment]);
+  }, [order, selectedPayment, paymentAmount, isSplitPayment]);
 
   // Complete sale and go to next
   const completeSale = useCallback(() => {

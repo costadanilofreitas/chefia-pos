@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useOrder } from '../hooks/useOrder';
@@ -36,29 +36,29 @@ export default function TablePage() {
   const navigate = useNavigate();
   const { terminalId } = useParams();
   const { user } = useAuth();
-  const { orders, getOrders, createOrder } = useOrder();
+  const { getOrders } = useOrder(); // orders, createOrder - TODO: usar quando implementar
   const { 
     tables: backendTables, 
-    loading: tablesLoading,
+    // loading: tablesLoading, // TODO: usar quando implementar
     updateTable,
-    updateTableStatus,
+    // updateTableStatus, // TODO: usar quando implementar
     occupyTable,
-    clearTable,
+    // clearTable, // TODO: usar quando implementar
     reserveTable: reserveTableApi,
     createTable: createNewTable,
     deleteTable,
     loadTables
   } = useTable();
-  const { toasts, removeToast, success, error, warning, info } = useToast();
+  const { toasts, removeToast, success, error } = useToast(); // warning, info - TODO: usar quando implementar
   
   // State
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [showTableDetails, setShowTableDetails] = useState(false);
   const [showReservationDialog, setShowReservationDialog] = useState(false);
   const [showAddTableDialog, setShowAddTableDialog] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'available' | 'occupied' | 'reserved'>('all');
+  const [filter] = useState<'all' | 'available' | 'occupied' | 'reserved'>('all'); // setFilter - TODO: implementar filtros
   const [selectedArea, setSelectedArea] = useState<string>('all');
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false); // TODO: usar quando implementar
   const [viewMode, setViewMode] = useState<'layout' | 'grid' | 'list'>('layout');
   const [editMode, setEditMode] = useState(false);
   const [draggedTable, setDraggedTable] = useState<Table | null>(null);
@@ -89,10 +89,19 @@ export default function TablePage() {
     { id: 'bar', name: 'Bar', icon: '🍻' }
   ];
   
+  // Load orders function
+  const loadOrders = useCallback(async () => {
+    try {
+      await getOrders();
+    } catch {
+      // console.error('Error loading orders:', error);
+    }
+  }, [getOrders]);
+
   // Transform backend tables to include UI properties
   const tables = backendTables.map((t: any) => {
     // Set minimum size for small tables
-    const minSize = t.seats <= 2 ? 80 : 100;
+    // const minSize = t.seats <= 2 ? 80 : 100; // TODO: usar para validação
     const width = t.size?.width || (t.seats <= 2 ? 80 : 100);
     const height = t.size?.height || (t.seats <= 2 ? 80 : 100);
     
@@ -115,15 +124,7 @@ export default function TablePage() {
   useEffect(() => {
     loadOrders();
     loadTables();
-  }, []);
-  
-  const loadOrders = useCallback(async () => {
-    try {
-      await getOrders();
-    } catch (error) {
-      console.error('Error loading orders:', error);
-    }
-  }, [getOrders]);
+  }, [loadOrders, loadTables]);
   
   // Keyboard shortcuts
   useHotkeys('v', () => setViewMode(prev => prev === 'layout' ? 'grid' : 'layout'));
@@ -143,7 +144,7 @@ export default function TablePage() {
       try {
         await occupyTable(table.id, 2, user?.id);
         navigate(`/pos/${terminalId}/waiter/table/${table.number}`);
-      } catch (err) {
+      } catch {
         error('Erro ao ocupar mesa');
       }
     } else {
@@ -170,7 +171,7 @@ export default function TablePage() {
       setReservationPhone('');
       setReservationTime('');
       setReservationGuests('');
-    } catch (err) {
+    } catch {
       error('Erro ao reservar mesa');
     }
   };
@@ -218,7 +219,7 @@ export default function TablePage() {
         height: 80
       });
       await loadTables();
-    } catch (err) {
+    } catch {
       error(selectedTable ? 'Erro ao atualizar mesa' : 'Erro ao adicionar mesa');
     }
   };
@@ -229,7 +230,7 @@ export default function TablePage() {
       await deleteTable(tableId);
       success('Mesa removida com sucesso!');
       await loadTables();
-    } catch (err) {
+    } catch {
       error('Erro ao remover mesa');
     }
   };
@@ -248,9 +249,9 @@ export default function TablePage() {
     if (!editMode || !draggedTable) return;
     e.preventDefault();
     
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = Math.round((e.clientX - rect.left) / gridSize) * gridSize;
-    const y = Math.round((e.clientY - rect.top) / gridSize) * gridSize;
+    // const rect = e.currentTarget.getBoundingClientRect();
+    // const x = Math.round((e.clientX - rect.left) / gridSize) * gridSize;
+    // const y = Math.round((e.clientY - rect.top) / gridSize) * gridSize;
     
     // TODO: Use the updateTable function from useTable hook
     // updateTable(draggedTable.id, { position: { x, y } });
@@ -262,16 +263,16 @@ export default function TablePage() {
     e.dataTransfer.dropEffect = 'move';
   };
   
-  const handleResizeTable = (table: Table, direction: 'width' | 'height', delta: number) => {
-    if (!editMode) return;
-    
-    // TODO: Use the updateTable function from useTable hook
-    // const newSize = {
-    //   ...table.size!,
-    //   [direction]: Math.max(60, Math.min(200, (table.size?.[direction] || 80) + delta))
-    // };
-    // updateTable(table.id, { size: newSize });
-  };
+  // const handleResizeTable = (_table: Table, _direction: 'width' | 'height', _delta: number) => {
+  //   if (!editMode) return;
+  //   
+  //   // TODO: Use the updateTable function from useTable hook
+  //   // const newSize = {
+  //   //   ...table.size!,
+  //   //   [direction]: Math.max(60, Math.min(200, (table.size?.[direction] || 80) + delta))
+  //   // };
+  //   // updateTable(table.id, { size: newSize });
+  // };
   
   const getStatusColor = (status: Table['status']) => {
     switch (status) {
@@ -298,7 +299,7 @@ export default function TablePage() {
     }
   };
   
-  const filteredTables = tables.filter((table: any) => {
+  const filteredTables = tables.filter((table: Table) => {
     const matchesArea = selectedArea === 'all' || table.area === selectedArea;
     const matchesStatus = filter === 'all' || table.status === filter;
     return matchesArea && matchesStatus;

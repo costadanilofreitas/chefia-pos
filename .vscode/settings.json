@@ -2,10 +2,10 @@
     // Tema de cores
     "workbench.colorTheme": "Dracula Theme", 
     // Ou "Dracula" se preferir
-  
+
     // Ícones de arquivos
     "workbench.iconTheme": "material-icon-theme",
-  
+
     // Aparência geral
     "editor.fontFamily": "Fira Code, JetBrains Mono, monospace",
     "editor.fontLigatures": true,
@@ -14,16 +14,16 @@
     "editor.cursorSmoothCaretAnimation": "on",
     "editor.cursorBlinking": "smooth",
     "editor.minimap.enabled": false,
-  
+
     // Espaçamento e identação
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
     "editor.renderWhitespace": "selection",
-  
+
     // Numeração de linhas e colunas
     "editor.lineNumbers": "on",
     "editor.rulers": [80, 120],
-  
+
     // Prettier
     "editor.formatOnSave": true,
     "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
@@ -43,98 +43,116 @@
     "python.formatting.provider": "black",
     "python.testing.pytestEnabled": true,
     "python.testing.pytestArgs": [
-      "src/tests"
+        "src/tests"
     ],
-    
+
     // TypeScript/JavaScript Configuration
     "typescript.preferences.includePackageJsonAutoImports": "auto",
     "typescript.suggest.autoImports": true,
     "javascript.suggest.autoImports": true,
     "typescript.updateImportsOnFileMove.enabled": "always",
-    
+
     // ESLint Configuration
     "eslint.workingDirectories": [
-      "./frontend"
+        "./frontend"
     ],
     "eslint.validate": [
-      "javascript",
-      "javascriptreact",
-      "typescript",
-      "typescriptreact"
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact"
     ],
-    
+
     // File Associations
     "files.associations": {
-      "*.env.*": "properties",
-      "*.json": "jsonc"
+        "*.env.*": "properties",
+        "*.json": "jsonc",
+        "*.css": "tailwindcss"
     },
-    
+
     // Code Actions
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit",
-      "source.organizeImports": "explicit"
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit"
     },
-    
+
     // Git Configuration
     "git.ignoreLimitWarning": true,
     "git.autofetch": true,
-    
+
     // File Explorer
     "files.exclude": {
-      "**/__pycache__": true,
-      "**/*.pyc": true,
-      "**/node_modules": true,
-      "**/dist": true,
-      "**/build": true,
-      "**/.pytest_cache": true,
-      "**/.coverage": true,
-      "**/coverage": true,
-      "**/.nyc_output": true
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.pytest_cache": true,
+        "**/.coverage": true,
+        "**/coverage": true,
+        "**/.nyc_output": true
     },
-    
+
     // Search Configuration
     "search.exclude": {
-      "**/node_modules": true,
-      "**/dist": true,
-      "**/build": true,
-      "**/.git": true,
-      "**/__pycache__": true,
-      "**/venv": true,
-      "**/env": true
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.git": true,
+        "**/__pycache__": true,
+        "**/venv": true,
+        "**/env": true
     },
-    
+
     // Terminal Configuration
     "terminal.integrated.defaultProfile.windows": "PowerShell",
     "terminal.integrated.env.windows": {
-      "PYTHONPATH": "${workspaceFolder}"
+        "PYTHONPATH": "${workspaceFolder}"
     },
-    
+
     // Extension Specific Settings
     "emmet.includeLanguages": {
-      "javascript": "javascriptreact",
-      "typescript": "typescriptreact"
+        "javascript": "javascriptreact",
+        "typescript": "typescriptreact"
     },
-    
+
     // Auto Save
     "files.autoSave": "afterDelay",
     "files.autoSaveDelay": 1000,
-    
+
     // Environment Specific
     "dotenv.enableAutocloaking": false,
-    
+
     // Project Specific
     "workbench.startupEditor": "readme",
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.patterns": {
-      "*.ts": "${capture}.js",
-      "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
-      "*.jsx": "${capture}.js",
-      "*.tsx": "${capture}.ts",
-      "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml",
-      "vite.config.*": "*.env, .env.*, env.d.ts",
-      "tsconfig.json": "tsconfig.*.json",
-      ".eslintrc.*": ".eslintignore, .eslintcache",
-      "jest.config.*": "jest.setup.*"
-    }
-  }
+        "*.ts": "${capture}.js",
+        "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
+        "*.jsx": "${capture}.js",
+        "*.tsx": "${capture}.ts",
+        "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml",
+        "vite.config.*": "*.env, .env.*, env.d.ts",
+        "tsconfig.json": "tsconfig.*.json",
+        ".eslintrc.*": ".eslintignore, .eslintcache",
+        "jest.config.*": "jest.setup.*",
+    },
+
+    "css.validate": false,
+    "tailwindCSS.includeLanguages": {
+        "plaintext": "html"
+    },
+    "tailwindCSS.files.exclude": [
+        "**/.git/**",
+        "**/node_modules/**",
+        "**/.hg/**"
+    ],
+    "tailwindCSS.emmetCompletions": true,
+    "editor.quickSuggestions": {
+        "strings": true
+    },
+    "scss.validate": false,
+    "less.validate": false,
+    "postcss.validate": true
+}
   

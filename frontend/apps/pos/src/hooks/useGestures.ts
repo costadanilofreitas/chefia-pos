@@ -8,8 +8,8 @@ export interface SwipeHandlers {
 }
 
 export interface PinchHandlers {
-  onPinchIn?: (scale: number) => void;
-  onPinchOut?: (scale: number) => void;
+  onPinchIn?: (_scale: number) => void;
+  onPinchOut?: (__scale: number) => void;
 }
 
 export interface LongPressHandlers {
@@ -32,7 +32,7 @@ const PINCH_THRESHOLD = 0.1; // Minimum scale change
  */
 export const useSwipe = (
   elementRef: React.RefObject<HTMLElement>,
-  handlers: SwipeHandlers,
+  handlers: SwipeHandlers | null,
   options = { threshold: SWIPE_THRESHOLD, preventDefault: true }
 ) => {
   const touchStart = useRef<TouchPoint | null>(null);
@@ -40,7 +40,7 @@ export const useSwipe = (
 
   useEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (!element || !handlers) return;
 
     const handleTouchStart = (e: TouchEvent) => {
       if (options.preventDefault) e.preventDefault();
@@ -65,7 +65,7 @@ export const useSwipe = (
       };
     };
 
-    const handleTouchEnd = (e: TouchEvent) => {
+    const handleTouchEnd = (_e: TouchEvent) => {
       if (!touchStart.current || !touchEnd.current) return;
 
       const deltaX = touchEnd.current.x - touchStart.current.x;
@@ -113,7 +113,7 @@ export const useSwipe = (
  */
 export const usePinch = (
   elementRef: React.RefObject<HTMLElement>,
-  handlers: PinchHandlers,
+  handlers: PinchHandlers | null,
   options = { preventDefault: true }
 ) => {
   const initialDistance = useRef<number | null>(null);
@@ -121,7 +121,7 @@ export const usePinch = (
 
   useEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (!element || !handlers) return;
 
     const getDistance = (touches: TouchList): number => {
       const [touch1, touch2] = Array.from(touches);
@@ -178,7 +178,7 @@ export const usePinch = (
  * Hook for detecting long press
  */
 export const useLongPress = (
-  callback: () => void,
+  callback: (() => void) | null,
   options: { delay?: number; preventDefault?: boolean } = {}
 ) => {
   const { delay = 500, preventDefault = true } = options;
@@ -192,15 +192,19 @@ export const useLongPress = (
       }
       
       target.current = event.currentTarget;
-      timeout.current = setTimeout(() => {
-        callback();
-      }, delay);
+      if (callback) {
+        timeout.current = setTimeout(() => {
+          callback();
+        }, delay);
+      }
     },
     [callback, delay, preventDefault]
   );
 
   const clear = useCallback(() => {
-    timeout.current && clearTimeout(timeout.current);
+    if (timeout.current) {
+      clearTimeout(timeout.current);
+    }
     target.current = undefined;
   }, []);
 
@@ -218,14 +222,14 @@ export const useLongPress = (
  * Hook for double tap detection
  */
 export const useDoubleTap = (
-  callback: () => void,
+  callback: (() => void) | null,
   delay = 300
 ) => {
   const lastTap = useRef<number>(0);
 
   const handleTap = useCallback(() => {
     const now = Date.now();
-    if (now - lastTap.current < delay) {
+    if (now - lastTap.current < delay && callback) {
       callback();
       lastTap.current = 0;
     } else {
@@ -256,17 +260,18 @@ export const useGestures = (
 ) => {
   const { swipe, pinch, longPress, doubleTap } = options || {};
 
-  // Use individual hooks
-  if (swipe) {
-    useSwipe(elementRef, swipe);
-  }
-
-  if (pinch) {
-    usePinch(elementRef, pinch);
-  }
-
-  const longPressHandlers = longPress ? useLongPress(longPress.onLongPress || (() => {}), { delay: longPress.delay }) : {};
-  const doubleTapHandlers = doubleTap ? useDoubleTap(doubleTap) : {};
+  // Always call hooks (React rules)
+  useSwipe(elementRef, swipe || null);
+  usePinch(elementRef, pinch || null);
+  
+  const longPressHandlers = useLongPress(
+    longPress?.onLongPress || (() => {}), 
+    { delay: longPress?.delay }
+  );
+  
+  const doubleTapHandlers = useDoubleTap(
+    doubleTap || null
+  );
 
   return {
     ...longPressHandlers,

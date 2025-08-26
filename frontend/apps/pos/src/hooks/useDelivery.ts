@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
+import {
   deliveryService, 
   DeliveryOrder, 
   DeliveryOrderCreate, 
@@ -50,7 +50,7 @@ interface UseDeliveryActions {
   
   // Zones and Calculations
   loadDeliveryZones: () => Promise<void>;
-  calculateDeliveryFee: (address: string) => Promise<{ fee: number; zone_id: string; estimated_time: number } | null>;
+  calculateDeliveryFee: (_address: string) => Promise<{ fee: number; zone_id: string; estimated_time: number } | null>;
   
   // Tracking
   loadDeliveryTracking: (deliveryId: string) => Promise<void>;
@@ -97,11 +97,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         deliveryOrders,
         loading: false 
       }));
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao carregar pedidos de entrega' 
+        error: (error instanceof Error ? error.message : 'Erro ao carregar pedidos de entrega') 
       }));
     }
   }, []);
@@ -118,11 +118,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         loading: false 
       }));
       return delivery;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao buscar pedido de entrega' 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar pedido de entrega') 
       }));
       return null;
     }
@@ -140,11 +140,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         creating: false 
       }));
       return newDelivery;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         creating: false, 
-        error: error.message || 'Erro ao criar pedido de entrega' 
+        error: (error instanceof Error ? error.message : 'Erro ao criar pedido de entrega') 
       }));
       return null;
     }
@@ -166,11 +166,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         updating: false 
       }));
       return updatedDelivery;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao atualizar pedido de entrega' 
+        error: (error instanceof Error ? error.message : 'Erro ao atualizar pedido de entrega') 
       }));
       return null;
     }
@@ -189,11 +189,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         updating: false 
       }));
       return cancelledDelivery;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao cancelar pedido de entrega' 
+        error: (error instanceof Error ? error.message : 'Erro ao cancelar pedido de entrega') 
       }));
       return null;
     }
@@ -212,11 +212,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         assigning: false 
       }));
       return assignedDelivery;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         assigning: false, 
-        error: error.message || 'Erro ao atribuir entregador' 
+        error: (error instanceof Error ? error.message : 'Erro ao atribuir entregador') 
       }));
       return null;
     }
@@ -235,11 +235,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         updating: false 
       }));
       return startedDelivery;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao iniciar entrega' 
+        error: (error instanceof Error ? error.message : 'Erro ao iniciar entrega') 
       }));
       return null;
     }
@@ -258,11 +258,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         updating: false 
       }));
       return completedDelivery;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao finalizar entrega' 
+        error: (error instanceof Error ? error.message : 'Erro ao finalizar entrega') 
       }));
       return null;
     }
@@ -279,11 +279,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         couriers,
         loading: false 
       }));
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao carregar entregadores' 
+        error: (error instanceof Error ? error.message : 'Erro ao carregar entregadores') 
       }));
     }
   }, []);
@@ -300,11 +300,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         creating: false 
       }));
       return newCourier;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         creating: false, 
-        error: error.message || 'Erro ao criar entregador' 
+        error: (error instanceof Error ? error.message : 'Erro ao criar entregador') 
       }));
       return null;
     }
@@ -326,11 +326,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         updating: false 
       }));
       return updatedCourier;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao atualizar entregador' 
+        error: (error instanceof Error ? error.message : 'Erro ao atualizar entregador') 
       }));
       return null;
     }
@@ -343,10 +343,10 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
     try {
       await deliveryService.updateCourierLocation(courierId, location);
       return true;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
-        error: error.message || 'Erro ao atualizar localização do entregador' 
+        error: (error instanceof Error ? error.message : 'Erro ao atualizar localização do entregador') 
       }));
       return false;
     }
@@ -360,11 +360,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
       const couriers = await deliveryService.getAvailableCouriers();
       setState(prev => ({ ...prev, loading: false }));
       return couriers;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao buscar entregadores disponíveis' 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar entregadores disponíveis') 
       }));
       return [];
     }
@@ -381,11 +381,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         zones,
         loading: false 
       }));
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao carregar zonas de entrega' 
+        error: (error instanceof Error ? error.message : 'Erro ao carregar zonas de entrega') 
       }));
     }
   }, []);
@@ -398,11 +398,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
       const result = await deliveryService.calculateDeliveryFee(address);
       setState(prev => ({ ...prev, loading: false }));
       return result;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao calcular taxa de entrega' 
+        error: (error instanceof Error ? error.message : 'Erro ao calcular taxa de entrega') 
       }));
       return null;
     }
@@ -419,11 +419,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
         tracking,
         loading: false 
       }));
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao carregar rastreamento' 
+        error: (error instanceof Error ? error.message : 'Erro ao carregar rastreamento') 
       }));
     }
   }, []);
@@ -436,11 +436,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
       const orders = await deliveryService.getDeliveryOrdersByStatus(status);
       setState(prev => ({ ...prev, loading: false }));
       return orders;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao buscar pedidos por status' 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar pedidos por status') 
       }));
       return [];
     }
@@ -454,11 +454,11 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
       const orders = await deliveryService.getCourierDeliveries(courierId, date);
       setState(prev => ({ ...prev, loading: false }));
       return orders;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao buscar entregas do entregador' 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar entregas do entregador') 
       }));
       return [];
     }

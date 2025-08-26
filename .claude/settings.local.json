@@ -31,7 +31,13 @@
       "mcp__ide__getDiagnostics",
       "Bash(powershell:*)",
       "Bash(npx storybook@latest init:*)",
-      "Bash(dir)"
+      "Bash(dir)",
+      "Bash(npx eslint:*)",
+      "Bash(for:*)",
+      "Bash(do sed -i 's/} catch {/} catch (error) {/g' \"$file\")",
+      "Bash(done)",
+      "Bash(npx vite:*)",
+      "Read(/C:\\Users\\Consultor/**)"
     ],
     "deny": [],
     "ask": [],

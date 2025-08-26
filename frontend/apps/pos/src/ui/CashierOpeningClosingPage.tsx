@@ -7,6 +7,7 @@ import { useBusinessDay } from '../hooks/useBusinessDay';
 import { formatCurrency } from '../utils/formatters';
 import NumericLoginModal from '../components/NumericLoginModal';
 import Toast, { useToast } from '../components/Toast';
+import logger, { LogSource } from '../services/LocalLoggerService';
 import '../index.css';
 
 interface CashierSummary {
@@ -19,14 +20,19 @@ interface CashierSummary {
   deposits_total: number;
 }
 
+interface SummaryData {
+  sales?: number;
+  withdrawals?: number;
+  deposits?: number;
+}
+
 export default function CashierOpeningClosingPage() {
   const navigate = useNavigate();
   const { terminalId } = useParams();
   const { user, isAuthenticated, login } = useAuth();
-  const { toasts, removeToast, success, error, info } = useToast();
+  const { toasts, removeToast, success, error } = useToast();
   const { 
     currentCashier, 
-    terminalStatus,
     loading,
     openCashier,
     closeCashier,
@@ -43,12 +49,14 @@ export default function CashierOpeningClosingPage() {
   const [closingAmount, setClosingAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [summary, setSummary] = useState<CashierSummary | null>(null);
-  const [selectedAmount, setSelectedAmount] = useState<'opening' | 'closing'>('opening');
 
   // Check terminal status on mount
   useEffect(() => {
     if (terminalId && isAuthenticated) {
-      checkTerminalStatus(terminalId).catch(() => {});
+      logger.debug('Verificando status do terminal no mount', { terminalId }, 'CashierOpeningClosing', LogSource.POS);
+      checkTerminalStatus(terminalId).catch((error) => {
+        logger.error('Erro ao verificar status do terminal', { terminalId, error }, 'CashierOpeningClosing', LogSource.POS);
+      });
     }
   }, [terminalId, isAuthenticated, checkTerminalStatus]);
 
@@ -57,6 +65,7 @@ export default function CashierOpeningClosingPage() {
     if (currentCashier?.status === 'OPEN') {
       loadSummary();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentCashier]);
 
   // Load cashier summary
@@ -64,18 +73,22 @@ export default function CashierOpeningClosingPage() {
     if (!currentCashier) return;
     
     try {
-      const data = await getSummary();
-      setSummary({
-        sales_count: 0,
-        sales_total: data?.sales || 0,
-        cash_total: data?.sales || 0,
-        card_total: 0,
-        pix_total: 0,
-        withdrawals_total: data?.withdrawals || 0,
-        deposits_total: data?.deposits || 0
-      });
+      await logger.debug('Carregando resumo do caixa', { cashierId: currentCashier.id }, 'CashierOpeningClosing', LogSource.POS);
+      const data = await getSummary() as SummaryData | undefined;
+      if (data) {
+        setSummary({
+          sales_count: 0,
+          sales_total: data.sales || 0,
+          cash_total: data.sales || 0,
+          card_total: 0,
+          pix_total: 0,
+          withdrawals_total: data.withdrawals || 0,
+          deposits_total: data.deposits || 0
+        });
+        await logger.debug('Resumo do caixa carregado', { data }, 'CashierOpeningClosing', LogSource.POS);
+      }
     } catch (error) {
-      // Error loading summary silenciado
+      await logger.error('Erro ao carregar resumo do caixa', { error }, 'CashierOpeningClosing', LogSource.POS);
     }
   }, [currentCashier, getSummary]);
 
@@ -84,44 +97,60 @@ export default function CashierOpeningClosingPage() {
     if (!terminalId || !user) return;
 
     try {
-      await openCashier({
+      const openingData = {
         terminal_id: terminalId,
         opening_balance: parseFloat(openingAmount) || 0,
         operator_id: user.id || user.username,
         business_day_id: currentBusinessDay?.id || '',
         notes
-      });
+      };
+      
+      await logger.info('Iniciando abertura de caixa', openingData, 'CashierOpeningClosing', LogSource.POS);
+      
+      await openCashier(openingData);
       
       setShowOpenDialog(false);
       setOpeningAmount('');
       setNotes('');
       success('Caixa aberto com sucesso!');
       
+      await logger.info('Caixa aberto com sucesso', { terminalId, operatorId: user.id }, 'CashierOpeningClosing', LogSource.POS);
+      
       // Navigate to main POS
       navigate(`/pos/${terminalId}/main`);
     } catch (err) {
-      // Error opening cashier silenciado
+      await logger.error('Erro ao abrir o caixa', { terminalId, error: err }, 'CashierOpeningClosing', LogSource.POS);
       error('Erro ao abrir o caixa');
     }
-  }, [terminalId, user, openingAmount, notes, openCashier, navigate, success, error]);
+  }, [terminalId, user, openingAmount, notes, currentBusinessDay?.id, openCashier, navigate, success, error]);
 
   // Handle closing cashier
   const handleCloseCashier = useCallback(async () => {
     if (!currentCashier) return;
 
     try {
+      const closingData = {
+        cashierId: currentCashier.id,
+        closingAmount: parseFloat(closingAmount) || 0,
+        notes
+      };
+      
+      await logger.info('Iniciando fechamento de caixa', closingData, 'CashierOpeningClosing', LogSource.POS);
+      
       await closeCashier(parseFloat(closingAmount) || 0, notes);
       
       setShowCloseDialog(false);
       setClosingAmount('');
       setNotes('');
       
+      await logger.info('Caixa fechado com sucesso', { cashierId: currentCashier.id }, 'CashierOpeningClosing', LogSource.POS);
+      
       // Refresh status
       if (terminalId) {
         await checkTerminalStatus(terminalId);
       }
     } catch (err) {
-      // Error closing cashier silenciado
+      await logger.error('Erro ao fechar o caixa', { cashierId: currentCashier.id, error: err }, 'CashierOpeningClosing', LogSource.POS);
       error('Erro ao fechar o caixa');
     }
   }, [currentCashier, terminalId, closingAmount, notes, closeCashier, checkTerminalStatus, error]);
@@ -329,7 +358,10 @@ export default function CashierOpeningClosingPage() {
           {/* Actions */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
             <button
-              onClick={() => navigate(`/pos/${terminalId}/main`)}
+              onClick={() => {
+                logger.info('Navegando para tela de vendas', { terminalId }, 'CashierOpeningClosing', LogSource.UI);
+                navigate(`/pos/${terminalId}/main`);
+              }}
               className="py-3 lg:py-4 px-4 lg:px-6 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
             >
               <span className="text-xl lg:text-2xl">🏪</span>
@@ -337,7 +369,10 @@ export default function CashierOpeningClosingPage() {
             </button>
             
             <button
-              onClick={() => navigate(`/pos/${terminalId}/cash-withdrawal`)}
+              onClick={() => {
+                logger.info('Navegando para tela de sangria', { terminalId }, 'CashierOpeningClosing', LogSource.UI);
+                navigate(`/pos/${terminalId}/cash-withdrawal`);
+              }}
               className="py-3 lg:py-4 px-4 lg:px-6 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
             >
               <span className="text-xl lg:text-2xl">💸</span>
@@ -345,7 +380,10 @@ export default function CashierOpeningClosingPage() {
             </button>
             
             <button
-              onClick={() => setShowCloseDialog(true)}
+              onClick={() => {
+                logger.info('Abrindo diálogo de fechamento de caixa', { cashierId: currentCashier?.id }, 'CashierOpeningClosing', LogSource.UI);
+                setShowCloseDialog(true);
+              }}
               className="py-3 lg:py-4 px-4 lg:px-6 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
             >
               <span className="text-xl lg:text-2xl">🔒</span>
@@ -368,7 +406,10 @@ export default function CashierOpeningClosingPage() {
             Terminal {terminalId} está pronto para abertura
           </p>
           <button
-            onClick={() => setShowOpenDialog(true)}
+            onClick={() => {
+              logger.info('Abrindo diálogo de abertura de caixa', { terminalId }, 'CashierOpeningClosing', LogSource.UI);
+              setShowOpenDialog(true);
+            }}
             className="px-8 py-4 bg-green-500 text-white rounded-lg font-bold text-lg hover:bg-green-600 transition-colors"
           >
             Abrir Caixa (F2)
@@ -567,17 +608,23 @@ export default function CashierOpeningClosingPage() {
         onClose={() => setShowLoginModal(false)}
         onLogin={async (operatorId: string, password: string) => {
           try {
+            await logger.info('Tentativa de login', { operatorId }, 'CashierOpeningClosing', LogSource.SECURITY);
             await login({ operator_id: operatorId, password });
             setShowLoginModal(false);
             success('Login realizado com sucesso!');
+            await logger.info('Login realizado com sucesso', { operatorId }, 'CashierOpeningClosing', LogSource.SECURITY);
+            
             // Refresh terminal status after login with a small delay
             setTimeout(() => {
               if (terminalId) {
-                checkTerminalStatus(terminalId).catch(() => {});
+                checkTerminalStatus(terminalId).catch((error) => {
+                  logger.error('Erro ao verificar status após login', { terminalId, error }, 'CashierOpeningClosing', LogSource.POS);
+                });
               }
             }, 100);
-          } catch (err: any) {
-            throw err;
+          } catch (err) {
+            await logger.error('Erro no login', { operatorId, error: err }, 'CashierOpeningClosing', LogSource.SECURITY);
+            throw err; // Re-throw para o NumericLoginModal tratar
           }
         }}
       />

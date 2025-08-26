@@ -18,7 +18,7 @@ export const useTable = () => {
     try {
       const data = await tableService.getTables();
       setTables(data);
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message);
       showError('Erro ao carregar mesas');
     } finally {
@@ -33,7 +33,7 @@ export const useTable = () => {
       setTables(prev => [...prev, newTable]);
       success('Mesa criada com sucesso!');
       return newTable;
-    } catch (err: any) {
+    } catch (err) {
       showError('Erro ao criar mesa');
       throw err;
     } finally {
@@ -48,7 +48,7 @@ export const useTable = () => {
       setTables(prev => prev.map(t => t.id === id ? updatedTable : t));
       success('Mesa atualizada com sucesso!');
       return updatedTable;
-    } catch (err: any) {
+    } catch (err) {
       showError('Erro ao atualizar mesa');
       throw err;
     } finally {
@@ -62,7 +62,7 @@ export const useTable = () => {
       await tableService.deleteTable(id);
       setTables(prev => prev.filter(t => t.id !== id));
       success('Mesa removida com sucesso!');
-    } catch (err: any) {
+    } catch (err) {
       showError('Erro ao remover mesa');
       throw err;
     } finally {
@@ -96,7 +96,7 @@ export const useTable = () => {
       setTables(prev => prev.map(t => t.id === id ? clearedTable : t));
       success('Mesa liberada com sucesso!');
       return clearedTable;
-    } catch (err: any) {
+    } catch (err) {
       showError('Erro ao liberar mesa');
       throw err;
     } finally {

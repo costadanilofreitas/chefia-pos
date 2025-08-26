@@ -1,4 +1,3 @@
-import { renderHook } from '@testing-library/react';
 
 // Mock fetch globally
 global.fetch = jest.fn();

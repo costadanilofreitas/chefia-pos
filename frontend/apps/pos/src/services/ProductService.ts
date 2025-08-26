@@ -59,113 +59,80 @@ export class ProductService {
 
   // Product endpoints
   async getProducts(): Promise<Product[]> {
-    try {
-      const response = await apiInterceptor.get(`${this.baseURL}/products`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      throw new Error('Falha ao carregar produtos');
-    }
+    
+    const response = await apiInterceptor.get<Product[]>(`${this.baseURL}/products`);
+    return response.data;
+  
   }
 
   async getProduct(id: string): Promise<Product> {
-    try {
-      const response = await apiInterceptor.get(`${this.baseURL}/products/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching product:', error);
-      throw new Error('Falha ao carregar produto');
-    }
+    
+    const response = await apiInterceptor.get<Product>(`${this.baseURL}/products/${id}`);
+    return response.data;
+  
   }
 
   async createProduct(product: ProductCreate): Promise<Product> {
-    try {
-      const response = await apiInterceptor.post(`${this.baseURL}/products`, product);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating product:', error);
-      throw new Error('Falha ao criar produto');
-    }
+    
+    const response = await apiInterceptor.post<Product>(`${this.baseURL}/products`, product);
+    return response.data;
+  
   }
 
   async updateProduct(id: string, product: ProductUpdate): Promise<Product> {
-    try {
-      const response = await apiInterceptor.put(`${this.baseURL}/products/${id}`, product);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating product:', error);
-      throw new Error('Falha ao atualizar produto');
-    }
+    
+    const response = await apiInterceptor.put<Product>(`${this.baseURL}/products/${id}`, product);
+    return response.data;
+  
   }
 
   async deleteProduct(id: string): Promise<void> {
-    try {
-      await apiInterceptor.delete(`${this.baseURL}/products/${id}`);
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      throw new Error('Falha ao excluir produto');
-    }
+    
+    await apiInterceptor.delete(`${this.baseURL}/products/${id}`);
+  
   }
 
   // Category endpoints
   async getCategories(): Promise<ProductCategory[]> {
-    try {
-      const response = await apiInterceptor.get(`${this.baseURL}/categories`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      throw new Error('Falha ao carregar categorias');
-    }
+    
+    const response = await apiInterceptor.get<ProductCategory[]>(`${this.baseURL}/categories`);
+    return response.data;
+  
   }
 
   async getCategory(id: string): Promise<ProductCategory> {
-    try {
-      const response = await apiInterceptor.get(`${this.baseURL}/categories/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching category:', error);
-      throw new Error('Falha ao carregar categoria');
-    }
+    
+    const response = await apiInterceptor.get<ProductCategory>(`${this.baseURL}/categories/${id}`);
+    return response.data;
+  
   }
 
   async createCategory(category: CategoryCreate): Promise<ProductCategory> {
-    try {
-      const response = await apiInterceptor.post(`${this.baseURL}/categories`, category);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating category:', error);
-      throw new Error('Falha ao criar categoria');
-    }
+    
+    const response = await apiInterceptor.post<ProductCategory>(`${this.baseURL}/categories`, category);
+    return response.data;
+  
   }
 
   async updateCategory(id: string, category: CategoryUpdate): Promise<ProductCategory> {
-    try {
-      const response = await apiInterceptor.put(`${this.baseURL}/categories/${id}`, category);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating category:', error);
-      throw new Error('Falha ao atualizar categoria');
-    }
+    
+    const response = await apiInterceptor.put<ProductCategory>(`${this.baseURL}/categories/${id}`, category);
+    return response.data;
+  
   }
 
   async deleteCategory(id: string): Promise<void> {
-    try {
-      await apiInterceptor.delete(`${this.baseURL}/categories/${id}`);
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      throw new Error('Falha ao excluir categoria');
-    }
+    
+    await apiInterceptor.delete(`${this.baseURL}/categories/${id}`);
+  
   }
 
   // Health check
   async healthCheck(): Promise<{ status: string; service: string }> {
-    try {
-      const response = await apiInterceptor.get(`${this.baseURL}/health`);
-      return response.data;
-    } catch (error) {
-      console.error('Error checking product service health:', error);
-      throw new Error('Serviço de produtos indisponível');
-    }
+    
+    const response = await apiInterceptor.get<{ status: string; service: string }>(`${this.baseURL}/health`);
+    return response.data;
+  
   }
 }
 

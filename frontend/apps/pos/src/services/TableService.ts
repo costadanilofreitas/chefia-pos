@@ -32,13 +32,13 @@ export interface TableLayout {
   name: string;
   description?: string;
   tables: Table[];
-  sections: any[];
+  sections: Array<unknown>;
   is_active: boolean;
   background_image?: string;
   background_color: string;
   width: number;
   height: number;
-  metadata?: any;
+  metadata?: unknown;
   created_at: string;
   updated_at: string;
 }
@@ -60,92 +60,63 @@ class TableServiceClass {
    * Get active table layout with all tables
    */
   async getTables(): Promise<Table[]> {
-    try {
-      const response = await apiInterceptor.get(
-        `${this.baseURL}/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
-      );
-      
-      // Extract tables from layout
-      const layout = response.data;
-      return layout.tables || [];
-    } catch (error: any) {
-      console.error('Error fetching tables:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get specific table by ID
-   */
-  async getTable(id: string): Promise<Table> {
-    const tables = await this.getTables();
-    const table = tables.find(t => t.id === id);
-    if (!table) {
-      throw new Error('Mesa não encontrada');
-    }
-    return table;
+    
+    const response = await apiInterceptor.get<{ tables: Table[] }>(
+      `${this.baseURL}/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
+    );
+    
+    // Extract tables from layout
+    const layout = response.data;
+    return layout.tables || [];
   }
 
   /**
    * Create a new table (requires layout update)
    */
   async createTable(table: Partial<Table>): Promise<Table> {
-    try {
-      // Get current layout
-      const layoutResponse = await apiInterceptor.get(
-        `${this.baseURL}/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
-      );
-      
-      const layout = layoutResponse.data;
-      
-      // Add new table to layout
-      const newTable: Table = {
-        id: Date.now().toString(),
-        number: table.number || 1,
-        seats: table.seats || 4,
-        status: 'available',
-        area: table.area || 'saloon',
-        position: table.position || { x: 100, y: 100 },
-        size: table.size || { width: 100, height: 100 },
-        shape: table.shape || 'square',
-        ...table
-      };
-      
-      layout.tables.push(newTable);
-      
-      // Update layout
-      await apiInterceptor.put(`${this.baseURL}/layouts/${layout.id}`, {
-        tables: layout.tables
-      });
-      
-      return newTable;
-    } catch (error) {
-      console.error('Error creating table:', error);
-      throw error;
-    }
+    
+    // Get current layout
+    const layoutResponse = await apiInterceptor.get<{ id: string; tables: Table[] }>(
+      `${this.baseURL}/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
+    );
+    
+    const layout = layoutResponse.data;
+    
+    // Add new table to layout
+    const newTable: Table = {
+      id: Date.now().toString(),
+      number: table.number || 1,
+      seats: table.seats || 4,
+      status: 'available',
+      area: table.area || 'saloon',
+      position: table.position || { x: 100, y: 100 },
+      size: table.size || { width: 100, height: 100 },
+      shape: table.shape || 'square',
+      ...table
+    };
+    
+    layout.tables.push(newTable);
+    
+    // Update layout
+    await apiInterceptor.put(`${this.baseURL}/layouts/${layout.id}`, {
+      tables: layout.tables
+    });
+    
+    return newTable;
+  
   }
 
   /**
    * Update table status
    */
   async updateTableStatus(id: string, statusUpdate: TableStatusUpdate): Promise<Table> {
-    try {
-      const response = await apiInterceptor.put(
-        `${this.baseURL}/${id}/status`,
-        statusUpdate
-      );
-      return response.data;
-    } catch (error) {
-      console.error('Error updating table status:', error);
-      
-      // Update locally for development
-      const tables = await this.getTables();
-      const table = tables.find(t => t.id === id);
-      if (table) {
-        return { ...table, ...statusUpdate };
-      }
-      throw new Error('Falha ao atualizar status da mesa');
-    }
+    
+    const response = await apiInterceptor.put<Table>(
+      `${this.baseURL}/${id}/status`,
+      statusUpdate
+    );
+    return response.data;
+  
   }
 
   /**
@@ -159,7 +130,7 @@ class TableServiceClass {
     
     // For other updates, need to update the entire layout
     try {
-      const layoutResponse = await apiInterceptor.get(
+      const layoutResponse = await apiInterceptor.get<{ id: string; tables: Table[] }>(
         `${this.baseURL}/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
       );
       
@@ -177,9 +148,10 @@ class TableServiceClass {
       });
       
       return layout.tables[tableIndex];
-    } catch (error) {
-      console.error('Error updating table:', error);
-      const table = await this.getTable(id);
+    } catch {
+// console.error('Error updating table:', error);
+      const tables = await this.getTables();
+      const table = tables.find(t => t.id === id) || {} as Table;
       return { ...table, ...updates };
     }
   }
@@ -189,7 +161,7 @@ class TableServiceClass {
    */
   async deleteTable(id: string): Promise<void> {
     try {
-      const layoutResponse = await apiInterceptor.get(
+      const layoutResponse = await apiInterceptor.get<{ id: string; tables: Table[] }>(
         `${this.baseURL}/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
       );
       
@@ -199,8 +171,8 @@ class TableServiceClass {
       await apiInterceptor.put(`${this.baseURL}/layouts/${layout.id}`, {
         tables: layout.tables
       });
-    } catch (error) {
-      console.error('Error deleting table:', error);
+    } catch {
+// console.error('Error deleting table:', error);
     }
   }
 

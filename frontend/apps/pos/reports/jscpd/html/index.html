@@ -1,0 +1,545 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Copy/Paste Detector Report</title><link href="styles/tailwind.css" rel="stylesheet"><link href="styles/prism.css" rel="stylesheet"></head><body class="bg-gray-100"><header class="bg-white shadow py-4"><div class="container mx-auto px-4"><h1 class="text-3xl font-semibold text-gray-800">jscpd - copy/paste report</h1></div></header><main class="container mx-auto my-8 p-4 bg-white shadow rounded"><section class="mb-8" id="dashboard"><h2 class="text-2xl font-semibold text-gray-700 mb-4">Dashboard</h2><div class="grid grid-cols-4 gap-4"><div class="bg-blue-200 p-4 rounded text-center"><h3 class="text-lg font-semibold text-blue-800 mb-2">Total Files</h3><span class="text-4xl font-bold text-blue-800">145</span></div><div class="bg-green-200 p-4 rounded text-center"><h3 class="text-lg font-semibold text-green-800 mb-2">Total Lines of Code</h3><span class="text-4xl font-bold text-green-800">30887</span></div><div class="bg-yellow-200 p-4 rounded text-center"><h3 class="text-lg font-semibold text-yellow-800 mb-2">Number of Clones</h3><span class="text-4xl font-bold text-yellow-800">53</span></div><div class="bg-red-200 p-4 rounded text-center"><h3 class="text-lg font-semibold text-red-800 mb-2">Duplicated Lines</h3><span class="text-4xl font-bold text-red-800">536 (1.74%)</span></div></div></section><section class="mb-8" id="formats"><h2 class="text-2xl font-semibold text-gray-700 mb-4">Formats with Duplications</h2><table class="w-full table-auto"><thead><tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal"><th class="py-3 px-6 text-left">Format</th><th class="py-3 px-6 text-left">Files</th><th class="py-3 px-6 text-left">Lines</th><th class="py-3 px-6 text-left">Clones</th><th class="py-3 px-6 text-left">Duplicated Lines</th><th class="py-3 px-6 text-left">Duplicated Tokens</th></tr></thead><tbody><tr class="bg-white border-b border-gray-200 text-gray-800 text-sm"><td class="py-3 px-6"><a class="text-blue-600 hover:underline" href="#typescript-clones">typescript</a></td><td class="py-3 px-6">66</td><td class="py-3 px-6">14698</td><td class="py-3 px-6">15</td><td class="py-3 px-6">131</td><td class="py-3 px-6">1686</td></tr><tr class="bg-white border-b border-gray-200 text-gray-800 text-sm"><td class="py-3 px-6"><a class="text-blue-600 hover:underline" href="#javascript-clones">javascript</a></td><td class="py-3 px-6">38</td><td class="py-3 px-6">5722</td><td class="py-3 px-6">4</td><td class="py-3 px-6">56</td><td class="py-3 px-6">621</td></tr><tr class="bg-white border-b border-gray-200 text-gray-800 text-sm"><td class="py-3 px-6"><a class="text-blue-600 hover:underline" href="#tsx-clones">tsx</a></td><td class="py-3 px-6">40</td><td class="py-3 px-6">10467</td><td class="py-3 px-6">34</td><td class="py-3 px-6">349</td><td class="py-3 px-6">3849</td></tr><tr class="bg-white border-b border-gray-200 text-gray-800 text-sm"><td class="py-3 px-6"><a class="text-blue-600 hover:underline" href="#css-clones">css</a></td><td class="py-3 px-6">1</td><td class="py-3 px-6">0</td><td class="py-3 px-6">0</td><td class="py-3 px-6">0</td><td class="py-3 px-6">0</td></tr></tbody></table></section><section class="mb-8" id="txt-clones"><a name="typescript-clones"></a><h2 class="text-2xl font-semibold text-gray-700 mb-4">typescript</h2><div class="divide-y divide-gray-200 border-b-2"><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/TableService.ts (Line 163:5 - Line 169:7), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/TableService.ts (Line 132:5 - Line 138:6)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn30" onclick="toggleCodeBlock('cloneGroup30', 'expandBtn30', 'collapseBtn30')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn30" onclick="toggleCodeBlock('cloneGroup30', 'expandBtn30', 'collapseBtn30')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup30"><code class="language-typescript text-sm text-gray-800">try {
+      const layoutResponse = await apiInterceptor.get&lt;{ id: string; tables: Table[] }&gt;(
+        `${this.baseURL}/layouts/active?restaurant_id=${this.restaurantId}&amp;store_id=${this.storeId}`
+      );
+      
+      const layout = layoutResponse.data;
+      layout</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OrderService.ts (Line 354:5 - Line 363:11), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OrderService.ts (Line 98:7 - Line 107:6)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn31" onclick="toggleCodeBlock('cloneGroup31', 'expandBtn31', 'collapseBtn31')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn31" onclick="toggleCodeBlock('cloneGroup31', 'expandBtn31', 'collapseBtn31')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup31"><code class="language-typescript text-sm text-gray-800">const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) =&gt; {
+        if (value !== undefined &amp;&amp; value !== null) {
+          params.append(key, value.toString());
+        }
+      });
+    }
+
+    const response: AxiosResponse&lt;OrderStats</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts (Line 128:2 - Line 134:7), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts (Line 115:8 - Line 121:4)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn32" onclick="toggleCodeBlock('cloneGroup32', 'expandBtn32', 'collapseBtn32')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn32" onclick="toggleCodeBlock('cloneGroup32', 'expandBtn32', 'collapseBtn32')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup32"><code class="language-typescript text-sm text-gray-800">&gt; {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) =&gt; {
+      const transaction = this.db!.transaction([storeName], 'readonly');
+      const store = transaction.objectStore(storeName);
+      const request = store.getAll</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts (Line 141:5 - Line 147:4), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts (Line 98:7 - Line 104:4)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn33" onclick="toggleCodeBlock('cloneGroup33', 'expandBtn33', 'collapseBtn33')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn33" onclick="toggleCodeBlock('cloneGroup33', 'expandBtn33', 'collapseBtn33')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup33"><code class="language-typescript text-sm text-gray-800">&gt; {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) =&gt; {
+      const transaction = this.db!.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.put</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts (Line 157:7 - Line 163:7), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/OfflineStorage.ts (Line 141:4 - Line 104:4)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn34" onclick="toggleCodeBlock('cloneGroup34', 'expandBtn34', 'collapseBtn34')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn34" onclick="toggleCodeBlock('cloneGroup34', 'expandBtn34', 'collapseBtn34')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup34"><code class="language-typescript text-sm text-gray-800">): Promise&lt;void&gt; {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) =&gt; {
+      const transaction = this.db!.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+      const request = store.delete</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/BillsService.ts (Line 84:8 - Line 93:24), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/CouponsService.ts (Line 82:10 - Line 91:26)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn35" onclick="toggleCodeBlock('cloneGroup35', 'expandBtn35', 'collapseBtn35')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn35" onclick="toggleCodeBlock('cloneGroup35', 'expandBtn35', 'collapseBtn35')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup35"><code class="language-typescript text-sm text-gray-800">${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(updates)
+    });
+    
+    if (!response.ok) throw new Error('Failed to update bill'</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useGestures.ts (Line 166:2 - Line 179:4), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useGestures.ts (Line 100:2 - Line 113:4)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn36" onclick="toggleCodeBlock('cloneGroup36', 'expandBtn36', 'collapseBtn36')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn36" onclick="toggleCodeBlock('cloneGroup36', 'expandBtn36', 'collapseBtn36')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup36"><code class="language-typescript text-sm text-gray-800">});
+    element.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () =&gt; {
+      element.removeEventListener('touchstart', handleTouchStart);
+      element.removeEventListener('touchmove', handleTouchMove);
+      element.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [elementRef, handlers, options]);
+};
+
+/**
+ * Hook for detecting long press
+ */</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts (Line 189:11 - Line 201:29), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts (Line 143:13 - Line 155:32)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn37" onclick="toggleCodeBlock('cloneGroup37', 'expandBtn37', 'collapseBtn37')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn37" onclick="toggleCodeBlock('cloneGroup37', 'expandBtn37', 'collapseBtn37')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup37"><code class="language-typescript text-sm text-gray-800">);
+      setState(prev =&gt; ({ 
+        ...prev, 
+        employees: prev.employees.map(e =&gt; e.id === employeeId ? updatedEmployee : e),
+        currentEmployee: prev.currentEmployee?.id === employeeId ? updatedEmployee : prev.currentEmployee,
+        updating: false 
+      }));
+      return updatedEmployee;
+    } catch (error) {
+      setState(prev =&gt; ({ 
+        ...prev, 
+        updating: false, 
+        error: (error instanceof Error ? error.message : 'Erro ao ativar funcionário'</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts (Line 212:19 - Line 224:32), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts (Line 189:17 - Line 155:32)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn38" onclick="toggleCodeBlock('cloneGroup38', 'expandBtn38', 'collapseBtn38')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn38" onclick="toggleCodeBlock('cloneGroup38', 'expandBtn38', 'collapseBtn38')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup38"><code class="language-typescript text-sm text-gray-800">(employeeId);
+      setState(prev =&gt; ({ 
+        ...prev, 
+        employees: prev.employees.map(e =&gt; e.id === employeeId ? updatedEmployee : e),
+        currentEmployee: prev.currentEmployee?.id === employeeId ? updatedEmployee : prev.currentEmployee,
+        updating: false 
+      }));
+      return updatedEmployee;
+    } catch (error) {
+      setState(prev =&gt; ({ 
+        ...prev, 
+        updating: false, 
+        error: (error instanceof Error ? error.message : 'Erro ao desativar funcionário'</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts (Line 339:5 - Line 346:40), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts (Line 321:7 - Line 328:30)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn39" onclick="toggleCodeBlock('cloneGroup39', 'expandBtn39', 'collapseBtn39')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn39" onclick="toggleCodeBlock('cloneGroup39', 'expandBtn39', 'collapseBtn39')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup39"><code class="language-typescript text-sm text-gray-800">);
+      setState(prev =&gt; ({ ...prev, loading: false }));
+      return employees;
+    } catch (error) {
+      setState(prev =&gt; ({ 
+        ...prev, 
+        loading: false, 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar funcionários por cargo'</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts (Line 357:2 - Line 364:37), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useEmployee.ts (Line 321:7 - Line 328:30)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn40" onclick="toggleCodeBlock('cloneGroup40', 'expandBtn40', 'collapseBtn40')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn40" onclick="toggleCodeBlock('cloneGroup40', 'expandBtn40', 'collapseBtn40')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup40"><code class="language-typescript text-sm text-gray-800">);
+      setState(prev =&gt; ({ ...prev, loading: false }));
+      return employees;
+    } catch (error) {
+      setState(prev =&gt; ({ 
+        ...prev, 
+        loading: false, 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar funcionários ativos'</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useDelivery.ts (Line 454:5 - Line 461:40), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useDelivery.ts (Line 436:7 - Line 443:36)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn41" onclick="toggleCodeBlock('cloneGroup41', 'expandBtn41', 'collapseBtn41')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn41" onclick="toggleCodeBlock('cloneGroup41', 'expandBtn41', 'collapseBtn41')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup41"><code class="language-typescript text-sm text-gray-800">);
+      setState(prev =&gt; ({ ...prev, loading: false }));
+      return orders;
+    } catch (error) {
+      setState(prev =&gt; ({ 
+        ...prev, 
+        loading: false, 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar entregas do entregador'</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts (Line 180:6 - Line 187:27), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts (Line 162:6 - Line 169:30)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn42" onclick="toggleCodeBlock('cloneGroup42', 'expandBtn42', 'collapseBtn42')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn42" onclick="toggleCodeBlock('cloneGroup42', 'expandBtn42', 'collapseBtn42')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup42"><code class="language-typescript text-sm text-gray-800">);
+      setState(prev =&gt; ({ ...prev, loading: false }));
+      return customers;
+    } catch (error) {
+      setState(prev =&gt; ({ 
+        ...prev, 
+        loading: false, 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar por email'</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts (Line 198:7 - Line 210:27), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts (Line 116:13 - Line 128:28)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn43" onclick="toggleCodeBlock('cloneGroup43', 'expandBtn43', 'collapseBtn43')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn43" onclick="toggleCodeBlock('cloneGroup43', 'expandBtn43', 'collapseBtn43')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup43"><code class="language-typescript text-sm text-gray-800">);
+      setState(prev =&gt; ({ 
+        ...prev, 
+        customers: prev.customers.map(c =&gt; c.id === customerId ? updatedCustomer : c),
+        currentCustomer: prev.currentCustomer?.id === customerId ? updatedCustomer : prev.currentCustomer,
+        updating: false 
+      }));
+      return updatedCustomer;
+    } catch (error) {
+      setState(prev =&gt; ({ 
+        ...prev, 
+        updating: false, 
+        error: (error instanceof Error ? error.message : 'Erro ao adicionar pontos'</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts (Line 221:20 - Line 233:26), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useCustomer.ts (Line 198:17 - Line 128:28)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn44" onclick="toggleCodeBlock('cloneGroup44', 'expandBtn44', 'collapseBtn44')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn44" onclick="toggleCodeBlock('cloneGroup44', 'expandBtn44', 'collapseBtn44')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup44"><code class="language-typescript text-sm text-gray-800">(customerId, points);
+      setState(prev =&gt; ({ 
+        ...prev, 
+        customers: prev.customers.map(c =&gt; c.id === customerId ? updatedCustomer : c),
+        currentCustomer: prev.currentCustomer?.id === customerId ? updatedCustomer : prev.currentCustomer,
+        updating: false 
+      }));
+      return updatedCustomer;
+    } catch (error) {
+      setState(prev =&gt; ({ 
+        ...prev, 
+        updating: false, 
+        error: (error instanceof Error ? error.message : 'Erro ao resgatar pontos'</code></pre></div><!-- Add more clone groups for .txt format as needed         // Add more clone groups for .txt format as needed--></div><a name="javascript-clones"></a><h2 class="text-2xl font-semibold text-gray-700 mb-4">javascript</h2><div class="divide-y divide-gray-200 border-b-2"><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx (Line 253:2 - Line 294:11), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx (Line 166:2 - Line 212:17)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn10" onclick="toggleCodeBlock('cloneGroup10', 'expandBtn10', 'collapseBtn10')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn10" onclick="toggleCodeBlock('cloneGroup10', 'expandBtn10', 'collapseBtn10')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup10"><code class="language-javascript text-sm text-gray-800">} fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15&quot; /&gt;
+              &lt;/svg&gt;
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        
+        {/* Tabs */}
+        &lt;div className=&quot;flex gap-2 mt-4&quot;&gt;
+          {[
+            { key: 'documents', label: 'Documentos', icon: '📄' },
+            { key: 'config', label: 'Configurações', icon: '⚙️' },
+            { key: 'contingency', label: 'Contingência', icon: '⚠️' },
+            { key: 'reports', label: 'Relatórios', icon: '📊' }
+          ].map(tab =&gt; (
+            &lt;button
+              key={tab.key}
+              onClick={() =&gt; setSelectedTab(tab.key as any)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                selectedTab === tab.key
+                  ? 'bg-blue-500 text-white shadow-lg'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            &gt;
+              &lt;span className=&quot;text-lg&quot;&gt;{tab.icon}&lt;/span&gt;
+              {tab.label}
+            &lt;/button&gt;
+          ))}
+        &lt;/div&gt;
+      &lt;/div&gt;
+      
+      {/* Content */}
+      &lt;div className=&quot;flex-1 overflow-auto p-6&quot;&gt;
+        {selectedTab === 'documents' &amp;&amp; (
+          &lt;div className=&quot;space-y-4&quot;&gt;
+            {/* Filters */}
+            &lt;div className=&quot;bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4&quot;&gt;
+              &lt;div className=&quot;flex flex-wrap gap-3&quot;&gt;
+                &lt;input
+                  type=&quot;text&quot;
+                  placeholder=&quot;Buscar por número, cliente ou chave...&quot;
+                  value={searchTerm</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx (Line 294:5 - Line 299:43), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx (Line 281:7 - Line 286:172)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn26" onclick="toggleCodeBlock('cloneGroup26', 'expandBtn26', 'collapseBtn26')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn26" onclick="toggleCodeBlock('cloneGroup26', 'expandBtn26', 'collapseBtn26')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup26"><code class="language-javascript text-sm text-gray-800">}
+          color=&quot;blue&quot;
+          loading={loading}
+          icon={
+            &lt;svg className=&quot;w-6 h-6&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+              &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx (Line 307:4 - Line 312:147), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx (Line 281:7 - Line 286:172)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn27" onclick="toggleCodeBlock('cloneGroup27', 'expandBtn27', 'collapseBtn27')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn27" onclick="toggleCodeBlock('cloneGroup27', 'expandBtn27', 'collapseBtn27')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup27"><code class="language-javascript text-sm text-gray-800">}
+          color=&quot;purple&quot;
+          loading={loading}
+          icon={
+            &lt;svg className=&quot;w-6 h-6&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+              &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx (Line 320:4 - Line 325:85), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx (Line 281:7 - Line 286:172)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn28" onclick="toggleCodeBlock('cloneGroup28', 'expandBtn28', 'collapseBtn28')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn28" onclick="toggleCodeBlock('cloneGroup28', 'expandBtn28', 'collapseBtn28')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup28"><code class="language-javascript text-sm text-gray-800">}
+          color=&quot;orange&quot;
+          loading={loading}
+          icon={
+            &lt;svg className=&quot;w-6 h-6&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+              &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z</code></pre></div><!-- Add more clone groups for .txt format as needed         // Add more clone groups for .txt format as needed--></div><a name="tsx-clones"></a><h2 class="text-2xl font-semibold text-gray-700 mb-4">tsx</h2><div class="divide-y divide-gray-200 border-b-2"><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Input.tsx (Line 27:2 - Line 42:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Select.tsx (Line 42:2 - Line 57:2)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn0" onclick="toggleCodeBlock('cloneGroup0', 'expandBtn0', 'collapseBtn0')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn0" onclick="toggleCodeBlock('cloneGroup0', 'expandBtn0', 'collapseBtn0')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup0"><code class="language-tsx text-sm text-gray-800">;
+    
+    return (
+      &lt;div className={cn('relative', fullWidth &amp;&amp; 'w-full')}&gt;
+        {label &amp;&amp; (
+          &lt;label 
+            htmlFor={inputId}
+            className=&quot;block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1&quot;
+          &gt;
+            {label}
+            {required &amp;&amp; &lt;span className=&quot;text-red-500 ml-1&quot; aria-label=&quot;required&quot;&gt;*&lt;/span&gt;}
+          &lt;/label&gt;
+        )}
+        
+        &lt;div className=&quot;relative&quot;&gt;
+          {</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Input.tsx (Line 80:9 - Line 98:6), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Select.tsx (Line 102:9 - Line 120:7)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn1" onclick="toggleCodeBlock('cloneGroup1', 'expandBtn1', 'collapseBtn1')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn1" onclick="toggleCodeBlock('cloneGroup1', 'expandBtn1', 'collapseBtn1')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup1"><code class="language-tsx text-sm text-gray-800">&lt;/div&gt;
+        
+        {error &amp;&amp; (
+          &lt;p id={`${inputId}-error`} className=&quot;mt-1 text-sm text-red-600 dark:text-red-400&quot; role=&quot;alert&quot;&gt;
+            {error}
+          &lt;/p&gt;
+        )}
+        
+        {helperText &amp;&amp; !error &amp;&amp; (
+          &lt;p id={`${inputId}-helper`} className=&quot;mt-1 text-sm text-gray-500 dark:text-gray-400&quot;&gt;
+            {helperText}
+          &lt;/p&gt;
+        )}
+      &lt;/div&gt;
+    );
+  }
+);
+
+Input</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 506:21 - Line 511:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx (Line 125:8 - Line 130:3)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn2" onclick="toggleCodeBlock('cloneGroup2', 'expandBtn2', 'collapseBtn2')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn2" onclick="toggleCodeBlock('cloneGroup2', 'expandBtn2', 'collapseBtn2')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup2"><code class="language-tsx text-sm text-gray-800">&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                              &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+                            &lt;/svg&gt;
+                          &lt;/button&gt;
+                        &lt;/div&gt;
+                        &lt;</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 545:2 - Line 556:15), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 515:2 - Line 526:9)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn3" onclick="toggleCodeBlock('cloneGroup3', 'expandBtn3', 'collapseBtn3')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn3" onclick="toggleCodeBlock('cloneGroup3', 'expandBtn3', 'collapseBtn3')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup3"><code class="language-tsx text-sm text-gray-800">1);
+                                const updatedCart = cart.map(cartItem =&gt; 
+                                  cartItem.id === item.id 
+                                    ? { ...cartItem, quantity: newQuantity }
+                                    : cartItem
+                                );
+                                setCart(updatedCart);
+                              }}
+                              className=&quot;w-7 h-7 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors flex items-center justify-center&quot;
+                            &gt;
+                              &lt;svg className=&quot;w-4 h-4&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                                &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M12 4v16m8-8H4</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 767:22 - Line 773:10), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx (Line 125:8 - Line 511:39)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn4" onclick="toggleCodeBlock('cloneGroup4', 'expandBtn4', 'collapseBtn4')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn4" onclick="toggleCodeBlock('cloneGroup4', 'expandBtn4', 'collapseBtn4')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup4"><code class="language-tsx text-sm text-gray-800">&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                    &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+                  &lt;/svg&gt;
+                &lt;/button&gt;
+              &lt;/div&gt;
+              
+              &lt;div className=&quot;space-y-4</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 797:21 - Line 802:15), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 783:21 - Line 788:9)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn5" onclick="toggleCodeBlock('cloneGroup5', 'expandBtn5', 'collapseBtn5')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn5" onclick="toggleCodeBlock('cloneGroup5', 'expandBtn5', 'collapseBtn5')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup5"><code class="language-tsx text-sm text-gray-800">&lt;button
+                      onClick={() =&gt; setQuantity(quantity + 1)}
+                      className=&quot;p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors&quot;
+                    &gt;
+                      &lt;svg className=&quot;w-5 h-5&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                        &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M12 4v16m8-8H4</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 801:8 - Line 806:3), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 555:8 - Line 560:2)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn6" onclick="toggleCodeBlock('cloneGroup6', 'expandBtn6', 'collapseBtn6')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn6" onclick="toggleCodeBlock('cloneGroup6', 'expandBtn6', 'collapseBtn6')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup6"><code class="language-tsx text-sm text-gray-800">&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                        &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M12 4v16m8-8H4&quot; /&gt;
+                      &lt;/svg&gt;
+                    &lt;/button&gt;
+                  &lt;/div&gt;
+                &lt;/</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx (Line 110:2 - Line 126:15), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 171:2 - Line 187:15)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn7" onclick="toggleCodeBlock('cloneGroup7', 'expandBtn7', 'collapseBtn7')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn7" onclick="toggleCodeBlock('cloneGroup7', 'expandBtn7', 'collapseBtn7')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup7"><code class="language-tsx text-sm text-gray-800">;
+
+  const formatCurrency = (value: number) =&gt; {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const formatTime = (date: Date) =&gt; {
+    return new Intl.DateTimeFormat('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
+  const filteredOrders</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx (Line 186:2 - Line 205:25), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 362:2 - Line 381:28)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn8" onclick="toggleCodeBlock('cloneGroup8', 'expandBtn8', 'collapseBtn8')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn8" onclick="toggleCodeBlock('cloneGroup8', 'expandBtn8', 'collapseBtn8')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup8"><code class="language-tsx text-sm text-gray-800">}
+          ].map(tab =&gt; (
+            &lt;button
+              key={tab.key}
+              onClick={() =&gt; setSelectedTab(tab.key as any)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                selectedTab === tab.key
+                  ? 'bg-blue-500 text-white shadow-lg'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            &gt;
+              &lt;span className=&quot;text-lg&quot;&gt;{tab.icon}&lt;/span&gt;
+              {tab.label}
+            &lt;/button&gt;
+          ))}
+        &lt;/div&gt;
+      &lt;/div&gt;
+      
+      {/* Content */}
+      &lt;div className=&quot;flex-1 overflow-auto p-6</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx (Line 547:4 - Line 559:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 762:3 - Line 774:2)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn9" onclick="toggleCodeBlock('cloneGroup9', 'expandBtn9', 'collapseBtn9')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn9" onclick="toggleCodeBlock('cloneGroup9', 'expandBtn9', 'collapseBtn9')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup9"><code class="language-tsx text-sm text-gray-800">&gt;
+                &lt;button
+                  onClick={() =&gt; setShowOrderModal(false)}
+                  className=&quot;p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors&quot;
+                &gt;
+                  &lt;svg className=&quot;w-5 h-5 text-gray-500&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                    &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+                  &lt;/svg&gt;
+                &lt;/button&gt;
+              &lt;/div&gt;
+              
+              &lt;div className=&quot;space-y-4&quot;&gt;
+                {</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx (Line 253:2 - Line 263:12), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx (Line 174:2 - Line 184:9)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn11" onclick="toggleCodeBlock('cloneGroup11', 'expandBtn11', 'collapseBtn11')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn11" onclick="toggleCodeBlock('cloneGroup11', 'expandBtn11', 'collapseBtn11')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup11"><code class="language-tsx text-sm text-gray-800"> fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15&quot; /&gt;
+              &lt;/svg&gt;
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        
+        {/* Tabs */}
+        &lt;div className=&quot;flex gap-2 mt-4&quot;&gt;
+          {[
+            { key: 'documents'</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx (Line 266:13 - Line 286:12), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx (Line 186:12 - Line 206:9)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn12" onclick="toggleCodeBlock('cloneGroup12', 'expandBtn12', 'collapseBtn12')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn12" onclick="toggleCodeBlock('cloneGroup12', 'expandBtn12', 'collapseBtn12')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup12"><code class="language-tsx text-sm text-gray-800">, icon: '📊' }
+          ].map(tab =&gt; (
+            &lt;button
+              key={tab.key}
+              onClick={() =&gt; setSelectedTab(tab.key as any)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                selectedTab === tab.key
+                  ? 'bg-blue-500 text-white shadow-lg'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            &gt;
+              &lt;span className=&quot;text-lg&quot;&gt;{tab.icon}&lt;/span&gt;
+              {tab.label}
+            &lt;/button&gt;
+          ))}
+        &lt;/div&gt;
+      &lt;/div&gt;
+      
+      {/* Content */}
+      &lt;div className=&quot;flex-1 overflow-auto p-6&quot;&gt;
+        {selectedTab === 'documents'</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx (Line 433:31 - Line 438:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx (Line 124:9 - Line 129:3)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn13" onclick="toggleCodeBlock('cloneGroup13', 'expandBtn13', 'collapseBtn13')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn13" onclick="toggleCodeBlock('cloneGroup13', 'expandBtn13', 'collapseBtn13')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup13"><code class="language-tsx text-sm text-gray-800">&gt;
+                                &lt;svg className=&quot;w-5 h-5&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                                  &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+                                &lt;/svg&gt;
+                              &lt;/button&gt;
+                            &lt;</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx (Line 650:17 - Line 662:4), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 762:17 - Line 774:2)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn14" onclick="toggleCodeBlock('cloneGroup14', 'expandBtn14', 'collapseBtn14')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn14" onclick="toggleCodeBlock('cloneGroup14', 'expandBtn14', 'collapseBtn14')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup14"><code class="language-tsx text-sm text-gray-800">&lt;/h2&gt;
+                &lt;button
+                  onClick={() =&gt; setShowCancelModal(false)}
+                  className=&quot;p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors&quot;
+                &gt;
+                  &lt;svg className=&quot;w-5 h-5 text-gray-500&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                    &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+                  &lt;/svg&gt;
+                &lt;/button&gt;
+              &lt;/div&gt;
+              
+              &lt;div className=&quot;space-y-4&quot;&gt;
+                &lt;div</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx (Line 723:17 - Line 735:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 762:17 - Line 662:2)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn15" onclick="toggleCodeBlock('cloneGroup15', 'expandBtn15', 'collapseBtn15')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn15" onclick="toggleCodeBlock('cloneGroup15', 'expandBtn15', 'collapseBtn15')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup15"><code class="language-tsx text-sm text-gray-800">&lt;/h2&gt;
+                &lt;button
+                  onClick={() =&gt; setShowReportModal(false)}
+                  className=&quot;p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors&quot;
+                &gt;
+                  &lt;svg className=&quot;w-5 h-5 text-gray-500&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                    &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+                  &lt;/svg&gt;
+                &lt;/button&gt;
+              &lt;/div&gt;
+              
+              &lt;div className=&quot;space-y-4&quot;&gt;
+                &lt;div&gt;</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/FiscalPage.tsx (Line 786:7 - Line 801:6), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 761:5 - Line 737:5)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn16" onclick="toggleCodeBlock('cloneGroup16', 'expandBtn16', 'collapseBtn16')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn16" onclick="toggleCodeBlock('cloneGroup16', 'expandBtn16', 'collapseBtn16')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup16"><code class="language-tsx text-sm text-gray-800">}
+                &lt;/h2&gt;
+                &lt;button
+                  onClick={() =&gt; setShowDocumentModal(false)}
+                  className=&quot;p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors&quot;
+                &gt;
+                  &lt;svg className=&quot;w-5 h-5 text-gray-500&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                    &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+                  &lt;/svg&gt;
+                &lt;/button&gt;
+              &lt;/div&gt;
+              
+              &lt;div className=&quot;space-y-4&quot;&gt;
+                &lt;div&gt;
+                  &lt;label className=&quot;block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1&quot;&gt;
+                    Chave</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx (Line 482:15 - Line 489:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx (Line 124:9 - Line 130:3)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn17" onclick="toggleCodeBlock('cloneGroup17', 'expandBtn17', 'collapseBtn17')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn17" onclick="toggleCodeBlock('cloneGroup17', 'expandBtn17', 'collapseBtn17')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup17"><code class="language-tsx text-sm text-gray-800">&gt;
+                &lt;svg className=&quot;w-5 h-5&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                  &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+                &lt;/svg&gt;
+              &lt;/button&gt;
+            &lt;/div&gt;
+            
+            {</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx (Line 502:61 - Line 512:3), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/WaiterPage.tsx (Line 670:21 - Line 681:2)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn18" onclick="toggleCodeBlock('cloneGroup18', 'expandBtn18', 'collapseBtn18')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn18" onclick="toggleCodeBlock('cloneGroup18', 'expandBtn18', 'collapseBtn18')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup18"><code class="language-tsx text-sm text-gray-800">&quot;&gt;
+                    &lt;span className=&quot;text-gray-700 dark:text-gray-300&quot;&gt;
+                      {item.quantity}x {item.name}
+                    &lt;/span&gt;
+                    &lt;span className=&quot;font-medium text-gray-900 dark:text-white&quot;&gt;
+                      {formatCurrency(item.price * item.quantity)}
+                    &lt;/span&gt;
+                  &lt;/div&gt;
+                ))}
+              &lt;/div&gt;
+            &lt;/</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CounterOrdersPage.tsx (Line 210:63 - Line 215:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx (Line 274:46 - Line 278:3)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn19" onclick="toggleCodeBlock('cloneGroup19', 'expandBtn19', 'collapseBtn19')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn19" onclick="toggleCodeBlock('cloneGroup19', 'expandBtn19', 'collapseBtn19')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup19"><code class="language-tsx text-sm text-gray-800">&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z&quot; /&gt;
+              &lt;/svg&gt;
+            &lt;/div&gt;
+            
+            {</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CounterOrdersPage.tsx (Line 220:13 - Line 226:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx (Line 173:2 - Line 178:3)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn20" onclick="toggleCodeBlock('cloneGroup20', 'expandBtn20', 'collapseBtn20')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn20" onclick="toggleCodeBlock('cloneGroup20', 'expandBtn20', 'collapseBtn20')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup20"><code class="language-tsx text-sm text-gray-800">&gt;
+              &lt;svg className=&quot;w-5 h-5&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15&quot; /&gt;
+              &lt;/svg&gt;
+            &lt;/button&gt;
+            
+            {</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CounterOrdersPage.tsx (Line 416:7 - Line 422:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx (Line 471:7 - Line 477:2)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn21" onclick="toggleCodeBlock('cloneGroup21', 'expandBtn21', 'collapseBtn21')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn21" onclick="toggleCodeBlock('cloneGroup21', 'expandBtn21', 'collapseBtn21')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup21"><code class="language-tsx text-sm text-gray-800">{/* Order Details Modal */}
+      {showOrderDetails &amp;&amp; selectedOrder &amp;&amp; (
+        &lt;div className=&quot;fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50&quot;&gt;
+          &lt;div className=&quot;bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto&quot;&gt;
+            &lt;div className=&quot;flex items-center justify-between mb-4&quot;&gt;
+              &lt;h3 className=&quot;text-xl font-bold text-gray-900 dark:text-white&quot;&gt;
+                Detalhes do Pedido #{selectedOrder.id.</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CounterOrdersPage.tsx (Line 426:63 - Line 434:17), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/DeliveryPage.tsx (Line 481:56 - Line 489:20)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn22" onclick="toggleCodeBlock('cloneGroup22', 'expandBtn22', 'collapseBtn22')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn22" onclick="toggleCodeBlock('cloneGroup22', 'expandBtn22', 'collapseBtn22')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup22"><code class="language-tsx text-sm text-gray-800">&quot;
+              &gt;
+                &lt;svg className=&quot;w-5 h-5&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                  &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+                &lt;/svg&gt;
+              &lt;/button&gt;
+            &lt;/div&gt;
+            
+            {/* Order Info */</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashWithdrawalPage.tsx (Line 305:15 - Line 312:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/RemoteOrdersPage.tsx (Line 173:2 - Line 179:3)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn23" onclick="toggleCodeBlock('cloneGroup23', 'expandBtn23', 'collapseBtn23')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn23" onclick="toggleCodeBlock('cloneGroup23', 'expandBtn23', 'collapseBtn23')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup23"><code class="language-tsx text-sm text-gray-800">&gt;
+                &lt;svg className=&quot;w-5 h-5&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                  &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15&quot; /&gt;
+                &lt;/svg&gt;
+              &lt;/button&gt;
+            &lt;/div&gt;
+            
+            &lt;</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashierOpeningClosingPage.tsx (Line 453:5 - Line 467:3), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashWithdrawalPage.tsx (Line 222:8 - Line 236:2)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn24" onclick="toggleCodeBlock('cloneGroup24', 'expandBtn24', 'collapseBtn24')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn24" onclick="toggleCodeBlock('cloneGroup24', 'expandBtn24', 'collapseBtn24')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup24"><code class="language-tsx text-sm text-gray-800">&quot;
+                /&gt;
+                
+                {/* Numeric Keypad */}
+                &lt;div className=&quot;grid grid-cols-3 gap-2 mt-3&quot;&gt;
+                  {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.', '←'].map(key =&gt; (
+                    &lt;button
+                      key={key}
+                      onClick={() =&gt; handleKeypadInput(key, 'opening')}
+                      className=&quot;p-3 text-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors&quot;
+                    &gt;
+                      {key}
+                    &lt;/button&gt;
+                  ))}
+                &lt;/</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashierOpeningClosingPage.tsx (Line 528:17 - Line 551:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/CashierOpeningClosingPage.tsx (Line 447:17 - Line 470:2)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn25" onclick="toggleCodeBlock('cloneGroup25', 'expandBtn25', 'collapseBtn25')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn25" onclick="toggleCodeBlock('cloneGroup25', 'expandBtn25', 'collapseBtn25')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup25"><code class="language-tsx text-sm text-gray-800">&lt;/label&gt;
+                &lt;input
+                  type=&quot;text&quot;
+                  value={closingAmount}
+                  onChange={(e) =&gt; setClosingAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+                  className=&quot;w-full px-4 py-3 text-xl font-bold text-center bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white&quot;
+                  placeholder=&quot;0.00&quot;
+                /&gt;
+                
+                {/* Numeric Keypad */}
+                &lt;div className=&quot;grid grid-cols-3 gap-2 mt-3&quot;&gt;
+                  {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.', '←'].map(key =&gt; (
+                    &lt;button
+                      key={key}
+                      onClick={() =&gt; handleKeypadInput(key, 'closing')}
+                      className=&quot;p-3 text-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors&quot;
+                    &gt;
+                      {key}
+                    &lt;/button&gt;
+                  ))}
+                &lt;/div&gt;
+              &lt;/div&gt;
+
+              {</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx (Line 259:7 - Line 265:38), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/ui/AnalyticsDashboardPage.tsx (Line 250:2 - Line 256:117)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn29" onclick="toggleCodeBlock('cloneGroup29', 'expandBtn29', 'collapseBtn29')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn29" onclick="toggleCodeBlock('cloneGroup29', 'expandBtn29', 'collapseBtn29')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup29"><code class="language-tsx text-sm text-gray-800">&gt;
+                  &lt;button
+                    onClick={() =&gt; handleExport('json')}
+                    className=&quot;w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center&quot;
+                  &gt;
+                    &lt;svg className=&quot;w-4 h-4 mr-2&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                      &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx (Line 226:17 - Line 234:26), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx (Line 124:9 - Line 559:20)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn45" onclick="toggleCodeBlock('cloneGroup45', 'expandBtn45', 'collapseBtn45')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn45" onclick="toggleCodeBlock('cloneGroup45', 'expandBtn45', 'collapseBtn45')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup45"><code class="language-tsx text-sm text-gray-800">&gt;
+                  &lt;svg className=&quot;w-5 h-5&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                    &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+                  &lt;/svg&gt;
+                &lt;/button&gt;
+              &lt;/div&gt;
+
+              &lt;div className=&quot;space-y-4&quot;&gt;
+                {/* Navigation Commands */</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx (Line 254:6 - Line 266:23), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx (Line 238:11 - Line 250:21)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn46" onclick="toggleCodeBlock('cloneGroup46', 'expandBtn46', 'collapseBtn46')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn46" onclick="toggleCodeBlock('cloneGroup46', 'expandBtn46', 'collapseBtn46')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup46"><code class="language-tsx text-sm text-gray-800">.map((cmd, i) =&gt; (
+                      &lt;div key={i} className=&quot;flex items-center gap-2 text-sm&quot;&gt;
+                        &lt;span className=&quot;text-gray-400&quot;&gt;•&lt;/span&gt;
+                        &lt;span className=&quot;font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded&quot;&gt;
+                          &amp;quot;{cmd.phrases[0]}&amp;quot;
+                        &lt;/span&gt;
+                        &lt;span className=&quot;text-gray-500&quot;&gt;→ {cmd.description}&lt;/span&gt;
+                      &lt;/div&gt;
+                    ))}
+                  &lt;/div&gt;
+                &lt;/div&gt;
+
+                {/* Payment Commands */</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx (Line 270:8 - Line 282:22), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx (Line 238:11 - Line 250:21)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn47" onclick="toggleCodeBlock('cloneGroup47', 'expandBtn47', 'collapseBtn47')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn47" onclick="toggleCodeBlock('cloneGroup47', 'expandBtn47', 'collapseBtn47')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup47"><code class="language-tsx text-sm text-gray-800">.map((cmd, i) =&gt; (
+                      &lt;div key={i} className=&quot;flex items-center gap-2 text-sm&quot;&gt;
+                        &lt;span className=&quot;text-gray-400&quot;&gt;•&lt;/span&gt;
+                        &lt;span className=&quot;font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded&quot;&gt;
+                          &amp;quot;{cmd.phrases[0]}&amp;quot;
+                        &lt;/span&gt;
+                        &lt;span className=&quot;text-gray-500&quot;&gt;→ {cmd.description}&lt;/span&gt;
+                      &lt;/div&gt;
+                    ))}
+                  &lt;/div&gt;
+                &lt;/div&gt;
+
+                {/* Search Commands */</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx (Line 286:7 - Line 297:3), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/VoiceControl.tsx (Line 238:11 - Line 250:2)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn48" onclick="toggleCodeBlock('cloneGroup48', 'expandBtn48', 'collapseBtn48')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn48" onclick="toggleCodeBlock('cloneGroup48', 'expandBtn48', 'collapseBtn48')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup48"><code class="language-tsx text-sm text-gray-800">.map((cmd, i) =&gt; (
+                      &lt;div key={i} className=&quot;flex items-center gap-2 text-sm&quot;&gt;
+                        &lt;span className=&quot;text-gray-400&quot;&gt;•&lt;/span&gt;
+                        &lt;span className=&quot;font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded&quot;&gt;
+                          &amp;quot;{cmd.phrases[0]}&amp;quot;
+                        &lt;/span&gt;
+                        &lt;span className=&quot;text-gray-500&quot;&gt;→ {cmd.description}&lt;/span&gt;
+                      &lt;/div&gt;
+                    ))}
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/Toast.tsx (Line 109:2 - Line 121:7), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/contexts/ToastContext.tsx (Line 20:2 - Line 32:6)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn49" onclick="toggleCodeBlock('cloneGroup49', 'expandBtn49', 'collapseBtn49')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn49" onclick="toggleCodeBlock('cloneGroup49', 'expandBtn49', 'collapseBtn49')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup49"><code class="language-tsx text-sm text-gray-800">) =&gt; {
+  const [toasts, setToasts] = useState&lt;ToastMessage[]&gt;([]);
+
+  const showToast = useCallback((message: string, type: ToastMessage['type'] = 'info', duration?: number) =&gt; {
+    const id = Date.now().toString() + Math.random().toString(36);
+    setToasts(prev =&gt; [...prev, { id, message, type, duration }]);
+  }, []);
+
+  const removeToast = useCallback((id: string) =&gt; {
+    setToasts(prev =&gt; prev.filter(t =&gt; t.id !== id));
+  }, []);
+
+  return</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/Toast.tsx (Line 125:5 - Line 130:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/contexts/ToastContext.tsx (Line 33:5 - Line 39:7)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn50" onclick="toggleCodeBlock('cloneGroup50', 'expandBtn50', 'collapseBtn50')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn50" onclick="toggleCodeBlock('cloneGroup50', 'expandBtn50', 'collapseBtn50')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup50"><code class="language-tsx text-sm text-gray-800">success: useCallback((message: string, duration?: number) =&gt; showToast(message, 'success', duration), [showToast]),
+    error: useCallback((message: string, duration?: number) =&gt; showToast(message, 'error', duration), [showToast]),
+    warning: useCallback((message: string, duration?: number) =&gt; showToast(message, 'warning', duration), [showToast]),
+    info: useCallback((message: string, duration?: number) =&gt; showToast(message, 'info', duration), [showToast]),
+  };
+}</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/PerformanceMonitor.tsx (Line 128:8 - Line 134:15), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx (Line 125:8 - Line 489:20)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn51" onclick="toggleCodeBlock('cloneGroup51', 'expandBtn51', 'collapseBtn51')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn51" onclick="toggleCodeBlock('cloneGroup51', 'expandBtn51', 'collapseBtn51')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup51"><code class="language-tsx text-sm text-gray-800">&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+            &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+          &lt;/svg&gt;
+        &lt;/button&gt;
+      &lt;/div&gt;
+
+      {/* Métricas */</code></pre></div><div class="py-4"><p class="text-gray-600">C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/NumericLoginModal.tsx (Line 161:19 - Line 166:2), C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Dialog.tsx (Line 125:8 - Line 511:4)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn52" onclick="toggleCodeBlock('cloneGroup52', 'expandBtn52', 'collapseBtn52')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn52" onclick="toggleCodeBlock('cloneGroup52', 'expandBtn52', 'collapseBtn52')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup52"><code class="language-tsx text-sm text-gray-800">&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; viewBox=&quot;0 0 24 24&quot;&gt;
+                &lt;path strokeLinecap=&quot;round&quot; strokeLinejoin=&quot;round&quot; strokeWidth={2} d=&quot;M6 18L18 6M6 6l12 12&quot; /&gt;
+              &lt;/svg&gt;
+            &lt;/button&gt;
+          &lt;/div&gt;
+          &lt;p</code></pre></div><!-- Add more clone groups for .txt format as needed         // Add more clone groups for .txt format as needed--></div><a name="css-clones"></a><h2 class="text-2xl font-semibold text-gray-700 mb-4">css</h2><div class="divide-y divide-gray-200 border-b-2"><!-- Add more clone groups for .txt format as needed         // Add more clone groups for .txt format as needed--></div></section><!-- Add more sections for other formats and clone groups as needed--></main><footer class="bg-white shadow mt-8 py-4"><div class="container mx-auto px-4 text-center"><p class="text-sm text-gray-600">This report is generated by jscpd, an open-source copy/paste detector.</p><p class="text-sm text-gray-600">jscpd is licensed under the MIT License.</p><a class="text-blue-500 text-sm" href="https://github.com/kucherenko/jscpd" target="_blank" rel="noopener noreferrer">View jscpd on GitHub</a></div></footer><script src="js/prism.js"></script><script>function toggleCodeBlock(codeBlockId, expandBtnId, collapseBtnId) {
+  const codeBlock = document.getElementById(codeBlockId);
+  const expandBtn = document.getElementById(expandBtnId);
+  const collapseBtn = document.getElementById(collapseBtnId);
+
+  codeBlock.classList.toggle('hidden');
+  expandBtn.classList.toggle('hidden');
+  collapseBtn.classList.toggle('hidden');
+}</script></body></html>

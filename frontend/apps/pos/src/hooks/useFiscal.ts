@@ -3,8 +3,9 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import fiscalService, { FiscalDocument, FiscalConfig, ContingencyMode } from '../services/FiscalService';
+import fiscalService, { FiscalDocument, FiscalConfig, ContingencyMode, FiscalReport } from '../services/FiscalService';
 import { useToast } from './useToast';
+import logger, { LogSource } from '../services/LocalLoggerService';
 
 interface UseFiscalReturn {
   // Estados
@@ -15,7 +16,7 @@ interface UseFiscalReturn {
   error: string | null;
   
   // Ações de documentos
-  loadDocuments: (filters?: any) => Promise<void>;
+  loadDocuments: (filters?: unknown) => Promise<void>;
   emitDocument: (orderId: string, type: FiscalDocument['type']) => Promise<void>;
   cancelDocument: (documentId: string, reason: string) => Promise<void>;
   retryDocument: (documentId: string) => Promise<void>;
@@ -56,11 +57,10 @@ export const useFiscal = (): UseFiscalReturn => {
   const { success, error: showError, info } = useToast();
   
   // Use ref to track first load to avoid re-creating callback
-  const isFirstLoadRef = useRef(true);
   const hasShownEmptyMessageRef = useRef(false);
 
   // Carrega documentos
-  const loadDocuments = useCallback(async (filters?: any) => {
+  const loadDocuments = useCallback(async (filters?: unknown) => {
     try {
       setLoading(true);
       setError(null);
@@ -75,7 +75,7 @@ export const useFiscal = (): UseFiscalReturn => {
         info('Nenhum documento fiscal encontrado');
         hasShownEmptyMessageRef.current = true;
       }
-    } catch (err: any) {
+    } catch (err) {
       const message = err.message || 'Erro ao carregar documentos';
       setError(message);
       showError(message);
@@ -93,7 +93,8 @@ export const useFiscal = (): UseFiscalReturn => {
       // Verifica status da contingência
       const contingencyStatus = await fiscalService.getContingencyStatus();
       setContingency(contingencyStatus);
-    } catch (err: any) {
+    } catch (error) {
+      await logger.warn('Erro ao carregar configuração fiscal, usando valores padrão', { error }, 'useFiscal', LogSource.FISCAL);
       // Usa valores padrão se falhar
     }
   }, []);
@@ -108,7 +109,7 @@ export const useFiscal = (): UseFiscalReturn => {
       setDocuments(prev => [doc, ...prev]);
       
       success(`Documento fiscal ${doc.number} emitido com sucesso`);
-    } catch (err: any) {
+    } catch (err) {
       const message = err.response?.data?.message || 'Erro ao emitir documento fiscal';
       showError(message);
       throw err;
@@ -127,7 +128,7 @@ export const useFiscal = (): UseFiscalReturn => {
       setDocuments(prev => prev.map(d => d.id === documentId ? doc : d));
       
       success('Documento cancelado com sucesso');
-    } catch (err: any) {
+    } catch (err) {
       const message = err.response?.data?.message || 'Erro ao cancelar documento';
       showError(message);
       throw err;
@@ -146,7 +147,7 @@ export const useFiscal = (): UseFiscalReturn => {
       setDocuments(prev => prev.map(d => d.id === documentId ? doc : d));
       
       success('Documento reprocessado com sucesso');
-    } catch (err: any) {
+    } catch (err) {
       const message = err.response?.data?.message || 'Erro ao reprocessar documento';
       showError(message);
       throw err;
@@ -167,7 +168,8 @@ export const useFiscal = (): UseFiscalReturn => {
       URL.revokeObjectURL(url);
       
       success('XML baixado com sucesso');
-    } catch (err: any) {
+    } catch (error) {
+      await logger.error('Erro ao baixar XML', { documentId, error }, 'useFiscal', LogSource.FISCAL);
       showError('Erro ao baixar XML');
     }
   }, [success, showError]);
@@ -184,7 +186,8 @@ export const useFiscal = (): UseFiscalReturn => {
       URL.revokeObjectURL(url);
       
       success('PDF baixado com sucesso');
-    } catch (err: any) {
+    } catch (error) {
+      await logger.error('Erro ao baixar PDF', { documentId, error }, 'useFiscal', LogSource.FISCAL);
       showError('Erro ao baixar PDF');
     }
   }, [success, showError]);
@@ -194,7 +197,8 @@ export const useFiscal = (): UseFiscalReturn => {
     try {
       await fiscalService.printDocument(documentId);
       success('Documento enviado para impressão');
-    } catch (err: any) {
+    } catch (error) {
+      await logger.error('Erro ao imprimir documento', { documentId, error }, 'useFiscal', LogSource.FISCAL);
       showError('Erro ao imprimir documento');
     }
   }, [success, showError]);
@@ -206,7 +210,7 @@ export const useFiscal = (): UseFiscalReturn => {
       const updated = await fiscalService.updateConfig(newConfig);
       setConfig(updated);
       success('Configuração atualizada com sucesso');
-    } catch (err: any) {
+    } catch (err) {
       showError('Erro ao atualizar configuração');
       throw err;
     } finally {
@@ -218,7 +222,7 @@ export const useFiscal = (): UseFiscalReturn => {
   const toggleContingency = useCallback(async (active: boolean, reason?: string) => {
     try {
       setLoading(true);
-      const status = await fiscalService.toggleContingency(active, reason);
+      const status = await fiscalService.toggleContingency(reason);
       setContingency(status);
       
       if (active) {
@@ -226,7 +230,7 @@ export const useFiscal = (): UseFiscalReturn => {
       } else {
         success('Modo de contingência desativado');
       }
-    } catch (err: any) {
+    } catch (err) {
       showError('Erro ao alterar modo de contingência');
       throw err;
     } finally {
@@ -243,7 +247,13 @@ export const useFiscal = (): UseFiscalReturn => {
       setLoading(true);
       info('Gerando relatório...');
       
-      const blob = await fiscalService.generateReport(reportType, dateRange);
+      const reportParams: FiscalReport = {
+        type: reportType,
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        format: 'pdf'
+      };
+      const blob = await fiscalService.generateReport(reportParams);
       
       // Faz download do arquivo
       const url = URL.createObjectURL(blob);
@@ -265,7 +275,7 @@ export const useFiscal = (): UseFiscalReturn => {
       URL.revokeObjectURL(url);
       
       success('Relatório gerado com sucesso');
-    } catch (err: any) {
+    } catch (err) {
       const message = err.response?.data?.message || 'Erro ao gerar relatório';
       showError(message);
       throw err;
@@ -296,7 +306,8 @@ export const useFiscal = (): UseFiscalReturn => {
       
       // Recarrega documentos
       await loadDocuments();
-    } catch (err: any) {
+    } catch (error) {
+      await logger.error('Erro ao sincronizar documentos', { error }, 'useFiscal', LogSource.FISCAL);
       showError('Erro ao sincronizar documentos');
     } finally {
       setLoading(false);

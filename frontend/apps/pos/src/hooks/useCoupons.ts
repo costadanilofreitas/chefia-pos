@@ -10,110 +10,76 @@ export const useCoupons = () => {
   const { success, error: showError } = useToast();
 
   const loadCoupons = useCallback(async (status?: 'active' | 'inactive' | 'expired') => {
-    setLoading(true);
-    setError(null);
     try {
+      setLoading(true);
+      setError(null);
+      
       const data = await couponsService.listCoupons(status);
       setCoupons(data);
       return data;
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar cupons');
+    } catch (err) {
       showError('Erro ao carregar cupons');
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, [showError]);
-
-  const createCoupon = useCallback(async (coupon: CouponCreate) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const newCoupon = await couponsService.createCoupon(coupon);
-      setCoupons(prev => [...prev, newCoupon]);
-      success('Cupom criado com sucesso!');
-      return newCoupon;
-    } catch (err: any) {
-      setError(err.message || 'Erro ao criar cupom');
-      showError('Erro ao criar cupom');
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [success, showError]);
+  }, [showError, setError, setLoading]);
+
+  const createCoupon = useCallback(async (couponData: CouponCreate) => {
+    setLoading(true);
+    setError(null);
+    
+    const newCoupon = await couponsService.createCoupon(couponData);
+    setCoupons(prev => [...prev, newCoupon]);
+    success('Cupom criado com sucesso!');
+    return newCoupon;
+  }, [success, setError, setLoading]);
 
   const updateCoupon = useCallback(async (id: string, updates: Partial<CouponCreate>) => {
     setLoading(true);
     setError(null);
-    try {
-      const updatedCoupon = await couponsService.updateCoupon(id, updates);
-      setCoupons(prev => prev.map(coupon => 
-        coupon.id === id ? updatedCoupon : coupon
-      ));
-      success('Cupom atualizado com sucesso!');
-      return updatedCoupon;
-    } catch (err: any) {
-      setError(err.message || 'Erro ao atualizar cupom');
-      showError('Erro ao atualizar cupom');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [success, showError]);
+    
+    const updatedCoupon = await couponsService.updateCoupon(id, updates);
+    setCoupons(prev => prev.map(coupon => 
+      coupon.id === id ? updatedCoupon : coupon
+    ));
+    success('Cupom atualizado com sucesso!');
+    return updatedCoupon;
+  }, [success, setError, setLoading]);
 
   const deleteCoupon = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
-    try {
-      await couponsService.deleteCoupon(id);
-      setCoupons(prev => prev.filter(coupon => coupon.id !== id));
-      success('Cupom excluído com sucesso!');
-    } catch (err: any) {
-      setError(err.message || 'Erro ao excluir cupom');
-      showError('Erro ao excluir cupom');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [success, showError]);
+    
+    await couponsService.deleteCoupon(id);
+    setCoupons(prev => prev.filter(coupon => coupon.id !== id));
+    success('Cupom excluído com sucesso!');
+  }, [success, setError, setLoading]);
+
 
   const validateCoupon = useCallback(async (code: string, orderAmount: number, customerId?: string) => {
     setLoading(true);
     setError(null);
-    try {
-      const result = await couponsService.validateCoupon(code, orderAmount, customerId);
-      setValidation(result);
-      
-      if (result.is_valid) {
-        success(`Cupom válido! Desconto: R$ ${result.discount_amount?.toFixed(2)}`);
-      } else {
-        showError(result.message || 'Cupom inválido');
-      }
-      
-      return result;
-    } catch (err: any) {
-      setError(err.message || 'Erro ao validar cupom');
-      showError('Erro ao validar cupom');
-      throw err;
-    } finally {
-      setLoading(false);
+    
+    const result = await couponsService.validateCoupon(code, orderAmount, customerId);
+    setValidation(result);
+    
+    if (result.is_valid) {
+      success(`Cupom válido! Desconto: R$ ${result.discount_amount?.toFixed(2)}`);
+    } else {
+      showError((result instanceof Error ? result.message : 'Cupom inválido'));
     }
-  }, [success, showError]);
+    
+    return result;
+  }, [success, showError, setError, setLoading]);
 
   const applyCoupon = useCallback(async (code: string, orderId: string) => {
     setLoading(true);
     setError(null);
-    try {
-      await couponsService.applyCoupon(code, orderId);
-      success('Cupom aplicado com sucesso!');
-    } catch (err: any) {
-      setError(err.message || 'Erro ao aplicar cupom');
-      showError('Erro ao aplicar cupom');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [success, showError]);
+    
+    await couponsService.applyCoupon(code, orderId);
+    success('Cupom aplicado com sucesso!');
+  }, [success, setError, setLoading]);
 
   // Calculate statistics
   const getStatistics = useCallback(() => {
@@ -135,7 +101,7 @@ export const useCoupons = () => {
   // Load initial data
   useEffect(() => {
     loadCoupons();
-  }, []);
+  }, [loadCoupons]);
 
   return {
     coupons,

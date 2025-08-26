@@ -1,7 +1,13 @@
 import { useState, useCallback } from 'react';
+import logger, { LogSource } from '../services/LocalLoggerService';
+
+interface Supplier {
+  id: string;
+  [key: string]: any;
+}
 
 export const useSupplier = () => {
-  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(false);
   
   const loadSuppliers = useCallback(async () => {
@@ -15,15 +21,15 @@ export const useSupplier = () => {
       if (!response.ok) throw new Error('Failed to load suppliers');
       const data = await response.json();
       setSuppliers(data);
-    } catch (err) {
-      console.error('Error loading suppliers:', err);
+    } catch (error) {
+      await logger.error('Erro ao carregar fornecedores', { error }, 'useSupplier', LogSource.SUPPLIER);
       setSuppliers([]);
     } finally {
       setLoading(false);
     }
   }, []);
   
-  const createSupplier = useCallback(async (data: any) => {
+  const createSupplier = useCallback(async (data) => {
     const newSupplier = { ...data, id: Date.now().toString() };
     setSuppliers(prev => [...prev, newSupplier]);
     return newSupplier;

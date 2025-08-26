@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useOrder } from '../hooks/useOrder';
+// import { useOrder } from '../hooks/useOrder';
 import { useProduct } from '../hooks/useProduct';
-import { useCustomer } from '../hooks/useCustomer';
+// import { useCustomer } from '../hooks/useCustomer';
 import { useToast } from '../components/Toast';
 import { useConfirmDialog } from '../components/ConfirmDialog';
 import { SimpleTooltip } from '../components/Tooltip';
@@ -13,8 +13,8 @@ const MainPage: React.FC = () => {
   const navigate = useNavigate();
   const { terminalId } = useParams();
   const { products, categories, loading } = useProduct();
-  const { createOrder } = useOrder();
-  const { customers } = useCustomer();
+  // const { createOrder } = useOrder(); // TODO: usar quando implementar
+  // const { customers } = useCustomer(); // TODO: usar quando implementar  
   const { success, error: showError } = useToast();
   const { showConfirm, ConfirmDialogComponent } = useConfirmDialog();
 
@@ -22,20 +22,19 @@ const MainPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<any[]>([]);
-  const [customerInfo, setCustomerInfo] = useState<any>(null);
+  const [customerInfo] = useState<unknown>(null);
   const [orderType, setOrderType] = useState<'local' | 'delivery' | 'takeout' | 'online'>('local');
-  const [showCustomerDialog, setShowCustomerDialog] = useState(false);
   const [speedMode, setSpeedMode] = useState(false);
   const [lastAddedProduct, setLastAddedProduct] = useState<string | null>(null);
 
   const searchRef = useRef<HTMLInputElement>(null);
   const productGridRef = useRef<HTMLDivElement>(null);
 
-  const selectCategoryByIndex = (index: number) => {
+  const selectCategoryByIndex = useCallback((index: number) => {
     if (categories[index]) {
       setSelectedCategory(categories[index].id);
     }
-  };
+  }, [categories]);
 
   // Filtered products with memoization
   const filteredProducts = useMemo(() => {
@@ -73,8 +72,8 @@ const MainPage: React.FC = () => {
   );
 
   // Optimized add to cart - SINGLE CLICK
-  const addToCart = useCallback((product: any) => {
-    // Remove focus from any active element (especially inputs)
+  const addToCart = useCallback((product) => {
+    // Remove focus from unknown active element (especially inputs)
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
@@ -140,7 +139,7 @@ const MainPage: React.FC = () => {
         { type: 'warning' }
       );
     }
-  }, [cart.length, success, showConfirm]);
+  }, [cart.length, showConfirm, success]);
 
   const processPayment = useCallback(() => {
     if (cart.length === 0) {

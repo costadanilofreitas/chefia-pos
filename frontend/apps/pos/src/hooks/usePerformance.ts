@@ -8,17 +8,17 @@ import eventBus from '../utils/EventBus';
 
 interface UsePerformanceReturn {
   // Cache
-  cachedFetch: <T>(key: string, fetcher: () => Promise<T>, ttl?: number) => Promise<T>;
+  cachedFetch: <T>(_key: string, fetcher: () => Promise<T>, ttl?: number) => Promise<T>;
   clearCache: () => void;
   
   // Lazy loading
-  lazyLoad: (componentPath: string) => Promise<any>;
+  lazyLoad: (_componentPath: string) => Promise<unknown>;
   observeElement: (element: HTMLElement | null) => void;
   
   // Otimização
-  debounce: <T extends (...args: any[]) => any>(func: T, wait: number) => (...args: Parameters<T>) => void;
-  throttle: <T extends (...args: any[]) => any>(func: T, limit: number) => (...args: Parameters<T>) => void;
-  optimizeImage: (url: string, options?: any) => string;
+  debounce: <T extends (...args: Array<unknown>) => unknown>(func: T, _wait: number) => (...args: Parameters<T>) => void;
+  throttle: <T extends (...args: Array<unknown>) => unknown>(func: T, _limit: number) => (...args: Parameters<T>) => void;
+  optimizeImage: (_url: string, options?: unknown) => string;
   
   // Métricas
   metrics: {
@@ -35,7 +35,7 @@ export const usePerformance = (): UsePerformanceReturn => {
 
   // Atualiza métricas
   useEffect(() => {
-    const handleMetricsUpdate = (newMetrics: any) => {
+    const handleMetricsUpdate = (newMetrics) => {
       setMetrics(newMetrics);
     };
 
@@ -44,7 +44,7 @@ export const usePerformance = (): UsePerformanceReturn => {
     return () => {
       eventBus.off('performance:metrics', handleMetricsUpdate);
     };
-  }, [eventBus]);
+  }, []);
 
   // Cached fetch
   const cachedFetch = useCallback(async <T,>(
@@ -73,7 +73,7 @@ export const usePerformance = (): UsePerformanceReturn => {
   }, []);
 
   // Debounce
-  const debounce = useCallback(<T extends (...args: any[]) => any>(
+  const debounce = useCallback(<T extends (...args: Array<unknown>) => unknown>(
     func: T,
     wait: number
   ) => {
@@ -81,7 +81,7 @@ export const usePerformance = (): UsePerformanceReturn => {
   }, []);
 
   // Throttle
-  const throttle = useCallback(<T extends (...args: any[]) => any>(
+  const throttle = useCallback(<T extends (...args: Array<unknown>) => unknown>(
     func: T,
     limit: number
   ) => {
@@ -89,7 +89,7 @@ export const usePerformance = (): UsePerformanceReturn => {
   }, []);
 
   // Optimize image
-  const optimizeImage = useCallback((url: string, options?: any) => {
+  const optimizeImage = useCallback((url: string, options?: unknown) => {
     return performanceService.optimizeImage(url, options);
   }, []);
 
@@ -117,7 +117,7 @@ export const useLazyComponent = (componentPath: string, fallback?: React.Compone
     performanceService.lazyLoad(componentPath)
       .then(module => {
         if (mounted) {
-          setComponent(() => module.default || module);
+          setComponent(() => (module as any).default || module);
           setLoading(false);
         }
       })
@@ -197,6 +197,7 @@ export const useMemoizedValue = <T,>(
       // Sem cache, apenas recalcula
       setValue(factory());
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   return value;
@@ -219,7 +220,7 @@ export const useDebouncedValue = <T,>(value: T, delay: number): T => {
 };
 
 // Hook para throttled callback
-export const useThrottledCallback = <T extends (...args: any[]) => any>(
+export const useThrottledCallback = <T extends (...args: Array<unknown>) => unknown>(
   callback: T,
   delay: number
 ): T => {

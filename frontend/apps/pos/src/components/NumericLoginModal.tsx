@@ -4,7 +4,7 @@ import '../index.css';
 interface NumericLoginModalProps {
   open: boolean;
   onClose: () => void;
-  onLogin: (operatorId: string, password: string) => Promise<void>;
+  onLogin: (__operatorId: string, __password: string) => Promise<void>;
   title?: string;
 }
 
@@ -55,8 +55,8 @@ const NumericLoginModal: React.FC<NumericLoginModalProps> = ({
             try {
               await onLogin(operatorId, newPassword);
               onClose();
-            } catch (err: any) {
-              setError(err.message || 'Erro ao fazer login');
+            } catch (err) {
+              setError((err instanceof Error ? err.message : 'Erro ao fazer login'));
               setLoading(false);
             }
           }, 100);
@@ -109,8 +109,8 @@ const NumericLoginModal: React.FC<NumericLoginModalProps> = ({
       try {
         await onLogin(operatorId, password);
         onClose();
-      } catch (err: any) {
-        setError(err.message || 'Erro ao fazer login');
+      } catch (err) {
+        setError((err instanceof Error ? err.message : 'Erro ao fazer login'));
         setLoading(false);
       }
     }

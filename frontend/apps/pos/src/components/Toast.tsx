@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import '../index.css';
 
 export interface ToastMessage {
@@ -109,12 +109,12 @@ export default Toast;
 export const useToast = () => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  const showToast = React.useCallback((message: string, type: ToastMessage['type'] = 'info', duration?: number) => {
+  const showToast = useCallback((message: string, type: ToastMessage['type'] = 'info', duration?: number) => {
     const id = Date.now().toString() + Math.random().toString(36);
     setToasts(prev => [...prev, { id, message, type, duration }]);
   }, []);
 
-  const removeToast = React.useCallback((id: string) => {
+  const removeToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
@@ -122,9 +122,9 @@ export const useToast = () => {
     toasts,
     showToast,
     removeToast,
-    success: React.useCallback((message: string, duration?: number) => showToast(message, 'success', duration), [showToast]),
-    error: React.useCallback((message: string, duration?: number) => showToast(message, 'error', duration), [showToast]),
-    warning: React.useCallback((message: string, duration?: number) => showToast(message, 'warning', duration), [showToast]),
-    info: React.useCallback((message: string, duration?: number) => showToast(message, 'info', duration), [showToast]),
+    success: useCallback((message: string, duration?: number) => showToast(message, 'success', duration), [showToast]),
+    error: useCallback((message: string, duration?: number) => showToast(message, 'error', duration), [showToast]),
+    warning: useCallback((message: string, duration?: number) => showToast(message, 'warning', duration), [showToast]),
+    info: useCallback((message: string, duration?: number) => showToast(message, 'info', duration), [showToast]),
   };
 };

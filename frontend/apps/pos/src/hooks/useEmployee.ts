@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
+import {
   employeeService, 
   Employee, 
   EmployeeCreate, 
@@ -40,7 +40,7 @@ interface UseEmployeeActions {
   loadAttendanceHistory: (employeeId: string, startDate?: string, endDate?: string) => Promise<void>;
   
   // Search operations
-  searchEmployees: (search: string) => Promise<Employee[]>;
+  searchEmployees: (_search: string) => Promise<Employee[]>;
   getEmployeesByRole: (role: EmployeeRole) => Promise<Employee[]>;
   getActiveEmployees: () => Promise<Employee[]>;
   
@@ -79,11 +79,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
         employees,
         loading: false 
       }));
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao carregar funcionários' 
+        error: (error instanceof Error ? error.message : 'Erro ao carregar funcionários') 
       }));
     }
   }, []);
@@ -100,11 +100,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
         loading: false 
       }));
       return employee;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao buscar funcionário' 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar funcionário') 
       }));
       return null;
     }
@@ -122,11 +122,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
         creating: false 
       }));
       return newEmployee;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         creating: false, 
-        error: error.message || 'Erro ao criar funcionário' 
+        error: (error instanceof Error ? error.message : 'Erro ao criar funcionário') 
       }));
       return null;
     }
@@ -148,11 +148,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
         updating: false 
       }));
       return updatedEmployee;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao atualizar funcionário' 
+        error: (error instanceof Error ? error.message : 'Erro ao atualizar funcionário') 
       }));
       return null;
     }
@@ -171,11 +171,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
         deleting: false 
       }));
       return true;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         deleting: false, 
-        error: error.message || 'Erro ao excluir funcionário' 
+        error: (error instanceof Error ? error.message : 'Erro ao excluir funcionário') 
       }));
       return false;
     }
@@ -194,11 +194,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
         updating: false 
       }));
       return updatedEmployee;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao ativar funcionário' 
+        error: (error instanceof Error ? error.message : 'Erro ao ativar funcionário') 
       }));
       return null;
     }
@@ -217,11 +217,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
         updating: false 
       }));
       return updatedEmployee;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao desativar funcionário' 
+        error: (error instanceof Error ? error.message : 'Erro ao desativar funcionário') 
       }));
       return null;
     }
@@ -235,11 +235,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
       await employeeService.resetPassword(employeeId, newPassword);
       setState(prev => ({ ...prev, updating: false }));
       return true;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao resetar senha' 
+        error: (error instanceof Error ? error.message : 'Erro ao resetar senha') 
       }));
       return false;
     }
@@ -257,11 +257,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
         clockingIn: false 
       }));
       return attendance;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         clockingIn: false, 
-        error: error.message || 'Erro ao registrar entrada' 
+        error: (error instanceof Error ? error.message : 'Erro ao registrar entrada') 
       }));
       return null;
     }
@@ -279,11 +279,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
         clockingOut: false 
       }));
       return attendance;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         clockingOut: false, 
-        error: error.message || 'Erro ao registrar saída' 
+        error: (error instanceof Error ? error.message : 'Erro ao registrar saída') 
       }));
       return null;
     }
@@ -304,11 +304,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
         attendance,
         loading: false 
       }));
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao carregar histórico de presença' 
+        error: (error instanceof Error ? error.message : 'Erro ao carregar histórico de presença') 
       }));
     }
   }, []);
@@ -321,11 +321,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
       const employees = await employeeService.searchEmployees(search);
       setState(prev => ({ ...prev, loading: false }));
       return employees;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao buscar funcionários' 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar funcionários') 
       }));
       return [];
     }
@@ -339,11 +339,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
       const employees = await employeeService.getEmployeesByRole(role);
       setState(prev => ({ ...prev, loading: false }));
       return employees;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao buscar funcionários por cargo' 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar funcionários por cargo') 
       }));
       return [];
     }
@@ -357,11 +357,11 @@ export const useEmployee = (): UseEmployeeState & UseEmployeeActions => {
       const employees = await employeeService.getActiveEmployees();
       setState(prev => ({ ...prev, loading: false }));
       return employees;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao buscar funcionários ativos' 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar funcionários ativos') 
       }));
       return [];
     }

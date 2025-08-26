@@ -1,4 +1,3 @@
-// src/components/AuthGuard.tsx
 import React from 'react';
 import { useAuth, UserRole } from '../hooks/useAuth';
 

@@ -23,6 +23,12 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8001
 
 # Run tests
 pytest
+
+# Format and lint
+make format         # Format with black and ruff
+make lint           # Run linting
+make typecheck      # Type checking with mypy
+make all            # Format, lint, typecheck and test
 ```
 
 ### Frontend (React/TypeScript Monorepo)
@@ -49,8 +55,16 @@ npm run test
 # Lint all workspaces
 npm run lint
 
-# Type checking
-npm run type-check --workspace=apps/pos
+# Type checking (per app)
+cd apps/pos && npm run type-check
+```
+
+### E2E Tests (Playwright)
+```bash
+cd frontend/apps/pos/
+npm run test:e2e          # Run e2e tests
+npm run test:e2e:ui       # Run with UI mode
+npm run test:e2e:report   # Show test report
 ```
 
 ### Marketing Site
@@ -75,7 +89,8 @@ The backend follows a modular architecture with each business domain as a separa
 - **Business Modules**: Each module contains:
   - `models/`: Pydantic models for data validation
   - `router/`: FastAPI route definitions
-  - `services/`: Business logic implementation
+  - `services/`: Business logic implementation  
+  - `repositories/`: Data access layer (when using DB)
   - `events/`: Event definitions for the event bus system
   - `tests/`: Module-specific tests
 
@@ -89,17 +104,21 @@ The backend follows a modular architecture with each business domain as a separa
 ### Frontend Architecture (frontend/)
 Monorepo structure using npm workspaces:
 
-- **common/**: Shared components, services, and utilities
+- **common/**: Shared components, services, and utilities (deprecated for POS)
   - Reusable UI components (Button, Card, Table, etc.)
   - API client and service abstractions
   - Event bus for frontend communication
   - Common types and utilities
 
 - **apps/**: Individual applications
-  - **pos**: Main point-of-sale terminal (React + TypeScript + MUI)
+  - **pos**: Main point-of-sale terminal (React + TypeScript + TailwindCSS)
+    - REFERENCE ARCHITECTURE: Zero MUI, zero common/, optimized bundle
+    - Custom components with Tailwind styling
+    - React Context for state management
   - **kds**: Kitchen Display System for order management
   - **kiosk**: Customer self-service interface
   - **waiter**: Mobile waiter terminal
+  - **backoffice**: Cloud-based management interface
   - Each app has its own Vite config and can be developed/deployed independently
 
 ### Event-Driven Architecture
@@ -111,7 +130,8 @@ The system uses an event bus pattern for decoupled communication:
 ### Database Strategy
 - JSON file-based storage in `data/` for development
 - PostgreSQL support via Docker (docker-compose.yml)
-- Motor for async MongoDB operations where needed
+- SQLAlchemy 2.0 for ORM operations
+- Redis for caching
 
 ## Key Development Patterns
 
@@ -122,7 +142,7 @@ The system uses an event bus pattern for decoupled communication:
 - Async/await throughout for performance
 
 ### Frontend State Management
-- React Context API for global state
+- React Context API for global state (Auth, Theme, Toast)
 - Local component state for UI-specific data
 - Service layer pattern for API communication
 - TypeScript for type safety
@@ -138,3 +158,123 @@ The system uses an event bus pattern for decoupled communication:
 - Custom exception classes per module
 - Frontend error boundaries and toast notifications
 - Comprehensive logging with configurable levels
+
+## Important Development Rules
+
+### Code Quality Standards
+- **NEVER** leave console.log/print debug statements in production code
+- **NEVER** use mocks outside of test files
+- **ALWAYS** use proper typing (avoid 'any' in TypeScript)
+- **ALWAYS** complete tasks 100% before moving to the next
+- **ALWAYS** fix bugs before marking a task as complete
+
+### Before Committing
+1. Remove all debug statements (console.log, print)
+2. Run linting and fix all issues
+3. Ensure all tests pass
+4. Remove unused imports
+5. Verify no type errors exist
+
+### Frontend Guidelines
+- POS app is the reference architecture - follow its patterns
+- Prefer custom components over external UI libraries
+- Use TailwindCSS for styling
+- Minimize bundle size - avoid unnecessary dependencies
+- Components should be pure and testable
+
+### Backend Guidelines
+- Follow the module structure consistently
+- Use Pydantic for all data validation
+- Implement proper error handling in services
+- Use the event bus for cross-module communication
+- Write tests for all business logic
+
+### Git Workflow
+```bash
+# Create feature branch
+git checkout -b feature/module-name
+
+# Make atomic commits
+git add .
+git commit -m "feat(module): description"
+
+# Push to remote
+git push origin feature/module-name
+```
+
+### Commit Message Format
+- `feat(scope):` New feature
+- `fix(scope):` Bug fix
+- `docs(scope):` Documentation only
+- `refactor(scope):` Code refactoring
+- `test(scope):` Adding tests
+- `chore(scope):` Maintenance tasks
+
+## Infrastructure Commands
+
+### Docker Operations
+```bash
+# Start all services
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# View logs
+docker-compose logs -f [service-name]
+
+# Rebuild containers
+docker-compose build
+```
+
+### Database Operations
+```bash
+# Access PostgreSQL
+docker exec -it chefia-pos-postgres psql -U postgres
+
+# Run migrations (when available)
+alembic upgrade head
+
+# Create new migration
+alembic revision -m "description"
+```
+
+## Troubleshooting
+
+### Common Issues
+- **Import errors**: Ensure PYTHONPATH includes src/ directory
+- **Type errors in frontend**: Run `npm run type-check` in the specific app
+- **Test failures**: Check if test database is properly configured
+- **CORS issues**: Verify backend CORS settings match frontend URL
+
+### Performance Optimization
+- Frontend: Use React.memo, useMemo, and useCallback appropriately
+- Backend: Use async operations, implement caching where needed
+- Database: Add indexes for frequently queried fields
+
+## Module-Specific Notes
+
+### POS Terminal (frontend/apps/pos)
+- Reference implementation for frontend architecture
+- Zero Material UI dependencies
+- Optimized for touch interfaces
+- Custom component library with TailwindCSS
+- Comprehensive keyboard shortcuts support
+
+### Payment Module
+- Asaas integration for payment processing
+- Support for split payments
+- PIX payment implementation
+- Partial payment capabilities
+
+### Fiscal Module
+- SAT fiscal document generation
+- NFC-e and MFe support
+- Integration with multiple fiscal printers
+- Compliance with Brazilian tax regulations
+
+### Remote Orders
+- Unified interface for delivery platforms
+- iFood and Rappi integrations
+- Order status synchronization
+- Platform-agnostic order handling

@@ -3,8 +3,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { usePerformance } from '../hooks/usePerformance';
-import { cn } from '../utils/cn';
+import {usePerformance} from '../hooks/usePerformance';
+import {cn} from '../utils/cn';
 
 interface PerformanceMonitorProps {
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';

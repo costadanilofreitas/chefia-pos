@@ -26,7 +26,7 @@ export interface Notification {
   read: boolean;
   persistent: boolean;
   actions?: NotificationAction[];
-  data?: any;
+  data?: unknown;
   sound?: boolean;
   vibrate?: boolean;
   icon?: string;
@@ -120,7 +120,7 @@ class NotificationService {
     // Carrega notificações persistentes
     this.loadPersistedNotifications();
     
-    console.log('🔔 Serviço de notificações inicializado');
+      // console.log('🔔 Serviço de notificações inicializado');
   }
 
   /**
@@ -128,7 +128,7 @@ class NotificationService {
    */
   async requestPermission(): Promise<boolean> {
     if (!('Notification' in window)) {
-      console.warn('Este navegador não suporta notificações desktop');
+      // console.warn('Este navegador não suporta notificações desktop');
       return false;
     }
 
@@ -151,10 +151,10 @@ class NotificationService {
    */
   private initAudio() {
     if ('AudioContext' in window || 'webkitAudioContext' in window) {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      this.audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       
       // Pré-carrega sons
-      Object.entries(NOTIFICATION_SOUNDS).forEach(([type, url]) => {
+      Object.entries(NOTIFICATION_SOUNDS).forEach(([_type, url]) => {
         this.preloadSound(url);
       });
     }
@@ -171,8 +171,8 @@ class NotificationService {
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
       this.audioBuffers.set(url, audioBuffer);
-    } catch (error) {
-      console.warn(`Erro ao carregar som: ${url}`, error);
+    } catch {
+      // console.warn(`Erro ao carregar som: ${url}`, error);
     }
   }
 
@@ -190,8 +190,8 @@ class NotificationService {
             this.handleNotificationClick(event.data.notificationId, event.data.action);
           }
         });
-      } catch (error) {
-        console.error('Erro ao registrar service worker:', error);
+      } catch {
+      // console.error('Erro ao registrar service worker:', error);
       }
     }
   }
@@ -347,7 +347,7 @@ class NotificationService {
         ...(notification.vibrate ? { vibrate: this.getVibrationPattern(notification.priority) } as any : {}),
         data: {
           notificationId: notification.id,
-          ...notification.data
+          ...(notification.data as any || {})
         }
       });
     } else {
@@ -363,10 +363,10 @@ class NotificationService {
         silent: !notification.sound,
         // vibrate is not standard but supported in some browsers
         ...(notification.vibrate ? { vibrate: this.getVibrationPattern(notification.priority) } as any : {}),
-        actions: notification.actions,
+        ...(notification.actions ? { actions: notification.actions as NotificationAction[] } : {}),
         data: {
           notificationId: notification.id,
-          ...notification.data
+          ...(notification.data as any || {})
         }
       });
     }
@@ -389,8 +389,8 @@ class NotificationService {
     } else {
       // Fallback para Audio API
       const audio = new Audio(soundUrl);
-      audio.play().catch(error => {
-        console.warn('Erro ao tocar som:', error);
+      audio.play().catch(_error => {
+      // console.warn('Erro ao tocar som:', error);
       });
     }
   }
@@ -463,8 +463,8 @@ class NotificationService {
       }
       
       localStorage.setItem('notifications', JSON.stringify(notifications));
-    } catch (error) {
-      console.error('Erro ao persistir notificação:', error);
+    } catch {
+      // console.error('Erro ao persistir notificação:', error);
     }
   }
 
@@ -481,8 +481,8 @@ class NotificationService {
           timestamp: new Date(n.timestamp)
         }));
       }
-    } catch (error) {
-      console.error('Erro ao carregar notificações:', error);
+    } catch {
+      // console.error('Erro ao carregar notificações:', error);
     }
   }
 
@@ -536,8 +536,8 @@ class NotificationService {
     try {
       const persistent = this.notifications.filter(n => n.persistent);
       localStorage.setItem('notifications', JSON.stringify(persistent));
-    } catch (error) {
-      console.error('Erro ao persistir notificações:', error);
+    } catch {
+      // console.error('Erro ao persistir notificações:', error);
     }
   }
 

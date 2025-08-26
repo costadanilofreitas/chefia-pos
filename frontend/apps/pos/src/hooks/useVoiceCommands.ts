@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 
 interface VoiceCommand {
   phrases: string[];
-  action: (transcript: string) => void;
+  action: (_transcript: string) => void;
   description?: string;
 }
 
@@ -13,8 +13,8 @@ interface UseVoiceCommandsOptions {
   autoStart?: boolean;
   onStart?: () => void;
   onEnd?: () => void;
-  onError?: (error: any) => void;
-  onResult?: (transcript: string) => void;
+  onError?: (error) => void;
+  onResult?: (_transcript: string) => void;
 }
 
 // Check if browser supports speech recognition
@@ -47,7 +47,7 @@ export const useVoiceCommands = (
   // Initialize speech recognition
   useEffect(() => {
     if (!isSpeechRecognitionSupported) {
-      console.warn('Speech recognition is not supported in this browser');
+// console.warn('Speech recognition is not supported in this browser');
       setIsSupported(false);
       return;
     }
@@ -58,7 +58,7 @@ export const useVoiceCommands = (
     recognition.current.interimResults = interimResults;
 
     // Handle results
-    recognition.current.onresult = (event: any) => {
+    recognition.current.onresult = (event) => {
       let finalTranscript = '';
       let interim = '';
 
@@ -108,21 +108,21 @@ export const useVoiceCommands = (
     };
 
     // Handle errors
-    recognition.current.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
+    recognition.current.onerror = (event) => {
+// console.error('Speech recognition error:', event.error);
       setIsListening(false);
       onError?.(event.error);
       
       // Handle specific errors
       switch (event.error) {
         case 'not-allowed':
-          console.error('Microphone permission denied');
+// console.error('Microphone permission denied');
           break;
         case 'no-speech':
-          console.log('No speech detected');
+// console.log('No speech detected');
           break;
         case 'network':
-          console.error('Network error');
+// console.error('Network error');
           break;
       }
     };
@@ -140,6 +140,7 @@ export const useVoiceCommands = (
         clearTimeout(timeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, continuous, interimResults, autoStart, onStart, onEnd, onError, onResult]);
 
   // Process voice command
@@ -169,14 +170,14 @@ export const useVoiceCommands = (
   // Start listening
   const startListening = useCallback(() => {
     if (!isSupported || !recognition.current) {
-      console.warn('Speech recognition not available');
+// console.warn('Speech recognition not available');
       return;
     }
 
     try {
       recognition.current.start();
-    } catch (error) {
-      console.error('Failed to start speech recognition:', error);
+    } catch {
+// console.error('Failed to start speech recognition:', error);
     }
   }, [isSupported]);
 

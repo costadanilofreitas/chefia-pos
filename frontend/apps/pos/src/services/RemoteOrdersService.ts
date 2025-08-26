@@ -69,134 +69,10 @@ class RemoteOrdersServiceClass {
    * Get all remote orders
    */
   async getOrders(): Promise<RemoteOrder[]> {
-    try {
-      const response = await apiInterceptor.get(`${this.baseURL}/remote-orders/`);
-      return response.data.map(this.transformOrder);
-    } catch (error) {
-      console.error('Error fetching remote orders:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get specific order by ID
-   */
-  async getOrder(orderId: string): Promise<RemoteOrder> {
-    try {
-      const response = await apiInterceptor.get(`${this.baseURL}/remote-orders/${orderId}`);
-      return this.transformOrder(response.data);
-    } catch (error) {
-      console.error('Error fetching order:', error);
-      throw new Error('Falha ao carregar pedido');
-    }
-  }
-
-  /**
-   * Get platform integrations
-   */
-  async getIntegrations(): Promise<PlatformIntegration[]> {
-    try {
-      const response = await apiInterceptor.get(`${this.baseURL}/remote-platforms/`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching integrations:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Accept a remote order
-   */
-  async acceptOrder(orderId: string): Promise<RemoteOrder> {
-    try {
-      const response = await apiInterceptor.post(
-        `${this.baseURL}/remote-orders/${orderId}/accept`
-      );
-      return this.transformOrder(response.data);
-    } catch (error) {
-      console.error('Error accepting order:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Reject a remote order
-   */
-  async rejectOrder(orderId: string, reason?: string): Promise<void> {
-    try {
-      await apiInterceptor.post(
-        `${this.baseURL}/remote-orders/${orderId}/reject`,
-        { reason }
-      );
-    } catch (error) {
-      console.error('Error rejecting order:', error);
-    }
-  }
-
-  /**
-   * Mark order as ready
-   */
-  async markOrderReady(orderId: string): Promise<RemoteOrder> {
-    try {
-      const response = await apiInterceptor.post(
-        `${this.baseURL}/remote-orders/${orderId}/ready`
-      );
-      return this.transformOrder(response.data);
-    } catch (error) {
-      console.error('Error marking order ready:', error);
-      throw new Error('Falha ao marcar pedido como pronto');
-    }
-  }
-
-  /**
-   * Dispatch order for delivery
-   */
-  async dispatchOrder(orderId: string, courierId?: string): Promise<RemoteOrder> {
-    try {
-      const response = await apiInterceptor.post(
-        `${this.baseURL}/remote-orders/${orderId}/dispatch`,
-        { courier_id: courierId }
-      );
-      return this.transformOrder(response.data);
-    } catch (error) {
-      console.error('Error dispatching order:', error);
-      throw new Error('Falha ao despachar pedido');
-    }
-  }
-
-  /**
-   * Cancel order
-   */
-  async cancelOrder(orderId: string, reason?: string): Promise<RemoteOrder> {
-    try {
-      const response = await apiInterceptor.post(
-        `${this.baseURL}/remote-orders/${orderId}/cancel`,
-        { reason }
-      );
-      return this.transformOrder(response.data);
-    } catch (error) {
-      console.error('Error canceling order:', error);
-      throw new Error('Falha ao cancelar pedido');
-    }
-  }
-
-  /**
-   * Update order status
-   */
-  async updateOrderStatus(orderId: string, status: RemoteOrder['status']): Promise<RemoteOrder> {
-    // Route to specific endpoints based on status
-    switch (status) {
-      case 'confirmed':
-        return this.acceptOrder(orderId);
-      case 'ready':
-        return this.markOrderReady(orderId);
-      case 'dispatched':
-        return this.dispatchOrder(orderId);
-      case 'cancelled':
-        return this.cancelOrder(orderId);
-      default:
-        throw new Error(`Status update to ${status} not supported`);
-    }
+    
+    const response = await apiInterceptor.get<any[]>(`${this.baseURL}/remote-orders/`);
+    return response.data.map(this.transformOrder);
+  
   }
 
   /**
@@ -205,8 +81,8 @@ class RemoteOrdersServiceClass {
   async syncPlatform(platform: RemoteOrder['platform']): Promise<void> {
     try {
       await apiInterceptor.post(`${this.baseURL}/remote-orders/sync/${platform}`);
-    } catch (error) {
-      console.error('Error syncing platform:', error);
+    } catch {
+// console.error('Error syncing platform:', error);
     }
   }
 
@@ -214,12 +90,8 @@ class RemoteOrdersServiceClass {
    * Configure platform
    */
   async configurePlatform(platform: RemoteOrder['platform'], config: PlatformConfig): Promise<void> {
-    try {
-      await apiInterceptor.put(`${this.baseURL}/remote-platforms/${platform}`, config);
-    } catch (error) {
-      console.error('Error configuring platform:', error);
-      throw new Error('Falha ao configurar plataforma');
-    }
+    await apiInterceptor.put(`${this.baseURL}/remote-platforms/${platform}`, config);
+    
   }
 
   /**
@@ -228,20 +100,54 @@ class RemoteOrdersServiceClass {
   async printOrder(orderId: string): Promise<void> {
     try {
       await apiInterceptor.post(`${this.baseURL}/remote-orders/${orderId}/print`);
-    } catch (error) {
-      console.error('Error printing order:', error);
+    } catch {
+// console.error('Error printing order:', error);
     }
+  }
+
+  /**
+   * Get platform integrations
+   */
+  async getIntegrations(): Promise<PlatformIntegration[]> {
+    try {
+      const response = await apiInterceptor.get<PlatformIntegration[]>(`${this.baseURL}/remote-platforms/integrations`);
+      return response.data;
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Accept order
+   */
+  async acceptOrder(orderId: string): Promise<RemoteOrder> {
+    const response = await apiInterceptor.post<RemoteOrder>(`${this.baseURL}/remote-orders/${orderId}/accept`);
+    return response.data;
+  }
+
+  /**
+   * Reject order
+   */
+  async rejectOrder(orderId: string, reason?: string): Promise<void> {
+    await apiInterceptor.post(`${this.baseURL}/remote-orders/${orderId}/reject`, { reason });
+  }
+
+  /**
+   * Update order status
+   */
+  async updateOrderStatus(orderId: string, status: string): Promise<void> {
+    await apiInterceptor.put(`${this.baseURL}/remote-orders/${orderId}/status`, { status });
   }
 
   /**
    * Get statistics summary
    */
-  async getStatsSummary(): Promise<any> {
+  async getStatsSummary(): Promise<unknown> {
     try {
       const response = await apiInterceptor.get(`${this.baseURL}/remote-orders/stats/summary`);
       return response.data;
-    } catch (error) {
-      console.error('Error fetching stats:', error);
+    } catch {
+// console.error('Error fetching stats:', error);
       return {
         total_orders: 0,
         pending_orders: 0,

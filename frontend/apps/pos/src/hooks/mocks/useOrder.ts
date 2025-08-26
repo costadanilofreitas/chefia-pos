@@ -2,9 +2,7 @@ import {
   Order,
   OrderCreate,
   OrderUpdate,
-  OrderItem,
   OrderItemCreate,
-  OrderItemUpdate,
   OrderFilters,
   OrderStatus,
   OrderType,
@@ -49,7 +47,7 @@ export const useOrder = (): UseOrderReturn => ({
   error: null,
 
   // Operações de pedidos
-  getOrders: async (filters?: OrderFilters): Promise<void> => {
+  getOrders: async (_filters?: OrderFilters): Promise<void> => {
     return Promise.resolve();
   },
   createOrder: async (orderData: OrderCreate): Promise<Order | null> => {
@@ -84,24 +82,24 @@ export const useOrder = (): UseOrderReturn => ({
       waiter_name: null,
     };
   },
-  updateOrder: async (orderId: string, updateData: OrderUpdate): Promise<Order | null> => {
+  updateOrder: async (__orderId: string, _updateData: OrderUpdate): Promise<Order | null> => {
     return null;
   },
-  cancelOrder: async (orderId: string, reason: string): Promise<Order | null> => {
+  cancelOrder: async (__orderId: string, _reason: string): Promise<Order | null> => {
     return null;
   },
-  completeOrder: async (orderId: string): Promise<Order | null> => {
+  completeOrder: async (_orderId: string): Promise<Order | null> => {
     return null;
   },
   
   // Operações de carrinho local
-  addToCart: (item: OrderItemCreate): void => {
+  addToCart: (_item: OrderItemCreate): void => {
     // Mock implementation
   },
-  removeFromCart: (index: number): void => {
+  removeFromCart: (_index: number): void => {
     // Mock implementation
   },
-  updateCartItem: (index: number, updates: Partial<OrderItemCreate>): void => {
+  updateCartItem: (_index: number, _updates: Partial<OrderItemCreate>): void => {
     // Mock implementation
   },
   clearCart: (): void => {
@@ -109,12 +107,12 @@ export const useOrder = (): UseOrderReturn => ({
   },
   
   // Finalização
-  finalizeOrder: async (orderId: string, paymentMethod: PaymentMethod): Promise<Order | null> => {
+  finalizeOrder: async (__orderId: string, _paymentMethod: PaymentMethod): Promise<Order | null> => {
     return null;
   },
   
   // Utilitários
-  setCurrentOrder: (order: Order | null): void => {
+  setCurrentOrder: (_order: Order | null): void => {
     // Mock implementation
   },
   clearError: (): void => {

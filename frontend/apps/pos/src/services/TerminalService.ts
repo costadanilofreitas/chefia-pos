@@ -15,7 +15,7 @@ interface TerminalConfig {
     type: string;
     model: string;
     connection_type: string;
-    connection_params: Record<string, any>;
+    connection_params: Record<string, unknown>;
   }>;
   default_printer?: string;
   allow_discounts?: boolean;
@@ -107,7 +107,7 @@ class TerminalService {
           session.loginTime = new Date(session.loginTime);
         }
         return session;
-      } catch (error) {
+      } catch {
         // Error parsing session
         return null;
       }
@@ -191,7 +191,7 @@ class TerminalService {
       const config = configModule.default || configModule;
       this.CONFIG_CACHE.set(terminalId, config);
       return config;
-    } catch (error) {
+    } catch {
       // Error loading config - terminal doesn't exist
       // NO DEFAULT CONFIG - if terminal doesn't exist, it should be blocked
       return null;

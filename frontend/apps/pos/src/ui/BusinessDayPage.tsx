@@ -5,7 +5,7 @@ import { useBusinessDay } from '../hooks/useBusinessDay';
 import { useAuth } from '../hooks/useAuth';
 import { useCashier } from '../hooks/useCashier';
 import { useReport } from '../hooks/useReport';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { formatCurrency } from '../utils/formatters';
 import '../index.css';
 
 export default function BusinessDayPage() {
@@ -25,7 +25,7 @@ export default function BusinessDayPage() {
   
   // Lazy load useCashier apenas quando necessário
   const cashier = useCashier();
-  const { generateReport, printReport, currentReport, loading: loadingReport } = useReport();
+  const { generateReport, printReport, currentReport } = useReport();
   
   // State
   const [showOpenDialog, setShowOpenDialog] = useState(false);
@@ -34,9 +34,9 @@ export default function BusinessDayPage() {
   const [notes, setNotes] = useState('');
   const [hasOpenCashiers, setHasOpenCashiers] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [reportData, setReportData] = useState<any>(null);
+  // const [reportData, setReportData] = useState<unknown>(null); // TODO: usar quando implementar relatórios
   const [selectedReportType, setSelectedReportType] = useState<string>('');
-  const [cashierSummary, setCashierSummary] = useState<any>(null);
+  // const [_cashierSummary, setCashiersummary] = useState<unknown>(null); // TODO: usar quando implementar resumo de caixas
   const [reportGenerated, setReportGenerated] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
   
@@ -66,7 +66,7 @@ export default function BusinessDayPage() {
       setShowOpenDialog(false);
       setNotes('');
       await refreshCurrentBusinessDay();
-    } catch (error) {
+    } catch {
       // Error opening business day silenciado
       alert('Erro ao abrir dia operacional');
     }
@@ -87,7 +87,7 @@ export default function BusinessDayPage() {
       setShowCloseDialog(false);
       setNotes('');
       await refreshCurrentBusinessDay();
-    } catch (error) {
+    } catch {
       // Error closing business day silenciado
       alert('Erro ao fechar dia operacional');
     }
@@ -520,7 +520,7 @@ export default function BusinessDayPage() {
                           setSelectedReportType('summary');
                           setReportGenerated(true);
                         }
-                      } catch (error) {
+                      } catch {
                         // Full error silenciado
                         alert('Erro ao gerar relatório: ' + error);
                       } finally {
@@ -558,7 +558,7 @@ export default function BusinessDayPage() {
                           setSelectedReportType('cashflow');
                           setReportGenerated(true);
                         }
-                      } catch (error) {
+                      } catch {
                         // Error generating report silenciado
                         alert('Erro ao gerar relatório: ' + error);
                       } finally {
@@ -596,7 +596,7 @@ export default function BusinessDayPage() {
                           setSelectedReportType('sales');
                           setReportGenerated(true);
                         }
-                      } catch (error) {
+                      } catch {
                         // Error generating report silenciado
                         alert('Erro ao gerar relatório: ' + error);
                       } finally {
@@ -634,7 +634,7 @@ export default function BusinessDayPage() {
                           setSelectedReportType('payments');
                           setReportGenerated(true);
                         }
-                      } catch (error) {
+                      } catch {
                         // Error generating report silenciado
                         alert('Erro ao gerar relatório: ' + error);
                       } finally {
@@ -672,7 +672,7 @@ export default function BusinessDayPage() {
                           setSelectedReportType('operators');
                           setReportGenerated(true);
                         }
-                      } catch (error) {
+                      } catch {
                         // Error generating report silenciado
                         alert('Erro ao gerar relatório: ' + error);
                       } finally {
@@ -710,7 +710,7 @@ export default function BusinessDayPage() {
                           setSelectedReportType('closure');
                           setReportGenerated(true);
                         }
-                      } catch (error) {
+                      } catch {
                         // Error generating report silenciado
                         alert('Erro ao gerar relatório: ' + error);
                       } finally {
@@ -754,7 +754,7 @@ export default function BusinessDayPage() {
                   </div>
 
                   {/* Report Content - Dynamic based on report type */}
-                  {loadingReport ? (
+                  {generatingReport ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>

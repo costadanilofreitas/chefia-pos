@@ -20,8 +20,8 @@ interface UseCustomerActions {
   deleteCustomer: (customerId: string) => Promise<boolean>;
   
   // Search operations
-  searchByPhone: (phone: string) => Promise<Customer[]>;
-  searchByEmail: (email: string) => Promise<Customer[]>;
+  searchByPhone: (_phone: string) => Promise<Customer[]>;
+  searchByEmail: (_email: string) => Promise<Customer[]>;
   
   // Loyalty operations
   addLoyaltyPoints: (customerId: string, points: number) => Promise<Customer | null>;
@@ -55,11 +55,11 @@ export const useCustomer = (): UseCustomerState & UseCustomerActions => {
         customers,
         loading: false 
       }));
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao carregar clientes' 
+        error: (error instanceof Error ? error.message : 'Erro ao carregar clientes') 
       }));
     }
   }, []);
@@ -76,11 +76,11 @@ export const useCustomer = (): UseCustomerState & UseCustomerActions => {
         loading: false 
       }));
       return customer;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao buscar cliente' 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar cliente') 
       }));
       return null;
     }
@@ -98,11 +98,11 @@ export const useCustomer = (): UseCustomerState & UseCustomerActions => {
         creating: false 
       }));
       return newCustomer;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         creating: false, 
-        error: error.message || 'Erro ao criar cliente' 
+        error: (error instanceof Error ? error.message : 'Erro ao criar cliente') 
       }));
       return null;
     }
@@ -121,11 +121,11 @@ export const useCustomer = (): UseCustomerState & UseCustomerActions => {
         updating: false 
       }));
       return updatedCustomer;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao atualizar cliente' 
+        error: (error instanceof Error ? error.message : 'Erro ao atualizar cliente') 
       }));
       return null;
     }
@@ -144,11 +144,11 @@ export const useCustomer = (): UseCustomerState & UseCustomerActions => {
         deleting: false 
       }));
       return true;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         deleting: false, 
-        error: error.message || 'Erro ao excluir cliente' 
+        error: (error instanceof Error ? error.message : 'Erro ao excluir cliente') 
       }));
       return false;
     }
@@ -162,11 +162,11 @@ export const useCustomer = (): UseCustomerState & UseCustomerActions => {
       const customers = await customerService.searchByPhone(phone);
       setState(prev => ({ ...prev, loading: false }));
       return customers;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao buscar por telefone' 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar por telefone') 
       }));
       return [];
     }
@@ -180,11 +180,11 @@ export const useCustomer = (): UseCustomerState & UseCustomerActions => {
       const customers = await customerService.searchByEmail(email);
       setState(prev => ({ ...prev, loading: false }));
       return customers;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || 'Erro ao buscar por email' 
+        error: (error instanceof Error ? error.message : 'Erro ao buscar por email') 
       }));
       return [];
     }
@@ -203,11 +203,11 @@ export const useCustomer = (): UseCustomerState & UseCustomerActions => {
         updating: false 
       }));
       return updatedCustomer;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao adicionar pontos' 
+        error: (error instanceof Error ? error.message : 'Erro ao adicionar pontos') 
       }));
       return null;
     }
@@ -226,11 +226,11 @@ export const useCustomer = (): UseCustomerState & UseCustomerActions => {
         updating: false 
       }));
       return updatedCustomer;
-    } catch (error: any) {
+    } catch (error) {
       setState(prev => ({ 
         ...prev, 
         updating: false, 
-        error: error.message || 'Erro ao resgatar pontos' 
+        error: (error instanceof Error ? error.message : 'Erro ao resgatar pontos') 
       }));
       return null;
     }

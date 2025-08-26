@@ -1,4 +1,6 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+
+import { Component, ReactNode, ErrorInfo } from 'react';
+import logger, { LogSource } from '../services/LocalLoggerService';
 
 interface Props {
   children: ReactNode;
@@ -27,7 +29,17 @@ class ErrorBoundaryModern extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Log crítico para erros capturados pelo ErrorBoundary
+    logger.critical('ErrorBoundary capturou erro crítico', 
+      { 
+        error: error.toString(), 
+        stack: error.stack,
+        componentStack: errorInfo.componentStack 
+      }, 
+      'ErrorBoundary', 
+      LogSource.UI
+    ).catch(console.error);
+    
     this.setState({
       error,
       errorInfo
@@ -46,21 +58,21 @@ class ErrorBoundaryModern extends Component<Props, State> {
   };
 
   private handleReportError = () => {
-    const { error, errorInfo } = this.state;
+    const { error } = this.state;
+    // const { errorInfo } = this.state;
     
     // Send error to logging service
     if (error) {
-      const errorReport = {
-        message: error.message,
-        stack: error.stack,
-        componentStack: errorInfo?.componentStack,
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-        url: window.location.href
-      };
-      
-      console.log('Error Report:', errorReport);
       // TODO: Send to error tracking service (Sentry, LogRocket, etc.)
+      // const errorReport = {
+      //   message: error.message,
+      //   stack: error.stack,
+      //   componentStack: errorInfo?.componentStack,
+      //   timestamp: new Date().toISOString(),
+      //   userAgent: navigator.userAgent,
+      //   url: window.location.href
+      // };
+      // console.log('Error Report:', errorReport);
     }
   };
 

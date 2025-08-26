@@ -1,4 +1,5 @@
 import axios from 'axios';
+import logger, { LogSource } from './LocalLoggerService';
 
 // Interfaces para o sistema de autenticação
 export interface LoginRequest {
@@ -46,6 +47,8 @@ class AuthService {
    */
   async login(credentials: LoginRequest): Promise<AuthUser> {
     try {
+      await logger.info('Tentativa de login', { operator_id: credentials.operator_id }, 'AuthService', LogSource.SECURITY);
+      
       // Fazer chamada real para o backend de autenticação
       const formData = new FormData();
       formData.append('username', credentials.operator_id);
@@ -80,17 +83,20 @@ class AuthService {
       this.currentUser = user;
       this.saveUserToStorage(user);
       
-      console.log('✅ Login realizado com sucesso:', user.operator_name);
+      await logger.info('Login realizado com sucesso', 
+        { operator_id: user.operator_id, operator_name: user.operator_name, roles: user.roles }, 
+        'AuthService', 
+        LogSource.SECURITY
+      );
+      
       return user;
-      
-    } catch (error: any) {
-      console.error('❌ Erro no login:', error);
-      
-      if (error.response?.status === 401) {
-        throw new Error('Credenciais inválidas');
-      } else {
-        throw new Error('Erro de conexão com o servidor');
-      }
+    } catch (error) {
+      await logger.critical('Erro ao realizar login', 
+        { operator_id: credentials.operator_id, error }, 
+        'AuthService', 
+        LogSource.SECURITY
+      );
+      throw error;
     }
   }
 
@@ -100,6 +106,12 @@ class AuthService {
    */
   async createCredentials(data: CreateCredentialRequest): Promise<void> {
     try {
+      await logger.info('Criando credenciais para operador', 
+        { operator_id: data.operator_id }, 
+        'AuthService', 
+        LogSource.SECURITY
+      );
+      
       // Implementar chamada real para o backend
       const response = await fetch(`${this.baseURL}/auth/credentials`, {
         method: 'POST',
@@ -113,12 +125,19 @@ class AuthService {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
       }
-
-      console.log('✅ Credenciais criadas com sucesso para:', data.operator_id);
       
+      await logger.info('Credenciais criadas com sucesso', 
+        { operator_id: data.operator_id }, 
+        'AuthService', 
+        LogSource.SECURITY
+      );
     } catch (error) {
-      console.error('❌ Erro ao criar credenciais:', error);
-      throw new Error('Erro ao criar credenciais');
+      await logger.critical('Erro ao criar credenciais', 
+        { operator_id: data.operator_id, error }, 
+        'AuthService', 
+        LogSource.SECURITY
+      );
+      throw error;
     }
   }
 
@@ -207,7 +226,7 @@ class AuthService {
         }
       }
     } catch (error) {
-      console.error('Erro ao carregar usuário do storage:', error);
+      logger.error('Erro ao carregar usuário do storage', error, 'AuthService', LogSource.SECURITY).catch(console.error);
       this.logout();
     }
   }

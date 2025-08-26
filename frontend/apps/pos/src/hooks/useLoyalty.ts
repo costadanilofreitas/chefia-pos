@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '../components/Toast';
+import logger, { LogSource } from '../services/LocalLoggerService';
 
 export interface LoyaltyTransaction {
   customer_id: string;
@@ -21,10 +22,10 @@ export const useLoyalty = () => {
     description: string,
     orderId?: string
   ) => {
-    setLoading(true);
-    setError(null);
     try {
-      // API call would go here
+      setLoading(true);
+      setError(null);
+      
       const response = await fetch(`http://localhost:8001/api/v1/loyalty/add-points`, {
         method: 'POST',
         headers: {
@@ -43,14 +44,13 @@ export const useLoyalty = () => {
       
       success(`${points} pontos adicionados com sucesso!`);
       return await response.json();
-    } catch (err: any) {
-      console.error('Error adding points:', err);
+    } catch (err) {
       showError('Erro ao adicionar pontos');
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [success]);
+  }, [success, showError, setError, setLoading]);
 
   const redeemPoints = useCallback(async (
     customerId: string,
@@ -58,10 +58,10 @@ export const useLoyalty = () => {
     rewardId: string,
     description: string
   ) => {
-    setLoading(true);
-    setError(null);
     try {
-      // API call would go here
+      setLoading(true);
+      setError(null);
+      
       const response = await fetch(`http://localhost:8001/api/v1/loyalty/redeem-points`, {
         method: 'POST',
         headers: {
@@ -80,14 +80,13 @@ export const useLoyalty = () => {
       
       success(`${points} pontos resgatados com sucesso!`);
       return await response.json();
-    } catch (err: any) {
-      console.error('Error redeeming points:', err);
+    } catch (err) {
       showError('Erro ao resgatar pontos');
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [success, showError]);
+  }, [success, showError, setError, setLoading]);
 
   const transferPoints = useCallback(async (
     fromCustomerId: string,
@@ -95,10 +94,10 @@ export const useLoyalty = () => {
     points: number,
     reason: string
   ) => {
-    setLoading(true);
-    setError(null);
     try {
-      // API call would go here
+      setLoading(true);
+      setError(null);
+      
       const response = await fetch(`http://localhost:8001/api/v1/loyalty/transfer-points`, {
         method: 'POST',
         headers: {
@@ -117,14 +116,13 @@ export const useLoyalty = () => {
       
       success(`${points} pontos transferidos com sucesso!`);
       return await response.json();
-    } catch (err: any) {
-      console.error('Error transferring points:', err);
+    } catch (err) {
       showError('Erro ao transferir pontos');
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [success]);
+  }, [success, showError, setError, setLoading]);
 
   const checkBalance = useCallback(async (customerId: string) => {
     try {
@@ -136,46 +134,58 @@ export const useLoyalty = () => {
       
       if (!response.ok) throw new Error('Failed to check balance');
       return await response.json();
-    } catch (err: any) {
-      console.error('Error checking balance:', err);
-      return {
-        customer_id: customerId,
-        points_balance: 0,
-        tier: 'bronze',
-        next_tier_points: 0,
-        points_expiring_soon: 0,
-        expiry_date: null
-      };
+    } catch (err) {
+      showError('Erro ao verificar saldo');
+      throw err;
     }
-  }, []);
+  }, [showError]);
 
-  const getTransactionHistory = useCallback(async (customerId: string, limit: number = 10) => {
+  const getTransactionHistory = useCallback(async (customerId: string) => {
     try {
-      const response = await fetch(
-        `http://localhost:8001/api/v1/loyalty/transactions/${customerId}?limit=${limit}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+      const response = await fetch(`http://localhost:8001/api/v1/loyalty/transactions/${customerId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
-      );
+      });
       
-      if (!response.ok) throw new Error('Failed to fetch transactions');
+      if (!response.ok) throw new Error('Failed to get transactions');
       return await response.json();
-    } catch (err: any) {
-      console.error('Error fetching transactions:', err);
+    } catch (error) {
+      await logger.error('Erro ao buscar transações de fidelidade', { customerId, error }, 'useLoyalty', LogSource.CUSTOMER);
       return [];
     }
   }, []);
 
   const loadRewards = useCallback(async () => {
-    // Function to load rewards from API
-    return [];
+    try {
+      const response = await fetch(`http://localhost:8001/api/v1/loyalty/rewards`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to load rewards');
+      return await response.json();
+    } catch (error) {
+      await logger.error('Erro ao carregar recompensas', { error }, 'useLoyalty', LogSource.CUSTOMER);
+      return [];
+    }
   }, []);
 
   const loadTransactions = useCallback(async () => {
-    // Function to load transactions from API
-    return [];
+    try {
+      const response = await fetch(`http://localhost:8001/api/v1/loyalty/transactions`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to load transactions');
+      return await response.json();
+    } catch (error) {
+      await logger.error('Erro ao carregar transações', { error }, 'useLoyalty', LogSource.CUSTOMER);
+      return [];
+    }
   }, []);
 
   const loyaltyProgram = {

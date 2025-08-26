@@ -147,14 +147,14 @@ export interface OrderFilters {
 export interface PaymentData {
   payment_method: PaymentMethod;
   amount_paid: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface ProcessPaymentData {
   order_id: string;
   payment_method: PaymentMethod;
   amount: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 // Interface para resposta da API

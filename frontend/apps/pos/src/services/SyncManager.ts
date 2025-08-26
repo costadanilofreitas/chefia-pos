@@ -1,10 +1,11 @@
 import { offlineStorage } from './OfflineStorage';
+import logger, { LogSource } from './LocalLoggerService';
 
 interface SyncOperation {
   id: number;
   type: string;
   operation: string;
-  data: any;
+  data: unknown;
   timestamp: string;
   retries: number;
   maxRetries: number;
@@ -34,14 +35,14 @@ class SyncManager {
     window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
   }
 
-  private handleOnline(): void {
-    console.log('[SyncManager] Connection restored');
+  private async handleOnline(): Promise<void> {
+    await logger.info('Conexão restaurada', {}, 'SyncManager', LogSource.SYNC);
     this.isOnline = true;
     this.syncPendingOperations();
   }
 
-  private handleOffline(): void {
-    console.log('[SyncManager] Connection lost');
+  private async handleOffline(): Promise<void> {
+    await logger.warn('Conexão perdida', {}, 'SyncManager', LogSource.SYNC);
     this.isOnline = false;
     this.clearRetryTimeouts();
   }
@@ -54,7 +55,7 @@ class SyncManager {
   }
 
   private handleBeforeUnload(): void {
-    // Cancel any pending operations to avoid issues
+    // Cancel unknown pending operations to avoid issues
     this.clearRetryTimeouts();
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
@@ -76,17 +77,17 @@ class SyncManager {
   }
 
   // Queue an operation for sync
-  async queueOperation(type: string, operation: string, data: any): Promise<void> {
+  async queueOperation(type: string, operation: string, data: unknown): Promise<void> {
     try {
       await offlineStorage.addToSyncQueue(type, operation, data);
-      console.log(`[SyncManager] Queued ${operation} operation for ${type}`);
+      await logger.debug(`Operação ${operation} para ${type} adicionada à fila`, { type, operation }, 'SyncManager', LogSource.SYNC);
 
       // If online, try to sync immediately
       if (this.isOnline) {
         this.syncPendingOperations();
       }
     } catch (error) {
-      console.error('[SyncManager] Failed to queue operation:', error);
+      await logger.error('Erro ao adicionar operação à fila de sincronização', { type, operation, error }, 'SyncManager', LogSource.SYNC);
       throw error;
     }
   }
@@ -98,156 +99,133 @@ class SyncManager {
     }
 
     this.syncInProgress = true;
-    console.log('[SyncManager] Starting sync...');
-
+    
     try {
+      await logger.info('Iniciando sincronização', {}, 'SyncManager', LogSource.SYNC);
       const pendingOperations = await offlineStorage.getPendingSyncItems();
-      console.log(`[SyncManager] Found ${pendingOperations.length} pending operations`);
+      await logger.info(`${pendingOperations.length} operações pendentes encontradas`, { count: pendingOperations.length }, 'SyncManager', LogSource.SYNC);
 
       for (const operation of pendingOperations) {
-        await this.syncOperation(operation);
+        await this.syncOperation(operation as SyncOperation);
       }
-
-      console.log('[SyncManager] Sync completed successfully');
+      await logger.info('Sincronização concluída com sucesso', {}, 'SyncManager', LogSource.SYNC);
     } catch (error) {
-      console.error('[SyncManager] Sync failed:', error);
+      await logger.error('Erro durante sincronização', error, 'SyncManager', LogSource.SYNC);
+      throw error;
     } finally {
       this.syncInProgress = false;
     }
   }
 
+  // Sync a single operation
   private async syncOperation(operation: SyncOperation): Promise<void> {
     try {
-      const success = await this.executeOperation(operation);
+      let response: Response;
       
-      if (success) {
-        await offlineStorage.markAsSynced(operation.id);
-        console.log(`[SyncManager] Synced ${operation.type} ${operation.operation}`);
-      } else {
-        await this.handleSyncFailure(operation);
+      switch (operation.type) {
+        case 'customer':
+          response = await this.syncCustomer(operation.operation, operation.data);
+          break;
+        case 'payment':
+          response = await this.syncPayment(operation.operation, operation.data);
+          break;
+        case 'inventory':
+          response = await this.syncInventory(operation.operation, operation.data);
+          break;
+        default:
+          throw new Error(`Unknown operation type: ${operation.type}`);
       }
+
+      if (!response.ok) {
+        throw new Error(`Sync failed: ${response.status} ${response.statusText}`);
+      }
+
+      // Mark as synced
+      await offlineStorage.markAsSynced(operation.id);
+      await logger.debug(`Operação ${operation.id} sincronizada com sucesso`, { operationId: operation.id }, 'SyncManager', LogSource.SYNC);
     } catch (error) {
-      console.error(`[SyncManager] Failed to sync operation ${operation.id}:`, error);
+      await logger.error(`Falha ao sincronizar operação ${operation.id}`, { operationId: operation.id, error }, 'SyncManager', LogSource.SYNC);
       await this.handleSyncFailure(operation);
     }
   }
 
-  private async executeOperation(operation: SyncOperation): Promise<boolean> {
-    const { type, operation: op, data } = operation;
-
-    try {
-      let response: Response;
-
-      switch (type) {
-        case 'order':
-          response = await this.syncOrder(op, data);
-          break;
-        case 'customer':
-          response = await this.syncCustomer(op, data);
-          break;
-        case 'payment':
-          response = await this.syncPayment(op, data);
-          break;
-        case 'inventory':
-          response = await this.syncInventory(op, data);
-          break;
-        default:
-          console.warn(`[SyncManager] Unknown operation type: ${type}`);
-          return false;
-      }
-
-      return response.ok;
-    } catch (error) {
-      console.error(`[SyncManager] Network error during ${type} ${op}:`, error);
-      return false;
-    }
-  }
-
-  private async syncOrder(operation: string, data: any): Promise<Response> {
-    switch (operation) {
-      case 'create':
-        return fetch('/api/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-      case 'update':
-        return fetch(`/api/orders/${data.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-      case 'cancel':
-        return fetch(`/api/orders/${data.id}/cancel`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reason: data.reason })
-        });
-      default:
-        throw new Error(`Unknown order operation: ${operation}`);
-    }
-  }
-
   private async syncCustomer(operation: string, data: any): Promise<Response> {
-    switch (operation) {
-      case 'create':
-        return fetch('/api/customers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-      case 'update':
-        return fetch(`/api/customers/${data.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-      case 'loyalty-points':
-        return fetch(`/api/customers/${data.customerId}/points`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ points: data.points, reason: data.reason })
-        });
-      default:
-        throw new Error(`Unknown customer operation: ${operation}`);
+    try {
+      switch (operation) {
+        case 'create':
+          return fetch('/api/customers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+        case 'update':
+          return fetch(`/api/customers/${data.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+        case 'loyalty-points':
+          return fetch(`/api/customers/${data.customerId}/points`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ points: data.points, reason: data.reason })
+          });
+        default:
+          throw new Error(`Unknown customer operation: ${operation}`);
+      }
+    } catch (error) {
+      await logger.error('Erro ao sincronizar cliente', { operation, data, error }, 'SyncManager', LogSource.SYNC);
+      throw error;
     }
   }
 
   private async syncPayment(operation: string, data: any): Promise<Response> {
-    switch (operation) {
-      case 'process':
-        return fetch('/api/payments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-      case 'refund':
-        return fetch(`/api/payments/${data.paymentId}/refund`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: data.amount, reason: data.reason })
-        });
-      default:
-        throw new Error(`Unknown payment operation: ${operation}`);
+    try {
+      await logger.info('Sincronizando operação de pagamento', { operation, amount: data.amount }, 'SyncManager', LogSource.PAYMENT);
+      
+      switch (operation) {
+        case 'process':
+          return fetch('/api/payments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+        case 'refund':
+          return fetch(`/api/payments/${data.paymentId}/refund`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: data.amount, reason: data.reason })
+          });
+        default:
+          throw new Error(`Unknown payment operation: ${operation}`);
+      }
+    } catch (error) {
+      await logger.critical('Erro crítico ao sincronizar pagamento', { operation, data, error }, 'SyncManager', LogSource.PAYMENT);
+      throw error;
     }
   }
 
   private async syncInventory(operation: string, data: any): Promise<Response> {
-    switch (operation) {
-      case 'update-stock':
-        return fetch(`/api/products/${data.productId}/stock`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quantity: data.quantity, reason: data.reason })
-        });
-      case 'price-update':
-        return fetch(`/api/products/${data.productId}/price`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ price: data.price })
-        });
-      default:
-        throw new Error(`Unknown inventory operation: ${operation}`);
+    try {
+      switch (operation) {
+        case 'update-stock':
+          return fetch(`/api/products/${data.productId}/stock`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quantity: data.quantity, reason: data.reason })
+          });
+        case 'price-update':
+          return fetch(`/api/products/${data.productId}/price`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ price: data.price })
+          });
+        default:
+          throw new Error(`Unknown inventory operation: ${operation}`);
+      }
+    } catch (error) {
+      await logger.error('Erro ao sincronizar inventário', { operation, data, error }, 'SyncManager', LogSource.INVENTORY);
+      throw error;
     }
   }
 
@@ -258,7 +236,13 @@ class SyncManager {
     };
 
     if (updatedOperation.retries >= operation.maxRetries) {
-      console.error(`[SyncManager] Max retries reached for operation ${operation.id}`);
+      await logger.critical('Máximo de tentativas alcançado para operação', {
+        operationId: operation.id,
+        type: operation.type,
+        operation: operation.operation,
+        retries: updatedOperation.retries,
+        maxRetries: operation.maxRetries
+      }, 'SyncManager', LogSource.SYNC);
       
       // Log failed operation
       await offlineStorage.log('error', 'Sync operation failed permanently', {
@@ -287,21 +271,27 @@ class SyncManager {
     }, retryDelay);
 
     this.retryTimeouts.set(operation.id, retryTimeout);
-    
-    console.log(`[SyncManager] Scheduled retry for operation ${operation.id} in ${retryDelay}ms`);
+    await logger.debug(`Tentativa reagendada para operação ${operation.id} em ${retryDelay}ms`, { operationId: operation.id, retryDelay }, 'SyncManager', LogSource.SYNC);
   }
 
   // Force sync specific operation type
   async forceSyncType(type: string): Promise<void> {
-    if (!this.isOnline) {
-      throw new Error('Cannot force sync while offline');
-    }
+    try {
+      if (!this.isOnline) {
+        throw new Error('Cannot force sync while offline');
+      }
 
-    const pendingOperations = await offlineStorage.getPendingSyncItems();
-    const typeOperations = pendingOperations.filter(op => op.type === type);
+      await logger.info(`Forçando sincronização para tipo: ${type}`, { type }, 'SyncManager', LogSource.SYNC);
+      const pendingOperations = await offlineStorage.getPendingSyncItems();
+      const typeOperations = pendingOperations.filter((op: any) => op.type === type);
 
-    for (const operation of typeOperations) {
-      await this.syncOperation(operation);
+      for (const operation of typeOperations) {
+        await this.syncOperation(operation as SyncOperation);
+      }
+      await logger.info(`Sincronização forçada concluída para tipo: ${type}`, { type }, 'SyncManager', LogSource.SYNC);
+    } catch (error) {
+      await logger.error('Erro ao forçar sincronização', { type, error }, 'SyncManager', LogSource.SYNC);
+      throw error;
     }
   }
 
@@ -312,25 +302,37 @@ class SyncManager {
     pendingCount: number;
     lastSyncTime: string | null;
   }> {
-    const pendingOperations = await offlineStorage.getPendingSyncItems();
-    const lastSyncTime = await offlineStorage.getConfig('lastSyncTime');
+    try {
+      const pendingOperations = await offlineStorage.getPendingSyncItems();
+      const lastSyncTime = await offlineStorage.getConfig('lastSyncTime');
 
-    return {
-      isOnline: this.isOnline,
-      syncInProgress: this.syncInProgress,
-      pendingCount: pendingOperations.length,
-      lastSyncTime
-    };
+      return {
+        isOnline: this.isOnline,
+        syncInProgress: this.syncInProgress,
+        pendingCount: pendingOperations.length,
+        lastSyncTime: lastSyncTime as string | null
+      };
+    } catch (error) {
+      await logger.error('Erro ao obter status de sincronização', error, 'SyncManager', LogSource.SYNC);
+      throw error;
+    }
   }
 
   // Manual sync trigger
   async manualSync(): Promise<void> {
-    if (!this.isOnline) {
-      throw new Error('Cannot sync while offline');
-    }
+    try {
+      if (!this.isOnline) {
+        throw new Error('Cannot sync while offline');
+      }
 
-    await this.syncPendingOperations();
-    await offlineStorage.saveConfig('lastSyncTime', new Date().toISOString());
+      await logger.info('Sincronização manual iniciada', {}, 'SyncManager', LogSource.SYNC);
+      await this.syncPendingOperations();
+      await offlineStorage.saveConfig('lastSyncTime', new Date().toISOString());
+      await logger.info('Sincronização manual concluída', {}, 'SyncManager', LogSource.SYNC);
+    } catch (error) {
+      await logger.error('Erro na sincronização manual', error, 'SyncManager', LogSource.SYNC);
+      throw error;
+    }
   }
 
   // Cleanup

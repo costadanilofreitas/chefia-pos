@@ -1,5 +1,6 @@
 import { apiInterceptor } from './ApiInterceptor';
 import { API_ENDPOINTS } from '../config/api';
+import logger, { LogSource } from './LocalLoggerService';
 
 // Tipos baseados no backend
 export interface CashierCreate {
@@ -71,16 +72,15 @@ export class CashierService {
   async getTerminalStatus(terminalId: string): Promise<TerminalStatus> {
     try {
       const endpoint = API_ENDPOINTS.CASHIER.STATUS(terminalId);
-      console.log('🔄 Calling terminal status endpoint:', endpoint);
+      await logger.debug('Verificando status do terminal', { terminalId, endpoint }, 'CashierService', LogSource.POS);
       
-      const response = await apiInterceptor.get(endpoint);
-      console.log('✅ Terminal status response:', response.data);
+      const response = await apiInterceptor.get<TerminalStatus>(endpoint);
       
+      await logger.debug('Status do terminal obtido', { terminalId, status: response.data }, 'CashierService', LogSource.POS);
       return response.data;
-    } catch (error: any) {
-      console.error('❌ Erro ao verificar status do terminal:', error);
-      console.error('❌ Error details:', error.response?.data);
-      throw new Error(error.response?.data?.message || 'Erro ao verificar status do terminal');
+    } catch (error) {
+      await logger.error('Erro ao obter status do terminal', { terminalId, error }, 'CashierService', LogSource.POS);
+      throw error;
     }
   }
 
@@ -89,14 +89,26 @@ export class CashierService {
    */
   async openCashier(cashierData: CashierCreate): Promise<Cashier> {
     try {
-      const response = await apiInterceptor.post(
+      await logger.info('Abrindo caixa', 
+        { terminalId: cashierData.terminal_id, operatorId: cashierData.operator_id, openingBalance: cashierData.opening_balance }, 
+        'CashierService', 
+        LogSource.POS
+      );
+      
+      const response = await apiInterceptor.post<Cashier>(
         API_ENDPOINTS.CASHIER.OPEN,
         cashierData
       );
+      
+      await logger.info('Caixa aberto com sucesso', 
+        { cashierId: response.data.id, terminalId: cashierData.terminal_id }, 
+        'CashierService', 
+        LogSource.POS
+      );
       return response.data;
-    } catch (error: any) {
-      console.error('Erro ao abrir caixa:', error);
-      throw new Error(error.response?.data?.message || 'Erro ao abrir caixa');
+    } catch (error) {
+      await logger.critical('Erro ao abrir caixa', { cashierData, error }, 'CashierService', LogSource.POS);
+      throw error;
     }
   }
 
@@ -105,47 +117,53 @@ export class CashierService {
    */
   async closeCashier(cashierId: string, closeData: CashierClose): Promise<Cashier> {
     try {
-      const response = await apiInterceptor.put(
+      await logger.info('Fechando caixa', 
+        { cashierId, operatorId: closeData.operator_id, physicalCash: closeData.physical_cash_amount }, 
+        'CashierService', 
+        LogSource.POS
+      );
+      
+      const response = await apiInterceptor.put<Cashier>(
         API_ENDPOINTS.CASHIER.CLOSE(cashierId),
         closeData
       );
+      
+      await logger.info('Caixa fechado com sucesso', 
+        { cashierId, finalBalance: response.data.final_balance }, 
+        'CashierService', 
+        LogSource.POS
+      );
       return response.data;
-    } catch (error: any) {
-      console.error('Erro ao fechar caixa:', error);
-      throw new Error(error.response?.data?.message || 'Erro ao fechar caixa');
+    } catch (error) {
+      await logger.critical('Erro ao fechar caixa', { cashierId, error }, 'CashierService', LogSource.POS);
+      throw error;
     }
   }
 
   /**
    * Registra uma operação no caixa
    */
-  async registerOperation(cashierId: string, operation: CashierOperation): Promise<any> {
-    try {
-      const response = await apiInterceptor.post(
-        `/api/v1/cashier/${cashierId}/operation`,
-        operation
-      );
-      return response.data;
-    } catch (error: any) {
-      console.error('Erro ao registrar operação:', error);
-      throw new Error(error.response?.data?.message || 'Erro ao registrar operação');
-    }
+  async registerOperation(cashierId: string, operation: CashierOperation): Promise<unknown> {
+    
+    const response = await apiInterceptor.post(
+      `/api/v1/cashier/${cashierId}/operation`,
+      operation
+    );
+    return response.data;
+  
   }
 
   /**
    * Registra uma retirada (ruptura) no caixa
    */
-  async registerWithdrawal(cashierId: string, withdrawal: CashierWithdrawal): Promise<any> {
-    try {
-      const response = await apiInterceptor.post(
-        API_ENDPOINTS.CASHIER.WITHDRAW(cashierId),
-        withdrawal
-      );
-      return response.data;
-    } catch (error: any) {
-      console.error('Erro ao registrar retirada:', error);
-      throw new Error(error.response?.data?.message || 'Erro ao registrar retirada');
-    }
+  async registerWithdrawal(cashierId: string, withdrawal: CashierWithdrawal): Promise<unknown> {
+    
+    const response = await apiInterceptor.post(
+      API_ENDPOINTS.CASHIER.WITHDRAW(cashierId),
+      withdrawal
+    );
+    return response.data;
+  
   }
 
   /**
@@ -153,11 +171,11 @@ export class CashierService {
    */
   async getCashier(cashierId: string): Promise<Cashier> {
     try {
-      const response = await apiInterceptor.get(`/api/v1/cashier/${cashierId}`);
+      const response = await apiInterceptor.get<Cashier>(`/api/v1/cashier/${cashierId}`);
       return response.data;
-    } catch (error: any) {
-      console.error('Erro ao buscar caixa:', error);
-      throw new Error(error.response?.data?.message || 'Erro ao buscar caixa');
+    } catch (error) {
+      await logger.error('Erro ao buscar caixa', { cashierId, error }, 'CashierService', LogSource.POS);
+      throw error;
     }
   }
 
@@ -172,37 +190,31 @@ export class CashierService {
     limit?: number;
     offset?: number;
   }): Promise<Cashier[]> {
-    try {
-      const params = new URLSearchParams();
-      
-      if (filters?.business_day_id) params.append('business_day_id', filters.business_day_id);
-      if (filters?.status) params.append('status', filters.status);
-      if (filters?.terminal_id) params.append('terminal_id', filters.terminal_id);
-      if (filters?.operator_id) params.append('operator_id', filters.operator_id);
-      if (filters?.limit) params.append('limit', filters.limit.toString());
-      if (filters?.offset) params.append('offset', filters.offset.toString());
+    
+    const params = new URLSearchParams();
+    
+    if (filters?.business_day_id) params.append('business_day_id', filters.business_day_id);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.terminal_id) params.append('terminal_id', filters.terminal_id);
+    if (filters?.operator_id) params.append('operator_id', filters.operator_id);
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.offset) params.append('offset', filters.offset.toString());
 
-      const response = await apiInterceptor.get(
-        `/api/v1/cashier?${params.toString()}`
-      );
-      return response.data;
-    } catch (error: any) {
-      console.error('Erro ao listar caixas:', error);
-      throw new Error(error.response?.data?.message || 'Erro ao listar caixas');
-    }
+    const response = await apiInterceptor.get<Cashier[]>(
+      `/api/v1/cashier?${params.toString()}`
+    );
+    return response.data;
+  
   }
 
   /**
    * Busca caixas abertos no dia atual
    */
   async getCurrentCashiers(): Promise<Cashier[]> {
-    try {
-      const response = await apiInterceptor.get('/api/v1/cashier/current');
-      return response.data;
-    } catch (error: any) {
-      console.error('Erro ao buscar caixas atuais:', error);
-      throw new Error(error.response?.data?.message || 'Erro ao buscar caixas atuais');
-    }
+    
+    const response = await apiInterceptor.get<Cashier[]>('/api/v1/cashier/current');
+    return response.data;
+  
   }
 
   /**
@@ -212,22 +224,19 @@ export class CashierService {
     operation_type?: string;
     limit?: number;
     offset?: number;
-  }): Promise<any[]> {
-    try {
-      const params = new URLSearchParams();
-      
-      if (filters?.operation_type) params.append('operation_type', filters.operation_type);
-      if (filters?.limit) params.append('limit', filters.limit.toString());
-      if (filters?.offset) params.append('offset', filters.offset.toString());
+  }): Promise<unknown[]> {
+    
+    const params = new URLSearchParams();
+    
+    if (filters?.operation_type) params.append('operation_type', filters.operation_type);
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.offset) params.append('offset', filters.offset.toString());
 
-      const response = await apiInterceptor.get(
-        `/api/v1/cashier/${cashierId}/operations?${params.toString()}`
-      );
-      return response.data;
-    } catch (error: any) {
-      console.error('Erro ao buscar operações do caixa:', error);
-      throw new Error(error.response?.data?.message || 'Erro ao buscar operações do caixa');
-    }
+    const response = await apiInterceptor.get<CashierOperation[]>(
+      `/api/v1/cashier/${cashierId}/operations?${params.toString()}`
+    );
+    return response.data;
+  
   }
 }
 

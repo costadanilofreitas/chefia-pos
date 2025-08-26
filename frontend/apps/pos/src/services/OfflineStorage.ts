@@ -19,13 +19,13 @@ class OfflineStorage {
       const request = indexedDB.open(this.dbName, this.version);
 
       request.onerror = () => {
-        console.error('Failed to open IndexedDB:', request.error);
+// console.error('Failed to open IndexedDB:', request.error);
         reject(request.error);
       };
 
       request.onsuccess = () => {
         this.db = request.result;
-        console.log('IndexedDB initialized successfully');
+// console.log('IndexedDB initialized successfully');
         resolve();
       };
 
@@ -102,7 +102,7 @@ class OfflineStorage {
       const transaction = this.db!.transaction([storeName], 'readwrite');
       const store = transaction.objectStore(storeName);
       const request = store.add({
-        ...data,
+        ...(data as object),
         timestamp: new Date().toISOString(),
         offline: true
       });
@@ -112,7 +112,7 @@ class OfflineStorage {
     });
   }
 
-  async get(storeName: string, id: number | string): Promise<any> {
+  async get(storeName: string, id: number | string): Promise<unknown> {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
@@ -125,7 +125,7 @@ class OfflineStorage {
     });
   }
 
-  async getAll(storeName: string): Promise<any[]> {
+  async getAll(storeName: string): Promise<unknown[]> {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
@@ -145,7 +145,7 @@ class OfflineStorage {
       const transaction = this.db!.transaction([storeName], 'readwrite');
       const store = transaction.objectStore(storeName);
       const request = store.put({
-        ...data,
+        ...(data as object),
         updatedAt: new Date().toISOString()
       });
 
@@ -168,7 +168,7 @@ class OfflineStorage {
   }
 
   // Specialized methods for orders
-  async saveOrder(order: any): Promise<number> {
+  async saveOrder(order: unknown): Promise<number> {
     const orderId = await this.add(this.stores.orders, order);
     
     // Add to sync queue if offline
@@ -179,7 +179,7 @@ class OfflineStorage {
     return orderId;
   }
 
-  async getOrdersByTerminal(terminalId: string): Promise<any[]> {
+  async getOrdersByTerminal(terminalId: string): Promise<unknown[]> {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
@@ -194,7 +194,7 @@ class OfflineStorage {
   }
 
   // Specialized methods for products
-  async cacheProducts(products: any[]): Promise<void> {
+  async cacheProducts(products: Array<unknown>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
     const transaction = this.db.transaction([this.stores.products], 'readwrite');
@@ -217,7 +217,7 @@ class OfflineStorage {
     }
   }
 
-  async getAvailableProducts(): Promise<any[]> {
+  async getAvailableProducts(): Promise<unknown[]> {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
@@ -232,7 +232,7 @@ class OfflineStorage {
   }
 
   // Sync queue management
-  async addToSyncQueue(type: string, operation: string, data: any): Promise<void> {
+  async addToSyncQueue(type: string, operation: string, data: unknown): Promise<void> {
     await this.add(this.stores.queue, {
       type,
       operation,
@@ -243,7 +243,7 @@ class OfflineStorage {
     });
   }
 
-  async getPendingSyncItems(): Promise<any[]> {
+  async getPendingSyncItems(): Promise<unknown[]> {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
@@ -260,7 +260,7 @@ class OfflineStorage {
   async markAsSynced(queueId: number): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
-    const item = await this.get(this.stores.queue, queueId);
+    const item = await this.get(this.stores.queue, queueId) as any;
     if (item) {
       item.synced = true;
       item.syncedAt = new Date().toISOString();
@@ -269,17 +269,17 @@ class OfflineStorage {
   }
 
   // Configuration management
-  async saveConfig(key: string, value: any): Promise<void> {
+  async saveConfig(key: string, value: unknown): Promise<void> {
     await this.update(this.stores.config, { key, value });
   }
 
-  async getConfig(key: string): Promise<any> {
-    const config = await this.get(this.stores.config, key);
+  async getConfig(key: string): Promise<unknown> {
+    const config = await this.get(this.stores.config, key) as any;
     return config?.value;
   }
 
   // Logging
-  async log(level: 'info' | 'warn' | 'error', message: string, data?: any): Promise<void> {
+  async log(level: 'info' | 'warn' | 'error', message: string, data?: unknown): Promise<void> {
     await this.add(this.stores.logs, {
       level,
       message,
@@ -293,7 +293,7 @@ class OfflineStorage {
     if (logs.length > 1000) {
       const oldLogs = logs.slice(0, logs.length - 1000);
       for (const log of oldLogs) {
-        await this.delete(this.stores.logs, log.id);
+        await this.delete(this.stores.logs, (log as any).id);
       }
     }
   }
@@ -306,8 +306,8 @@ class OfflineStorage {
 
     const orders = await this.getAll(this.stores.orders);
     for (const order of orders) {
-      if (new Date(order.timestamp) < thirtyDaysAgo) {
-        await this.delete(this.stores.orders, order.id);
+      if (new Date((order as any).timestamp) < thirtyDaysAgo) {
+        await this.delete(this.stores.orders, (order as any).id);
       }
     }
 
@@ -317,15 +317,16 @@ class OfflineStorage {
 
     const queueItems = await this.getAll(this.stores.queue);
     for (const item of queueItems) {
-      if (item.synced && new Date(item.timestamp) < sevenDaysAgo) {
-        await this.delete(this.stores.queue, item.id);
+      const queueItem = item as any;
+      if (queueItem.synced && new Date(queueItem.timestamp) < sevenDaysAgo) {
+        await this.delete(this.stores.queue, queueItem.id);
       }
     }
   }
 
   // Export data for backup
-  async exportData(): Promise<any> {
-    const data: any = {};
+  async exportData(): Promise<unknown> {
+    const data: unknown = {};
     
     for (const storeName of Object.values(this.stores)) {
       data[storeName] = await this.getAll(storeName);
@@ -344,7 +345,7 @@ class OfflineStorage {
 
     for (const [storeName, items] of Object.entries(backup.data)) {
       if (Array.isArray(items)) {
-        for (const item of items as any[]) {
+        for (const item of items as unknown[]) {
           await this.update(storeName, item);
         }
       }

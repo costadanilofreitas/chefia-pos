@@ -39,8 +39,8 @@ export interface LoyaltyOptimization {
   current_program_efficiency: number;
   recommended_changes: {
     parameter: string;
-    current_value: any;
-    recommended_value: any;
+    current_value: unknown;
+    recommended_value: unknown;
     expected_impact: string;
   }[];
   projected_member_growth: number;
@@ -51,38 +51,28 @@ class AIService {
   private baseUrl = 'http://localhost:8001/api/v1/ai';
 
   async getCustomerInsights(customerId: string): Promise<CustomerInsight> {
-    try {
-      const response = await fetch(`${this.baseUrl}/customers/${customerId}/insights`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch customer insights');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching customer insights:', error);
-      throw error;
-    }
+    const response = await fetch(`${this.baseUrl}/customers/${customerId}/insights`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch customer insights');
+    return await response.json();
   }
 
   async getProductRecommendations(customerId: string, limit: number = 5): Promise<ProductRecommendation[]> {
-    try {
-      const response = await fetch(`${this.baseUrl}/recommendations/products`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ customer_id: customerId, limit })
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch recommendations');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching recommendations:', error);
-      throw error;
-    }
+    const response = await fetch(`${this.baseUrl}/recommendations/products`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({ customer_id: customerId, limit })
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch recommendations');
+    return await response.json();
   }
 
   async getCampaignRecommendations(targetMetrics?: {
@@ -90,38 +80,32 @@ class AIService {
     budget?: number;
     duration_days?: number;
   }): Promise<CampaignRecommendation[]> {
-    try {
-      const response = await fetch(`${this.baseUrl}/recommendations/campaigns`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(targetMetrics || {})
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch campaign recommendations');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching campaign recommendations:', error);
-      throw error;
-    }
+    
+    const response = await fetch(`${this.baseUrl}/recommendations/campaigns`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(targetMetrics || {})
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch campaign recommendations');
+    return await response.json();
+  
   }
 
   async optimizeLoyaltyProgram(): Promise<LoyaltyOptimization> {
-    try {
-      const response = await fetch(`${this.baseUrl}/loyalty/optimize`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch optimization suggestions');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching optimization:', error);
-      throw error;
-    }
+    
+    const response = await fetch(`${this.baseUrl}/loyalty/optimize`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch optimization suggestions');
+    return await response.json();
+  
   }
 
   async predictCustomerBehavior(customerId: string, days: number = 30): Promise<{
@@ -130,22 +114,19 @@ class AIService {
     estimated_spending: number;
     best_contact_times: string[];
   }> {
-    try {
-      const response = await fetch(`${this.baseUrl}/predict/behavior`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ customer_id: customerId, prediction_days: days })
-      });
-      
-      if (!response.ok) throw new Error('Failed to predict behavior');
-      return await response.json();
-    } catch (error) {
-      console.error('Error predicting behavior:', error);
-      throw error;
-    }
+    
+    const response = await fetch(`${this.baseUrl}/predict/behavior`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({ customer_id: customerId, prediction_days: days })
+    });
+    
+    if (!response.ok) throw new Error('Failed to predict behavior');
+    return await response.json();
+  
   }
 
   async generatePersonalizedOffer(customerId: string): Promise<{
@@ -155,22 +136,19 @@ class AIService {
     personalized_message: string;
     expected_conversion_rate: number;
   }> {
-    try {
-      const response = await fetch(`${this.baseUrl}/offers/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ customer_id: customerId })
-      });
-      
-      if (!response.ok) throw new Error('Failed to generate offer');
-      return await response.json();
-    } catch (error) {
-      console.error('Error generating offer:', error);
-      throw error;
-    }
+    
+    const response = await fetch(`${this.baseUrl}/offers/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({ customer_id: customerId })
+    });
+    
+    if (!response.ok) throw new Error('Failed to generate offer');
+    return await response.json();
+  
   }
 
 }

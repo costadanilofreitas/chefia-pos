@@ -1,4 +1,3 @@
-// src/components/TerminalValidator.tsx
 import React from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import TerminalService from '../services/TerminalService';

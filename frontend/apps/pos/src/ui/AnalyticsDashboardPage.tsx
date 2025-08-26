@@ -2,9 +2,9 @@
  * Dashboard de Analytics em tempo real
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAnalytics } from '../hooks/useAnalytics';
-import { cn } from '../utils/cn';
+import React, { useState, useEffect } from 'react';
+import {useAnalytics} from '../hooks/useAnalytics';
+import {cn} from '../utils/cn';
 
 // Componente de métrica individual
 const MetricCard: React.FC<{
@@ -114,7 +114,7 @@ const BarChart: React.FC<{
 
 // Componente principal do Dashboard
 const AnalyticsDashboardPage: React.FC = () => {
-  const { metrics, loading, error, lastUpdated, refreshMetrics, formatCurrency, formatPercentage } = useAnalytics(true, 30000);
+  const { metrics, lastUpdated, refreshMetrics, formatCurrency, formatPercentage, loading, error } = useAnalytics(true, 30000);
   const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month'>('day');
   const [showExportMenu, setShowExportMenu] = useState(false);
 
@@ -131,10 +131,10 @@ const AnalyticsDashboardPage: React.FC = () => {
   })) || [];
 
   // Simula dados para métodos de pagamento
-  const paymentMethodsData = metrics?.paymentMethods?.map(method => ({
-    label: method.method,
-    value: method.count
-  })) || [];
+  // const paymentMethodsData = metrics?.paymentMethods?.map(method => ({
+  //   label: method.method,
+  //   value: method.count
+  // })) || [];  // TODO: usar quando implementar gráfico de métodos de pagamento
 
   // Função para exportar dados
   const handleExport = async (format: 'csv' | 'json') => {
@@ -151,8 +151,8 @@ const AnalyticsDashboardPage: React.FC = () => {
       URL.revokeObjectURL(url);
       
       setShowExportMenu(false);
-    } catch (error) {
-      console.error('Erro ao exportar:', error);
+    } catch {
+// console.error('Erro ao exportar:', error);
     }
   };
 

@@ -21,8 +21,8 @@ export interface Customer {
   visitCount?: number;
   segment?: string;
   tier?: string;
-  preferences?: any;
-  communication?: any;
+  preferences?: unknown;
+  communication?: unknown;
   lastVisit?: string;
   registrationDate?: string;
   clv?: number;
@@ -76,7 +76,7 @@ export class CustomerService {
    */
   async listCustomers(search?: string): Promise<Customer[]> {
     const params = search ? { search } : {};
-    const response = await apiInterceptor.get(API_ENDPOINTS.CUSTOMERS.LIST, { params });
+    const response = await apiInterceptor.get<Customer[]>(API_ENDPOINTS.CUSTOMERS.LIST, { params });
     return response.data;
   }
 
@@ -84,7 +84,7 @@ export class CustomerService {
    * Busca um cliente por ID
    */
   async getCustomer(customerId: string): Promise<Customer> {
-    const response = await apiInterceptor.get(
+    const response = await apiInterceptor.get<Customer>(
       API_ENDPOINTS.CUSTOMERS.GET.replace(':id', customerId)
     );
     return response.data;
@@ -94,7 +94,7 @@ export class CustomerService {
    * Cria um novo cliente
    */
   async createCustomer(customerData: CustomerCreate): Promise<Customer> {
-    const response = await apiInterceptor.post(
+    const response = await apiInterceptor.post<Customer>(
       API_ENDPOINTS.CUSTOMERS.CREATE,
       customerData
     );
@@ -105,7 +105,7 @@ export class CustomerService {
    * Atualiza um cliente existente
    */
   async updateCustomer(customerId: string, customerData: CustomerUpdate): Promise<Customer> {
-    const response = await apiInterceptor.put(
+    const response = await apiInterceptor.put<Customer>(
       API_ENDPOINTS.CUSTOMERS.UPDATE.replace(':id', customerId),
       customerData
     );
@@ -125,7 +125,7 @@ export class CustomerService {
    * Busca clientes por telefone
    */
   async searchByPhone(phone: string): Promise<Customer[]> {
-    const response = await apiInterceptor.get(API_ENDPOINTS.CUSTOMERS.SEARCH_PHONE, {
+    const response = await apiInterceptor.get<Customer[]>(API_ENDPOINTS.CUSTOMERS.SEARCH_PHONE, {
       params: { phone }
     });
     return response.data;
@@ -135,7 +135,7 @@ export class CustomerService {
    * Busca clientes por email
    */
   async searchByEmail(email: string): Promise<Customer[]> {
-    const response = await apiInterceptor.get(API_ENDPOINTS.CUSTOMERS.SEARCH_EMAIL, {
+    const response = await apiInterceptor.get<Customer[]>(API_ENDPOINTS.CUSTOMERS.SEARCH_EMAIL, {
       params: { email }
     });
     return response.data;
@@ -145,7 +145,7 @@ export class CustomerService {
    * Adiciona pontos de fidelidade a um cliente
    */
   async addLoyaltyPoints(customerId: string, points: number): Promise<Customer> {
-    const response = await apiInterceptor.post(
+    const response = await apiInterceptor.post<Customer>(
       API_ENDPOINTS.CUSTOMERS.ADD_POINTS.replace(':id', customerId),
       { points }
     );
@@ -156,7 +156,7 @@ export class CustomerService {
    * Resgata pontos de fidelidade de um cliente
    */
   async redeemLoyaltyPoints(customerId: string, points: number): Promise<Customer> {
-    const response = await apiInterceptor.post(
+    const response = await apiInterceptor.post<Customer>(
       API_ENDPOINTS.CUSTOMERS.REDEEM_POINTS.replace(':id', customerId),
       { points }
     );

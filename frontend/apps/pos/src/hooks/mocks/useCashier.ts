@@ -1,4 +1,4 @@
-import { Cashier, CashierCreate, CashierClose, CashierWithdrawal, TerminalStatus } from '../../services/CashierService';
+import { Cashier, CashierCreate, CashierWithdrawal, TerminalStatus } from '../../services/CashierService';
 import { UseCashierReturn } from '../useCashier';
 
 export const useCashier = (): UseCashierReturn => ({
@@ -86,16 +86,16 @@ export const useCashier = (): UseCashierReturn => ({
       current_operator_name: 'Test Operator',
     };
   },
-  registerWithdrawal: async (cashierId: string, withdrawal: CashierWithdrawal): Promise<any> => {
+  registerWithdrawal: async (_cashierId: string, _withdrawal: CashierWithdrawal): Promise<unknown> => {
     return Promise.resolve();
   },
-  refreshCashier: async (cashierId: string): Promise<void> => {
+  refreshCashier: async (_cashierId: string): Promise<void> => {
     return Promise.resolve();
   },
   clearError: (): void => {
     // Mock implementation
   },
-  getSummary: async (): Promise<any> => {
+  getSummary: async (): Promise<unknown> => {
     return {
       sales: 50.00,
       withdrawals: 0.00,

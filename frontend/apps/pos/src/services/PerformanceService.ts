@@ -33,8 +33,8 @@ interface PrefetchConfig {
 
 class PerformanceService {
   private eventBus = eventBus;
-  private cache = new Map<string, CacheEntry<any>>();
-  private loadingPromises = new Map<string, Promise<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
+  private loadingPromises = new Map<string, Promise<unknown>>();
   private metrics: PerformanceMetrics = {
     cacheHitRate: 0,
     avgLoadTime: 0,
@@ -80,7 +80,7 @@ class PerformanceService {
     this.startCleanupTimer();
     this.setupPrefetch();
     
-    console.log('⚡ Serviço de performance inicializado');
+      // console.log('⚡ Serviço de performance inicializado');
   }
 
   /**
@@ -186,7 +186,7 @@ class PerformanceService {
     
     // Verifica se já está carregando
     if (this.loadingPromises.has(key)) {
-      return this.loadingPromises.get(key)!;
+      return this.loadingPromises.get(key)! as Promise<T>;
     }
     
     // Faz o fetch
@@ -223,7 +223,7 @@ class PerformanceService {
     entry.hits++;
     entry.lastAccess = Date.now();
     
-    return entry.data;
+    return entry.data as T;
   }
 
   /**
@@ -234,7 +234,7 @@ class PerformanceService {
     
     // Verifica limite de tamanho
     if (size > this.MAX_CACHE_SIZE) {
-      console.warn(`Item muito grande para cache: ${key} (${size} bytes)`);
+      // console.warn(`Item muito grande para cache: ${key} (${size} bytes)`);
       return;
     }
     
@@ -260,7 +260,7 @@ class PerformanceService {
   /**
    * Estima tamanho do objeto
    */
-  private estimateSize(obj: any): number {
+  private estimateSize(obj: unknown): number {
     const str = JSON.stringify(obj);
     return new Blob([str]).size;
   }
@@ -303,14 +303,14 @@ class PerformanceService {
     keysToDelete.forEach(key => this.cache.delete(key));
     
     if (keysToDelete.length > 0) {
-      console.log(`🧹 Cache limpo: ${keysToDelete.length} itens removidos`);
+      // console.log(`🧹 Cache limpo: ${keysToDelete.length} itens removidos`);
     }
   }
 
   /**
    * Lazy loading de componentes
    */
-  lazyLoad(componentPath: string): Promise<any> {
+  lazyLoad(componentPath: string): Promise<unknown> {
     return this.cachedFetch(
       `component:${componentPath}`,
       () => import(componentPath),
@@ -334,19 +334,19 @@ class PerformanceService {
       const module = await this.lazyLoad(componentPath);
       
       // Renderiza componente
-      if (module.default) {
+      if ((module as any).default) {
         // React component
         const React = await import('react');
         const ReactDOM = await import('react-dom/client');
-        const Component = module.default;
+        const Component = (module as any).default;
         
         const root = ReactDOM.createRoot(element);
         root.render(React.createElement(Component));
       }
       
       element.classList.remove('loading');
-    } catch (error) {
-      console.error(`Erro ao carregar componente lazy: ${componentPath}`, error);
+    } catch {
+      // console.error(`Erro ao carregar componente lazy: ${componentPath}`, error);
       element.classList.add('error');
     }
   }
@@ -402,8 +402,8 @@ class PerformanceService {
       }
       
       this.metrics.prefetchedResources++;
-    } catch (error) {
-      console.warn(`Erro ao prefetch ${url}:`, error);
+    } catch {
+      // console.warn(`Erro ao prefetch ${url}:`, error);
     }
   }
 
@@ -464,7 +464,7 @@ class PerformanceService {
   /**
    * Atualiza métricas gerais
    */
-  private updateMetrics(type: 'cache-hit' | 'cache-miss', loadTime: number) {
+  private updateMetrics(_type: 'cache-hit' | 'cache-miss', _loadTime: number) {
     // Calcula taxa de acerto do cache
     const totalHits = Array.from(this.cache.values()).reduce((sum, e) => sum + e.hits, 0);
     const totalRequests = this.cache.size + totalHits;
@@ -472,7 +472,7 @@ class PerformanceService {
     
     // Atualiza memória
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
+      const memory = (performance as unknown as { memory: { usedJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
       this.metrics.memoryUsage = memory.usedJSHeapSize / memory.jsHeapSizeLimit * 100;
     }
     
@@ -504,7 +504,7 @@ class PerformanceService {
   /**
    * Debounce para otimização
    */
-  debounce<T extends (...args: any[]) => any>(
+  debounce<T extends (...args: unknown[]) => unknown>(
     func: T,
     wait: number
   ): (...args: Parameters<T>) => void {
@@ -519,7 +519,7 @@ class PerformanceService {
   /**
    * Throttle para otimização
    */
-  throttle<T extends (...args: any[]) => any>(
+  throttle<T extends (...args: unknown[]) => unknown>(
     func: T,
     limit: number
   ): (...args: Parameters<T>) => void {
@@ -547,7 +547,7 @@ class PerformanceService {
   clearCache() {
     this.cache.clear();
     this.currentCacheSize = 0;
-    console.log('🗑️ Cache limpo completamente');
+      // console.log('🗑️ Cache limpo completamente');
   }
 
   /**

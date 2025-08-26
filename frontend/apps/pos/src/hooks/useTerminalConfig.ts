@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import logger, { LogSource } from '../services/LocalLoggerService';
 
 export interface TerminalConfig {
   terminal_id: string;
@@ -33,8 +34,6 @@ export const useTerminalConfig = () => {
                                    localStorage.getItem('terminal_id') || 
                                    '1';
         
-        console.log(`Loading config for terminal: ${effectiveTerminalId}`);
-        
         // Tentar carregar configuração do arquivo primeiro
         try {
           const response = await fetch(`/config/pos/${effectiveTerminalId}.json`);
@@ -51,12 +50,10 @@ export const useTerminalConfig = () => {
             
             // Salvar terminal_id no localStorage para próximas sessões
             localStorage.setItem('terminal_id', configData.terminal_id);
-            
-            console.log('Config loaded successfully for terminal', configData.terminal_id);
             return;
           }
-        } catch (fetchError) {
-          console.warn(`Arquivo de configuração não encontrado para terminal ${effectiveTerminalId}, usando configuração padrão`);
+        } catch (error) {
+          await logger.warn(`Arquivo de configuração não encontrado para terminal ${effectiveTerminalId}, usando configuração padrão`, { error }, 'useTerminalConfig', LogSource.SYSTEM);
         }
         
         // Fallback para configuração padrão se arquivo não existir
@@ -76,19 +73,19 @@ export const useTerminalConfig = () => {
         };
         
         setConfig(defaultConfig);
-        console.log(`Using default config for terminal: ${defaultConfig.terminal_id}`);
+// console.log(`Using default config for terminal: ${defaultConfig.terminal_id}`);
         
-      } catch (err) {
-        const errorMsg = `Erro ao carregar configuração: ${err instanceof Error ? err.message : 'Erro desconhecido'}`;
+      } catch (error) {
+        const errorMsg = `Erro ao carregar configuração: ${error instanceof Error ? error.message : 'Erro desconhecido'}`;
         setError(errorMsg);
-        console.error(errorMsg, err);
+// console.error(errorMsg, error);
       } finally {
         setLoading(false);
       }
     };
 
     loadConfig();
-  }, [terminalId]);
+  }, [terminalId, setError, setLoading]);
 
   return {
     config,

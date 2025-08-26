@@ -1,6 +1,13 @@
-import { useState, useCallback, useEffect } from 'react';
-import { billsService, Bill, BillCreate, BillUpdate, BillsFilter } from '../services/BillsService';
-import { useToast } from '../components/Toast';
+import { useCallback, useEffect, useState } from "react";
+import { useToast } from "../components/Toast";
+import {
+  Bill,
+  BillCreate,
+  BillUpdate,
+  BillsFilter,
+  billsService,
+} from "../services/BillsService";
+import logger, { LogSource } from "../services/LocalLoggerService";
 
 export const useBills = () => {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -14,122 +21,100 @@ export const useBills = () => {
   } | null>(null);
   const { success, error: showError } = useToast();
 
-  const loadBills = useCallback(async (filter?: BillsFilter) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await billsService.listBills(filter);
-      setBills(data);
-      return data;
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar contas');
-      showError('Erro ao carregar contas a pagar');
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, [showError]);
-
   const loadSummary = useCallback(async () => {
     try {
       const data = await billsService.getBillsSummary();
       setSummary(data);
-      return data;
-    } catch (err: any) {
-      console.error('Error loading summary:', err);
-      return null;
+    } catch (error) {
+      await logger.warn('Erro ao carregar resumo de contas', { error }, 'useBills', LogSource.POS);
+      // Silently fail for summary
     }
   }, []);
 
-  const createBill = useCallback(async (bill: BillCreate) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const newBill = await billsService.createBill(bill);
-      setBills(prev => [...prev, newBill]);
-      success('Conta criada com sucesso!');
-      await loadSummary();
-      return newBill;
-    } catch (err: any) {
-      setError(err.message || 'Erro ao criar conta');
-      showError('Erro ao criar conta');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [success, showError, loadSummary]);
+  const loadBills = useCallback(
+    async (filter?: BillsFilter) => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const updateBill = useCallback(async (id: string, updates: BillUpdate) => {
-    setLoading(true);
-    setError(null);
-    try {
+        const data = await billsService.listBills(filter);
+        setBills(data);
+        return data;
+      } catch (err) {
+        showError("Erro ao carregar contas");
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [showError]
+  );
+
+  const updateBill = useCallback(
+    async (id: string, updates: BillUpdate) => {
+      setLoading(true);
+      setError(null);
+
       const updatedBill = await billsService.updateBill(id, updates);
-      setBills(prev => prev.map(bill => 
-        bill.id === id ? updatedBill : bill
-      ));
-      success('Conta atualizada com sucesso!');
+      setBills((prev) =>
+        prev.map((bill) => (bill.id === id ? updatedBill : bill))
+      );
+      success("Conta atualizada com sucesso!");
       await loadSummary();
       return updatedBill;
-    } catch (err: any) {
-      setError(err.message || 'Erro ao atualizar conta');
-      showError('Erro ao atualizar conta');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [success, showError, loadSummary]);
+    },
+    [loadSummary, success]
+  );
 
-  const deleteBill = useCallback(async (id: string) => {
-    setLoading(true);
-    setError(null);
-    try {
+  const deleteBill = useCallback(
+    async (id: string) => {
+      setLoading(true);
+      setError(null);
+
       await billsService.deleteBill(id);
-      setBills(prev => prev.filter(bill => bill.id !== id));
-      success('Conta excluída com sucesso!');
+      setBills((prev) => prev.filter((bill) => bill.id !== id));
+      success("Conta excluída com sucesso!");
       await loadSummary();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao excluir conta');
-      showError('Erro ao excluir conta');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [success, showError, loadSummary]);
+    },
+    [loadSummary, success]
+  );
 
-  const payBill = useCallback(async (id: string, paymentMethod: string) => {
-    setLoading(true);
-    setError(null);
-    try {
+  const payBill = useCallback(
+    async (id: string, paymentMethod: string) => {
+      setLoading(true);
+      setError(null);
+
       const paidBill = await billsService.payBill(id, paymentMethod);
-      setBills(prev => prev.map(bill => 
-        bill.id === id ? paidBill : bill
-      ));
-      success('Conta paga com sucesso!');
+      setBills((prev) =>
+        prev.map((bill) => (bill.id === id ? paidBill : bill))
+      );
+      success("Conta paga com sucesso!");
       await loadSummary();
       return paidBill;
-    } catch (err: any) {
-      setError(err.message || 'Erro ao pagar conta');
-      showError('Erro ao pagar conta');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [success, showError, loadSummary]);
+    },
+    [loadSummary, success]
+  );
 
   // Calculate additional statistics
   const getStatistics = useCallback(() => {
     const now = new Date();
-    const overdueBills = bills.filter(bill => 
-      bill.status === 'pending' && new Date(bill.due_date) < now
+    const overdueBills = bills.filter(
+      (bill) => bill.status === "pending" && new Date(bill.due_date) < now
     );
-    
-    const pendingBills = bills.filter(bill => bill.status === 'pending');
-    const paidBills = bills.filter(bill => bill.status === 'paid');
-    
-    const totalPending = pendingBills.reduce((sum, bill) => sum + bill.amount, 0);
-    const totalOverdue = overdueBills.reduce((sum, bill) => sum + bill.amount, 0);
+
+    const pendingBills = bills.filter((bill) => bill.status === "pending");
+    const paidBills = bills.filter((bill) => bill.status === "paid");
+
+    const totalPending = pendingBills.reduce(
+      (sum, bill) => sum + bill.amount,
+      0
+    );
+    const totalOverdue = overdueBills.reduce(
+      (sum, bill) => sum + bill.amount,
+      0
+    );
     const totalPaid = paidBills.reduce((sum, bill) => sum + bill.amount, 0);
-    
+
     return {
       totalBills: bills.length,
       pendingCount: pendingBills.length,
@@ -140,15 +125,36 @@ export const useBills = () => {
       totalPaid,
       overdueBills,
       pendingBills,
-      paidBills
+      paidBills,
     };
   }, [bills]);
+
+  const createBill = useCallback(
+    async (bill: BillCreate) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const newBill = await billsService.createBill(bill);
+        setBills((prev) => [...prev, newBill]);
+        success("Conta criada com sucesso!");
+        await loadSummary();
+        return newBill;
+      } catch (err) {
+        showError("Erro ao criar conta");
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [loadSummary, showError, success]
+  );
 
   // Load initial data
   useEffect(() => {
     loadBills();
     loadSummary();
-  }, []);
+  }, [loadBills, loadSummary]);
 
   return {
     bills,
@@ -161,6 +167,6 @@ export const useBills = () => {
     updateBill,
     deleteBill,
     payBill,
-    getStatistics
+    getStatistics,
   };
 };

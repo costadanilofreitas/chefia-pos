@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../components/Toast';
 import { remoteOrdersService, RemoteOrder, PlatformIntegration } from '../services/RemoteOrdersService';
+import logger, { LogSource } from '../services/LocalLoggerService';
 
 // Interfaces are now imported from RemoteOrdersService
 
@@ -20,7 +21,7 @@ export const useRemoteOrders = () => {
     try {
       const data = await remoteOrdersService.getOrders();
       setOrders(data);
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message);
       showError('Erro ao carregar pedidos remotos');
     } finally {
@@ -33,7 +34,8 @@ export const useRemoteOrders = () => {
     try {
       const data = await remoteOrdersService.getIntegrations();
       setIntegrations(data);
-    } catch (err: any) {
+    } catch (error) {
+      await logger.error('Erro ao carregar integrações', { error }, 'useRemoteOrders', LogSource.NETWORK);
       showError('Erro ao carregar integrações');
     } finally {
       setLoading(false);
@@ -44,7 +46,7 @@ export const useRemoteOrders = () => {
     setLoading(true);
     try {
       const updatedOrder = await remoteOrdersService.acceptOrder(orderId);
-      setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
+      setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o) as RemoteOrder[]);
       success(`Pedido ${updatedOrder.platformOrderId} aceito com sucesso!`);
       
       // Send to kitchen/preparation
@@ -53,7 +55,7 @@ export const useRemoteOrders = () => {
       }, 500);
       
       return updatedOrder;
-    } catch (err: any) {
+    } catch (err) {
       showError('Erro ao aceitar pedido');
       throw err;
     } finally {
@@ -77,7 +79,7 @@ export const useRemoteOrders = () => {
         : o
       ));
       warning(`Pedido ${order.platformOrderId} rejeitado`);
-    } catch (err: any) {
+    } catch (err) {
       showError('Erro ao rejeitar pedido');
       throw err;
     } finally {
@@ -89,10 +91,10 @@ export const useRemoteOrders = () => {
     setLoading(true);
     try {
       const updatedOrder = await remoteOrdersService.updateOrderStatus(orderId, status);
-      setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
+      setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o) as RemoteOrder[]);
       success('Status do pedido atualizado');
       return updatedOrder;
-    } catch (err: any) {
+    } catch (err) {
       showError('Erro ao atualizar status do pedido');
       throw err;
     } finally {
@@ -107,21 +109,21 @@ export const useRemoteOrders = () => {
       await loadOrders();
       await loadIntegrations();
       success(`${platform} sincronizado com sucesso`);
-    } catch (err: any) {
+    } catch (error) {
       showError(`Erro ao sincronizar ${platform}`);
-      throw err;
+      throw error;
     } finally {
       setLoading(false);
     }
   }, [loadOrders, loadIntegrations, success, showError]);
 
-  const configurePlatform = useCallback(async (platform: RemoteOrder['platform'], config: any) => {
+  const configurePlatform = useCallback(async (platform: RemoteOrder['platform'], config: unknown) => {
     setLoading(true);
     try {
       await remoteOrdersService.configurePlatform(platform, config);
       await loadIntegrations();
       success('Configurações salvas com sucesso!');
-    } catch (err: any) {
+    } catch (err) {
       showError('Erro ao salvar configurações');
       throw err;
     } finally {
@@ -133,7 +135,7 @@ export const useRemoteOrders = () => {
     try {
       await remoteOrdersService.printOrder(orderId);
       success('Pedido enviado para impressão');
-    } catch (err: any) {
+    } catch (err) {
       showError('Erro ao imprimir pedido');
       throw err;
     }

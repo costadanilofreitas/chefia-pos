@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { useCustomer } from '../hooks/useCustomer';
-import { useCoupons } from '../hooks/useCoupons';
-import { useAI } from '../hooks/useAI';
-import { useLoyalty } from '../hooks/useLoyalty';
-import Toast, { useToast } from '../components/Toast';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useConfirmDialog } from '../components/ConfirmDialog';
+import Toast, { useToast } from '../components/Toast';
+import { useAI } from '../hooks/useAI';
+import { useCoupons } from '../hooks/useCoupons';
+import { useCustomer } from '../hooks/useCustomer';
+import { useLoyalty } from '../hooks/useLoyalty';
 import '../index.css';
 
 interface LoyaltyCustomer {
@@ -50,33 +50,33 @@ interface LoyaltyTransaction {
   expiresAt?: Date;
 }
 
-interface LoyaltyProgram {
-  name: string;
-  pointsPerCurrency: number; // Points earned per R$ spent
-  tiers: {
-    bronze: { min: 0, multiplier: 1, benefits: string[] };
-    silver: { min: 500, multiplier: 1.2, benefits: string[] };
-    gold: { min: 1500, multiplier: 1.5, benefits: string[] };
-    platinum: { min: 5000, multiplier: 2, benefits: string[] };
-  };
-  birthdayBonus: number;
-  welcomeBonus: number;
-  referralBonus: number;
-}
+// interface LoyaltyProgram {
+//   name: string;
+//   pointsPerCurrency: number; // Points earned per R$ spent
+//   tiers: {
+//     bronze: { min: 0, multiplier: 1, benefits: string[] };
+//     silver: { min: 500, multiplier: 1.2, benefits: string[] };
+//     gold: { min: 1500, multiplier: 1.5, benefits: string[] };
+//     platinum: { min: 5000, multiplier: 2, benefits: string[] };
+//   };
+//   birthdayBonus: number;
+//   welcomeBonus: number;
+//   referralBonus: number;
+// } // TODO: usar quando implementar programa de fidelidade
 
 export default function LoyaltyPage() {
   const navigate = useNavigate();
   const { terminalId } = useParams();
-  const { toasts, removeToast, success, error, warning, info } = useToast();
+  const { toasts, removeToast, success, warning, error /* , info */ } = useToast();
   const { showConfirm, ConfirmDialogComponent } = useConfirmDialog();
-  const { customers: customerList, createCustomer, loadCustomers, creating } = useCustomer();
+  const { createCustomer, loadCustomers, creating } = useCustomer();
   const { 
     coupons, 
-    loading: loadingCoupons,
+    // loading: loadingCoupons, // TODO: usar para indicador de carregamento
     createCoupon,
     updateCoupon,
     deleteCoupon,
-    validateCoupon,
+    // validateCoupon, // TODO: usar quando implementar validação de cupons
     getStatistics: getCouponStats
   } = useCoupons();
   const {
@@ -95,8 +95,8 @@ export default function LoyaltyPage() {
     loading: loadingLoyalty,
     addPoints,
     redeemPoints,
-    checkBalance,
-    getTransactionHistory,
+    // checkBalance, // TODO: usar quando implementar consulta de saldo
+    // getTransactionHistory, // TODO: usar quando implementar histórico
     loadRewards,
     loadTransactions,
     loyaltyProgram = {
@@ -122,7 +122,7 @@ export default function LoyaltyPage() {
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [selectedReward, setSelectedReward] = useState<LoyaltyReward | null>(null);
   const [showCouponModal, setShowCouponModal] = useState(false);
-  const [selectedCoupon, setSelectedCoupon] = useState<any>(null);
+  const [selectedCoupon, setSelectedCoupon] = useState<unknown>(null);
   const [showAIInsightModal, setShowAIInsightModal] = useState(false);
   const [showAddPointsModal, setShowAddPointsModal] = useState(false);
   const [showRedeemPointsModal, setShowRedeemPointsModal] = useState(false);
@@ -153,10 +153,10 @@ export default function LoyaltyPage() {
   });
   
   // Use real customers from hook
-  const [customers, setCustomers] = useState<LoyaltyCustomer[]>([]);
+  const [customers /* , setCustomers */] = useState<LoyaltyCustomer[]>([]);
 
-  const [rewards, setRewards] = useState<LoyaltyReward[]>([]);
-  const [transactions, setTransactions] = useState<LoyaltyTransaction[]>([]);
+  const [rewards] = useState<LoyaltyReward[]>([]);
+  const [transactions] = useState<LoyaltyTransaction[]>([]);
 
   // Load loyalty data on mount
   useEffect(() => {
@@ -164,7 +164,7 @@ export default function LoyaltyPage() {
     loadCustomers();
     loadRewards(); 
     loadTransactions();
-  }, []);
+  }, [loadCustomers, loadRewards, loadTransactions]);
 
   useEffect(() => {
     if (!terminalId || isNaN(Number(terminalId))) {
@@ -810,7 +810,7 @@ export default function LoyaltyPage() {
             {!selectedCustomer && (
               <div className="bg-yellow-50 dark:bg-yellow-900 rounded-xl p-4 mb-4">
                 <p className="text-yellow-700 dark:text-yellow-300">
-                  ⚠️ Selecione um cliente na aba "Clientes" para usar as análises de IA personalizadas
+                  ⚠️ Selecione um cliente na aba &quot;Clientes&quot; para usar as análises de IA personalizadas
                 </p>
               </div>
             )}
@@ -912,7 +912,7 @@ export default function LoyaltyPage() {
                         Desconto: {campaign.recommended_discount}% | Timing: {campaign.optimal_timing}
                       </p>
                       <p className="text-sm italic text-gray-500 dark:text-gray-500">
-                        "{campaign.message_template}"
+                        &quot;{campaign.message_template}&quot;
                       </p>
                     </div>
                   ))}
@@ -997,7 +997,7 @@ export default function LoyaltyPage() {
                           {change.parameter}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          De {change.current_value} para {change.recommended_value}
+                          De {String(change.current_value)} para {String(change.recommended_value)}
                         </p>
                       </div>
                       <span className="text-sm font-medium text-green-600 dark:text-green-400">
@@ -1521,13 +1521,13 @@ export default function LoyaltyPage() {
                     onClick={async () => {
                       try {
                         if (selectedCoupon) {
-                          await updateCoupon(selectedCoupon.id, couponForm);
+                          await updateCoupon((selectedCoupon as any).id, couponForm);
                         } else {
                           await createCoupon(couponForm);
                         }
                         setShowCouponModal(false);
                         setSelectedCoupon(null);
-                      } catch (err) {
+                      } catch {
                         // Error handled in hook
                       }
                     }}

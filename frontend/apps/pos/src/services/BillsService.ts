@@ -45,96 +45,67 @@ class BillsService {
   private baseUrl = 'http://localhost:8001/api/v1';
 
   async listBills(filter?: BillsFilter): Promise<Bill[]> {
-    try {
-      const params = new URLSearchParams();
-      if (filter) {
-        Object.entries(filter).forEach(([key, value]) => {
-          if (value) params.append(key, value);
-        });
+    
+    const params = new URLSearchParams();
+    if (filter) {
+      Object.entries(filter).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+    }
+    
+    const response = await fetch(`${this.baseUrl}/bills?${params}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
-      
-      const response = await fetch(`${this.baseUrl}/bills?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch bills');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching bills:', error);
-      return [];
-    }
-  }
-
-  async getBill(id: string): Promise<Bill> {
-    try {
-      const response = await fetch(`${this.baseUrl}/bills/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch bill');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching bill:', error);
-      throw error;
-    }
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch bills');
+    return await response.json();
   }
 
   async createBill(bill: BillCreate): Promise<Bill> {
-    try {
-      const response = await fetch(`${this.baseUrl}/bills`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(bill)
-      });
-      
-      if (!response.ok) throw new Error('Failed to create bill');
-      return await response.json();
-    } catch (error) {
-      console.error('Error creating bill:', error);
-      throw error;
-    }
+    
+    const response = await fetch(`${this.baseUrl}/bills`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(bill)
+    });
+    
+    if (!response.ok) throw new Error('Failed to create bill');
+    return await response.json();
+  
   }
 
   async updateBill(id: string, updates: BillUpdate): Promise<Bill> {
-    try {
-      const response = await fetch(`${this.baseUrl}/bills/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(updates)
-      });
-      
-      if (!response.ok) throw new Error('Failed to update bill');
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating bill:', error);
-      throw error;
-    }
+    
+    const response = await fetch(`${this.baseUrl}/bills/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify(updates)
+    });
+    
+    if (!response.ok) throw new Error('Failed to update bill');
+    return await response.json();
+  
   }
 
   async deleteBill(id: string): Promise<void> {
-    try {
-      const response = await fetch(`${this.baseUrl}/bills/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete bill');
-    } catch (error) {
-      console.error('Error deleting bill:', error);
-      throw error;
-    }
+    
+    const response = await fetch(`${this.baseUrl}/bills/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Failed to delete bill');
+  
   }
 
   async payBill(id: string, paymentMethod: string): Promise<Bill> {
@@ -160,8 +131,8 @@ class BillsService {
       
       if (!response.ok) throw new Error('Failed to fetch summary');
       return await response.json();
-    } catch (error) {
-      console.error('Error fetching summary:', error);
+    } catch {
+// console.error('Error fetching summary:', error);
       return {
         total_pending: 0,
         total_overdue: 0,

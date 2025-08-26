@@ -3,8 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useRemoteOrders } from '../hooks/useRemoteOrders';
 import { RemoteOrder } from '../services/RemoteOrdersService';
-import Toast, { useToast } from '../components/Toast';
 import '../index.css';
+import Toast from '../components/Toast';
+import { useToast } from '../components/Toast';
 
 // Types are now imported from useRemoteOrders hook
 
@@ -15,12 +16,12 @@ export default function RemoteOrdersPage() {
   const {
     orders,
     integrations,
-    loading,
+    // loading, // TODO: usar para indicador de carregamento
     autoAccept,
     setAutoAccept,
     acceptOrder,
     rejectOrder,
-    syncPlatform,
+    // syncPlatform, // TODO: usar para sincronizar plataformas
     configurePlatform,
     printOrder,
     getTotalPendingOrders,

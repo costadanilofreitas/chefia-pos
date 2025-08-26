@@ -3,7 +3,7 @@ import { useVoiceCommands, posVoiceCommands } from '../hooks/useVoiceCommands';
 import { cn } from '../utils/cn';
 
 interface VoiceControlProps {
-  onCommand?: (command: string, transcript: string) => void;
+  onCommand?: (__command: string, __transcript: string) => void;
   className?: string;
 }
 
@@ -16,21 +16,21 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
     // Navigation commands
     {
       phrases: ['abrir pedidos', 'mostrar pedidos', 'ir para pedidos'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Navegando para pedidos...');
         onCommand?.('navigate:orders', transcript);
       }
     },
     {
       phrases: ['abrir produtos', 'mostrar produtos', 'catálogo'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Abrindo catálogo de produtos...');
         onCommand?.('navigate:products', transcript);
       }
     },
     {
       phrases: ['abrir caixa', 'mostrar caixa', 'ir para caixa'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Abrindo caixa...');
         onCommand?.('navigate:cashier', transcript);
       }
@@ -39,28 +39,28 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
     // Order commands
     {
       phrases: ['novo pedido', 'criar pedido', 'começar pedido'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Criando novo pedido...');
         onCommand?.('order:new', transcript);
       }
     },
     {
       phrases: ['adicionar produto', 'mais um', 'adicionar item'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Adicionar produto...');
         onCommand?.('order:add', transcript);
       }
     },
     {
       phrases: ['remover produto', 'tirar', 'remover item'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Remover produto...');
         onCommand?.('order:remove', transcript);
       }
     },
     {
       phrases: ['finalizar pedido', 'fechar pedido', 'concluir pedido'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Finalizando pedido...');
         onCommand?.('order:finish', transcript);
       }
@@ -69,28 +69,28 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
     // Payment commands
     {
       phrases: ['pagar', 'pagamento', 'ir para pagamento'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Indo para pagamento...');
         onCommand?.('payment:start', transcript);
       }
     },
     {
       phrases: ['pagar em dinheiro', 'dinheiro', 'pagamento dinheiro'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Pagamento em dinheiro...');
         onCommand?.('payment:cash', transcript);
       }
     },
     {
       phrases: ['pagar com cartão', 'cartão', 'débito', 'crédito'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Pagamento com cartão...');
         onCommand?.('payment:card', transcript);
       }
     },
     {
       phrases: ['pagar com pix', 'pix'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Pagamento via PIX...');
         onCommand?.('payment:pix', transcript);
       }
@@ -99,14 +99,14 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
     // Search commands
     {
       phrases: ['buscar', 'procurar', 'pesquisar'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Ativando busca...');
         onCommand?.('search:activate', transcript);
       }
     },
     {
       phrases: ['limpar busca', 'limpar pesquisa'],
-      action: (transcript: string) => {
+      action: (_transcript: string) => {
         setLastCommand('Limpando busca...');
         onCommand?.('search:clear', transcript);
       }
@@ -127,9 +127,7 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
     isListening,
     transcript,
     interimTranscript,
-    toggleListening,
-    startListening,
-    stopListening
+    toggleListening
   } = useVoiceCommands(commands, {
     language: 'pt-BR',
     continuous: false,
@@ -207,7 +205,7 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
                   <span className="text-gray-400 italic">{interimTranscript}</span>
                 )}
                 {transcript && !interimTranscript && (
-                  <span>"{transcript}"</span>
+                  <span>&quot;{transcript}&quot;</span>
                 )}
               </div>
             )}
@@ -241,7 +239,7 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
                       <div key={i} className="flex items-center gap-2 text-sm">
                         <span className="text-gray-400">•</span>
                         <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                          "{cmd.phrases[0]}"
+                          &quot;{cmd.phrases[0]}&quot;
                         </span>
                         <span className="text-gray-500">→ {cmd.description}</span>
                       </div>
@@ -257,7 +255,7 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
                       <div key={i} className="flex items-center gap-2 text-sm">
                         <span className="text-gray-400">•</span>
                         <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                          "{cmd.phrases[0]}"
+                          &quot;{cmd.phrases[0]}&quot;
                         </span>
                         <span className="text-gray-500">→ {cmd.description}</span>
                       </div>
@@ -273,7 +271,7 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
                       <div key={i} className="flex items-center gap-2 text-sm">
                         <span className="text-gray-400">•</span>
                         <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                          "{cmd.phrases[0]}"
+                          &quot;{cmd.phrases[0]}&quot;
                         </span>
                         <span className="text-gray-500">→ {cmd.description}</span>
                       </div>
@@ -289,7 +287,7 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
                       <div key={i} className="flex items-center gap-2 text-sm">
                         <span className="text-gray-400">•</span>
                         <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                          "{cmd.phrases[0]}"
+                          &quot;{cmd.phrases[0]}&quot;
                         </span>
                         <span className="text-gray-500">→ {cmd.description}</span>
                       </div>

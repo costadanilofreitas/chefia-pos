@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { cashierService, Cashier, CashierCreate, CashierClose, CashierWithdrawal, TerminalStatus } from '../services/CashierService';
+import logger, { LogSource } from '../services/LocalLoggerService';
 
 export interface UseCashierReturn {
   // Estado
@@ -12,11 +13,11 @@ export interface UseCashierReturn {
   checkTerminalStatus: (terminalId: string) => Promise<TerminalStatus>;
   openCashier: (cashierData: CashierCreate) => Promise<Cashier>;
   closeCashier: (physicalCashAmount: number, notes?: string) => Promise<Cashier>;
-  registerWithdrawal: (cashierId: string, withdrawal: CashierWithdrawal) => Promise<any>;
+  registerWithdrawal: (cashierId: string, withdrawal: CashierWithdrawal) => Promise<unknown>;
   refreshCashier: (cashierId: string) => Promise<void>;
   clearError: () => void;
-  operations: any[];
-  getSummary: () => Promise<any>;
+  operations: unknown[];
+  getSummary: () => Promise<unknown>;
 }
 
 export const useCashier = (): UseCashierReturn => {
@@ -24,7 +25,7 @@ export const useCashier = (): UseCashierReturn => {
   const [terminalStatus, setTerminalStatus] = useState<TerminalStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [operations, setOperations] = useState<any[]>([]);
+  const [operations, setOperations] = useState<unknown[]>([]);
 
   /**
    * Verifica o status do terminal
@@ -46,7 +47,7 @@ export const useCashier = (): UseCashierReturn => {
       }
       
       return status;
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = err.message || 'Erro ao verificar status do terminal';
       setError(errorMessage);
       throw err;
@@ -71,7 +72,7 @@ export const useCashier = (): UseCashierReturn => {
       setTerminalStatus(status);
       
       return newCashier;
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = err.message || 'Erro ao abrir caixa';
       setError(errorMessage);
       throw err;
@@ -108,7 +109,7 @@ export const useCashier = (): UseCashierReturn => {
       }
       
       return closedCashier;
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = err.message || 'Erro ao fechar caixa';
       setError(errorMessage);
       throw err;
@@ -116,29 +117,6 @@ export const useCashier = (): UseCashierReturn => {
       setLoading(false);
     }
   }, [currentCashier]);
-
-  /**
-   * Registra uma retirada (ruptura) no caixa
-   */
-  const registerWithdrawal = useCallback(async (cashierId: string, withdrawal: CashierWithdrawal): Promise<any> => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await cashierService.registerWithdrawal(cashierId, withdrawal);
-      
-      // Atualizar dados do caixa após a retirada
-      await refreshCashier(cashierId);
-      
-      return result;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Erro ao registrar retirada';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   /**
    * Atualiza os dados do caixa atual
@@ -151,11 +129,34 @@ export const useCashier = (): UseCashierReturn => {
       // Atualizar status do terminal
       const status = await cashierService.getTerminalStatus(updatedCashier.terminal_id);
       setTerminalStatus(status);
-    } catch (err: any) {
-      console.error('Erro ao atualizar caixa:', err);
+    } catch (error) {
+      await logger.error('Erro ao atualizar caixa', { cashierId, error }, 'useCashier', LogSource.POS);
       // Não definir erro aqui pois é uma operação em background
     }
   }, []);
+
+  /**
+   * Registra uma retirada (ruptura) no caixa
+   */
+  const registerWithdrawal = useCallback(async (cashierId: string, withdrawal: CashierWithdrawal): Promise<unknown> => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const result = await cashierService.registerWithdrawal(cashierId, withdrawal);
+      
+      // Atualizar dados do caixa após a retirada
+      await refreshCashier(cashierId);
+      
+      return result;
+    } catch (err) {
+      const errorMessage = err.message || 'Erro ao registrar retirada';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [refreshCashier]);
 
   /**
    * Limpa o erro atual
@@ -167,7 +168,7 @@ export const useCashier = (): UseCashierReturn => {
   /**
    * Busca resumo das operações do caixa
    */
-  const getSummary = useCallback(async (): Promise<any> => {
+  const getSummary = useCallback(async (): Promise<unknown> => {
     try {
       if (!currentCashier?.id) {
         throw new Error('Nenhum caixa ativo');
@@ -193,7 +194,7 @@ export const useCashier = (): UseCashierReturn => {
       }, { sales: 0, withdrawals: 0, deposits: 0 });
       
       return summary;
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = err.message || 'Erro ao buscar resumo do caixa';
       setError(errorMessage);
       throw err;

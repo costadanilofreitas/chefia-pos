@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import App from '../App';
 
 // Mock all the hooks and components
 jest.mock('../hooks/useTerminalConfig', () => ({
@@ -64,13 +65,11 @@ jest.mock('../ui/POSPaymentPage', () => {
 
 describe('App Component', () => {
   it('should be importable', () => {
-    const App = require('../App').default;
     expect(App).toBeDefined();
     expect(typeof App).toBe('function');
   });
 
   it('should render without crashing', () => {
-    const App = require('../App').default;
     const { container } = render(
       <MemoryRouter initialEntries={['/pos/1']}>
         <App />
@@ -80,7 +79,6 @@ describe('App Component', () => {
   });
 
   it('should handle different routes', () => {
-    const App = require('../App').default;
     
     // Test root route
     const { container: container1 } = render(

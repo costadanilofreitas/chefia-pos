@@ -3,8 +3,8 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { usePerformance } from '../hooks/usePerformance';
-import { cn } from '../utils/cn';
+import {usePerformance} from '../hooks/usePerformance';
+import {cn} from '../utils/cn';
 
 interface OptimizedImageProps {
   src: string;
@@ -35,7 +35,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const [isLoading, setIsLoading] = useState(lazy);
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
-  const { optimizeImage, observeElement } = usePerformance();
+  const { optimizeImage } = usePerformance();
 
   useEffect(() => {
     if (!lazy) {
@@ -75,13 +75,14 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       }
     );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
+    const currentImg = imgRef.current;
+    if (currentImg) {
+      observer.observe(currentImg);
     }
 
     return () => {
-      if (imgRef.current) {
-        observer.unobserve(imgRef.current);
+      if (currentImg) {
+        observer.unobserve(currentImg);
       }
     };
   }, [src, width, height, quality, lazy, optimizeImage, onLoad, onError]);
