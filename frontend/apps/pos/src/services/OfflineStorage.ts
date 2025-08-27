@@ -1,3 +1,71 @@
+// Types for stored data
+interface StoredOrder {
+  id?: number;
+  terminalId: string;
+  timestamp: string;
+  status: string;
+  items: Array<{ productId: string; quantity: number; price: number }>;
+  total: number;
+  customerId?: string;
+}
+
+interface StoredProduct {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  available: boolean;
+}
+
+interface StoredCustomer {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  loyaltyPoints?: number;
+}
+
+interface StoredConfig {
+  key: string;
+  value: unknown;
+}
+
+interface SyncQueueItem {
+  id?: number;
+  type: string;
+  operation: string;
+  data: unknown;
+  timestamp: string;
+  retries: number;
+  maxRetries: number;
+  synced: boolean;
+  syncedAt?: string;
+}
+
+interface StorageLogEntry {
+  id?: number;
+  level: string;
+  message: string;
+  context?: unknown;
+  timestamp: string;
+}
+
+interface BackupData {
+  version: number;
+  timestamp: string;
+  data: {
+    orders?: StoredOrder[];
+    products?: StoredProduct[];
+    customers?: StoredCustomer[];
+    config?: StoredConfig[];
+    queue?: SyncQueueItem[];
+    logs?: StorageLogEntry[];
+  };
+}
+
+type StorableData = StoredOrder | StoredProduct | StoredCustomer | StoredConfig | SyncQueueItem | StorageLogEntry;
+type StorableDataArray = StoredOrder[] | StoredProduct[] | StoredCustomer[] | StoredConfig[] | SyncQueueItem[] | StorageLogEntry[];
+
 // IndexedDB wrapper for offline data storage
 class OfflineStorage {
   private dbName = 'pos-modern-db';
@@ -19,13 +87,11 @@ class OfflineStorage {
       const request = indexedDB.open(this.dbName, this.version);
 
       request.onerror = () => {
-// console.error('Failed to open IndexedDB:', request.error);
         reject(request.error);
       };
 
       request.onsuccess = () => {
         this.db = request.result;
-// console.log('IndexedDB initialized successfully');
         resolve();
       };
 
@@ -95,7 +161,7 @@ class OfflineStorage {
   }
 
   // Generic CRUD operations
-  async add(storeName: string, data: any): Promise<number> {
+  async add(storeName: string, data: StorableData): Promise<number> {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
@@ -138,7 +204,7 @@ class OfflineStorage {
     });
   }
 
-  async update(storeName: string, data: any): Promise<void> {
+  async update(storeName: string, data: StorableData | StorableDataArray): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
     return new Promise((resolve, reject) => {
@@ -168,7 +234,7 @@ class OfflineStorage {
   }
 
   // Specialized methods for orders
-  async saveOrder(order: unknown): Promise<number> {
+  async saveOrder(order: StoredOrder): Promise<number> {
     const orderId = await this.add(this.stores.orders, order);
     
     // Add to sync queue if offline
@@ -233,14 +299,16 @@ class OfflineStorage {
 
   // Sync queue management
   async addToSyncQueue(type: string, operation: string, data: unknown): Promise<void> {
-    await this.add(this.stores.queue, {
+    const queueItem: SyncQueueItem = {
       type,
       operation,
       data,
+      timestamp: new Date().toISOString(),
       synced: false,
       retries: 0,
       maxRetries: 3
-    });
+    };
+    await this.add(this.stores.queue, queueItem);
   }
 
   async getPendingSyncItems(): Promise<unknown[]> {
@@ -260,7 +328,7 @@ class OfflineStorage {
   async markAsSynced(queueId: number): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
-    const item = await this.get(this.stores.queue, queueId) as any;
+    const item = await this.get(this.stores.queue, queueId) as SyncQueueItem;
     if (item) {
       item.synced = true;
       item.syncedAt = new Date().toISOString();
@@ -274,26 +342,26 @@ class OfflineStorage {
   }
 
   async getConfig(key: string): Promise<unknown> {
-    const config = await this.get(this.stores.config, key) as any;
+    const config = await this.get(this.stores.config, key) as StoredConfig;
     return config?.value;
   }
 
   // Logging
   async log(level: 'info' | 'warn' | 'error', message: string, data?: unknown): Promise<void> {
-    await this.add(this.stores.logs, {
+    const logEntry: StorageLogEntry = {
       level,
       message,
-      data,
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    });
+      context: data ? { data, userAgent: navigator.userAgent, url: window.location.href } : undefined,
+      timestamp: new Date().toISOString()
+    };
+    await this.add(this.stores.logs, logEntry);
 
     // Keep only last 1000 logs
     const logs = await this.getAll(this.stores.logs);
     if (logs.length > 1000) {
       const oldLogs = logs.slice(0, logs.length - 1000);
       for (const log of oldLogs) {
-        await this.delete(this.stores.logs, (log as any).id);
+        await this.delete(this.stores.logs, (log as StorageLogEntry).id);
       }
     }
   }
@@ -306,8 +374,8 @@ class OfflineStorage {
 
     const orders = await this.getAll(this.stores.orders);
     for (const order of orders) {
-      if (new Date((order as any).timestamp) < thirtyDaysAgo) {
-        await this.delete(this.stores.orders, (order as any).id);
+      if (new Date((order as StoredOrder).timestamp) < thirtyDaysAgo) {
+        await this.delete(this.stores.orders, (order as StoredOrder).id);
       }
     }
 
@@ -317,7 +385,7 @@ class OfflineStorage {
 
     const queueItems = await this.getAll(this.stores.queue);
     for (const item of queueItems) {
-      const queueItem = item as any;
+      const queueItem = item as SyncQueueItem;
       if (queueItem.synced && new Date(queueItem.timestamp) < sevenDaysAgo) {
         await this.delete(this.stores.queue, queueItem.id);
       }
@@ -340,18 +408,21 @@ class OfflineStorage {
   }
 
   // Import data from backup
-  async importData(backup: any): Promise<void> {
+  async importData(backup: BackupData): Promise<void> {
     if (!backup.data) throw new Error('Invalid backup format');
 
     for (const [storeName, items] of Object.entries(backup.data)) {
       if (Array.isArray(items)) {
-        for (const item of items as unknown[]) {
-          await this.update(storeName, item);
+        for (const item of items) {
+          await this.update(storeName, item as StorableData);
         }
       }
     }
   }
 }
+
+// Export types for external use
+export type { StorageLogEntry };
 
 // Singleton instance
 export const offlineStorage = new OfflineStorage();

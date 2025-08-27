@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '../components/Toast';
 import logger, { LogSource } from '../services/LocalLoggerService';
+import { buildApiUrl } from '../config/api';
 
 export interface LoyaltyTransaction {
   customer_id: string;
@@ -26,7 +27,7 @@ export const useLoyalty = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`http://localhost:8001/api/v1/loyalty/add-points`, {
+      const response = await fetch(buildApiUrl('/api/v1/loyalty/add-points'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,7 +63,7 @@ export const useLoyalty = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`http://localhost:8001/api/v1/loyalty/redeem-points`, {
+      const response = await fetch(buildApiUrl('/api/v1/loyalty/redeem-points'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +99,7 @@ export const useLoyalty = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`http://localhost:8001/api/v1/loyalty/transfer-points`, {
+      const response = await fetch(buildApiUrl('/api/v1/loyalty/transfer-points'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +127,7 @@ export const useLoyalty = () => {
 
   const checkBalance = useCallback(async (customerId: string) => {
     try {
-      const response = await fetch(`http://localhost:8001/api/v1/loyalty/balance/${customerId}`, {
+      const response = await fetch(buildApiUrl(`/api/v1/loyalty/balance/${customerId}`), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -142,7 +143,7 @@ export const useLoyalty = () => {
 
   const getTransactionHistory = useCallback(async (customerId: string) => {
     try {
-      const response = await fetch(`http://localhost:8001/api/v1/loyalty/transactions/${customerId}`, {
+      const response = await fetch(buildApiUrl(`/api/v1/loyalty/transactions/${customerId}`), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -158,7 +159,7 @@ export const useLoyalty = () => {
 
   const loadRewards = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:8001/api/v1/loyalty/rewards`, {
+      const response = await fetch(buildApiUrl('/api/v1/loyalty/rewards'), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -174,7 +175,7 @@ export const useLoyalty = () => {
 
   const loadTransactions = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:8001/api/v1/loyalty/transactions`, {
+      const response = await fetch(buildApiUrl('/api/v1/loyalty/transactions'), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

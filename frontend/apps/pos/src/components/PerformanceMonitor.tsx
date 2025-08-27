@@ -6,6 +6,17 @@ import React, { useState, useEffect } from 'react';
 import {usePerformance} from '../hooks/usePerformance';
 import {cn} from '../utils/cn';
 
+interface NetworkInformation {
+  effectiveType?: string;
+  downlink?: number;
+  rtt?: number;
+  saveData?: boolean;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
+
 interface PerformanceMonitorProps {
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   defaultExpanded?: boolean;
@@ -215,7 +226,7 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-gray-400">Connection</span>
             <span className="text-sm font-mono text-gray-300">
-              {(navigator as any).connection?.effectiveType || 'Unknown'}
+              {(navigator as NavigatorWithConnection).connection?.effectiveType || 'Unknown'}
             </span>
           </div>
 

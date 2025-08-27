@@ -112,7 +112,7 @@ export class EmployeeService {
     try {
       await logger.debug('Listando funcionários', { role, is_active, search }, 'EmployeeService', LogSource.POS);
       
-      const params: any = {};
+      const params: Record<string, string | boolean> = {};
       if (role) params.role = role;
       if (is_active !== undefined) params.is_active = is_active;
       if (search) params.search = search;
@@ -325,7 +325,7 @@ export class EmployeeService {
     try {
       await logger.debug('Buscando histórico de presença', { employeeId, startDate, endDate }, 'EmployeeService', LogSource.POS);
       
-      const params: any = {};
+      const params: Record<string, string> = {};
       if (startDate) params.start_date = startDate;
       if (endDate) params.end_date = endDate;
 

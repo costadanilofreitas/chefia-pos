@@ -2,7 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '../components/Toast';
 import { tableService, Table } from '../services/TableService';
 
-// Table interface is now imported from TableService
+interface TableReservation {
+  id: string;
+  customer_name: string;
+  customer_phone: string;
+  reservation_time: string;
+  guest_count: number;
+  notes?: string;
+}
 
 // TableService is now imported from external service file
 
@@ -82,7 +89,7 @@ export const useTable = () => {
     });
   }, [updateTable]);
 
-  const reserveTable = useCallback(async (tableId: string, reservation: any) => {
+  const reserveTable = useCallback(async (tableId: string, reservation: TableReservation) => {
     return updateTable(tableId, { 
       status: 'reserved',
       reservation 

@@ -3,11 +3,13 @@
  * Handles coupon management operations
  */
 
+import { buildApiUrl } from "../config/api";
+
 export interface Coupon {
   id: string;
   code: string;
   description: string;
-  discount_type: 'percentage' | 'fixed' | 'product' | 'shipping';
+  discount_type: "percentage" | "fixed" | "product" | "shipping";
   discount_value: number;
   min_purchase?: number;
   max_discount?: number;
@@ -18,7 +20,7 @@ export interface Coupon {
   per_customer_limit?: number;
   categories?: string[];
   products?: string[];
-  status: 'active' | 'inactive' | 'expired';
+  status: "active" | "inactive" | "expired";
   created_at: string;
   updated_at: string;
 }
@@ -26,7 +28,7 @@ export interface Coupon {
 export interface CouponCreate {
   code: string;
   description: string;
-  discount_type: 'percentage' | 'fixed' | 'product' | 'shipping';
+  discount_type: "percentage" | "fixed" | "product" | "shipping";
   discount_value: number;
   min_purchase?: number;
   max_discount?: number;
@@ -46,92 +48,100 @@ export interface CouponValidation {
 }
 
 class CouponsService {
-  private baseUrl = 'http://localhost:8001/api/v1';
+  private readonly baseUrl = buildApiUrl("/api/v1");
 
-  async listCoupons(status?: 'active' | 'inactive' | 'expired'): Promise<Coupon[]> {
-    
-    const params = status ? `?status=${status}` : '';
+  async listCoupons(
+    status?: "active" | "inactive" | "expired"
+  ): Promise<Coupon[]> {
+    const params = status ? `?status=${status}` : "";
     const response = await fetch(`${this.baseUrl}/coupons${params}`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
     });
-    
-    if (!response.ok) throw new Error('Failed to fetch coupons');
+
+    if (!response.ok) throw new Error("Failed to fetch coupons");
     return await response.json();
   }
 
   async createCoupon(coupon: CouponCreate): Promise<Coupon> {
-    
     const response = await fetch(`${this.baseUrl}/coupons`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      body: JSON.stringify(coupon)
+      body: JSON.stringify(coupon),
     });
-    
-    if (!response.ok) throw new Error('Failed to create coupon');
+
+    if (!response.ok) throw new Error("Failed to create coupon");
     return await response.json();
-  
   }
 
-  async updateCoupon(id: string, updates: Partial<CouponCreate>): Promise<Coupon> {
-    
+  async updateCoupon(
+    id: string,
+    updates: Partial<CouponCreate>
+  ): Promise<Coupon> {
     const response = await fetch(`${this.baseUrl}/coupons/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      body: JSON.stringify(updates)
+      body: JSON.stringify(updates),
     });
-    
-    if (!response.ok) throw new Error('Failed to update coupon');
+
+    if (!response.ok) throw new Error("Failed to update coupon");
     return await response.json();
-  
   }
 
   async deleteCoupon(id: string): Promise<void> {
-    
     const response = await fetch(`${this.baseUrl}/coupons/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
     });
-    
-    if (!response.ok) throw new Error('Failed to delete coupon');
-  
+
+    if (!response.ok) throw new Error("Failed to delete coupon");
   }
 
-  async validateCoupon(code: string, orderAmount: number, customerId?: string): Promise<CouponValidation> {
-    
+  async validateCoupon(
+    code: string,
+    orderAmount: number,
+    customerId?: string
+  ): Promise<CouponValidation> {
     const response = await fetch(`${this.baseUrl}/coupons/validate`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-      body: JSON.stringify({ code, order_amount: orderAmount, customer_id: customerId })
+      body: JSON.stringify({
+        code,
+        order_amount: orderAmount,
+        customer_id: customerId,
+      }),
     });
-    
-    if (!response.ok) throw new Error('Failed to validate coupon');
+
+    if (!response.ok) throw new Error("Failed to validate coupon");
     return await response.json();
   }
 
   async applyCoupon(code: string, orderId: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/orders/${orderId}/apply-coupon`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      },
-      body: JSON.stringify({ code })
-    });
-    
-    if (!response.ok) throw new Error('Failed to apply coupon');
+    const response = await fetch(
+      `${this.baseUrl}/orders/${orderId}/apply-coupon`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ code }),
+      }
+    );
+
+    if (!response.ok) throw new Error("Failed to apply coupon");
   }
 }
 

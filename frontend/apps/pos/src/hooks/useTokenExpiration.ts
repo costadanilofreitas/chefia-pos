@@ -71,7 +71,6 @@ export const useTokenExpiration = (options: UseTokenExpirationOptions = {}) => {
 
   const refreshToken = useCallback(async (): Promise<boolean> => {
     if (isRefreshing) {
-      // console.log('Token refresh already in progress');
       return false;
     }
 
@@ -80,18 +79,26 @@ export const useTokenExpiration = (options: UseTokenExpirationOptions = {}) => {
     try {
       // For now, we don't have a refresh endpoint, so we'll just validate the current token
       // In a real implementation, you would call a refresh endpoint here
-      // console.log('Token refresh not implemented - would need refresh endpoint');
 
-      // Reset the auto-refresh flag so it can try again later
-      hasAutoRefreshed.current = false;
-
-      if (onRefreshFailed) {
-        onRefreshFailed(new Error("Token refresh not implemented"));
+      // Simulate a refresh logic: if token is valid, return true, else return false
+      const token = apiInterceptor.getToken();
+      if (token && apiInterceptor.isTokenValid()) {
+        hasAutoRefreshed.current = false;
+        // Optionally call onTokenRefreshed if implemented
+        if (options.onTokenRefreshed) {
+          options.onTokenRefreshed();
+        }
+        return true;
+      } else {
+        hasAutoRefreshed.current = false;
+        if (onRefreshFailed) {
+          onRefreshFailed(
+            new Error("Token refresh not implemented or token invalid")
+          );
+        }
+        return false;
       }
-
-      return false;
     } catch (error) {
-      // console.error('Token refresh failed:', error);
       hasAutoRefreshed.current = false;
 
       if (onRefreshFailed) {
@@ -102,7 +109,7 @@ export const useTokenExpiration = (options: UseTokenExpirationOptions = {}) => {
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing, onRefreshFailed]);
+  }, [isRefreshing, onRefreshFailed, options]);
 
   const checkTokenStatus = useCallback(() => {
     const info = calculateTokenInfo();
@@ -138,7 +145,6 @@ export const useTokenExpiration = (options: UseTokenExpirationOptions = {}) => {
 
     if (shouldAutoRefresh) {
       hasAutoRefreshed.current = true;
-      // console.log(`Token expiring in ${Math.round(info.timeUntilExpiration / 1000 / 60)} minutes, attempting auto-refresh`);
       refreshToken();
     }
   }, [
@@ -163,14 +169,12 @@ export const useTokenExpiration = (options: UseTokenExpirationOptions = {}) => {
       checkTokenStatus,
       checkIntervalSeconds * 1000
     );
-    // console.log(`Token expiration monitoring started (checking every ${checkIntervalSeconds}s)`);
   }, [checkTokenStatus, checkIntervalSeconds]);
 
   const stopMonitoring = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
-      // console.log('Token expiration monitoring stopped');
     }
   }, []);
 

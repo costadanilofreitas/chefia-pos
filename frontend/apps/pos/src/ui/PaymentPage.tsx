@@ -247,9 +247,14 @@ export default function PaymentPage() {
               <div className="flex items-center gap-3">
                 {order.type && (
                   <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
-                    {order.type === 'local' ? '🍽️ Local' : 
-                     order.type === 'delivery' ? '🛵 Entrega' :
-                     order.type === 'takeout' ? '🥡 Retirada' : '💻 Online'}
+                    {(() => {
+                      const typeMap: Record<string, string> = {
+                        'local': '🍽️ Local',
+                        'delivery': '🛵 Entrega',
+                        'takeout': '🥡 Retirada'
+                      };
+                      return typeMap[order.type] || '💻 Online';
+                    })()}
                   </span>
                 )}
                 <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -413,10 +418,11 @@ export default function PaymentPage() {
           <div className="p-6 border-b dark:border-gray-700">
             {selectedPayment === 'cash' && (
               <>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="payment-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Valor Recebido
                 </label>
                 <input
+                  id="payment-amount"
                   type="text"
                   value={paymentAmount}
                   onChange={(e) => handlePaymentAmountChange(e.target.value)}

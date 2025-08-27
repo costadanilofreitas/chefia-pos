@@ -6,6 +6,7 @@ import { useCashier } from '../hooks/useCashier';
 import { useBusinessDay } from '../hooks/useBusinessDay';
 import { formatCurrency } from '../utils/formatters';
 import NumericLoginModal from '../components/NumericLoginModal';
+import { NumericKeypad } from '../components/NumericKeypad';
 import Toast, { useToast } from '../components/Toast';
 import logger, { LogSource } from '../services/LocalLoggerService';
 import '../index.css';
@@ -58,7 +59,8 @@ export default function CashierOpeningClosingPage() {
         logger.error('Erro ao verificar status do terminal', { terminalId, error }, 'CashierOpeningClosing', LogSource.POS);
       });
     }
-  }, [terminalId, isAuthenticated, checkTerminalStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [terminalId, isAuthenticated]); // Removed checkTerminalStatus to prevent re-renders
 
   // Load summary when cashier is open
   useEffect(() => {
@@ -442,10 +444,11 @@ export default function CashierOpeningClosingPage() {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="opening-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Valor de Abertura
                 </label>
                 <input
+                  id="opening-amount"
                   type="text"
                   value={openingAmount}
                   onChange={(e) => setOpeningAmount(e.target.value.replace(/[^0-9.]/g, ''))}
@@ -454,24 +457,23 @@ export default function CashierOpeningClosingPage() {
                 />
                 
                 {/* Numeric Keypad */}
-                <div className="grid grid-cols-3 gap-2 mt-3">
-                  {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.', '←'].map(key => (
-                    <button
-                      key={key}
-                      onClick={() => handleKeypadInput(key, 'opening')}
-                      className="p-3 text-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                    >
-                      {key}
-                    </button>
-                  ))}
-                </div>
+                <NumericKeypad 
+                  onNumberClick={(num) => handleKeypadInput(num, 'opening')}
+                  onBackspace={() => handleKeypadInput('←', 'opening')}
+                  onDecimal={() => handleKeypadInput('.', 'opening')}
+                  showClear={false}
+                  showDecimal={true}
+                  showBackspace={true}
+                  className="mt-3"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="opening-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Observações (opcional)
                 </label>
                 <textarea
+                  id="opening-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
@@ -523,10 +525,11 @@ export default function CashierOpeningClosingPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="closing-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Valor Contado
                 </label>
                 <input
+                  id="closing-amount"
                   type="text"
                   value={closingAmount}
                   onChange={(e) => setClosingAmount(e.target.value.replace(/[^0-9.]/g, ''))}
@@ -535,17 +538,15 @@ export default function CashierOpeningClosingPage() {
                 />
                 
                 {/* Numeric Keypad */}
-                <div className="grid grid-cols-3 gap-2 mt-3">
-                  {['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.', '←'].map(key => (
-                    <button
-                      key={key}
-                      onClick={() => handleKeypadInput(key, 'closing')}
-                      className="p-3 text-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                    >
-                      {key}
-                    </button>
-                  ))}
-                </div>
+                <NumericKeypad 
+                  onNumberClick={(num) => handleKeypadInput(num, 'closing')}
+                  onBackspace={() => handleKeypadInput('←', 'closing')}
+                  onDecimal={() => handleKeypadInput('.', 'closing')}
+                  showClear={false}
+                  showDecimal={true}
+                  showBackspace={true}
+                  className="mt-3"
+                />
               </div>
 
               {/* Show difference if any */}
@@ -566,10 +567,11 @@ export default function CashierOpeningClosingPage() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="closing-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Observações (opcional)
                 </label>
                 <textarea
+                  id="closing-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"

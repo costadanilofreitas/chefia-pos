@@ -89,16 +89,351 @@ make test  # ou npm test && pytest
 
 ---
 
+## 🏆 Padrões de Qualidade e Code Quality (SonarLint)
+
+### 📊 Métricas de Qualidade
+
+O projeto segue padrões rigorosos de qualidade baseados em análises estáticas do SonarQube/SonarLint:
+
+- **Code Coverage**: Mínimo 70% para produção
+- **Duplicação**: Máximo 3% de código duplicado
+- **Complexidade Ciclomática**: Máximo 15 por método/função
+- **Technical Debt**: Máximo 5% do tempo total de desenvolvimento
+
+### 🎯 Regras de Code Quality Implementadas
+
+#### 1. Substituição de console.* por Logging Centralizado
+
+```typescript
+// ❌ Antes: Console statements espalhados
+console.log('Processing order:', order);
+console.error('Error:', error);
+console.warn('Warning: Invalid data');
+
+// ✅ Depois: Logging centralizado com contexto
+import { offlineStorage } from '@/services/offlineStorage';
+
+// Para informações/debug
+offlineStorage.log('Processing order', { orderId: order.id, status: order.status });
+
+// Para erros (automaticamente inclui stack trace)
+offlineStorage.log('Failed to process order', error);
+
+// Para warnings com contexto
+offlineStorage.log('Warning: Invalid data detected', { 
+  data, 
+  validation: 'missing required fields' 
+});
+```
+
+#### 2. Eliminação de TypeScript 'any' Types
+
+```typescript
+// ❌ Antes: Tipos 'any' genéricos
+function processData(data: any): any {
+  return data.map((item: any) => item.value);
+}
+
+// ✅ Depois: Tipos específicos e seguros
+interface DataItem {
+  id: string;
+  value: number;
+  status: 'active' | 'inactive';
+}
+
+interface ProcessedData {
+  processedValues: number[];
+  totalCount: number;
+}
+
+function processData(data: DataItem[]): ProcessedData {
+  const processedValues = data.map(item => item.value);
+  return {
+    processedValues,
+    totalCount: data.length
+  };
+}
+```
+
+#### 3. Tratamento Robusto de Erros (Eliminação de Empty Catch Blocks)
+
+```typescript
+// ❌ Antes: Catch blocks vazios
+try {
+  const result = await api.getRemoteOrders();
+  setOrders(result);
+} catch (error) {
+  // Silencioso - problema crítico!
+}
+
+// ✅ Depois: Tratamento completo de erros
+try {
+  const result = await api.getRemoteOrders();
+  setOrders(result);
+} catch (error: unknown) {
+  // Log estruturado do erro
+  offlineStorage.log('Failed to fetch remote orders', {
+    error: error instanceof Error ? error.message : String(error),
+    timestamp: new Date().toISOString(),
+    context: 'RemoteOrdersPage.fetchOrders'
+  });
+  
+  // Feedback ao usuário
+  addToast('Erro ao carregar pedidos remotos', 'error');
+  
+  // Fallback graceful
+  setOrders([]);
+}
+```
+
+#### 4. Extração de Nested Ternary Operations
+
+```typescript
+// ❌ Antes: Nested ternary ilegível
+const statusIcon = order.status === 'pending' 
+  ? '⏳' 
+  : order.status === 'confirmed'
+    ? '✅'
+    : order.status === 'preparing'
+      ? '🔥'
+      : order.status === 'ready'
+        ? '📦'
+        : '❌';
+
+// ✅ Depois: Função pura e testável
+function getOrderStatusIcon(status: OrderStatus): string {
+  const iconMap: Record<OrderStatus, string> = {
+    pending: '⏳',
+    confirmed: '✅',
+    preparing: '🔥',
+    ready: '📦',
+    cancelled: '❌'
+  };
+  
+  return iconMap[status] || '❓';
+}
+
+const statusIcon = getOrderStatusIcon(order.status);
+
+// ✅ Alternativa: IIFE para lógica inline complexa
+const statusColor = (() => {
+  switch (order.status) {
+    case 'pending': return 'bg-yellow-100 text-yellow-800';
+    case 'confirmed': return 'bg-green-100 text-green-800';
+    case 'preparing': return 'bg-blue-100 text-blue-800';
+    default: return 'bg-gray-100 text-gray-800';
+  }
+})();
+```
+
+#### 5. Melhorias de Acessibilidade (Semantic HTML)
+
+```typescript
+// ❌ Antes: div com onClick (não acessível)
+<div 
+  onClick={handleOrderClick}
+  className="cursor-pointer hover:bg-gray-50"
+>
+  Order #{order.id}
+</div>
+
+// ✅ Depois: button semântico com acessibilidade
+<button
+  onClick={handleOrderClick}
+  type="button"
+  className="w-full text-left p-4 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+  aria-label={`View details for order ${order.id}`}
+>
+  Order #{order.id}
+</button>
+
+// ✅ Labels com htmlFor adequados
+<label 
+  htmlFor="order-notes"
+  className="block text-sm font-medium text-gray-700 mb-1"
+>
+  Observações do Pedido
+</label>
+<textarea
+  id="order-notes"
+  value={notes}
+  onChange={(e) => setNotes(e.target.value)}
+  className="w-full border border-gray-300 rounded-md px-3 py-2"
+  placeholder="Digite observações especiais..."
+/>
+```
+
+#### 6. Centralização de Configuração de API
+
+```typescript
+// ❌ Antes: URLs hardcoded espalhadas
+// Em vários arquivos:
+fetch('http://localhost:8001/api/v1/orders');
+fetch('http://localhost:8001/api/v1/remote-orders');
+fetch('http://localhost:8001/api/v1/products');
+
+// ✅ Depois: config/api.ts centralizado
+// config/api.ts
+export const API_CONFIG = {
+  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8001',
+  TIMEOUT: 30000,
+  RETRY_ATTEMPTS: 3,
+  ENDPOINTS: {
+    ORDERS: '/api/v1/orders',
+    REMOTE_ORDERS: '/api/v1/remote-orders',
+    PRODUCTS: '/api/v1/products',
+    CUSTOMERS: '/api/v1/customers'
+  }
+} as const;
+
+// services/apiClient.ts
+import { API_CONFIG } from '@/config/api';
+
+export class ApiClient {
+  private baseURL = API_CONFIG.BASE_URL;
+  
+  async get<T>(endpoint: string): Promise<T> {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+    
+    return response.json();
+  }
+}
+
+// Uso nos components
+const orders = await apiClient.get<Order[]>(API_CONFIG.ENDPOINTS.ORDERS);
+```
+
+#### 7. Cache para Prevenção de Duplicate API Calls
+
+```typescript
+// ❌ Antes: Multiple chamadas desnecessárias
+useEffect(() => {
+  fetchOrders(); // Chamada 1
+}, []);
+
+useEffect(() => {
+  fetchOrders(); // Chamada 2 (duplicada)
+}, [selectedPlatform]);
+
+// ✅ Depois: Cache inteligente com React Query
+import { useQuery } from '@tanstack/react-query';
+
+const { data: orders, isLoading, error } = useQuery({
+  queryKey: ['orders', selectedPlatform],
+  queryFn: () => orderService.getOrders({ platform: selectedPlatform }),
+  staleTime: 5 * 60 * 1000, // Fresh por 5 minutos
+  cacheTime: 10 * 60 * 1000, // Cache por 10 minutos
+  retry: 2,
+  refetchOnWindowFocus: false
+});
+
+// ✅ Alternativa: Cache manual simples
+const orderCache = new Map<string, { data: Order[]; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+async function getCachedOrders(platform: string): Promise<Order[]> {
+  const cacheKey = `orders-${platform}`;
+  const cached = orderCache.get(cacheKey);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  
+  const orders = await orderService.getOrders({ platform });
+  orderCache.set(cacheKey, { data: orders, timestamp: Date.now() });
+  
+  return orders;
+}
+```
+
+#### 8. Optional Chaining para Acesso Seguro
+
+```typescript
+// ❌ Antes: Acesso direto perigoso
+const customerName = order.customer.name;
+const firstItem = order.items[0].product.name;
+const discountAmount = order.payment.discount.amount;
+
+// ✅ Depois: Optional chaining seguro
+const customerName = order?.customer?.name ?? 'Cliente não identificado';
+const firstItem = order?.items?.[0]?.product?.name ?? 'Item não encontrado';
+const discountAmount = order?.payment?.discount?.amount ?? 0;
+
+// ✅ Com type guards para validação adicional
+function isValidOrder(order: unknown): order is Order {
+  return (
+    typeof order === 'object' &&
+    order !== null &&
+    'id' in order &&
+    'status' in order &&
+    'items' in order &&
+    Array.isArray((order as any).items)
+  );
+}
+
+if (isValidOrder(orderData)) {
+  // orderData é tipado como Order aqui
+  const total = orderData.items.reduce((sum, item) => sum + item.price, 0);
+}
+```
+
+### 🔍 Tools de Qualidade
+
+```bash
+# Análise de qualidade completa
+npm run lint          # ESLint para padrões
+npm run type-check     # TypeScript strict checking
+npm run test:coverage  # Coverage de testes
+npm run audit          # Vulnerabilidades de segurança
+
+# SonarLint integration (VSCode)
+# Instale a extensão SonarLint para análise em tempo real
+
+# Pre-commit hooks para garantir qualidade
+npx husky add .husky/pre-commit "npm run lint && npm run type-check"
+```
+
+---
+
 ## 💻 Padrões de Código
 
 ### ⚠️ REGRAS CRÍTICAS DE CÓDIGO
+
+#### 🏆 PADRÕES DE QUALIDADE SONARQUBE/SONAR LINT
+
+```typescript
+// ✅ PADRÃO: Usar logging centralizado ao invés de console
+// ❌ NUNCA deixe console.log/console.error
+console.log('debug', data);     // REMOVER ANTES DO COMMIT
+console.warn('test');           // REMOVER ANTES DO COMMIT
+console.error('check this');    // REMOVER ANTES DO COMMIT
+
+// ✅ SEMPRE use logging centralizado
+import { offlineStorage } from '@/services/offlineStorage';
+
+// Para logs de debug/info
+offlineStorage.log('Order processed successfully', { orderId: data.id });
+
+// Para erros (com stack trace)
+try {
+  processOrder(data);
+} catch (error) {
+  offlineStorage.log('Error processing order', error);
+  // Handle error appropriately
+}
+```
 
 #### ❌ PROIBIDO NO CÓDIGO DE PRODUÇÃO
 
 ```python
 # ❌ NUNCA deixe console.log/print de debug
 print("debug:", data)  # REMOVER ANTES DO COMMIT
-console.log("test", variable);  // REMOVER ANTES DO COMMIT
 
 # ❌ NUNCA deixe mocks fora de testes
 def get_user():
@@ -115,18 +450,21 @@ def process_data(data: Dict[str, Any]) -> ProcessedData:
 ```
 
 ```typescript
-// ❌ NUNCA deixe console.log
-console.log('debug', data);  // REMOVER ANTES DO COMMIT
-console.warn('test');         // REMOVER ANTES DO COMMIT
-console.error('check this');  // REMOVER ANTES DO COMMIT
-
 // ❌ NUNCA use any como tipo
 let data: any;  // EVITE ANY
 function process(input: any): any {  // TIPOS ESPECÍFICOS
 
 // ✅ SEMPRE use tipos específicos
+interface OrderData {
+  id: string;
+  total: number;
+  status: 'pending' | 'confirmed' | 'rejected';
+}
+
 let data: OrderData;
 function process(input: OrderInput): OrderOutput {
+  // Implementation
+}
 
 // ❌ NUNCA deixe dados mockados
 const users = [
@@ -135,6 +473,22 @@ const users = [
 
 // ✅ Use serviços reais ou factories
 const users = await userService.getUsers();
+
+// ❌ NUNCA deixe catch blocks vazios
+try {
+  const result = await api.getData();
+} catch (error) {
+  // Silencioso - NUNCA FAÇA ISSO!
+}
+
+// ✅ SEMPRE trate erros adequadamente
+try {
+  const result = await api.getData();
+} catch (error) {
+  offlineStorage.log('Failed to fetch data', error);
+  // Handle error: show notification, retry, etc.
+  throw new Error('Unable to fetch data. Please try again.');
+}
 ```
 
 ### Python (Backend)
@@ -292,6 +646,177 @@ export const Order: FC<OrderProps> = memo(({ orderId, onUpdate }) => {
 });
 
 Order.displayName = "Order";
+```
+
+### 🎯 PADRÕES DE CÓDIGO QUALIDADE (SONAR COMPLIANCE)
+
+#### Tratamento de Erros Centralizado
+
+```typescript
+// ✅ PADRÃO: Tratamento de erro centralizado
+import { offlineStorage } from '@/services/offlineStorage';
+
+try {
+  const orders = await remoteOrderService.getOrders();
+  return orders;
+} catch (error: unknown) {
+  // Log centralizado com contexto
+  offlineStorage.log('Failed to fetch remote orders', {
+    error: error instanceof Error ? error.message : String(error),
+    timestamp: new Date().toISOString(),
+    context: 'RemoteOrdersPage'
+  });
+  
+  // Throw error específico para tratamento upstream
+  throw new Error('Unable to load orders. Please check your connection.');
+}
+```
+
+#### Configuração de API Centralizada
+
+```typescript
+// ✅ PADRÃO: config/api.ts para centralizar URLs
+// config/api.ts
+export const API_CONFIG = {
+  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8001',
+  ENDPOINTS: {
+    ORDERS: '/api/v1/orders',
+    REMOTE_ORDERS: '/api/v1/remote-orders',
+    PRODUCTS: '/api/v1/products'
+  },
+  TIMEOUT: 30000
+};
+
+// ❌ NUNCA hardcode URLs nos componentes
+const response = await fetch('http://localhost:8001/api/v1/orders');
+
+// ✅ USE configuração centralizada
+import { API_CONFIG } from '@/config/api';
+const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORDERS}`);
+```
+
+#### Evitando Nested Ternary com IIFE
+
+```typescript
+// ❌ EVITE: Nested ternary difícil de ler
+const statusColor = order.status === 'pending' 
+  ? 'yellow' 
+  : order.status === 'confirmed'
+    ? 'green'
+    : order.status === 'preparing'
+      ? 'blue'
+      : 'red';
+
+// ✅ USE: IIFE (Immediately Invoked Function Expression) para lógica complexa
+const statusColor = (() => {
+  switch (order.status) {
+    case 'pending': return 'yellow';
+    case 'confirmed': return 'green';
+    case 'preparing': return 'blue';
+    default: return 'red';
+  }
+})();
+
+// ✅ OU: Extract para função nomeada
+function getStatusColor(status: OrderStatus): string {
+  const colorMap: Record<OrderStatus, string> = {
+    pending: 'yellow',
+    confirmed: 'green',
+    preparing: 'blue',
+    rejected: 'red'
+  };
+  return colorMap[status] || 'gray';
+}
+
+const statusColor = getStatusColor(order.status);
+```
+
+#### Acessibilidade com Elementos Semânticos
+
+```typescript
+// ❌ EVITE: div com onClick (não é acessível)
+<div onClick={handleClick} className="clickable">
+  Clique aqui
+</div>
+
+// ✅ USE: button para ações clicáveis
+<button 
+  onClick={handleClick} 
+  type="button"
+  className="bg-blue-500 text-white px-4 py-2 rounded"
+>
+  Clique aqui
+</button>
+
+// ✅ USE: htmlFor em labels
+<label htmlFor="order-notes" className="block mb-2">
+  Observações do Pedido
+</label>
+<textarea 
+  id="order-notes"
+  value={notes}
+  onChange={(e) => setNotes(e.target.value)}
+  className="w-full border rounded px-3 py-2"
+/>
+```
+
+#### Cache para Evitar Chamadas Duplicadas
+
+```typescript
+// ✅ PADRÃO: Cache simples com Map
+const orderCache = new Map<string, Order>();
+
+const getOrder = async (orderId: string): Promise<Order> => {
+  // Verificar cache primeiro
+  if (orderCache.has(orderId)) {
+    return orderCache.get(orderId)!;
+  }
+  
+  try {
+    const order = await api.getOrder(orderId);
+    // Salvar no cache
+    orderCache.set(orderId, order);
+    return order;
+  } catch (error) {
+    offlineStorage.log('Failed to fetch order', { orderId, error });
+    throw error;
+  }
+};
+
+// ✅ PADRÃO: React Query para cache automático (recomendado)
+import { useQuery } from '@tanstack/react-query';
+
+const { data: order, isLoading, error } = useQuery({
+  queryKey: ['order', orderId],
+  queryFn: () => orderService.getOrder(orderId),
+  staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+  cacheTime: 10 * 60 * 1000 // Manter em cache por 10 minutos
+});
+```
+
+#### Optional Chaining para Segurança
+
+```typescript
+// ❌ EVITE: Acesso direto que pode falhar
+const customerName = order.customer.name;
+const firstItemName = order.items[0].product.name;
+
+// ✅ USE: Optional chaining
+const customerName = order?.customer?.name ?? 'Cliente não identificado';
+const firstItemName = order?.items?.[0]?.product?.name ?? 'Produto não encontrado';
+
+// ✅ USE: Type guards para validação
+function isValidOrder(order: any): order is Order {
+  return order && 
+    typeof order.id === 'string' &&
+    Array.isArray(order.items) &&
+    order.items.length > 0;
+}
+
+if (isValidOrder(order)) {
+  // order é tipado corretamente aqui
+  const total = order.items.reduce((sum, item) => sum + item.price, 0);
+}
 ```
 
 ### Limpeza de Código
@@ -1556,7 +2081,15 @@ class TestComponent:
 20. **Crie codigos da forma mais simples possivel, evitando over-engineering**
 21. **Tome cuidado com a questão de segurança do codigo**
 22. **Evitar alteracoes em lote por meio de scripts pois se perde o contexto**
-23. **Lembrar de ter logs inteligentes no modelo já usado pelo projeto, que é gerado localmente**
+23. **Lembrar de ter logs inteligentes no padrão já usado pelo projeto, que é salvo localmente**
+24. **Observar as análises de qualidade de código feitas pelos scripts de lint, audit, analize e verificações de sonar**
+25. **SEMPRE substitua console.log por offlineStorage.log para logging centralizado**
+26. **NUNCA deixe catch blocks vazios - sempre trate erros adequadamente**
+27. **Use configuração centralizada (config/api.ts) ao invés de URLs hardcoded**
+28. **Extraia nested ternary em funções nomeadas ou use IIFE pattern**
+29. **Use elementos semânticos (button ao invés de div clickable)**
+30. **Implemente cache para evitar chamadas duplicadas à API**
+31. **Use optional chaining (?.) para acesso seguro a propriedades**
 
 ### 🚫 Os Pecados Capitais do Desenvolvimento
 
@@ -1569,6 +2102,11 @@ class TestComponent:
 7. **Copy-Paste Programming**: Duplicar código ao invés de reutilizar
 8. **Documentation Debt**: Não documentar código complexo
 9. **"Funciona na Minha Máquina"**: Não testar em ambiente limpo
+10. **Catch Silencioso**: Blocos catch vazios que engolem erros
+11. **URL Hardcoded**: URLs da API espalhadas pelo código
+12. **Nested Ternary Hell**: Operadores ternários aninhados ilegíveis
+13. **Div Clickable**: Usar div com onClick ao invés de button
+14. **API Spam**: Múltiplas chamadas desnecessárias para a mesma API
 
 ### Scripts de Limpeza Automática
 
@@ -1578,16 +2116,30 @@ class TestComponent:
 
 echo "🧹 Limpando código..."
 
-# Remove console.logs do TypeScript/JavaScript
+# Remove console.logs do TypeScript/JavaScript (preserve arquivos de teste)
 find frontend -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | \
   grep -v node_modules | \
   grep -v ".test." | \
+  grep -v ".spec." | \
   xargs sed -i '/console\./d'
 
-# Remove prints do Python
+# Remove prints do Python (preserve arquivos de teste)
 find src -name "*.py" | \
   grep -v tests | \
+  grep -v test_ | \
   xargs sed -i '/print(/d'
+
+# Verifica se há catch blocks vazios
+echo "🔍 Verificando catch blocks vazios..."
+if grep -r "catch.*{[[:space:]]*}" frontend/ --include="*.ts" --include="*.tsx"; then
+  echo "❌ Encontrados catch blocks vazios! Adicione tratamento de erro."
+fi
+
+# Verifica URLs hardcoded
+echo "🔍 Verificando URLs hardcoded..."
+if grep -r "http://\|https://" frontend/apps/ --include="*.ts" --include="*.tsx" | grep -v "config/api" | grep -v ".test." | grep -v "README"; then
+  echo "⚠️  URLs hardcoded encontradas. Use config/api.ts"
+fi
 
 # Remove imports não usados - Python
 autoflake --in-place --remove-unused-variables --remove-all-unused-imports src/**/*.py
@@ -1732,10 +2284,22 @@ echo "🧪 Rodando testes..."
 pytest --quiet || { echo "❌ Testes falhando! Corrija antes de continuar."; exit 1; }
 npm test -- --silent || { echo "❌ Testes JS falhando!"; exit 1; }
 
-# Verifica console errors
-if grep -r "console.error" frontend/ --include="*.ts" --include="*.tsx" | grep -v ".test." | grep -v "// eslint-disable"; then
-    echo "❌ console.error encontrado! Isso indica possível bug não tratado."
+# Verifica console statements (devem usar offlineStorage.log)
+if grep -r "console\." frontend/ --include="*.ts" --include="*.tsx" | grep -v ".test." | grep -v ".spec." | grep -v "// eslint-disable"; then
+    echo "❌ console.* encontrado! Use offlineStorage.log para logging centralizado."
+    echo "Exemplo: offlineStorage.log('Error message', error);"
     exit 1
+fi
+
+# Verifica catch blocks vazios
+if grep -r "catch.*{[[:space:]]*}" frontend/ --include="*.ts" --include="*.tsx" | grep -v ".test."; then
+    echo "❌ Catch blocks vazios encontrados! Sempre trate erros adequadamente."
+    exit 1
+fi
+
+# Verifica URLs hardcoded
+if grep -r "http[s]*://[^'\"]*['\"]" frontend/apps/ --include="*.ts" --include="*.tsx" | grep -v "config/api" | grep -v ".test." | head -5; then
+    echo "⚠️  URLs hardcoded encontradas. Centralize em config/api.ts"
 fi
 
 echo "✅ Nenhum bug óbvio detectado!"

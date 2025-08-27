@@ -117,7 +117,9 @@ export const useLazyComponent = (componentPath: string, fallback?: React.Compone
     performanceService.lazyLoad(componentPath)
       .then(module => {
         if (mounted) {
-          setComponent(() => (module as any).default || module);
+          const loadedModule = module as { default?: React.ComponentType } | React.ComponentType;
+          const actualComponent = (loadedModule as { default?: React.ComponentType }).default || (loadedModule as React.ComponentType);
+          setComponent(actualComponent);
           setLoading(false);
         }
       })

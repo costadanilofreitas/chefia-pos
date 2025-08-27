@@ -5,6 +5,7 @@ import { useConfirmDialog } from '../components/ConfirmDialog';
 import Toast, { useToast } from '../components/Toast';
 import { useAI } from '../hooks/useAI';
 import { useCoupons } from '../hooks/useCoupons';
+import type { Coupon } from '../services/CouponsService';
 import { useCustomer } from '../hooks/useCustomer';
 import { useLoyalty } from '../hooks/useLoyalty';
 import '../index.css';
@@ -25,6 +26,9 @@ interface LoyaltyCustomer {
   preferences?: string[];
   notes?: string;
 }
+
+// Using Coupon from CouponsService instead of local LoyaltyCoupon
+type LoyaltyCoupon = Coupon;
 
 interface LoyaltyReward {
   id: string;
@@ -122,7 +126,7 @@ export default function LoyaltyPage() {
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [selectedReward, setSelectedReward] = useState<LoyaltyReward | null>(null);
   const [showCouponModal, setShowCouponModal] = useState(false);
-  const [selectedCoupon, setSelectedCoupon] = useState<unknown>(null);
+  const [selectedCoupon, setSelectedCoupon] = useState<LoyaltyCoupon | null>(null);
   const [showAIInsightModal, setShowAIInsightModal] = useState(false);
   const [showAddPointsModal, setShowAddPointsModal] = useState(false);
   const [showRedeemPointsModal, setShowRedeemPointsModal] = useState(false);
@@ -164,7 +168,8 @@ export default function LoyaltyPage() {
     loadCustomers();
     loadRewards(); 
     loadTransactions();
-  }, [loadCustomers, loadRewards, loadTransactions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Load only once on mount
 
   useEffect(() => {
     if (!terminalId || isNaN(Number(terminalId))) {
@@ -301,7 +306,7 @@ export default function LoyaltyPage() {
           ].map(tab => (
             <button
               key={tab.key}
-              onClick={() => setSelectedTab(tab.key as any)}
+              onClick={() => setSelectedTab(tab.key as 'customers' | 'rewards' | 'transactions' | 'coupons' | 'ai' | 'program')}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 selectedTab === tab.key
                   ? 'bg-blue-500 text-white shadow-lg'
@@ -333,13 +338,14 @@ export default function LoyaltyPage() {
             {/* Customers Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredCustomers.map(customer => (
-                <div
+                <button
                   key={customer.id}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer w-full text-left"
                   onClick={() => {
                     setSelectedCustomer(customer);
                     setShowCustomerModal(true);
                   }}
+                  type="button"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -392,7 +398,7 @@ export default function LoyaltyPage() {
                       </button>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -401,13 +407,14 @@ export default function LoyaltyPage() {
         {selectedTab === 'rewards' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {rewards.map(reward => (
-              <div
+              <button
                 key={reward.id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer w-full text-left"
                 onClick={() => {
                   setSelectedReward(reward);
                   setShowRewardModal(true);
                 }}
+                type="button"
               >
                 {/* Reward Image Placeholder */}
                 <div className="h-32 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
@@ -446,7 +453,7 @@ export default function LoyaltyPage() {
                     </p>
                   )}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -538,8 +545,8 @@ export default function LoyaltyPage() {
                   <div className="space-y-3">
                     {Object.entries(loyaltyProgram.tiers).map(([tier, config]) => (
                       <div key={tier} className="flex items-center gap-3">
-                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${getTierColor(tier as any)}`}>
-                          {getTierName(tier as any)}
+                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${getTierColor(tier as LoyaltyCustomer['tier'])}`}>
+                          {getTierName(tier as LoyaltyCustomer['tier'])}
                         </span>
                         <span className="text-sm text-gray-600 dark:text-gray-400">
                           {config.min}+ pts • {config.multiplier}x pontos
@@ -555,15 +562,15 @@ export default function LoyaltyPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {Object.entries(loyaltyProgram.tiers).map(([tier, config]) => (
                 <div key={tier} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
-                  <div className={`inline-block px-3 py-1 text-sm font-medium rounded-full mb-3 ${getTierColor(tier as any)}`}>
-                    {getTierName(tier as any)}
+                  <div className={`inline-block px-3 py-1 text-sm font-medium rounded-full mb-3 ${getTierColor(tier as LoyaltyCustomer['tier'])}`}>
+                    {getTierName(tier as LoyaltyCustomer['tier'])}
                   </div>
                   <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
                     A partir de {config.min} pontos
                   </p>
                   <ul className="space-y-1">
-                    {config.benefits.map((benefit, index) => (
-                      <li key={index} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
+                    {config.benefits.map((benefit) => (
+                      <li key={benefit} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
                         <span className="text-green-500 mt-0.5">✓</span>
                         <span>{benefit}</span>
                       </li>
@@ -673,7 +680,10 @@ export default function LoyaltyPage() {
                         coupon.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
                         'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300'
                       }`}>
-                        {isExpired ? 'Expirado' : coupon.status === 'active' ? 'Ativo' : 'Inativo'}
+                        {(() => {
+                          if (isExpired) return 'Expirado';
+                          return coupon.status === 'active' ? 'Ativo' : 'Inativo';
+                        })()}
                       </span>
                     </div>
                     
@@ -895,8 +905,8 @@ export default function LoyaltyPage() {
                   Campanhas Recomendadas pela IA
                 </h3>
                 <div className="space-y-4">
-                  {campaigns.map((campaign, index) => (
-                    <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
+                  {campaigns.map((campaign) => (
+                    <div key={`${campaign.campaign_type}-${campaign.expected_roi}`} className="border-l-4 border-blue-500 pl-4 py-2">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium text-gray-900 dark:text-white">
                           {campaign.campaign_type}
@@ -927,8 +937,8 @@ export default function LoyaltyPage() {
                   Produtos Recomendados pela IA
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recommendations.map((rec, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  {recommendations.map((rec) => (
+                    <div key={rec.product_name} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium text-gray-900 dark:text-white">
                           {rec.product_name}
@@ -990,8 +1000,8 @@ export default function LoyaltyPage() {
                 
                 <div className="space-y-3">
                   <h4 className="font-medium text-gray-900 dark:text-white">Mudanças Recomendadas:</h4>
-                  {optimization.recommended_changes.map((change, index) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  {optimization.recommended_changes.map((change) => (
+                    <div key={change.parameter} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">
                           {change.parameter}
@@ -1397,7 +1407,7 @@ export default function LoyaltyPage() {
                   </label>
                   <select
                     value={couponForm.discount_type}
-                    onChange={(e) => setCouponForm({ ...couponForm, discount_type: e.target.value as any })}
+                    onChange={(e) => setCouponForm({ ...couponForm, discount_type: e.target.value as 'percentage' | 'fixed' | 'product' | 'shipping' })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="percentage">Porcentagem</option>
@@ -1521,7 +1531,7 @@ export default function LoyaltyPage() {
                     onClick={async () => {
                       try {
                         if (selectedCoupon) {
-                          await updateCoupon((selectedCoupon as any).id, couponForm);
+                          await updateCoupon(selectedCoupon.id, couponForm);
                         } else {
                           await createCoupon(couponForm);
                         }
@@ -1592,8 +1602,8 @@ export default function LoyaltyPage() {
                     Ações Recomendadas
                   </h3>
                   <ul className="space-y-2">
-                    {customerInsight.recommended_actions.map((action, index) => (
-                      <li key={index} className="flex items-start gap-2">
+                    {customerInsight.recommended_actions.map((action) => (
+                      <li key={action} className="flex items-start gap-2">
                         <span className="text-green-500 mt-0.5">✓</span>
                         <span className="text-sm text-gray-600 dark:text-gray-400">{action}</span>
                       </li>

@@ -3,6 +3,8 @@
  * Handles AI-powered recommendations and insights for loyalty program
  */
 
+import { buildApiUrl } from '../config/api';
+
 export interface CustomerInsight {
   customer_id: string;
   churn_risk: 'low' | 'medium' | 'high';
@@ -48,10 +50,9 @@ export interface LoyaltyOptimization {
 }
 
 class AIService {
-  private baseUrl = 'http://localhost:8001/api/v1/ai';
 
   async getCustomerInsights(customerId: string): Promise<CustomerInsight> {
-    const response = await fetch(`${this.baseUrl}/customers/${customerId}/insights`, {
+    const response = await fetch(buildApiUrl(`/api/v1/ai/customers/${customerId}/insights`), {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -62,7 +63,7 @@ class AIService {
   }
 
   async getProductRecommendations(customerId: string, limit: number = 5): Promise<ProductRecommendation[]> {
-    const response = await fetch(`${this.baseUrl}/recommendations/products`, {
+    const response = await fetch(buildApiUrl('/api/v1/ai/recommendations/products'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -81,7 +82,7 @@ class AIService {
     duration_days?: number;
   }): Promise<CampaignRecommendation[]> {
     
-    const response = await fetch(`${this.baseUrl}/recommendations/campaigns`, {
+    const response = await fetch(buildApiUrl('/api/v1/ai/recommendations/campaigns'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -97,7 +98,7 @@ class AIService {
 
   async optimizeLoyaltyProgram(): Promise<LoyaltyOptimization> {
     
-    const response = await fetch(`${this.baseUrl}/loyalty/optimize`, {
+    const response = await fetch(buildApiUrl('/api/v1/ai/loyalty/optimize'), {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -115,7 +116,7 @@ class AIService {
     best_contact_times: string[];
   }> {
     
-    const response = await fetch(`${this.baseUrl}/predict/behavior`, {
+    const response = await fetch(buildApiUrl('/api/v1/ai/predict/behavior'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -137,7 +138,7 @@ class AIService {
     expected_conversion_rate: number;
   }> {
     
-    const response = await fetch(`${this.baseUrl}/offers/generate`, {
+    const response = await fetch(buildApiUrl('/api/v1/ai/offers/generate'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

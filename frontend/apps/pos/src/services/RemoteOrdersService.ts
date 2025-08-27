@@ -1,8 +1,68 @@
-import { apiInterceptor } from './ApiInterceptor';
+import { apiInterceptor } from "./ApiInterceptor";
+import logger from './LocalLoggerService';
+import { buildApiUrl } from '../config/api';
+
+interface BackendRemoteOrder {
+  id: string;
+  platform: string;
+  platform_order_id?: string;
+  platformOrderId?: string;
+  customer_name?: string;
+  customerName?: string;
+  customer_phone?: string;
+  customerPhone?: string;
+  customer_address?: string;
+  customerAddress?: {
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    zipCode: string;
+  };
+  items?: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    price: number;
+    observations?: string;
+    modifiers?: Array<{
+      name: string;
+      price: number;
+    }>;
+  }>;
+  subtotal?: number;
+  delivery_fee?: number;
+  deliveryFee?: number;
+  service_fee?: number;
+  serviceFee?: number;
+  discount?: number;
+  total?: number;
+  status?: string;
+  payment_method?: string;
+  paymentMethod?: string;
+  payment_status?: string;
+  paymentStatus?: string;
+  estimated_delivery_time?: string;
+  estimatedDeliveryTime?: string;
+  order_type?: string;
+  orderType?: string;
+  observations?: string;
+  created_at?: string;
+  createdAt?: string;
+  confirmed_at?: string;
+  confirmedAt?: string;
+  ready_at?: string;
+  readyAt?: string;
+  delivered_at?: string;
+  deliveredAt?: string;
+  cancelled_at?: string;
+  cancelledAt?: string;
+}
 
 export interface RemoteOrder {
   id: string;
-  platform: 'ifood' | 'rappi' | 'ubereats' | 'whatsapp' | 'website' | 'phone';
+  platform: "ifood" | "rappi" | "ubereats" | "whatsapp" | "website" | "phone";
   platformOrderId: string;
   customerName: string;
   customerPhone: string;
@@ -30,11 +90,18 @@ export interface RemoteOrder {
   serviceFee: number;
   discount: number;
   total: number;
-  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'dispatched' | 'delivered' | 'cancelled';
+  status:
+    | "pending"
+    | "confirmed"
+    | "preparing"
+    | "ready"
+    | "dispatched"
+    | "delivered"
+    | "cancelled";
   paymentMethod: string;
-  paymentStatus: 'pending' | 'paid' | 'refunded';
+  paymentStatus: "pending" | "paid" | "refunded";
   estimatedDeliveryTime: Date;
-  orderType: 'delivery' | 'pickup';
+  orderType: "delivery" | "pickup";
   observations?: string;
   createdAt: Date;
   confirmedAt?: Date;
@@ -43,7 +110,7 @@ export interface RemoteOrder {
 }
 
 export interface PlatformIntegration {
-  platform: RemoteOrder['platform'];
+  platform: RemoteOrder["platform"];
   name: string;
   icon: string;
   color: string;
@@ -63,35 +130,41 @@ export interface PlatformConfig {
 }
 
 class RemoteOrdersServiceClass {
-  private baseURL = 'http://localhost:8001/api/v1';
 
   /**
    * Get all remote orders
    */
   async getOrders(): Promise<RemoteOrder[]> {
-    
-    const response = await apiInterceptor.get<any[]>(`${this.baseURL}/remote-orders/`);
+    const response = await apiInterceptor.get<BackendRemoteOrder[]>(
+      buildApiUrl('/api/v1/remote-orders/')
+    );
     return response.data.map(this.transformOrder);
-  
   }
 
   /**
    * Sync platform
    */
-  async syncPlatform(platform: RemoteOrder['platform']): Promise<void> {
+  async syncPlatform(platform: RemoteOrder["platform"]): Promise<void> {
     try {
-      await apiInterceptor.post(`${this.baseURL}/remote-orders/sync/${platform}`);
-    } catch {
-// console.error('Error syncing platform:', error);
+      await apiInterceptor.post(
+        buildApiUrl(`/api/v1/remote-orders/sync/${platform}`)
+      );
+    } catch (error) {
+      await logger.error('Failed to sync platform', { platform, error }, 'RemoteOrdersService');
     }
   }
 
   /**
    * Configure platform
    */
-  async configurePlatform(platform: RemoteOrder['platform'], config: PlatformConfig): Promise<void> {
-    await apiInterceptor.put(`${this.baseURL}/remote-platforms/${platform}`, config);
-    
+  async configurePlatform(
+    platform: RemoteOrder["platform"],
+    config: PlatformConfig
+  ): Promise<void> {
+    await apiInterceptor.put(
+      buildApiUrl(`/api/v1/remote-platforms/${platform}`),
+      config
+    );
   }
 
   /**
@@ -99,9 +172,11 @@ class RemoteOrdersServiceClass {
    */
   async printOrder(orderId: string): Promise<void> {
     try {
-      await apiInterceptor.post(`${this.baseURL}/remote-orders/${orderId}/print`);
-    } catch {
-// console.error('Error printing order:', error);
+      await apiInterceptor.post(
+        buildApiUrl(`/api/v1/remote-orders/${orderId}/print`)
+      );
+    } catch (error) {
+      await logger.error('Failed to print order', { orderId, error }, 'RemoteOrdersService');
     }
   }
 
@@ -110,9 +185,12 @@ class RemoteOrdersServiceClass {
    */
   async getIntegrations(): Promise<PlatformIntegration[]> {
     try {
-      const response = await apiInterceptor.get<PlatformIntegration[]>(`${this.baseURL}/remote-platforms/integrations`);
+      const response = await apiInterceptor.get<PlatformIntegration[]>(
+        buildApiUrl('/api/v1/remote-platforms/integrations')
+      );
       return response.data;
-    } catch {
+    } catch (error) {
+      await logger.warn('Failed to get platform configs', { error }, 'RemoteOrdersService');
       return [];
     }
   }
@@ -121,7 +199,9 @@ class RemoteOrdersServiceClass {
    * Accept order
    */
   async acceptOrder(orderId: string): Promise<RemoteOrder> {
-    const response = await apiInterceptor.post<RemoteOrder>(`${this.baseURL}/remote-orders/${orderId}/accept`);
+    const response = await apiInterceptor.post<RemoteOrder>(
+      buildApiUrl(`/api/v1/remote-orders/${orderId}/accept`)
+    );
     return response.data;
   }
 
@@ -129,14 +209,20 @@ class RemoteOrdersServiceClass {
    * Reject order
    */
   async rejectOrder(orderId: string, reason?: string): Promise<void> {
-    await apiInterceptor.post(`${this.baseURL}/remote-orders/${orderId}/reject`, { reason });
+    await apiInterceptor.post(
+      buildApiUrl(`/api/v1/remote-orders/${orderId}/reject`),
+      { reason }
+    );
   }
 
   /**
    * Update order status
    */
   async updateOrderStatus(orderId: string, status: string): Promise<void> {
-    await apiInterceptor.put(`${this.baseURL}/remote-orders/${orderId}/status`, { status });
+    await apiInterceptor.put(
+      buildApiUrl(`/api/v1/remote-orders/${orderId}/status`),
+      { status }
+    );
   }
 
   /**
@@ -144,14 +230,16 @@ class RemoteOrdersServiceClass {
    */
   async getStatsSummary(): Promise<unknown> {
     try {
-      const response = await apiInterceptor.get(`${this.baseURL}/remote-orders/stats/summary`);
+      const response = await apiInterceptor.get(
+        buildApiUrl('/api/v1/remote-orders/stats/summary')
+      );
       return response.data;
-    } catch {
-// console.error('Error fetching stats:', error);
+    } catch (error) {
+      await logger.warn('Failed to get remote orders summary', { error }, 'RemoteOrdersService');
       return {
         total_orders: 0,
         pending_orders: 0,
-        today_revenue: 0
+        today_revenue: 0,
       };
     }
   }
@@ -159,33 +247,52 @@ class RemoteOrdersServiceClass {
   /**
    * Transform backend order to frontend format
    */
-  private transformOrder(order: any): RemoteOrder {
+  private transformOrder(order: BackendRemoteOrder): RemoteOrder {
     return {
       id: order.id,
-      platform: order.platform,
-      platformOrderId: order.platform_order_id || order.platformOrderId,
-      customerName: order.customer_name || order.customerName || 'Cliente',
-      customerPhone: order.customer_phone || order.customerPhone || '',
-      customerAddress: order.customer_address || order.customerAddress,
+      platform: (order.platform as RemoteOrder["platform"]) || "phone",
+      platformOrderId: order.platform_order_id || order.platformOrderId || "",
+      customerName: order.customer_name || order.customerName || "Cliente",
+      customerPhone: order.customer_phone || order.customerPhone || "",
+      customerAddress:
+        typeof order.customer_address === "string"
+          ? undefined
+          : order.customer_address || order.customerAddress,
       items: order.items || [],
       subtotal: order.subtotal || 0,
       deliveryFee: order.delivery_fee || order.deliveryFee || 0,
       serviceFee: order.service_fee || order.serviceFee || 0,
       discount: order.discount || 0,
       total: order.total || 0,
-      status: order.status || 'pending',
-      paymentMethod: order.payment_method || order.paymentMethod || 'cash',
-      paymentStatus: order.payment_status || order.paymentStatus || 'pending',
-      estimatedDeliveryTime: new Date(order.estimated_delivery_time || Date.now() + 3600000),
-      orderType: order.order_type || order.orderType || 'delivery',
+      status: (order.status as RemoteOrder["status"]) || "pending",
+      paymentMethod: order.payment_method || order.paymentMethod || "cash",
+      paymentStatus: (order.payment_status ||
+        order.paymentStatus ||
+        "pending") as RemoteOrder["paymentStatus"],
+      estimatedDeliveryTime: new Date(
+        order.estimated_delivery_time ||
+          order.estimatedDeliveryTime ||
+          Date.now() + 3600000
+      ),
+      orderType: (order.order_type ||
+        order.orderType ||
+        "delivery") as RemoteOrder["orderType"],
       observations: order.observations,
       createdAt: new Date(order.created_at || order.createdAt || Date.now()),
-      confirmedAt: order.confirmed_at ? new Date(order.confirmed_at) : undefined,
-      readyAt: order.ready_at ? new Date(order.ready_at) : undefined,
-      deliveredAt: order.delivered_at ? new Date(order.delivered_at) : undefined
+      confirmedAt:
+        order.confirmed_at || order.confirmedAt
+          ? new Date(order.confirmed_at || order.confirmedAt || "")
+          : undefined,
+      readyAt:
+        order.ready_at || order.readyAt
+          ? new Date(order.ready_at || order.readyAt || "")
+          : undefined,
+      deliveredAt:
+        order.delivered_at || order.deliveredAt
+          ? new Date(order.delivered_at || order.deliveredAt || "")
+          : undefined,
     };
   }
-
 }
 
 // Export singleton instance

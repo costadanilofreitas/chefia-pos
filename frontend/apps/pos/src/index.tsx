@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import ErrorBoundaryModern from './components/ErrorBoundaryModern';
+import ErrorBoundary from './components/ErrorBoundary';
 import { offlineStorage } from './services/OfflineStorage';
 
 // Initialize offline storage
@@ -16,7 +16,6 @@ if ('serviceWorker' in navigator) {
 
 // Global error handler
 window.addEventListener('error', (event) => {
-// console.error('Global error:', event.error);
   offlineStorage.log('error', event.error?.message || 'Unknown error', {
     filename: event.filename,
     lineno: event.lineno,
@@ -27,21 +26,23 @@ window.addEventListener('error', (event) => {
 
 // Unhandled promise rejection handler
 window.addEventListener('unhandledrejection', (event) => {
-// console.error('Unhandled promise rejection:', event.reason);
   offlineStorage.log('error', 'Unhandled promise rejection', {
     reason: event.reason,
     stack: event.reason?.stack
   });
 });
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error('Root element not found');
+}
+
+const root = ReactDOM.createRoot(rootElement);
 
 root.render(
   <React.StrictMode>
-    <ErrorBoundaryModern>
+    <ErrorBoundary>
       <App />
-    </ErrorBoundaryModern>
+    </ErrorBoundary>
   </React.StrictMode>
 );

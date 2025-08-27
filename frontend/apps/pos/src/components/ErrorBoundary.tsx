@@ -1,5 +1,5 @@
 
-import { Component, ReactNode, ErrorInfo } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import logger, { LogSource } from '../services/LocalLoggerService';
 
 interface Props {
@@ -13,7 +13,7 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-class ErrorBoundaryModern extends Component<Props, State> {
+class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
@@ -30,7 +30,7 @@ class ErrorBoundaryModern extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log crítico para erros capturados pelo ErrorBoundary
-    logger.critical('ErrorBoundary capturou erro crítico', 
+    void logger.critical('ErrorBoundary capturou erro crítico', 
       { 
         error: error.toString(), 
         stack: error.stack,
@@ -38,7 +38,7 @@ class ErrorBoundaryModern extends Component<Props, State> {
       }, 
       'ErrorBoundary', 
       LogSource.UI
-    ).catch(console.error);
+    );
     
     this.setState({
       error,
@@ -46,7 +46,7 @@ class ErrorBoundaryModern extends Component<Props, State> {
     });
   }
 
-  private handleReset = () => {
+  private readonly handleReset = () => {
     this.setState({
       hasError: false,
       error: null,
@@ -57,22 +57,29 @@ class ErrorBoundaryModern extends Component<Props, State> {
     window.location.reload();
   };
 
-  private handleReportError = () => {
-    const { error } = this.state;
-    // const { errorInfo } = this.state;
+  private readonly handleReportError = async () => {
+    const { error, errorInfo } = this.state;
     
-    // Send error to logging service
     if (error) {
-      // TODO: Send to error tracking service (Sentry, LogRocket, etc.)
-      // const errorReport = {
-      //   message: error.message,
-      //   stack: error.stack,
-      //   componentStack: errorInfo?.componentStack,
-      //   timestamp: new Date().toISOString(),
-      //   userAgent: navigator.userAgent,
-      //   url: window.location.href
-      // };
-      // console.log('Error Report:', errorReport);
+      const errorReport = {
+        message: error.message,
+        stack: error.stack,
+        componentStack: errorInfo?.componentStack,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href
+      };
+      
+      // Log the error report
+      await logger.error(
+        'Erro reportado pelo usuário',
+        errorReport,
+        'ErrorBoundary',
+        LogSource.UI
+      );
+      
+      // Show feedback to user
+      alert('Erro reportado com sucesso. Obrigado pelo feedback!');
     }
   };
 
@@ -173,4 +180,4 @@ class ErrorBoundaryModern extends Component<Props, State> {
   }
 }
 
-export default ErrorBoundaryModern;
+export default ErrorBoundary;

@@ -5,6 +5,14 @@ import { useFiscal } from '../hooks/useFiscal';
 import { FiscalDocument } from '../services/FiscalService';
 import '../index.css';
 
+interface FiscalFilters {
+  type?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+}
+
 export default function FiscalPage() {
   const navigate = useNavigate();
   const { terminalId } = useParams();
@@ -55,7 +63,7 @@ export default function FiscalPage() {
     
     // Debounce the load call
     loadTimeoutRef.current = setTimeout(() => {
-      const filters: any = {};
+      const filters: FiscalFilters = {};
       if (filterType !== 'all') filters.type = filterType;
       if (filterStatus !== 'all') filters.status = filterStatus;
       if (searchTerm) filters.search = searchTerm;
@@ -71,7 +79,8 @@ export default function FiscalPage() {
         clearTimeout(loadTimeoutRef.current);
       }
     };
-  }, [filterType, filterStatus, searchTerm, loadDocuments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterType, filterStatus, searchTerm]); // Removed loadDocuments from dependencies to prevent re-renders
 
   useEffect(() => {
     if (!terminalId || isNaN(Number(terminalId))) {
@@ -267,7 +276,7 @@ export default function FiscalPage() {
           ].map(tab => (
             <button
               key={tab.key}
-              onClick={() => setSelectedTab(tab.key as any)}
+              onClick={() => setSelectedTab(tab.key as 'documents' | 'config' | 'contingency' | 'reports')}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 selectedTab === tab.key
                   ? 'bg-blue-500 text-white shadow-lg'
@@ -298,7 +307,7 @@ export default function FiscalPage() {
                 
                 <select
                   value={filterType}
-                  onChange={(e) => setFilterType(e.target.value as any)}
+                  onChange={(e) => setFilterType(e.target.value as 'all' | 'nfe' | 'nfce' | 'sat' | 'mfe')}
                   className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="all">Todos os Tipos</option>
@@ -310,7 +319,7 @@ export default function FiscalPage() {
                 
                 <select
                   value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value as any)}
+                  onChange={(e) => setFilterStatus(e.target.value as 'all' | 'authorized' | 'cancelled' | 'pending' | 'rejected')}
                   className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="all">Todos os Status</option>
@@ -619,9 +628,9 @@ export default function FiscalPage() {
                   description: 'Exportar XMLs do período',
                   action: 'xml_export'
                 }
-              ].map((report, index) => (
+              ].map((report) => (
                 <button
-                  key={index}
+                  key={report.action}
                   onClick={() => handleReportGeneration(report.action)}
                   className="p-6 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-left group"
                 >

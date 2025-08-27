@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 // import { useNavigate, useParams } from 'react-router-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useDelivery } from '../hooks/useDelivery';
+import type { DeliveryCourier, DeliveryOrder } from '../services/DeliveryService';
 import { formatCurrency } from '../utils/formatters';
 import '../index.css';
 import Toast from '../components/Toast';
@@ -31,7 +32,18 @@ const customStyles = `
   }
 `;
 
-interface DeliveryOrder {
+// Interface for external order items with flexible structure
+interface ExternalOrderItem {
+  name?: string;
+  productId?: string;
+  product_id?: string;
+  quantity: number;
+  price: number;
+  [key: string]: unknown; // Allow additional properties
+}
+
+// Interface local para o componente de UI - mapeamento do DeliveryOrder do serviço
+interface DeliveryOrderUI {
   id: string;
   customerName: string;
   phone: string;
@@ -60,7 +72,7 @@ interface DeliveryOrder {
 // } // TODO: usar quando implementar entregadores
 
 interface StatusColumn {
-  status: DeliveryOrder['status'];
+  status: DeliveryOrderUI['status'];
   title: string;
   color: string;
   borderColor: string;
@@ -83,35 +95,54 @@ export default function DeliveryPage() {
   } = useDelivery();
   
   // State
-  const [draggedOrder, setDraggedOrder] = useState<DeliveryOrder | null>(null);
+  const [draggedOrder, setDraggedOrder] = useState<DeliveryOrderUI | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<DeliveryOrder | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<DeliveryOrderUI | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [showAssignCourier, setShowAssignCourier] = useState(false);
   const [selectedCourier, setSelectedCourier] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Transform delivery orders from hook to match component interface
-  const orders: DeliveryOrder[] = deliveryOrders.map((order: any) => ({
-    id: order.id,
-    customerName: order.customer_name || 'Cliente',
-    phone: order.customer_phone || '',
-    address: order.delivery_address || order.customer_address || '',
-    items: order.items || [],
-    total: order.total || 0,
-    deliveryFee: order.delivery_fee || 0,
-    status: order.status || 'pending',
-    paymentMethod: order.payment_method || 'cash',
-    estimatedTime: order.estimated_time || '30 min',
-    courierName: order.courier_name,
-    createdAt: order.created_at || new Date().toISOString()
-  }));
+  const orders: DeliveryOrderUI[] = deliveryOrders.map((order) => {
+    // Extended order might have additional properties from backend
+    const extOrder = order as DeliveryOrder & {
+      customer_name?: string;
+      customer_phone?: string;
+      delivery_address?: string;
+      customer_address?: string;
+      items?: Array<{ productId: string; quantity: number; price: number }>;
+      total?: number;
+      estimated_time?: string;
+      courier_name?: string;
+    };
+    
+    return {
+      id: order.id,
+      customerName: extOrder.customer_name || 'Cliente',
+      phone: extOrder.customer_phone || '',
+      address: extOrder.delivery_address || extOrder.customer_address || '',
+      items: (extOrder.items || []).map((item: ExternalOrderItem) => ({
+        name: item.name || `Produto ${item.productId || item.product_id || ''}`,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      total: extOrder.total || order.payment_amount || 0,
+      deliveryFee: order.delivery_fee || 0,
+      status: (order.status as DeliveryOrderUI['status']) || 'pending',
+      paymentMethod: (order.payment_method as DeliveryOrderUI['paymentMethod']) || 'cash',
+      estimatedTime: extOrder.estimated_time || order.estimated_delivery_time || '30 min',
+      courierName: extOrder.courier_name,
+      createdAt: order.created_at || new Date().toISOString()
+    };
+  });
 
   // Load delivery orders and couriers on mount
   useEffect(() => {
     loadDeliveryOrders();
     loadCouriers();
-  }, [loadDeliveryOrders, loadCouriers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Load only once on mount
 
   // Mock data removed - using real data from useDelivery hook
 
@@ -128,7 +159,7 @@ export default function DeliveryPage() {
   const availableCouriers = useMemo(() => couriers || [], [couriers]);
 
   // Drag and Drop handlers
-  const handleDragStart = useCallback((e: React.DragEvent, order: DeliveryOrder) => {
+  const handleDragStart = useCallback((e: React.DragEvent, order: DeliveryOrderUI) => {
     setDraggedOrder(order);
     e.dataTransfer.effectAllowed = 'move';
     const element = e.target as HTMLElement;
@@ -152,7 +183,7 @@ export default function DeliveryPage() {
     setDragOverStatus(null);
   }, []);
   
-  const handleDrop = useCallback(async (e: React.DragEvent, newStatus: DeliveryOrder['status']) => {
+  const handleDrop = useCallback(async (e: React.DragEvent, newStatus: DeliveryOrderUI['status']) => {
     e.preventDefault();
     setDragOverStatus(null);
     
@@ -190,12 +221,10 @@ export default function DeliveryPage() {
       } else {
         // For other status changes, we need to update via API
         // This would require adding an updateOrderStatus method to useDelivery hook
-// console.log('Status update:', draggedOrder.id, newStatus);
       }
       await loadDeliveryOrders(); // Reload to show updated status
     } catch {
       error('Erro ao atualizar status do pedido');
-// console.error(err);
       return;
     }
     
@@ -230,7 +259,6 @@ export default function DeliveryPage() {
         success(`Pedido atribuído para ${courier.name}`);
       } catch {
         error('Erro ao atribuir entregador');
-// console.error(err);
       }
     }
   }, [selectedOrder, selectedCourier, availableCouriers, warning, success, error, assignCourier, startDelivery, loadDeliveryOrders]);
@@ -428,10 +456,10 @@ export default function DeliveryPage() {
                   <div className="text-left">
                     <p className="font-medium text-gray-900 dark:text-white">{courier.name}</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {(courier as any).vehicle_type === 'bike' && '🚴 Bicicleta'}
-                      {(courier as any).vehicle_type === 'motorcycle' && '🏍️ Moto'}
-                      {(courier as any).vehicle_type === 'car' && '🚗 Carro'}
-                      {' • '}{(courier as any).currentDeliveries || 0} entregas
+                      {courier.vehicle_type === 'bike' && '🚴 Bicicleta'}
+                      {courier.vehicle_type === 'motorcycle' && '🏍️ Moto'}
+                      {courier.vehicle_type === 'car' && '🚗 Carro'}
+                      {' • '}{(courier as DeliveryCourier & { currentDeliveries?: number }).currentDeliveries || 0} entregas
                     </p>
                   </div>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
@@ -499,7 +527,7 @@ export default function DeliveryPage() {
               <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Itens do Pedido</h4>
               <div className="space-y-2">
                 {selectedOrder.items.map((item, index) => (
-                  <div key={index} className="flex justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                  <div key={`order-item-${item.name}-${item.quantity}-${index}`} className="flex justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
                     <span className="text-gray-700 dark:text-gray-300">
                       {item.quantity}x {item.name}
                     </span>

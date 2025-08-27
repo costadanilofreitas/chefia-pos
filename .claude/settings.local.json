@@ -37,14 +37,16 @@
       "Bash(do sed -i 's/} catch {/} catch (error) {/g' \"$file\")",
       "Bash(done)",
       "Bash(npx vite:*)",
-      "Read(/C:\\Users\\Consultor/**)"
+      "Read(/C:\\Users\\Consultor/**)",
+      "Bash(npx jscpd:*)"
     ],
     "deny": [],
     "ask": [],
     "defaultMode": "acceptEdits",
     "additionalDirectories": [
       "C:\\c\\Users\\Consultor\\Documents\\projetos\\chefia-pos",
-      "C:\\c\\Users\\Consultor\\Documents\\projetos"
+      "C:\\c\\Users\\Consultor\\Documents\\projetos",
+      "C:\\c\\Users\\Consultor\\Documents\\projetos\\chefia-pos\\frontend\\apps"
     ]
   }
 }

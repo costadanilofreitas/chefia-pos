@@ -7,6 +7,14 @@ import fiscalService, { FiscalDocument, FiscalConfig, ContingencyMode, FiscalRep
 import { useToast } from './useToast';
 import logger, { LogSource } from '../services/LocalLoggerService';
 
+interface FiscalDocumentFilters {
+  type?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+}
+
 interface UseFiscalReturn {
   // Estados
   documents: FiscalDocument[];
@@ -16,7 +24,7 @@ interface UseFiscalReturn {
   error: string | null;
   
   // Ações de documentos
-  loadDocuments: (filters?: unknown) => Promise<void>;
+  loadDocuments: (filters?: FiscalDocumentFilters) => Promise<void>;
   emitDocument: (orderId: string, type: FiscalDocument['type']) => Promise<void>;
   cancelDocument: (documentId: string, reason: string) => Promise<void>;
   retryDocument: (documentId: string) => Promise<void>;
@@ -60,7 +68,7 @@ export const useFiscal = (): UseFiscalReturn => {
   const hasShownEmptyMessageRef = useRef(false);
 
   // Carrega documentos
-  const loadDocuments = useCallback(async (filters?: unknown) => {
+  const loadDocuments = useCallback(async (filters?: FiscalDocumentFilters) => {
     try {
       setLoading(true);
       setError(null);
@@ -317,7 +325,8 @@ export const useFiscal = (): UseFiscalReturn => {
   // Carrega apenas configuração inicial (documentos serão carregados pelo componente)
   useEffect(() => {
     loadConfig();
-  }, [loadConfig]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - load config only once on mount
 
   return {
     // Estados

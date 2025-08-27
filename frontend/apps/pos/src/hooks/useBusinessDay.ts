@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { businessDayService, BusinessDay, BusinessDayCreate, BusinessDayClose, BusinessDaySummary } from '../services/BusinessDayService';
+import { getApiErrorMessage } from '../types/error';
 
 interface UseBusinessDayReturn {
   // Estado
@@ -64,8 +65,7 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
       setCurrentBusinessDay(businessDay);
       setHasInitialized(true);
     } catch (err) {
-// console.error('Erro ao carregar dia operacional atual:', err);
-      setError((err as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Erro ao carregar dia operacional');
+      setError(getApiErrorMessage(err));
       setHasInitialized(true); // Marcar como inicializado mesmo com erro
     } finally {
       setLoading(false);
@@ -82,11 +82,9 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
       
       const businessDay = await businessDayService.openBusinessDay(data);
       setCurrentBusinessDay(businessDay);
-// console.log('✅ Dia operacional aberto com sucesso:', businessDay);
       return businessDay;
     } catch (err) {
-// console.error('❌ Erro ao abrir dia operacional:', err);
-      setError((err as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Erro ao abrir dia operacional');
+      setError(getApiErrorMessage(err));
       return null;
     } finally {
       setOpening(false);
@@ -108,11 +106,9 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
       
       const businessDay = await businessDayService.closeBusinessDay(currentBusinessDay.id, data);
       setCurrentBusinessDay(businessDay);
-// console.log('✅ Dia operacional fechado com sucesso:', businessDay);
       return businessDay;
     } catch (err) {
-// console.error('❌ Erro ao fechar dia operacional:', err);
-      setError((err as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Erro ao fechar dia operacional');
+      setError(getApiErrorMessage(err));
       return null;
     } finally {
       setClosing(false);
@@ -130,8 +126,7 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
       const days = await businessDayService.listBusinessDays(startDate, endDate);
       setBusinessDays(days);
     } catch (err) {
-// console.error('Erro ao carregar dias operacionais:', err);
-      setError((err as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Erro ao carregar dias operacionais');
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -148,8 +143,7 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
       const summaryData = await businessDayService.getBusinessDaySummary(businessDayId);
       setSummary(summaryData);
     } catch (err) {
-// console.error('Erro ao carregar resumo do dia operacional:', err);
-      setError((err as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Erro ao carregar resumo');
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -176,8 +170,7 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
         }
       } catch (err) {
         if (isMounted) {
-// console.error('Erro ao carregar dia operacional atual:', err);
-          setError((err as unknown as { response?: { data?: { detail?: string } } }).response?.data?.detail || 'Erro ao carregar dia operacional');
+          setError(getApiErrorMessage(err));
           setHasInitialized(true);
         }
       } finally {

@@ -1,8 +1,17 @@
 import { apiInterceptor } from './ApiInterceptor';
 import { API_ENDPOINTS } from '../config/api';
 import logger, { LogSource } from './LocalLoggerService';
+import {
+  Cashier,
+  CashierOperation,
+  CashierWithdrawal,
+  TerminalStatus
+} from '../types/cashier';
 
-// Tipos baseados no backend
+// Re-export types for backward compatibility
+export type { Cashier, TerminalStatus, CashierOperation, CashierWithdrawal } from '../types/cashier';
+
+// Tipos específicos do serviço
 export interface CashierCreate {
   terminal_id: string;
   operator_id: string;
@@ -17,53 +26,9 @@ export interface CashierClose {
   notes?: string;
 }
 
-export interface CashierOperation {
-  operation_type: 'SALE' | 'WITHDRAWAL' | 'DEPOSIT' | 'OPENING' | 'CLOSING';
-  amount: number;
-  operator_id: string;
-  payment_method?: string;
-  related_entity_id?: string;
-  notes?: string;
-}
+// CashierWithdrawal type is imported from types/cashier.ts
 
-export interface CashierWithdrawal {
-  operator_id: string;
-  amount: number;
-  reason: string;
-  notes?: string;
-}
-
-export interface Cashier {
-  id: string;
-  terminal_id: string;
-  operator_id: string;
-  operator_name: string;
-  business_day_id: string;
-  opened_at: string;
-  closed_at?: string;
-  initial_balance: number;
-  current_balance: number;
-  final_balance?: number;
-  status: 'OPEN' | 'CLOSED';
-  notes?: string;
-  current_operator_id: string;
-  current_operator_name: string;
-}
-
-export interface TerminalStatus {
-  has_open_cashier: boolean;
-  terminal_id: string;
-  cashier_id?: string;
-  operator_id?: string;
-  operator_name?: string;
-  opened_at?: string;
-  initial_balance?: number;
-  current_balance?: number;
-  business_day_id?: string;
-  business_day_date?: string;
-  status?: string;
-  message?: string;
-}
+// NOTE: Cashier, CashierOperation, and TerminalStatus types are imported from types/cashier.ts
 
 export class CashierService {
   /**
@@ -156,9 +121,9 @@ export class CashierService {
   /**
    * Registra uma retirada (ruptura) no caixa
    */
-  async registerWithdrawal(cashierId: string, withdrawal: CashierWithdrawal): Promise<unknown> {
+  async registerWithdrawal(cashierId: string, withdrawal: CashierWithdrawal): Promise<CashierOperation> {
     
-    const response = await apiInterceptor.post(
+    const response = await apiInterceptor.post<CashierOperation>(
       API_ENDPOINTS.CASHIER.WITHDRAW(cashierId),
       withdrawal
     );
@@ -224,7 +189,7 @@ export class CashierService {
     operation_type?: string;
     limit?: number;
     offset?: number;
-  }): Promise<unknown[]> {
+  }): Promise<CashierOperation[]> {
     
     const params = new URLSearchParams();
     

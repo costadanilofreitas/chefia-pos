@@ -1,11 +1,58 @@
 import { offlineStorage } from './OfflineStorage';
 import logger, { LogSource } from './LocalLoggerService';
 
+// Tipos de dados para diferentes operações
+interface CustomerData {
+  id?: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  document?: string;
+  address?: string;
+  customerId?: string;
+  points?: number;
+  reason?: string;
+}
+
+interface OrderData {
+  id?: string;
+  items: Array<{ productId: string; quantity: number; price: number }>;
+  total: number;
+  customerId?: string;
+  status?: string;
+}
+
+interface ProductData {
+  id?: string;
+  name: string;
+  price: number;
+  stock?: number;
+  category?: string;
+}
+
+interface PaymentData {
+  orderId: string;
+  amount: number;
+  method: string;
+  status: string;
+  paymentId?: string;
+  reason?: string;
+}
+
+interface InventoryData {
+  productId: string;
+  quantity?: number;
+  price?: number;
+  reason?: string;
+}
+
+type SyncData = CustomerData | OrderData | ProductData | PaymentData | InventoryData;
+
 interface SyncOperation {
   id: number;
   type: string;
   operation: string;
-  data: unknown;
+  data: SyncData;
   timestamp: string;
   retries: number;
   maxRetries: number;
@@ -124,13 +171,13 @@ class SyncManager {
       
       switch (operation.type) {
         case 'customer':
-          response = await this.syncCustomer(operation.operation, operation.data);
+          response = await this.syncCustomer(operation.operation, operation.data as CustomerData);
           break;
         case 'payment':
-          response = await this.syncPayment(operation.operation, operation.data);
+          response = await this.syncPayment(operation.operation, operation.data as PaymentData);
           break;
         case 'inventory':
-          response = await this.syncInventory(operation.operation, operation.data);
+          response = await this.syncInventory(operation.operation, operation.data as InventoryData);
           break;
         default:
           throw new Error(`Unknown operation type: ${operation.type}`);
@@ -149,7 +196,7 @@ class SyncManager {
     }
   }
 
-  private async syncCustomer(operation: string, data: any): Promise<Response> {
+  private async syncCustomer(operation: string, data: CustomerData): Promise<Response> {
     try {
       switch (operation) {
         case 'create':
@@ -179,7 +226,7 @@ class SyncManager {
     }
   }
 
-  private async syncPayment(operation: string, data: any): Promise<Response> {
+  private async syncPayment(operation: string, data: PaymentData): Promise<Response> {
     try {
       await logger.info('Sincronizando operação de pagamento', { operation, amount: data.amount }, 'SyncManager', LogSource.PAYMENT);
       
@@ -205,7 +252,7 @@ class SyncManager {
     }
   }
 
-  private async syncInventory(operation: string, data: any): Promise<Response> {
+  private async syncInventory(operation: string, data: InventoryData): Promise<Response> {
     try {
       switch (operation) {
         case 'update-stock':
@@ -283,7 +330,7 @@ class SyncManager {
 
       await logger.info(`Forçando sincronização para tipo: ${type}`, { type }, 'SyncManager', LogSource.SYNC);
       const pendingOperations = await offlineStorage.getPendingSyncItems();
-      const typeOperations = pendingOperations.filter((op: any) => op.type === type);
+      const typeOperations = pendingOperations.filter((op) => (op as SyncOperation).type === type);
 
       for (const operation of typeOperations) {
         await this.syncOperation(operation as SyncOperation);

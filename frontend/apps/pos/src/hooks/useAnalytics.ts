@@ -43,7 +43,6 @@ export const useAnalytics = (autoRefresh: boolean = true, refreshInterval: numbe
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar métricas';
       setError(errorMessage);
-// console.error('Erro ao carregar métricas:', err);
     } finally {
       setLoading(false);
     }
@@ -96,7 +95,6 @@ export const useAnalytics = (autoRefresh: boolean = true, refreshInterval: numbe
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar resumo';
       setError(errorMessage);
-// console.error('Erro ao carregar resumo:', err);
     } finally {
       setLoading(false);
     }

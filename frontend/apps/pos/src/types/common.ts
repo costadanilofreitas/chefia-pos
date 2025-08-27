@@ -10,12 +10,8 @@ export interface ApiResponse<T = unknown> {
   success: boolean;
 }
 
-// Generic error type
-export interface ApiError {
-  message: string;
-  code?: string;
-  details?: Record<string, unknown>;
-}
+// NOTE: ApiError moved to types/error.ts for consolidation
+// Import from there: import { ApiError } from './error';
 
 // Table reservation type
 export interface TableReservation {
@@ -54,13 +50,8 @@ export interface FormData {
   [key: string]: string | number | boolean | File | null;
 }
 
-// Cashier withdrawal type
-export interface CashierWithdrawal {
-  amount: number;
-  reason: string;
-  authorized_by?: string;
-  notes?: string;
-}
+// NOTE: CashierWithdrawal moved to types/cashier.ts for consolidation
+// Import from there: import { CashierWithdrawal } from './cashier';
 
 // Generic callback type
 export type AsyncCallback<T = void> = () => Promise<T>;

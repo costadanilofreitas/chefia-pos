@@ -6,6 +6,7 @@ import { useProduct } from '../hooks/useProduct';
 import { useToast } from '../components/Toast';
 import { useConfirmDialog } from '../components/ConfirmDialog';
 import { SimpleTooltip } from '../components/Tooltip';
+import type { CartItem } from '../hooks/useCart';
 // Temporarily removed hotkeys until library issue is resolved
 // import { useHotkeys } from 'react-hotkeys-hook';
 
@@ -21,7 +22,7 @@ const MainPage: React.FC = () => {
   // State
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [cart, setCart] = useState<any[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [customerInfo] = useState<unknown>(null);
   const [orderType, setOrderType] = useState<'local' | 'delivery' | 'takeout' | 'online'>('local');
   const [speedMode, setSpeedMode] = useState(false);

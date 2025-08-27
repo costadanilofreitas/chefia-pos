@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return authService.hasRole(role);
   };
 
-  const value: AuthContextType = {
+  const value = React.useMemo<AuthContextType>(() => ({
     user,
     login,
     logout,
@@ -63,7 +63,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     hasPermission,
     hasRole,
     loading
-  };
+  }), [user, loading]);
 
   return (
     <AuthContext.Provider value={value}>

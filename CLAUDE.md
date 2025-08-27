@@ -4,277 +4,455 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Chefia POS is a comprehensive point-of-sale system for restaurants, built with a microservices architecture. The system includes multiple frontend applications, a FastAPI backend, and various integrated modules for complete restaurant management.
+Chefia POS is a comprehensive point-of-sale system for restaurants built with a modular microservices architecture. The system includes multiple frontend applications (POS, KDS, Kiosk, Waiter, Backoffice), a FastAPI backend with 30+ business modules, and extensive integrations for complete restaurant management.
 
-## Common Development Commands
+## Quick Start Commands
 
-### Backend (Python/FastAPI)
+### 🚀 Start Complete System
 ```bash
-# Navigate to backend directory
-cd src/
+# Using scripts (Linux/Mac)
+./scripts/pos-modern.sh start
 
-# Install dependencies
-pip install -r requirements.txt
+# Using scripts (Windows)
+./scripts/pos-modern.bat
+# or PowerShell
+./scripts/pos-modern.ps1
 
-# Run the backend server
-python main.py
-# or
-uvicorn src.main:app --reload --host 0.0.0.0 --port 8001
-
-# Run tests
-pytest
-
-# Format and lint
-make format         # Format with black and ruff
-make lint           # Run linting
-make typecheck      # Type checking with mypy
-make all            # Format, lint, typecheck and test
+# Or manually with Docker
+docker-compose up -d
 ```
 
-### Frontend (React/TypeScript Monorepo)
+### Backend Development (Python/FastAPI)
 ```bash
-# Navigate to frontend directory
+cd src/
+
+# Install dependencies (Poetry preferred)
+poetry install
+# or pip
+pip install -r requirements.txt
+
+# Run development server
+poetry run dev
+# or manually
+uvicorn main:app --reload --host 0.0.0.0 --port 8001
+
+# Testing & Quality
+poetry run pytest                    # Run all tests
+poetry run pytest src/order/         # Test specific module
+poetry run pytest --cov=src          # With coverage
+
+# Code formatting & linting
+poetry run black src/                # Format code
+poetry run ruff check src/ --fix     # Lint and fix
+poetry run mypy src/                 # Type checking
+
+# All quality checks at once
+poetry run black src/ && poetry run ruff check src/ --fix && poetry run mypy src/ && poetry run pytest
+```
+
+### Frontend Development (React/TypeScript Monorepo)
+```bash
 cd frontend/
 
-# Install dependencies (uses npm workspaces)
+# Install all workspace dependencies
 npm install
 
-# Development servers for different apps
-npm run dev           # Main POS app
-npm run dev:kds       # Kitchen Display System
-npm run dev:kiosk     # Self-service kiosk
-npm run dev:waiter    # Waiter terminal
-npm run dev:backoffice # Backoffice management
+# Run specific apps
+npm run dev              # POS terminal (reference architecture)
+npm run dev:kds          # Kitchen Display System
+npm run dev:kiosk        # Self-service kiosk
+npm run dev:waiter       # Waiter terminal
+npm run dev:backoffice   # Cloud management
 
-# Build all apps
-npm run build
-
-# Run tests across all workspaces
-npm run test
-
-# Lint all workspaces
-npm run lint
+# Build & Test
+npm run build            # Build all apps
+npm run test             # Test all workspaces
+npm run lint             # Lint all workspaces
 
 # Type checking (per app)
 cd apps/pos && npm run type-check
 ```
 
-### E2E Tests (Playwright)
+### E2E Testing
 ```bash
 cd frontend/apps/pos/
-npm run test:e2e          # Run e2e tests
-npm run test:e2e:ui       # Run with UI mode
-npm run test:e2e:report   # Show test report
+npm run test:e2e          # Run Playwright tests
+npm run test:e2e:ui       # With UI mode
+npm run test:e2e:report   # View test report
 ```
 
-### Marketing Site
+## Architecture Overview
+
+### System Architecture
+```
+┌─────────────────────────────────────────────────────────┐
+│                    FRONTEND APPS                         │
+├─────────────────────────────────────────────────────────┤
+│ POS ⭐⭐⭐⭐⭐ | KDS ⭐⭐⭐ | Kiosk ⭐⭐⭐ | Waiter ⭐⭐ | Backoffice ⭐⭐ │
+│ React 18 + TypeScript 5 + Vite 7 + TailwindCSS 3        │
+└─────────────────────────────────────────────────────────┘
+                        ↕ HTTP/WebSocket
+┌─────────────────────────────────────────────────────────┐
+│                    BACKEND (FastAPI)                     │
+├─────────────────────────────────────────────────────────┤
+│ 30+ Business Modules | Event Bus | Async Operations     │
+│ Python 3.11+ | Pydantic 2 | SQLAlchemy 2 | JWT Auth    │
+└─────────────────────────────────────────────────────────┘
+                        ↕ 
+┌─────────────────────────────────────────────────────────┐
+│                    INFRASTRUCTURE                        │
+├─────────────────────────────────────────────────────────┤
+│ PostgreSQL 14 | Redis 6 | RabbitMQ 3 | Docker Compose  │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Backend Module Structure
+```
+src/
+├── <module>/
+│   ├── models/       # Pydantic models & DTOs
+│   ├── services/     # Business logic
+│   ├── repositories/ # Data access layer
+│   ├── router/       # FastAPI endpoints
+│   ├── events/       # Event bus handlers
+│   └── tests/        # Module tests
+```
+
+### Frontend App Maturity
+- **POS Terminal** ⭐⭐⭐⭐⭐: Production-ready, reference architecture, 250KB bundle
+- **KDS** ⭐⭐⭐: Migrating to POS architecture
+- **Kiosk** ⭐⭐⭐: Partially independent
+- **Waiter** ⭐⭐: Initial phase
+- **Backoffice** ⭐⭐: Cloud-based, different context
+
+## Critical Development Rules
+
+### ⚠️ MANDATORY: Code Quality Standards
+
+#### NEVER in Production Code:
+```python
+# ❌ NEVER leave debug statements
+print("debug:", data)  # REMOVE BEFORE COMMIT
+console.log("test");   # REMOVE BEFORE COMMIT
+
+# ❌ NEVER use mocks outside tests
+def get_user():
+    return {"id": 1, "name": "Mock"}  # ONLY IN TEST FILES
+
+# ❌ NEVER use 'any' type in TypeScript
+let data: any;  # USE SPECIFIC TYPES
+```
+
+#### ALWAYS Do:
+```python
+# ✅ Use proper typing
+def process_data(data: Dict[str, Any]) -> ProcessedData:
+    return ProcessedData(data)
+
+# ✅ Complete error handling
+try:
+    result = await operation()
+except SpecificError as e:
+    logger.error(f"Operation failed: {e}")
+    raise
+
+# ✅ Remove unused imports
+# Run: poetry run ruff check --fix
+```
+
+### Task Management Philosophy
+
+**🎯 GOLDEN RULE: One Task at a Time to 100% Completion**
+
+```markdown
+✅ RIGHT WAY:
+1. Choose ONE task
+2. Complete it 100% (no known bugs)
+3. Test thoroughly
+4. Commit when DONE
+5. THEN move to next task
+
+❌ WRONG WAY:
+- Start multiple tasks
+- Leave bugs "for later"
+- Jump between features
+- Commit incomplete work
+```
+
+### Pre-Commit Checklist
 ```bash
-cd marketing-site/
-npm install
-npm run dev      # Development server
-npm run build    # Production build
-npm run preview  # Preview production build
+# Before EVERY commit, ensure:
+□ No console.log/print statements
+□ No mocks in production code
+□ All tests passing
+□ No linting errors
+□ No type errors
+□ No unused imports
+□ No known bugs in the feature
 ```
 
-## High-Level Architecture
+## Key Integrations & Features
 
-### Backend Structure (src/)
-The backend follows a modular architecture with each business domain as a separate module:
+### Payment & Financial
+- **Asaas**: Payment gateway with split payment support
+- **PIX**: Brazilian instant payment
+- **TEF**: Card terminal integration
 
-- **Core Modules**: Core functionality shared across the system
-  - `core/`: Event bus, middleware, error handling, tracing
-  - `auth/`: Authentication and authorization with JWT
-  - `peripherals/`: Hardware integration (printers, payment terminals, keyboards)
+### Delivery & Orders
+- **iFood**: Native integration (unique in market)
+- **Rappi**: Delivery platform integration
+- **WhatsApp**: AI-powered chatbot for orders
 
-- **Business Modules**: Each module contains:
-  - `models/`: Pydantic models for data validation
-  - `router/`: FastAPI route definitions
-  - `services/`: Business logic implementation  
-  - `repositories/`: Data access layer (when using DB)
-  - `events/`: Event definitions for the event bus system
-  - `tests/`: Module-specific tests
+### Fiscal & Compliance
+- **SAT**: Fiscal document generation
+- **NFC-e/MFe**: Electronic invoicing
+- **Brazilian Tax**: Full compliance
 
-- **Key Integrations**:
-  - **Payment**: Asaas payment gateway with split payment support
-  - **Delivery**: iFood, Rappi, Google Maps integration
-  - **Fiscal**: SAT, NFC-e, MFe fiscal document generation
-  - **Messaging**: WhatsApp/Twilio chatbot integration
-  - **Remote Orders**: Platform-agnostic remote order handling
+### Hardware
+- **Printers**: Epson, Bematech, Star support
+- **Card Readers**: Multiple TEF providers
+- **Kitchen Hardware**: Displays, buzzers, printers
 
-### Frontend Architecture (frontend/)
-Monorepo structure using npm workspaces:
+## Development Patterns
 
-- **common/**: Shared components, services, and utilities (deprecated for POS)
-  - Reusable UI components (Button, Card, Table, etc.)
-  - API client and service abstractions
-  - Event bus for frontend communication
-  - Common types and utilities
+### API Design
+```python
+# RESTful endpoints
+/api/v1/{module}/{resource}
+/api/v1/{module}/{resource}/{id}
+/api/v1/{module}/{resource}/{id}/{action}
 
-- **apps/**: Individual applications
-  - **pos**: Main point-of-sale terminal (React + TypeScript + TailwindCSS)
-    - REFERENCE ARCHITECTURE: Zero MUI, zero common/, optimized bundle
-    - Custom components with Tailwind styling
-    - React Context for state management
-  - **kds**: Kitchen Display System for order management
-  - **kiosk**: Customer self-service interface
-  - **waiter**: Mobile waiter terminal
-  - **backoffice**: Cloud-based management interface
-  - Each app has its own Vite config and can be developed/deployed independently
+# Event-driven communication
+event_bus.publish("order.created", order_data)
+event_bus.subscribe("order.*", handle_order_event)
+```
 
-### Event-Driven Architecture
-The system uses an event bus pattern for decoupled communication:
-- Backend events handle cross-module communication
-- Frontend events coordinate between components
-- Transaction tracing tracks operations across modules
+### Frontend Reference (POS App)
+```typescript
+// Component structure
+interface ComponentProps {
+  id: string;
+  onUpdate?: (data: Data) => void;
+}
 
-### Database Strategy
-- JSON file-based storage in `data/` for development
-- PostgreSQL support via Docker (docker-compose.yml)
-- SQLAlchemy 2.0 for ORM operations
-- Redis for caching
-
-## Key Development Patterns
-
-### API Endpoints
-- RESTful design with FastAPI
-- Consistent URL patterns: `/api/{module}/{resource}`
-- Pydantic models for request/response validation
-- Async/await throughout for performance
-
-### Frontend State Management
-- React Context API for global state (Auth, Theme, Toast)
-- Local component state for UI-specific data
-- Service layer pattern for API communication
-- TypeScript for type safety
+export const Component: FC<ComponentProps> = memo(({ id, onUpdate }) => {
+  // 1. Hooks
+  const { data, loading } = useData(id);
+  
+  // 2. Computed values
+  const computed = useMemo(() => process(data), [data]);
+  
+  // 3. Handlers
+  const handleAction = useCallback(() => {
+    // action logic
+  }, [dependencies]);
+  
+  // 4. Early returns
+  if (loading) return <Loading />;
+  if (!data) return null;
+  
+  // 5. Main render
+  return <div>...</div>;
+});
+```
 
 ### Testing Strategy
-- Backend: pytest for unit and integration tests
-- Frontend: Jest + React Testing Library
-- E2E: Playwright for critical user flows
-- Test files co-located with source code
+```python
+# Backend test example
+@pytest.mark.asyncio
+async def test_create_order():
+    # Arrange
+    mock_repo = Mock()
+    service = OrderService(mock_repo)
+    
+    # Act
+    result = await service.create_order(data)
+    
+    # Assert
+    assert result.id == "123"
+    mock_repo.create.assert_called_once()
+```
 
-### Error Handling
-- Centralized error middleware in backend
-- Custom exception classes per module
-- Frontend error boundaries and toast notifications
-- Comprehensive logging with configurable levels
+## Git Workflow & Commits
 
-## Important Development Rules
-
-### Code Quality Standards
-- **NEVER** leave console.log/print debug statements in production code
-- **NEVER** use mocks outside of test files
-- **ALWAYS** use proper typing (avoid 'any' in TypeScript)
-- **ALWAYS** complete tasks 100% before moving to the next
-- **ALWAYS** fix bugs before marking a task as complete
-
-### Before Committing
-1. Remove all debug statements (console.log, print)
-2. Run linting and fix all issues
-3. Ensure all tests pass
-4. Remove unused imports
-5. Verify no type errors exist
-
-### Frontend Guidelines
-- POS app is the reference architecture - follow its patterns
-- Prefer custom components over external UI libraries
-- Use TailwindCSS for styling
-- Minimize bundle size - avoid unnecessary dependencies
-- Components should be pure and testable
-
-### Backend Guidelines
-- Follow the module structure consistently
-- Use Pydantic for all data validation
-- Implement proper error handling in services
-- Use the event bus for cross-module communication
-- Write tests for all business logic
-
-### Git Workflow
+### Branch Strategy
 ```bash
-# Create feature branch
-git checkout -b feature/module-name
-
-# Make atomic commits
-git add .
-git commit -m "feat(module): description"
-
-# Push to remote
-git push origin feature/module-name
+main              # Production
+├── develop       # Development
+    ├── feature/module-name     # New features
+    ├── fix/bug-description     # Bug fixes
+    └── refactor/component      # Refactoring
 ```
 
 ### Commit Message Format
-- `feat(scope):` New feature
-- `fix(scope):` Bug fix
-- `docs(scope):` Documentation only
-- `refactor(scope):` Code refactoring
-- `test(scope):` Adding tests
-- `chore(scope):` Maintenance tasks
+```bash
+feat(module): add new feature
+fix(module): correct specific bug
+docs(module): update documentation
+refactor(module): improve code structure
+test(module): add/fix tests
+chore: maintenance tasks
+```
+
+## Performance Guidelines
+
+### Cache Strategy for Local Application
+Since this is a **local POS application** (frontend and backend on same device), the cache strategy is:
+
+#### ✅ Backend Cache (Recommended)
+- Cache is implemented in the **backend** (Python/FastAPI)
+- Frontend makes simple requests without cache logic
+- Backend manages TTL and invalidation
+- Benefits:
+  - Shared cache between all browser tabs
+  - Persists across browser sessions
+  - Less memory usage in browser
+  - Simpler frontend code
+
+#### ❌ Frontend Cache (Not Used)
+- We DON'T use frontend cache (localStorage/memory)
+- Reasons:
+  - Data is already local (same machine)
+  - Adds unnecessary complexity
+  - Each tab would have separate cache
+  - Backend cache is more efficient
+
+#### Implementation Example:
+```python
+# Backend (Python) - WHERE CACHE HAPPENS
+from functools import lru_cache
+
+@router.get("/products")
+@lru_cache(maxsize=100, ttl=300)  # 5 min cache
+async def get_products():
+    return await product_service.get_all()
+```
+
+```typescript
+// Frontend (React) - SIMPLE, NO CACHE
+const loadProducts = async () => {
+  // Just fetch - backend handles cache!
+  const products = await fetch('/api/products');
+  setProducts(await products.json());
+};
+```
+
+### Frontend Optimization
+- **POS Bundle Target**: <300KB (currently 250KB)
+- **Response Time**: <100ms for interactions
+- **Techniques**: Code splitting, lazy loading, memoization
+- **Avoid**: Material UI, unnecessary dependencies
+
+### Backend Optimization
+- **Async Operations**: Use async/await throughout
+- **Connection Pooling**: PostgreSQL with proper pool config
+- **Caching**: Redis for frequently accessed data
+- **Query Optimization**: Use indexes, avoid N+1 queries
 
 ## Infrastructure Commands
 
 ### Docker Operations
 ```bash
-# Start all services
-docker-compose up -d
-
-# Stop all services
-docker-compose down
-
-# View logs
-docker-compose logs -f [service-name]
-
-# Rebuild containers
-docker-compose build
+docker-compose up -d            # Start all services
+docker-compose logs -f backend  # View logs
+docker-compose down             # Stop services
+docker-compose build --no-cache # Rebuild images
 ```
 
-### Database Operations
+### Database Management
 ```bash
-# Access PostgreSQL
+# PostgreSQL access
 docker exec -it chefia-pos-postgres psql -U postgres
 
-# Run migrations (when available)
+# Migrations (when available)
 alembic upgrade head
-
-# Create new migration
 alembic revision -m "description"
+```
+
+### Useful Scripts
+```bash
+# Format all code
+./scripts/format-code.py
+
+# Generate TypeScript types from API
+./scripts/generate-types.py
+
+# Setup environment
+./scripts/setup-env.sh
 ```
 
 ## Troubleshooting
 
-### Common Issues
-- **Import errors**: Ensure PYTHONPATH includes src/ directory
-- **Type errors in frontend**: Run `npm run type-check` in the specific app
-- **Test failures**: Check if test database is properly configured
-- **CORS issues**: Verify backend CORS settings match frontend URL
+### Common Issues & Solutions
 
-### Performance Optimization
-- Frontend: Use React.memo, useMemo, and useCallback appropriately
-- Backend: Use async operations, implement caching where needed
-- Database: Add indexes for frequently queried fields
+**Import Errors (Python)**
+```bash
+export PYTHONPATH="${PYTHONPATH}:${PWD}/src"
+```
+
+**Type Errors (Frontend)**
+```bash
+cd frontend/apps/pos
+npm run type-check
+```
+
+**CORS Issues**
+- Check backend CORS settings in `src/core/middleware.py`
+- Ensure frontend URL is in allowed origins
+
+**Performance Issues**
+- Check for N+1 queries in backend
+- Verify React component memoization
+- Review bundle size with `npm run build --analyze`
 
 ## Module-Specific Notes
 
-### POS Terminal (frontend/apps/pos)
-- Reference implementation for frontend architecture
-- Zero Material UI dependencies
-- Optimized for touch interfaces
-- Custom component library with TailwindCSS
-- Comprehensive keyboard shortcuts support
+### POS Terminal (Reference Architecture)
+- **Zero Material UI**: Custom components only
+- **Zero common/**: Completely independent
+- **Bundle**: 250KB optimized
+- **Performance**: <100ms interactions
+- **Touch-first**: Designed for tablets
 
-### Payment Module
-- Asaas integration for payment processing
-- Support for split payments
-- PIX payment implementation
-- Partial payment capabilities
+### Critical Business Rules
+- Orders can only be created during business hours
+- Minimum order value: R$ 10.00
+- Auto-cancel unpaid orders after 2 hours
+- Fiscal documents required for all sales
+- Inventory updates must be atomic
 
-### Fiscal Module
-- SAT fiscal document generation
-- NFC-e and MFe support
-- Integration with multiple fiscal printers
-- Compliance with Brazilian tax regulations
+### Offline-First Architecture
+- 100% functional without internet
+- Local PostgreSQL for data persistence
+- Intelligent sync when reconnected
+- Conflict resolution strategies per module
+- <50ms local operation latency
 
-### Remote Orders
-- Unified interface for delivery platforms
-- iFood and Rappi integrations
-- Order status synchronization
-- Platform-agnostic order handling
+## Quick Debug Commands
+
+```bash
+# Check for console.logs
+grep -r "console\." frontend/ --include="*.ts" --include="*.tsx" | grep -v test
+
+# Check for prints
+grep -r "print(" src/ --include="*.py" | grep -v test
+
+# Run all quality checks (Python)
+cd src && poetry run black . && poetry run ruff check --fix && poetry run mypy . && poetry run pytest
+
+# Run all quality checks (Frontend)
+cd frontend && npm run lint && npm run test && npm run build
+```
+
+## Important Resources
+
+- **Main Docs**: `/docs/ai/` - Comprehensive technical documentation
+- **Dev Guide**: `/docs/ai/GUIA_DESENVOLVIMENTO.md` - Development best practices
+- **Architecture**: `/docs/ai/ARQUITETURA_TECNICA_COMPLETA.md` - Full technical architecture
+- **Business Rules**: `/docs/ai/REGRAS_NEGOCIO_CONSOLIDADAS.md` - Business logic documentation
+
+## Support & Feedback
+
+- **GitHub Issues**: Report bugs and request features
+- **Documentation**: Check `/docs` folder for detailed guides
+- **Development Channel**: #chefia-pos-dev on Slack

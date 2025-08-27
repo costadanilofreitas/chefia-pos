@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import Toast, { useToast } from '../components/Toast';
 import { useTheme } from '../contexts/ThemeContext';
-import { useToast } from '../components/Toast';
-import Toast from '../components/Toast';
+import { useAuth } from '../hooks/useAuth';
+import '../index.css'; // Import Tailwind CSS
+import { DocumentWithVendorFullscreen, HTMLElementWithVendorFullscreen } from '../types/browser';
+import NumericLoginModal from './NumericLoginModal';
 import ThemeToggle from './ThemeToggle';
 import { SimpleTooltip } from './Tooltip';
-import '../index.css'; // Import Tailwind CSS
-import NumericLoginModal from './NumericLoginModal';
 
 interface POSLayoutProps {
   children: React.ReactNode;
@@ -113,14 +113,14 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children, title }) => {
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen?.();
-      (document.documentElement as any)?.webkitRequestFullscreen?.();
-      (document.documentElement as any)?.mozRequestFullScreen?.();
-      (document.documentElement as any)?.msRequestFullscreen?.();
+      (document.documentElement as HTMLElementWithVendorFullscreen)?.webkitRequestFullscreen?.();
+      (document.documentElement as HTMLElementWithVendorFullscreen)?.mozRequestFullScreen?.();
+      (document.documentElement as HTMLElementWithVendorFullscreen)?.msRequestFullscreen?.();
     } else {
       document.exitFullscreen?.();
-      (document as any)?.webkitExitFullscreen?.();
-      (document as any)?.mozCancelFullScreen?.();
-      (document as any)?.msExitFullscreen?.();
+      (document as DocumentWithVendorFullscreen)?.webkitExitFullscreen?.();
+      (document as DocumentWithVendorFullscreen)?.mozCancelFullScreen?.();
+      (document as DocumentWithVendorFullscreen)?.msExitFullscreen?.();
     }
   }, []);
 

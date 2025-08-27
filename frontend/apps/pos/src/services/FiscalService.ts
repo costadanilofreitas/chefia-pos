@@ -2,15 +2,16 @@
  * Serviço para operações fiscais
  */
 
-import { apiInterceptor } from './ApiInterceptor';
-import logger, { LogSource } from './LocalLoggerService';
+import { buildApiUrl } from "../config/api";
+import { apiInterceptor } from "./ApiInterceptor";
+import logger, { LogSource } from "./LocalLoggerService";
 
 export interface FiscalDocument {
   id: string;
-  type: 'nfe' | 'nfce' | 'sat' | 'mfe';
+  type: "nfe" | "nfce" | "sat" | "mfe";
   number: string;
   series: string;
-  status: 'pending' | 'authorized' | 'cancelled' | 'rejected' | 'denied';
+  status: "pending" | "authorized" | "cancelled" | "rejected" | "denied";
   orderId: string;
   customerDocument: string;
   customerName: string;
@@ -27,7 +28,7 @@ export interface FiscalDocument {
 }
 
 export interface FiscalConfig {
-  environment: 'production' | 'homologation';
+  environment: "production" | "homologation";
   cnpj: string;
   stateRegistration: string;
   legalName: string;
@@ -42,7 +43,7 @@ export interface FiscalReport {
   type: string;
   startDate: string;
   endDate: string;
-  format: 'pdf' | 'xml' | 'csv' | 'xlsx';
+  format: "pdf" | "xml" | "csv" | "xlsx";
 }
 
 export interface ContingencyMode {
@@ -52,7 +53,7 @@ export interface ContingencyMode {
 }
 
 class FiscalService {
-  private baseUrl = '/api/v1/fiscal';
+  private readonly baseUrl = buildApiUrl("/api/v1/fical");
 
   /**
    * Busca documentos fiscais
@@ -65,8 +66,13 @@ class FiscalService {
     search?: string;
   }): Promise<FiscalDocument[]> {
     try {
-      await logger.debug('Buscando documentos fiscais', { filters }, 'FiscalService', LogSource.FISCAL);
-      
+      await logger.debug(
+        "Buscando documentos fiscais",
+        { filters },
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
       const params = new URLSearchParams();
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
@@ -74,8 +80,10 @@ class FiscalService {
         });
       }
 
-      const response = await apiInterceptor.get(`${this.baseUrl}/documents?${params.toString()}`);
-      
+      const response = await apiInterceptor.get(
+        `${this.baseUrl}/documents?${params.toString()}`
+      );
+
       // Se não houver dados, retorna array vazio
       if (!response.data || !Array.isArray(response.data)) {
         return [];
@@ -83,13 +91,23 @@ class FiscalService {
 
       const documents = response.data.map((doc) => ({
         ...doc,
-        issuedAt: doc.issuedAt || new Date().toISOString()
+        issuedAt: doc.issuedAt || new Date().toISOString(),
       }));
-      
-      await logger.debug(`${documents.length} documentos fiscais encontrados`, { count: documents.length }, 'FiscalService', LogSource.FISCAL);
+
+      await logger.debug(
+        `${documents.length} documentos fiscais encontrados`,
+        { count: documents.length },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       return documents;
     } catch (error) {
-      await logger.error('Erro ao buscar documentos fiscais', { filters, error }, 'FiscalService', LogSource.FISCAL);
+      await logger.error(
+        "Erro ao buscar documentos fiscais",
+        { filters, error },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -97,16 +115,39 @@ class FiscalService {
   /**
    * Sincroniza documentos pendentes
    */
-  async syncDocuments(): Promise<{ synced: number; failed: number; pending: number }> {
+  async syncDocuments(): Promise<{
+    synced: number;
+    failed: number;
+    pending: number;
+  }> {
     try {
-      await logger.info('Sincronizando documentos fiscais pendentes', {}, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.post<{ synced: number; failed: number; pending: number }>(`${this.baseUrl}/sync`);
-      
-      await logger.info('Sincronização de documentos fiscais concluída', response.data, 'FiscalService', LogSource.FISCAL);
+      await logger.info(
+        "Sincronizando documentos fiscais pendentes",
+        {},
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.post<{
+        synced: number;
+        failed: number;
+        pending: number;
+      }>(`${this.baseUrl}/sync`);
+
+      await logger.info(
+        "Sincronização de documentos fiscais concluída",
+        response.data,
+        "FiscalService",
+        LogSource.FISCAL
+      );
       return response.data;
     } catch (error) {
-      await logger.critical('Erro crítico ao sincronizar documentos fiscais', error, 'FiscalService', LogSource.FISCAL);
+      await logger.critical(
+        "Erro crítico ao sincronizar documentos fiscais",
+        error,
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -114,23 +155,44 @@ class FiscalService {
   /**
    * Consulta status SEFAZ
    */
-  async checkSEFAZStatus(state?: string): Promise<{ online: boolean; message: string; services: Array<unknown> }> {
+  async checkSEFAZStatus(
+    state?: string
+  ): Promise<{ online: boolean; message: string; services: Array<unknown> }> {
     try {
-      await logger.debug('Consultando status SEFAZ', { state }, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.get<{ online: boolean; message: string; services: Array<unknown> }>(`${this.baseUrl}/sefaz/status`, {
-        params: { state }
+      await logger.debug(
+        "Consultando status SEFAZ",
+        { state },
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.get<{
+        online: boolean;
+        message: string;
+        services: Array<unknown>;
+      }>(`${this.baseUrl}/sefaz/status`, {
+        params: { state },
       });
-      
-      await logger.info('Status SEFAZ obtido', response.data, 'FiscalService', LogSource.FISCAL);
+
+      await logger.info(
+        "Status SEFAZ obtido",
+        response.data,
+        "FiscalService",
+        LogSource.FISCAL
+      );
       return response.data;
     } catch (error) {
-      await logger.error('Erro ao consultar status SEFAZ', { state, error }, 'FiscalService', LogSource.FISCAL);
-      
+      await logger.error(
+        "Erro ao consultar status SEFAZ",
+        { state, error },
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
       return {
         online: false,
-        message: 'Não foi possível consultar o status da SEFAZ',
-        services: []
+        message: "Não foi possível consultar o status da SEFAZ",
+        services: [],
       };
     }
   }
@@ -140,12 +202,24 @@ class FiscalService {
    */
   async getConfig(): Promise<FiscalConfig> {
     try {
-      await logger.debug('Buscando configuração fiscal', {}, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.get<FiscalConfig>(`${this.baseUrl}/config`);
+      await logger.debug(
+        "Buscando configuração fiscal",
+        {},
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.get<FiscalConfig>(
+        `${this.baseUrl}/config`
+      );
       return response.data;
     } catch (error) {
-      await logger.error('Erro ao buscar configuração fiscal', error, 'FiscalService', LogSource.FISCAL);
+      await logger.error(
+        "Erro ao buscar configuração fiscal",
+        error,
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -155,17 +229,34 @@ class FiscalService {
    */
   async getContingencyStatus(): Promise<ContingencyMode> {
     try {
-      await logger.debug('Buscando status de contingência', {}, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.get<ContingencyMode>(`${this.baseUrl}/contingency`);
-      
+      await logger.debug(
+        "Buscando status de contingência",
+        {},
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.get<ContingencyMode>(
+        `${this.baseUrl}/contingency`
+      );
+
       if (response.data.active) {
-        await logger.warn('Sistema em modo de contingência', response.data, 'FiscalService', LogSource.FISCAL);
+        await logger.warn(
+          "Sistema em modo de contingência",
+          response.data,
+          "FiscalService",
+          LogSource.FISCAL
+        );
       }
-      
+
       return response.data;
     } catch (error) {
-      await logger.error('Erro ao buscar status de contingência', error, 'FiscalService', LogSource.FISCAL);
+      await logger.error(
+        "Erro ao buscar status de contingência",
+        error,
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -175,18 +266,36 @@ class FiscalService {
    */
   async emitDocument(orderId: string, type: string): Promise<FiscalDocument> {
     try {
-      await logger.info('Emitindo documento fiscal', { orderId, type }, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.post<FiscalDocument>(`${this.baseUrl}/emit`, { orderId, type });
-      
-      await logger.info('Documento fiscal emitido com sucesso', 
-        { documentId: response.data.id, number: response.data.number, accessKey: response.data.accessKey }, 
-        'FiscalService', 
+      await logger.info(
+        "Emitindo documento fiscal",
+        { orderId, type },
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.post<FiscalDocument>(
+        `${this.baseUrl}/emit`,
+        { orderId, type }
+      );
+
+      await logger.info(
+        "Documento fiscal emitido com sucesso",
+        {
+          documentId: response.data.id,
+          number: response.data.number,
+          accessKey: response.data.accessKey,
+        },
+        "FiscalService",
         LogSource.FISCAL
       );
       return response.data;
     } catch (error) {
-      await logger.critical('Erro crítico ao emitir documento fiscal', { orderId, type, error }, 'FiscalService', LogSource.FISCAL);
+      await logger.critical(
+        "Erro crítico ao emitir documento fiscal",
+        { orderId, type, error },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -194,16 +303,37 @@ class FiscalService {
   /**
    * Cancela documento fiscal
    */
-  async cancelDocument(documentId: string, reason: string): Promise<FiscalDocument> {
+  async cancelDocument(
+    documentId: string,
+    reason: string
+  ): Promise<FiscalDocument> {
     try {
-      await logger.warn('Cancelando documento fiscal', { documentId, reason }, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.post<FiscalDocument>(`${this.baseUrl}/documents/${documentId}/cancel`, { reason });
-      
-      await logger.info('Documento fiscal cancelado', { documentId, protocol: response.data.protocol }, 'FiscalService', LogSource.FISCAL);
+      await logger.warn(
+        "Cancelando documento fiscal",
+        { documentId, reason },
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.post<FiscalDocument>(
+        `${this.baseUrl}/documents/${documentId}/cancel`,
+        { reason }
+      );
+
+      await logger.info(
+        "Documento fiscal cancelado",
+        { documentId, protocol: response.data.protocol },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       return response.data;
     } catch (error) {
-      await logger.critical('Erro crítico ao cancelar documento fiscal', { documentId, reason, error }, 'FiscalService', LogSource.FISCAL);
+      await logger.critical(
+        "Erro crítico ao cancelar documento fiscal",
+        { documentId, reason, error },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -213,18 +343,31 @@ class FiscalService {
    */
   async retryDocument(documentId: string): Promise<FiscalDocument> {
     try {
-      await logger.info('Reemitindo documento fiscal', { documentId }, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.post<FiscalDocument>(`${this.baseUrl}/documents/${documentId}/retry`);
-      
-      await logger.info('Documento fiscal reemitido com sucesso', 
-        { documentId, status: response.data.status }, 
-        'FiscalService', 
+      await logger.info(
+        "Reemitindo documento fiscal",
+        { documentId },
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.post<FiscalDocument>(
+        `${this.baseUrl}/documents/${documentId}/retry`
+      );
+
+      await logger.info(
+        "Documento fiscal reemitido com sucesso",
+        { documentId, status: response.data.status },
+        "FiscalService",
         LogSource.FISCAL
       );
       return response.data;
     } catch (error) {
-      await logger.error('Erro ao reemitir documento fiscal', { documentId, error }, 'FiscalService', LogSource.FISCAL);
+      await logger.error(
+        "Erro ao reemitir documento fiscal",
+        { documentId, error },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -234,16 +377,34 @@ class FiscalService {
    */
   async downloadXML(documentId: string): Promise<Blob> {
     try {
-      await logger.debug('Fazendo download de XML', { documentId }, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.get<Blob>(`${this.baseUrl}/documents/${documentId}/xml`, {
-        responseType: 'blob'
-      });
-      
-      await logger.debug('XML baixado com sucesso', { documentId }, 'FiscalService', LogSource.FISCAL);
+      await logger.debug(
+        "Fazendo download de XML",
+        { documentId },
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.get<Blob>(
+        `${this.baseUrl}/documents/${documentId}/xml`,
+        {
+          responseType: "blob",
+        }
+      );
+
+      await logger.debug(
+        "XML baixado com sucesso",
+        { documentId },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       return response.data;
     } catch (error) {
-      await logger.error('Erro ao baixar XML do documento', { documentId, error }, 'FiscalService', LogSource.FISCAL);
+      await logger.error(
+        "Erro ao baixar XML do documento",
+        { documentId, error },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -253,16 +414,34 @@ class FiscalService {
    */
   async downloadPDF(documentId: string): Promise<Blob> {
     try {
-      await logger.debug('Fazendo download de PDF', { documentId }, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.get<Blob>(`${this.baseUrl}/documents/${documentId}/pdf`, {
-        responseType: 'blob'
-      });
-      
-      await logger.debug('PDF baixado com sucesso', { documentId }, 'FiscalService', LogSource.FISCAL);
+      await logger.debug(
+        "Fazendo download de PDF",
+        { documentId },
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.get<Blob>(
+        `${this.baseUrl}/documents/${documentId}/pdf`,
+        {
+          responseType: "blob",
+        }
+      );
+
+      await logger.debug(
+        "PDF baixado com sucesso",
+        { documentId },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       return response.data;
     } catch (error) {
-      await logger.error('Erro ao baixar PDF do documento', { documentId, error }, 'FiscalService', LogSource.FISCAL);
+      await logger.error(
+        "Erro ao baixar PDF do documento",
+        { documentId, error },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -272,13 +451,30 @@ class FiscalService {
    */
   async printDocument(documentId: string): Promise<void> {
     try {
-      await logger.info('Imprimindo documento fiscal', { documentId }, 'FiscalService', LogSource.FISCAL);
-      
-      await apiInterceptor.post(`${this.baseUrl}/documents/${documentId}/print`);
-      
-      await logger.info('Documento fiscal enviado para impressão', { documentId }, 'FiscalService', LogSource.FISCAL);
+      await logger.info(
+        "Imprimindo documento fiscal",
+        { documentId },
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      await apiInterceptor.post(
+        `${this.baseUrl}/documents/${documentId}/print`
+      );
+
+      await logger.info(
+        "Documento fiscal enviado para impressão",
+        { documentId },
+        "FiscalService",
+        LogSource.FISCAL
+      );
     } catch (error) {
-      await logger.error('Erro ao imprimir documento fiscal', { documentId, error }, 'FiscalService', LogSource.FISCAL);
+      await logger.error(
+        "Erro ao imprimir documento fiscal",
+        { documentId, error },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -288,14 +484,32 @@ class FiscalService {
    */
   async updateConfig(config: Partial<FiscalConfig>): Promise<FiscalConfig> {
     try {
-      await logger.info('Atualizando configuração fiscal', config, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.put<FiscalConfig>(`${this.baseUrl}/config`, config);
-      
-      await logger.info('Configuração fiscal atualizada', response.data, 'FiscalService', LogSource.FISCAL);
+      await logger.info(
+        "Atualizando configuração fiscal",
+        config,
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.put<FiscalConfig>(
+        `${this.baseUrl}/config`,
+        config
+      );
+
+      await logger.info(
+        "Configuração fiscal atualizada",
+        response.data,
+        "FiscalService",
+        LogSource.FISCAL
+      );
       return response.data;
     } catch (error) {
-      await logger.critical('Erro crítico ao atualizar configuração fiscal', { config, error }, 'FiscalService', LogSource.FISCAL);
+      await logger.critical(
+        "Erro crítico ao atualizar configuração fiscal",
+        { config, error },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -305,18 +519,32 @@ class FiscalService {
    */
   async toggleContingency(reason?: string): Promise<ContingencyMode> {
     try {
-      await logger.warn('Alternando modo de contingência', { reason }, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.post<ContingencyMode>(`${this.baseUrl}/contingency/toggle`, { reason });
-      
-      await logger.warn(`Modo de contingência ${response.data.active ? 'ATIVADO' : 'DESATIVADO'}`, 
-        response.data, 
-        'FiscalService', 
+      await logger.warn(
+        "Alternando modo de contingência",
+        { reason },
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.post<ContingencyMode>(
+        `${this.baseUrl}/contingency/toggle`,
+        { reason }
+      );
+
+      await logger.warn(
+        `Modo de contingência ${response.data.active ? "ATIVADO" : "DESATIVADO"}`,
+        response.data,
+        "FiscalService",
         LogSource.FISCAL
       );
       return response.data;
     } catch (error) {
-      await logger.critical('Erro crítico ao alternar modo de contingência', { reason, error }, 'FiscalService', LogSource.FISCAL);
+      await logger.critical(
+        "Erro crítico ao alternar modo de contingência",
+        { reason, error },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }
@@ -326,16 +554,35 @@ class FiscalService {
    */
   async generateReport(params: FiscalReport): Promise<Blob> {
     try {
-      await logger.info('Gerando relatório fiscal', params, 'FiscalService', LogSource.FISCAL);
-      
-      const response = await apiInterceptor.post<Blob>(`${this.baseUrl}/reports`, params, {
-        responseType: 'blob'
-      });
-      
-      await logger.info('Relatório fiscal gerado com sucesso', { type: params.type, format: params.format }, 'FiscalService', LogSource.FISCAL);
+      await logger.info(
+        "Gerando relatório fiscal",
+        params,
+        "FiscalService",
+        LogSource.FISCAL
+      );
+
+      const response = await apiInterceptor.post<Blob>(
+        `${this.baseUrl}/reports`,
+        params,
+        {
+          responseType: "blob",
+        }
+      );
+
+      await logger.info(
+        "Relatório fiscal gerado com sucesso",
+        { type: params.type, format: params.format },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       return response.data;
     } catch (error) {
-      await logger.error('Erro ao gerar relatório fiscal', { params, error }, 'FiscalService', LogSource.FISCAL);
+      await logger.error(
+        "Erro ao gerar relatório fiscal",
+        { params, error },
+        "FiscalService",
+        LogSource.FISCAL
+      );
       throw error;
     }
   }

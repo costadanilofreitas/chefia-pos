@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { useNavigate, useParams } from 'react-router-dom';
+import Toast, { useToast } from '../components/Toast';
+import { useAuth } from '../hooks/useAuth';
 import { useOrder } from '../hooks/useOrder';
 import { useTable } from '../hooks/useTable';
-import { useAuth } from '../hooks/useAuth';
-import Toast, { useToast } from '../components/Toast';
-import { formatCurrency } from '../utils/formatters';
 import '../index.css';
+import { formatCurrency } from '../utils/formatters';
 
 interface Chair {
   id: number;
@@ -94,12 +94,12 @@ export default function TablePage() {
     try {
       await getOrders();
     } catch {
-      // console.error('Error loading orders:', error);
+        error('Erro ao carregar pedidos');
     }
   }, [getOrders]);
 
   // Transform backend tables to include UI properties
-  const tables = backendTables.map((t: any) => {
+  const tables: Table[] = backendTables.map((t) => {
     // Set minimum size for small tables
     // const minSize = t.seats <= 2 ? 80 : 100; // TODO: usar para validação
     const width = t.size?.width || (t.seats <= 2 ? 80 : 100);
@@ -109,14 +109,17 @@ export default function TablePage() {
       ...t,
       chairs: Array.from({ length: t.seats }, (_, i) => ({ 
         id: i + 1, 
-        occupied: false 
-      })),
+        occupied: false,
+        customerName: undefined,
+        orderValue: undefined
+      } as Chair)),
       splitByChair: false,
       customers: t.customer_count,
       orderValue: t.order_total,
       startTime: t.start_time,
       waiter: t.waiter_name,
-      size: { width, height }
+      size: { width, height },
+      position: t.position || { x: 0, y: 0 } // Default position if missing
     };
   });
 
@@ -124,7 +127,8 @@ export default function TablePage() {
   useEffect(() => {
     loadOrders();
     loadTables();
-  }, [loadOrders, loadTables]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Load only once on mount
   
   // Keyboard shortcuts
   useHotkeys('v', () => setViewMode(prev => prev === 'layout' ? 'grid' : 'layout'));
@@ -158,6 +162,7 @@ export default function TablePage() {
     
     try {
       await reserveTableApi(selectedTable.id, {
+        id: `reservation-${Date.now()}`,
         customer_name: reservationName,
         customer_phone: reservationPhone,
         reservation_time: reservationTime,
@@ -307,10 +312,10 @@ export default function TablePage() {
   
   const stats = {
     total: tables.length,
-    available: tables.filter((t: any) => t.status === 'available').length,
-    occupied: tables.filter((t: any) => t.status === 'occupied').length,
-    reserved: tables.filter((t: any) => t.status === 'reserved').length,
-    occupancyRate: Math.round((tables.filter((t: any) => t.status === 'occupied').length / tables.length) * 100)
+    available: tables.filter((t) => t.status === 'available').length,
+    occupied: tables.filter((t) => t.status === 'occupied').length,
+    reserved: tables.filter((t) => t.status === 'reserved').length,
+    occupancyRate: Math.round((tables.filter((t) => t.status === 'occupied').length / tables.length) * 100)
   };
   
   return (
@@ -523,7 +528,7 @@ export default function TablePage() {
               const chairPositions = getChairPositions();
               
               return (
-                <div
+                <button
                   key={table.id}
                   draggable={editMode}
                   onDragStart={(e) => handleTableDragStart(table, e)}
@@ -541,14 +546,15 @@ export default function TablePage() {
                     width: `${Math.max(table.size?.width || 100, table.seats <= 2 ? 80 : 100)}px`,
                     height: `${Math.max(table.size?.height || 100, table.seats <= 2 ? 80 : 100)}px`
                   }}
+                  type="button"
                 >
                   {/* Chairs - show for all tables */}
                   {!editMode && chairPositions.length > 0 && chairPositions.map((pos, index) => {
-                    const chair = table.chairs && table.chairs[index];
+                    const chair = table.chairs?.[index];
                     const isOccupied = chair?.occupied || false;
                     return (
                       <div
-                        key={index}
+                        key={`chair-${table.id}-${index}`}
                         className={`absolute w-3 h-3 rounded-full border-2 ${
                           isOccupied
                             ? 'bg-red-500 border-red-600' 
@@ -628,7 +634,7 @@ export default function TablePage() {
                       </>
                     )}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -638,12 +644,13 @@ export default function TablePage() {
         {viewMode === 'grid' && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filteredTables.map(table => (
-              <div
+              <button
                 key={table.id}
                 onClick={() => handleTableClick(table)}
                 className={`p-6 rounded-xl border-2 transition-all cursor-pointer hover:scale-105 ${
                   getStatusColor(table.status)
-                }`}
+                } w-full text-left`}
+                type="button"
               >
                 <div className="text-center">
                   <div className="text-3xl mb-2">{getStatusIcon(table.status)}</div>
@@ -655,7 +662,7 @@ export default function TablePage() {
                     </p>
                   )}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -883,10 +890,11 @@ export default function TablePage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="reservation-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Nome do Cliente
                   </label>
                   <input
+                    id="reservation-name"
                     type="text"
                     value={reservationName}
                     onChange={(e) => setReservationName(e.target.value)}
@@ -895,10 +903,11 @@ export default function TablePage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="reservation-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Telefone
                   </label>
                   <input
+                    id="reservation-phone"
                     type="tel"
                     value={reservationPhone}
                     onChange={(e) => setReservationPhone(e.target.value)}
@@ -907,10 +916,11 @@ export default function TablePage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="reservation-time" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Horário
                   </label>
                   <input
+                    id="reservation-time"
                     type="time"
                     value={reservationTime}
                     onChange={(e) => setReservationTime(e.target.value)}
@@ -919,10 +929,11 @@ export default function TablePage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="reservation-guests" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Número de Pessoas
                   </label>
                   <input
+                    id="reservation-guests"
                     type="number"
                     value={reservationGuests}
                     onChange={(e) => setReservationGuests(e.target.value)}

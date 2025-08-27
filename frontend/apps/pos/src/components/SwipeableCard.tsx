@@ -55,7 +55,6 @@ const SwipeableCard: React.FC<SwipeableCardProps> = ({
 
   // Double tap to open
   const doubleTapHandlers = useDoubleTap(() => {
-// console.log('Double tapped!');
   });
 
   // Reset position on touch end

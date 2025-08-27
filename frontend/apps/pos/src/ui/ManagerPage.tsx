@@ -7,6 +7,7 @@ import { useEmployee } from '../hooks/useEmployee';
 import { useReport } from '../hooks/useReport';
 import { useStock } from '../hooks/useStock';
 import { useSupplier } from '../hooks/useSupplier';
+import type { EmployeeCreate, EmployeeRole, EmploymentType } from '../services/EmployeeService';
 import '../index.css';
 import { formatCurrency } from '../utils/formatters';
 
@@ -15,6 +16,7 @@ type TabType = 'dashboard' | 'employees' | 'suppliers' | 'stock' | 'bills' | 're
 interface Employee {
   id: string;
   name: string;
+  email?: string;
   role?: string;
   phone?: string;
   salary?: number;
@@ -28,6 +30,7 @@ interface Supplier {
   phone?: string;
   email?: string;
   address?: string;
+  contact_person?: string;
 }
 
 interface Stock {
@@ -48,6 +51,7 @@ interface Bill {
   due_date?: string;
   status?: string;
   category?: string;
+  notes?: string;
 }
 
 export default function ManagerPage() {
@@ -78,9 +82,9 @@ export default function ManagerPage() {
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showBillModal, setShowBillModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<unknown>(null);
-  const [selectedSupplier, setSelectedSupplier] = useState<unknown>(null);
-  const [selectedBill, setSelectedBill] = useState<unknown>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [billsFilter, setBillsFilter] = useState<'all' | 'pending' | 'overdue' | 'paid'>('all');
   const [employeeModalTab, setEmployeeModalTab] = useState(0);
@@ -137,18 +141,19 @@ export default function ManagerPage() {
 
   // Load data on mount
   useEffect(() => {
-    loadEmployees().catch(console.error);
-    loadSuppliers().catch(console.error);
-    loadStocks().catch(console.error);
-  }, [loadEmployees, loadSuppliers, loadStocks]);
+    loadEmployees().catch(() => error('Erro ao carregar funcionários'));
+    loadSuppliers().catch(() => error('Erro ao carregar fornecedores'));
+    loadStocks().catch(() => error('Erro ao carregar estoque'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Load only once on mount
 
   // Dashboard stats
   const billsStats = getStatistics();
   const dashboardStats = {
     totalEmployees: employees?.length || 0,
-    activeEmployees: employees?.filter((e: Employee) => e.is_active === true).length || 0,
+    activeEmployees: employees?.filter((e: Employee) => e.is_active).length || 0,
     totalSuppliers: suppliers?.length || 0,
-    lowStockItems: stocks?.filter((s: any) => s.quantity <= s.min_quantity).length || 0,
+    lowStockItems: stocks?.filter((s) => s.quantity <= (s.min_quantity || 0)).length || 0,
     pendingBills: billsStats.pendingCount,
     overdueBills: billsStats.overdueCount,
     totalPending: billsStats.totalPending,
@@ -159,7 +164,7 @@ export default function ManagerPage() {
   const handleSaveEmployee = async () => {
     try {
       if (selectedEmployee) {
-        await updateEmployee((selectedEmployee as any).id, {
+        await updateEmployee(selectedEmployee.id, {
           name: employeeForm.name,
           phone: employeeForm.phone,
           email: employeeForm.email
@@ -167,13 +172,13 @@ export default function ManagerPage() {
         success('Funcionário atualizado com sucesso!');
       } else {
         // For creation, map to required fields
-        const newEmployee = {
+        const newEmployee: EmployeeCreate = {
           name: employeeForm.name,
-          role: employeeForm.role as any,
+          role: employeeForm.role as EmployeeRole,
           document: employeeForm.operator_id || '00000000000',
           email: employeeForm.email,
           phone: employeeForm.phone,
-          employment_type: employeeForm.contract_type as any,
+          employment_type: employeeForm.contract_type as EmploymentType,
           hire_date: employeeForm.admission_date,
           salary: employeeForm.salary,
           password: '123456' // Default password
@@ -238,7 +243,7 @@ export default function ManagerPage() {
   const handleSaveSupplier = async () => {
     try {
       if (selectedSupplier) {
-        await updateSupplier((selectedSupplier as any).id, supplierForm);
+        await updateSupplier(selectedSupplier.id, supplierForm);
         success('Fornecedor atualizado com sucesso!');
       } else {
         await createSupplier(supplierForm);
@@ -285,7 +290,7 @@ export default function ManagerPage() {
   const handleSaveBill = async () => {
     try {
       if (selectedBill) {
-        await updateBill((selectedBill as any).id, {
+        await updateBill(selectedBill.id, {
           description: billForm.description,
           supplier: billForm.supplier,
           amount: billForm.amount,
@@ -325,7 +330,7 @@ export default function ManagerPage() {
     if (!selectedBill) return;
     
     try {
-      await payBill((selectedBill as any).id, paymentMethod);
+      await payBill(selectedBill.id, paymentMethod);
       success('Conta paga com sucesso!');
       setShowPaymentModal(false);
       setSelectedBill(null);
@@ -347,7 +352,7 @@ export default function ManagerPage() {
     setSelectedBill(null);
   };
 
-  const openBillModal = (bill?: any) => {
+  const openBillModal = (bill?: Bill) => {
     if (bill) {
       setSelectedBill(bill);
       setBillForm({
@@ -380,7 +385,7 @@ export default function ManagerPage() {
       }
       
       // Get all employees with salary information
-      const employeesWithSalary = employees?.filter((emp: any) => (emp.salary || 0) > 0) || [];
+      const employeesWithSalary = employees?.filter((emp) => ((emp as Employee).salary || 0) > 0) || [];
       
       if (employeesWithSalary.length === 0) {
         warning('Nenhum funcionário com salário cadastrado');
@@ -391,7 +396,7 @@ export default function ManagerPage() {
       let totalPayroll = 0;
       const payrollDetails: string[] = [];
       
-      employeesWithSalary.forEach((emp: any) => {
+      employeesWithSalary.forEach((emp) => {
         const totalCost = (emp.salary || 0);
         totalPayroll += totalCost;
         payrollDetails.push(`${emp.name}: ${formatCurrency(totalCost)}`);
@@ -438,7 +443,6 @@ export default function ManagerPage() {
       );
     } catch {
       error('Erro ao gerar folha de pagamento');
-// console.error(err);
     }
   };
 
@@ -623,7 +627,7 @@ export default function ManagerPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredEmployees.map((employee: any) => (
+                  {filteredEmployees.map((employee) => (
                     <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{employee.name}</td>
                       <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{employee.id}</td>
@@ -696,7 +700,7 @@ export default function ManagerPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredSuppliers.map((supplier: any) => (
+              {filteredSuppliers.map((supplier) => (
                 <div key={supplier.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-gray-900 dark:text-white">{supplier.name}</h3>
@@ -1075,13 +1079,13 @@ export default function ManagerPage() {
             <div className="space-y-4">
               {/* Dados Pessoais Tab */}
               {employeeModalTab === 0 && (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                     <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Nome Completo
                       </label>
                       <input
+                        id="employee-name"
                         type="text"
                         value={employeeForm.name}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, name: e.target.value })}
@@ -1090,10 +1094,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-cpf" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         CPF
                       </label>
                       <input
+                        id="employee-cpf"
                         type="text"
                         value={employeeForm.cpf}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, cpf: e.target.value })}
@@ -1103,10 +1108,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-rg" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         RG
                       </label>
                       <input
+                        id="employee-rg"
                         type="text"
                         value={employeeForm.rg}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, rg: e.target.value })}
@@ -1144,10 +1150,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Telefone
                       </label>
                       <input
+                        id="employee-phone"
                         type="tel"
                         value={employeeForm.phone}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, phone: e.target.value })}
@@ -1157,10 +1164,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Email
                       </label>
                       <input
+                        id="employee-email"
                         type="email"
                         value={employeeForm.email}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })}
@@ -1170,10 +1178,11 @@ export default function ManagerPage() {
                     
                     {!selectedEmployee && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="employee-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Senha
                         </label>
                         <input
+                          id="employee-password"
                           type="password"
                           value={employeeForm.password}
                           onChange={(e) => setEmployeeForm({ ...employeeForm, password: e.target.value })}
@@ -1183,10 +1192,11 @@ export default function ManagerPage() {
                     )}
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-work-card" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Carteira de Trabalho
                       </label>
                       <input
+                        id="employee-work-card"
                         type="text"
                         value={employeeForm.work_card}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, work_card: e.target.value })}
@@ -1194,7 +1204,6 @@ export default function ManagerPage() {
                       />
                     </div>
                   </div>
-                </>
               )}
               
               {/* Financeiro Tab */}
@@ -1202,10 +1211,11 @@ export default function ManagerPage() {
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-salary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Salário (R$)
                       </label>
                       <input
+                        id="employee-salary"
                         type="number"
                         value={employeeForm.salary}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, salary: parseFloat(e.target.value) || 0 })}
@@ -1214,10 +1224,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-contract" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Tipo de Contrato
                       </label>
                       <select
+                        id="employee-contract"
                         value={employeeForm.contract_type}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, contract_type: e.target.value })}
                         className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
@@ -1231,10 +1242,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-payment-day" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Dia de Pagamento
                       </label>
                       <input
+                        id="employee-payment-day"
                         type="number"
                         min="1"
                         max="31"
@@ -1245,10 +1257,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-admission" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Data de Admissão
                       </label>
                       <input
+                        id="employee-admission"
                         type="date"
                         value={employeeForm.admission_date}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, admission_date: e.target.value })}
@@ -1270,10 +1283,11 @@ export default function ManagerPage() {
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-bank" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Banco
                       </label>
                       <input
+                        id="employee-bank"
                         type="text"
                         value={employeeForm.bank_name}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, bank_name: e.target.value })}
@@ -1283,10 +1297,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-agency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Agência
                       </label>
                       <input
+                        id="employee-agency"
                         type="text"
                         value={employeeForm.bank_agency}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, bank_agency: e.target.value })}
@@ -1296,10 +1311,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-account" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Conta
                       </label>
                       <input
+                        id="employee-account"
                         type="text"
                         value={employeeForm.bank_account}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, bank_account: e.target.value })}
@@ -1309,10 +1325,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-account-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Tipo de Conta
                       </label>
                       <select
+                        id="employee-account-type"
                         value={employeeForm.bank_account_type}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, bank_account_type: e.target.value })}
                         className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
@@ -1324,10 +1341,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-pix" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Chave PIX
                       </label>
                       <input
+                        id="employee-pix"
                         type="text"
                         value={employeeForm.pix_key}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, pix_key: e.target.value })}
@@ -1344,10 +1362,11 @@ export default function ManagerPage() {
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-meal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Vale Refeição (R$/mês)
                       </label>
                       <input
+                        id="employee-meal"
                         type="number"
                         value={employeeForm.meal_voucher}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, meal_voucher: parseFloat(e.target.value) || 0 })}
@@ -1356,10 +1375,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-transport" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Vale Transporte (R$/mês)
                       </label>
                       <input
+                        id="employee-transport"
                         type="number"
                         value={employeeForm.transport_voucher}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, transport_voucher: parseFloat(e.target.value) || 0 })}
@@ -1368,10 +1388,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-benefits" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Outros Benefícios (R$/mês)
                       </label>
                       <input
+                        id="employee-benefits"
                         type="number"
                         value={employeeForm.other_benefits}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, other_benefits: parseFloat(e.target.value) || 0 })}
@@ -1442,10 +1463,11 @@ export default function ManagerPage() {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="supplier-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Nome
                 </label>
                 <input
+                  id="supplier-name"
                   type="text"
                   value={supplierForm.name}
                   onChange={(e) => setSupplierForm({ ...supplierForm, name: e.target.value })}
@@ -1454,10 +1476,11 @@ export default function ManagerPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="supplier-cnpj" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   CNPJ
                 </label>
                 <input
+                  id="supplier-cnpj"
                   type="text"
                   value={supplierForm.cnpj}
                   onChange={(e) => setSupplierForm({ ...supplierForm, cnpj: e.target.value })}
@@ -1466,10 +1489,11 @@ export default function ManagerPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="supplier-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Telefone
                 </label>
                 <input
+                  id="supplier-phone"
                   type="tel"
                   value={supplierForm.phone}
                   onChange={(e) => setSupplierForm({ ...supplierForm, phone: e.target.value })}
@@ -1478,10 +1502,11 @@ export default function ManagerPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="supplier-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Email
                 </label>
                 <input
+                  id="supplier-email"
                   type="email"
                   value={supplierForm.email}
                   onChange={(e) => setSupplierForm({ ...supplierForm, email: e.target.value })}
@@ -1490,10 +1515,11 @@ export default function ManagerPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="supplier-contact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Pessoa de Contato
                 </label>
                 <input
+                  id="supplier-contact"
                   type="text"
                   value={supplierForm.contact_person}
                   onChange={(e) => setSupplierForm({ ...supplierForm, contact_person: e.target.value })}
@@ -1533,10 +1559,11 @@ export default function ManagerPage() {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="bill-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Descrição
                 </label>
                 <input
+                  id="bill-description"
                   type="text"
                   value={billForm.description}
                   onChange={(e) => setBillForm({ ...billForm, description: e.target.value })}
@@ -1546,10 +1573,11 @@ export default function ManagerPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="bill-supplier" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Fornecedor
                 </label>
                 <input
+                  id="bill-supplier"
                   type="text"
                   value={billForm.supplier}
                   onChange={(e) => setBillForm({ ...billForm, supplier: e.target.value })}
@@ -1559,10 +1587,11 @@ export default function ManagerPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="bill-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Categoria
                 </label>
                 <select
+                  id="bill-category"
                   value={billForm.category}
                   onChange={(e) => setBillForm({ ...billForm, category: e.target.value })}
                   className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
@@ -1650,10 +1679,10 @@ export default function ManagerPage() {
             
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">Conta</p>
-              <p className="font-semibold text-gray-900 dark:text-white">{(selectedBill as any).description}</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Fornecedor: {(selectedBill as any).supplier}</p>
+              <p className="font-semibold text-gray-900 dark:text-white">{selectedBill?.description}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Fornecedor: {selectedBill?.supplier}</p>
               <p className="text-lg font-bold text-gray-900 dark:text-white mt-2">
-                {formatCurrency((selectedBill as any).amount)}
+                {formatCurrency(selectedBill?.amount || 0)}
               </p>
             </div>
             

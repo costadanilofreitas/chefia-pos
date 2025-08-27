@@ -44,7 +44,6 @@ export default defineConfig({
           services: [
             "./src/services/OfflineStorage.ts",
             "./src/services/SyncManager.ts",
-            "./src/services/ApiClient.ts",
           ],
         },
 

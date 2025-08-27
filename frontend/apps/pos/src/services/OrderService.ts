@@ -1,4 +1,5 @@
 import { AxiosResponse } from "axios";
+import { API_CONFIG, buildApiUrl } from "../config/api";
 import {
   Order,
   OrderCreate,
@@ -18,8 +19,7 @@ import logger, { LogSource } from "./LocalLoggerService";
  * Integração com backend API
  */
 export class OrderService {
-  private baseURL = "http://localhost:8001/api/v1";
-  private apiInterceptor = ApiInterceptor.getInstance();
+  private readonly apiInterceptor = ApiInterceptor.getInstance();
 
   /**
    * Criar um novo pedido
@@ -35,7 +35,7 @@ export class OrderService {
 
       const response: AxiosResponse<Order> = await this.apiInterceptor
         .getAxiosInstance()
-        .post(`${this.baseURL}/orders/`, orderData);
+        .post(buildApiUrl(API_CONFIG.ENDPOINTS.ORDERS.CREATE), orderData);
 
       await logger.info(
         "Pedido criado com sucesso",
@@ -69,7 +69,7 @@ export class OrderService {
 
       const response: AxiosResponse<Order> = await this.apiInterceptor
         .getAxiosInstance()
-        .get(`${this.baseURL}/orders/${orderId}`);
+        .get(buildApiUrl(`/api/v1/orders/${orderId}`));
 
       return response.data;
     } catch (error) {
@@ -106,7 +106,11 @@ export class OrderService {
 
       const response: AxiosResponse<Order[]> = await this.apiInterceptor
         .getAxiosInstance()
-        .get(`${this.baseURL}/orders/?${params.toString()}`);
+        .get(
+          buildApiUrl(
+            `${API_CONFIG.ENDPOINTS.ORDERS.LIST}?${params.toString()}`
+          )
+        );
 
       return response.data;
     } catch (error) {
@@ -134,7 +138,10 @@ export class OrderService {
 
       const response: AxiosResponse<Order> = await this.apiInterceptor
         .getAxiosInstance()
-        .put(`${this.baseURL}/orders/${orderId}`, updateData);
+        .put(
+          buildApiUrl(API_CONFIG.ENDPOINTS.ORDERS.UPDATE(orderId)),
+          updateData
+        );
 
       await logger.info(
         "Pedido atualizado",
@@ -168,7 +175,7 @@ export class OrderService {
 
       const response: AxiosResponse<Order> = await this.apiInterceptor
         .getAxiosInstance()
-        .put(`${this.baseURL}/orders/${orderId}/cancel`, {
+        .put(buildApiUrl(`/api/v1/orders/${orderId}/cancel`), {
           cancellation_reason: reason,
         });
 
@@ -204,7 +211,7 @@ export class OrderService {
 
       const response: AxiosResponse<Order> = await this.apiInterceptor
         .getAxiosInstance()
-        .put(`${this.baseURL}/orders/${orderId}/complete`);
+        .put(buildApiUrl(`/api/v1/orders/${orderId}/complete`));
 
       await logger.info(
         "Pedido finalizado com sucesso",
@@ -239,7 +246,7 @@ export class OrderService {
       await this.apiInterceptor
         .getAxiosInstance()
         .post(
-          `${this.baseURL}/orders/${paymentData.order_id}/payment`,
+          buildApiUrl(`/api/v1/orders/${paymentData.order_id}/payment`),
           paymentData
         );
 
@@ -274,7 +281,7 @@ export class OrderService {
 
       const response: AxiosResponse<Order> = await this.apiInterceptor
         .getAxiosInstance()
-        .post(`${this.baseURL}/orders/${orderId}/items`, item);
+        .post(buildApiUrl(`/api/v1/orders/${orderId}/items`), item);
 
       await logger.info(
         "Item adicionado ao pedido",
@@ -308,7 +315,7 @@ export class OrderService {
 
       const response: AxiosResponse<Order> = await this.apiInterceptor
         .getAxiosInstance()
-        .delete(`${this.baseURL}/orders/${orderId}/items/${itemId}`);
+        .delete(buildApiUrl(`/api/v1/orders/${orderId}/items/${itemId}`));
 
       await logger.info(
         "Item removido do pedido",
@@ -336,12 +343,12 @@ export class OrderService {
     itemId: string,
     updateData: OrderItemUpdate
   ): Promise<Order> {
-    // console.log('🔄 OrderService: Atualizando item do pedido', orderId, itemId, updateData);
-
     const response: AxiosResponse<Order> = await this.apiInterceptor
       .getAxiosInstance()
-      .put(`${this.baseURL}/orders/${orderId}/items/${itemId}`, updateData);
-    // console.log('✅ OrderService: Item atualizado', response.data);
+      .put(
+        buildApiUrl(`/api/v1/orders/${orderId}/items/${itemId}`),
+        updateData
+      );
     return response.data;
   }
 
@@ -349,8 +356,6 @@ export class OrderService {
    * Obter estatísticas de pedidos
    */
   async getOrderStats(filters?: OrderFilters): Promise<OrderStats> {
-    // console.log('📊 OrderService: Obtendo estatísticas', filters);
-
     const params = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -362,8 +367,7 @@ export class OrderService {
 
     const response: AxiosResponse<OrderStats> = await this.apiInterceptor
       .getAxiosInstance()
-      .get(`${this.baseURL}/orders/stats?${params.toString()}`);
-    // console.log('✅ OrderService: Estatísticas obtidas', response.data);
+      .get(buildApiUrl(`/api/v1/orders/stats?${params.toString()}`));
     return response.data;
   }
 

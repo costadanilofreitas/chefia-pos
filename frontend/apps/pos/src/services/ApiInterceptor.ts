@@ -1,11 +1,12 @@
-
 import axios, {
   AxiosError,
+  AxiosHeaders,
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
+import { API_CONFIG } from "../config/api";
 
 export interface TokenData {
   access_token: string;
@@ -20,15 +21,15 @@ export interface TokenData {
 
 export class ApiInterceptor {
   private static instance: ApiInterceptor;
-  private axiosInstance: AxiosInstance;
+  private readonly axiosInstance: AxiosInstance;
   private tokenData: TokenData | null = null;
   private tokenExpirationTime: number = 0;
   private refreshPromise: Promise<string> | null = null;
 
   private constructor() {
     this.axiosInstance = axios.create({
-      baseURL: "http://localhost:8001",
-      timeout: 10000,
+      baseURL: API_CONFIG.BASE_URL,
+      timeout: API_CONFIG.TIMEOUT,
       headers: {
         "Content-Type": "application/json",
       },
@@ -63,7 +64,6 @@ export class ApiInterceptor {
 
         if (this.tokenData && this.tokenExpirationTime > 0) {
           if (now >= this.tokenExpirationTime - fiveMinutesInMs) {
-            // console.log('Token expiring soon, refreshing...');
             await this.refreshToken();
           }
         }
@@ -71,7 +71,7 @@ export class ApiInterceptor {
         // Add authorization header if token exists
         if (this.tokenData?.access_token) {
           if (!config.headers) {
-            config.headers = {} as any;
+            config.headers = new AxiosHeaders();
           }
           config.headers.Authorization = `Bearer ${this.tokenData.access_token}`;
         }
@@ -79,7 +79,9 @@ export class ApiInterceptor {
         return config;
       },
       (error) => {
-        return Promise.reject(error);
+        return Promise.reject(
+          error instanceof Error ? error : new Error(String(error))
+        );
       }
     );
   }
@@ -100,14 +102,12 @@ export class ApiInterceptor {
 
           // Só tentar refresh se tivermos um token válido
           if (this.tokenData && this.isTokenValid()) {
-            
-            // console.log('🔄 401 detected, attempting token refresh...');
             await this.refreshToken();
 
             // Retry original request with new token
             if (this.tokenData?.access_token) {
               if (!originalRequest.headers) {
-                originalRequest.headers = {} as any;
+                originalRequest.headers = new AxiosHeaders();
               }
               originalRequest.headers.Authorization = `Bearer ${this.tokenData.access_token}`;
               return this.axiosInstance(originalRequest);
@@ -121,7 +121,7 @@ export class ApiInterceptor {
   }
 
   private async refreshToken(): Promise<string> {
-    if (this.refreshPromise) {
+    if (this.refreshPromise !== null) {
       return this.refreshPromise;
     }
 
@@ -141,7 +141,6 @@ export class ApiInterceptor {
       if (!this.tokenData?.access_token) {
         throw new Error("No token to verify");
       }
-      // console.log('🔄 Verificando token com backend...');
 
       // Fazer chamada para verificar se o token ainda é válido
       const response = await axios.get("http://localhost:8001/api/v1/auth/me", {
@@ -152,7 +151,6 @@ export class ApiInterceptor {
       });
 
       if (response.status === 200) {
-        // console.log('✅ Token ainda válido no backend');
         // Atualizar tempo de expiração baseado na resposta do backend
         const now = Date.now();
         this.tokenExpirationTime = now + this.tokenData.expires_in * 1000;
@@ -162,63 +160,41 @@ export class ApiInterceptor {
         throw new Error("Token inválido no backend");
       }
     } catch {
-      // console.error('❌ Verificação de token falhou:', error);
       // NÃO limpar token automaticamente - apenas logar o erro
-      // console.warn('⚠️ Mantendo token local, erro pode ser temporário');
       // Retornar token atual para continuar funcionando
       return this.tokenData?.access_token || "";
     }
   }
 
   private saveTokenToStorage(): void {
-    // console.log('💾 SAVE TOKEN DEBUG: Starting saveTokenToStorage...');
-    // console.log('💾 SAVE TOKEN DEBUG: tokenData exists:', this.tokenData ? 'YES' : 'NO');
-
     if (this.tokenData) {
       try {
         const tokenStr = JSON.stringify(this.tokenData);
-        // console.log('💾 SAVE TOKEN DEBUG: Token serialized successfully, length:', tokenStr.length);
-        // console.log('💾 SAVE TOKEN DEBUG: Token preview:', tokenStr.substring(0, 100) + '...');
 
         // Verificar localStorage antes de salvar
         /*
-        // console.log('💾 SAVE TOKEN DEBUG: localStorage before save:', {
           auth_token: localStorage.getItem('auth_token') ? 'EXISTS' : 'NULL',
           auth_token_expiration: localStorage.getItem('auth_token_expiration') ? 'EXISTS' : 'NULL'
         });
         */
 
         localStorage.setItem("auth_token", tokenStr);
-        // console.log('💾 SAVE TOKEN DEBUG: Token saved to localStorage');
 
         localStorage.setItem(
           "auth_token_expiration",
           this.tokenExpirationTime.toString()
         );
-        // console.log('💾 SAVE TOKEN DEBUG: Expiration saved:', this.tokenExpirationTime);
 
         // Verificar se foi salvo corretamente
         const savedToken = localStorage.getItem("auth_token");
-        // const savedExpiration = localStorage.getItem("auth_token_expiration");
-        // console.log('💾 SAVE TOKEN DEBUG: Verification - token exists:', savedToken ? 'YES' : 'NO');
-        // console.log('💾 SAVE TOKEN DEBUG: Verification - expiration exists:', savedExpiration ? 'YES' : 'NO');
 
-        if (!savedToken) {
-          // console.error('❌ SAVE TOKEN ERROR: Token was not saved to localStorage!');
-        } else {
-          // console.log('✅ SAVE TOKEN SUCCESS: Token successfully persisted');
-
+        if (savedToken) {
           // Verificar novamente após um pequeno delay
-          setTimeout(() => {
-            // const delayedCheck = localStorage.getItem("auth_token");
-            // console.log('💾 DELAYED CHECK: Token still exists after 100ms:', delayedCheck ? 'YES' : 'NO');
-          }, 100);
+          setTimeout(() => {}, 100);
         }
-      } catch {
-        // console.error('❌ SAVE TOKEN ERROR: Failed to save token:', error);
+      } catch (err) {
+        console.error("Failed to save token to storage", err);
       }
-    } else {
-      // console.log('⚠️ SAVE TOKEN WARNING: No tokenData to save');
     }
   }
 
@@ -236,7 +212,7 @@ export class ApiInterceptor {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("auth_token_expiration");
   }
-  
+
   public getTokenExpirationTime(): number {
     return this.tokenExpirationTime;
   }
@@ -267,7 +243,6 @@ export class ApiInterceptor {
 
         // Validate expiration time is a valid number
         if (isNaN(expirationTime)) {
-          // console.log('Invalid expiration time in storage, clearing...');
           this.clearToken();
           return;
         }
@@ -278,18 +253,15 @@ export class ApiInterceptor {
           this.tokenData = tokenData;
           this.tokenExpirationTime = expirationTime;
           /*
-          // console.log('Token loaded from storage:', {
             operator: tokenData.operator_name,
             expiresAt: new Date(expirationTime).toISOString()
           });
           */
         } else {
-          // console.log('Stored token expired, clearing...');
           this.clearToken();
         }
       }
     } catch {
-      // console.error('Failed to load token from storage:', error);
       this.clearToken();
     }
   }

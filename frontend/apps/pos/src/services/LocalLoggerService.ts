@@ -5,7 +5,7 @@
  */
 
 import { apiInterceptor } from './ApiInterceptor';
-import { offlineStorage } from './OfflineStorage';
+import { offlineStorage, type StorageLogEntry } from './OfflineStorage';
 
 export enum LogLevel {
   DEBUG = 'debug',
@@ -41,7 +41,7 @@ interface LogEntry {
   source: LogSource;
   module: string;
   message: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   user_id?: string;
   user_name?: string;
   ip_address?: string;
@@ -110,28 +110,28 @@ class LocalLoggerService {
   /**
    * Log de debug
    */
-  async debug(message: string, details?: any, module: string = 'app', source: LogSource = LogSource.POS) {
+  async debug(message: string, details?: unknown, module: string = 'app', source: LogSource = LogSource.POS) {
     await this.log(LogLevel.DEBUG, message, details, module, source);
   }
 
   /**
    * Log de informação
    */
-  async info(message: string, details?: any, module: string = 'app', source: LogSource = LogSource.POS) {
+  async info(message: string, details?: unknown, module: string = 'app', source: LogSource = LogSource.POS) {
     await this.log(LogLevel.INFO, message, details, module, source);
   }
 
   /**
    * Log de aviso
    */
-  async warn(message: string, details?: any, module: string = 'app', source: LogSource = LogSource.POS) {
+  async warn(message: string, details?: unknown, module: string = 'app', source: LogSource = LogSource.POS) {
     await this.log(LogLevel.WARNING, message, details, module, source);
   }
 
   /**
    * Log de erro
    */
-  async error(message: string, details?: any, module: string = 'app', source: LogSource = LogSource.POS) {
+  async error(message: string, details?: unknown, module: string = 'app', source: LogSource = LogSource.POS) {
     // Adicionar stack trace se disponível
     if (details instanceof Error) {
       details = {
@@ -147,7 +147,7 @@ class LocalLoggerService {
   /**
    * Log crítico
    */
-  async critical(message: string, details?: any, module: string = 'app', source: LogSource = LogSource.POS) {
+  async critical(message: string, details?: unknown, module: string = 'app', source: LogSource = LogSource.POS) {
     await this.log(LogLevel.CRITICAL, message, details, module, source);
   }
 
@@ -157,7 +157,7 @@ class LocalLoggerService {
   private async log(
     level: LogLevel,
     message: string,
-    details?: any,
+    details?: unknown,
     module: string = 'app',
     source: LogSource = LogSource.POS
   ) {
@@ -170,7 +170,7 @@ class LocalLoggerService {
       source,
       module,
       message,
-      details,
+      details: details ? (typeof details === 'object' ? details as Record<string, unknown> : { value: details }) : undefined,
       user_id: localStorage.getItem('user_id') || undefined,
       user_name: localStorage.getItem('user_name') || undefined,
       session_id: localStorage.getItem('session_id') || undefined,
@@ -208,7 +208,7 @@ class LocalLoggerService {
    * Log no console
    */
   // eslint-disable-next-line no-console
-  private consoleLog(level: LogLevel, message: string, details?: any) {
+  private consoleLog(level: LogLevel, message: string, details?: unknown) {
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
     
@@ -230,6 +230,18 @@ class LocalLoggerService {
   }
 
   /**
+   * Convert LogEntry to StorageLogEntry format
+   */
+  private toStorageLogEntry(logEntry: LogEntry): StorageLogEntry {
+    return {
+      level: logEntry.level,
+      message: logEntry.message,
+      context: logEntry.details,
+      timestamp: logEntry.timestamp?.toISOString() || new Date().toISOString()
+    };
+  }
+
+  /**
    * Salvar log localmente
    */
   private async saveLocal(logEntry: LogEntry) {
@@ -237,8 +249,9 @@ class LocalLoggerService {
       // Buscar logs existentes
       const existingLogs = await offlineStorage.getAll('logs') || [];
       
-      // Adicionar novo log
-      existingLogs.push(logEntry);
+      // Converter e adicionar novo log
+      const storageLogEntry = this.toStorageLogEntry(logEntry);
+      existingLogs.push(storageLogEntry);
       
       // Limitar quantidade de logs locais
       if (existingLogs.length > this.config.maxLocalLogs) {
@@ -246,7 +259,7 @@ class LocalLoggerService {
       }
       
       // Salvar no IndexedDB
-      await offlineStorage.update('logs', existingLogs);
+      await offlineStorage.update('logs', existingLogs as StorageLogEntry[]);
     } catch (error) {
       console.error('Failed to save log locally:', error);
     }
@@ -310,7 +323,8 @@ class LocalLoggerService {
    */
   private async savePendingLogs() {
     try {
-      await offlineStorage.update('pending_logs', this.pendingLogs);
+      const storageLogEntries = this.pendingLogs.map(log => this.toStorageLogEntry(log));
+      await offlineStorage.update('pending_logs', storageLogEntries);
     } catch (error) {
       console.error('Failed to save pending logs:', error);
     }

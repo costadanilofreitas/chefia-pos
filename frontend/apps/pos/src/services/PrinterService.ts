@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = '/api/v1/peripherals/printers'; // Base URL for the printer API
+import { buildApiUrl } from '../config/api';
 
 const PrinterService = {
   async printReceipt(_data: {
@@ -15,7 +14,6 @@ const PrinterService = {
     date: Date;
   }) {
     // Lógica para enviar os dados para a impressora
-// console.log('Imprimindo recibo:', data);
     // Simulação de sucesso
     return Promise.resolve();
   },
@@ -41,7 +39,7 @@ const PrinterService = {
       date: date.toLocaleString(),
       notes,
     };
-    await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
+    await axios.post(buildApiUrl('/api/v1/peripherals/printers/default-printer/print-receipt'), { data: receiptData });
     
   },
 
@@ -75,7 +73,7 @@ const PrinterService = {
       total_orders,
       notes,
     };
-    await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
+    await axios.post(buildApiUrl('/api/v1/peripherals/printers/default-printer/print-receipt'), { data: receiptData });
     
   },
 
@@ -103,7 +101,7 @@ const PrinterService = {
       date: date.toLocaleString(),
       notes
     };
-    await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
+    await axios.post(buildApiUrl('/api/v1/peripherals/printers/default-printer/print-receipt'), { data: receiptData });
     
   },
 
@@ -158,7 +156,7 @@ const PrinterService = {
       date: date.toLocaleString(),
       notes
     };
-    await axios.post(`${API_BASE_URL}/default-printer/print-receipt`, { data: receiptData });
+    await axios.post(buildApiUrl('/api/v1/peripherals/printers/default-printer/print-receipt'), { data: receiptData });
     
   },
 

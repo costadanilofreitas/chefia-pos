@@ -95,7 +95,6 @@ export const useOrder = (): UseOrderReturn => {
   const getOrders = useCallback(
     async (filters?: OrderFilters): Promise<void> => {
       try {
-        // console.log('📋 useOrder: Buscando pedidos', filters);
         updateState({ loading: true, error: null });
 
         const orders = await orderService.listOrders(filters);
@@ -105,7 +104,6 @@ export const useOrder = (): UseOrderReturn => {
           loading: false,
         });
       } catch (error) {
-        // console.error('❌ useOrder: Erro ao buscar pedidos', error);
         updateState({
           loading: false,
           error:
@@ -120,7 +118,6 @@ export const useOrder = (): UseOrderReturn => {
   const createOrder = useCallback(
     async (orderData: OrderCreate): Promise<Order | null> => {
       try {
-        // console.log('🔥 useOrder: Iniciando criação de pedido', orderData);
         updateState({ creating: true, error: null });
 
         const order = await orderService.createOrder(orderData);
@@ -131,10 +128,8 @@ export const useOrder = (): UseOrderReturn => {
           orders: [order, ...state.orders],
           creating: false,
         });
-        // console.log('✅ useOrder: Pedido criado com sucesso', order);
         return order;
       } catch (error) {
-        // console.error('❌ useOrder: Erro ao criar pedido', error);
         updateState({
           creating: false,
           error:
@@ -150,7 +145,6 @@ export const useOrder = (): UseOrderReturn => {
   const updateOrder = useCallback(
     async (orderId: string, updateData: OrderUpdate): Promise<Order | null> => {
       try {
-        // console.log('🔄 useOrder: Atualizando pedido', orderId, updateData);
         updateState({ updating: true, error: null });
 
         const updatedOrder = await orderService.updateOrder(
@@ -171,10 +165,8 @@ export const useOrder = (): UseOrderReturn => {
               : state.currentOrder,
           updating: false,
         });
-        // console.log('✅ useOrder: Pedido atualizado', updatedOrder);
         return updatedOrder;
       } catch (error) {
-        // console.error('❌ useOrder: Erro ao atualizar pedido', error);
         updateState({
           updating: false,
           error:
@@ -190,7 +182,6 @@ export const useOrder = (): UseOrderReturn => {
   const cancelOrder = useCallback(
     async (orderId: string, reason: string): Promise<Order | null> => {
       try {
-        // console.log('❌ useOrder: Cancelando pedido', orderId, reason);
         updateState({ updating: true, error: null });
 
         const cancelledOrder = await orderService.cancelOrder(orderId, reason);
@@ -208,10 +199,8 @@ export const useOrder = (): UseOrderReturn => {
               : state.currentOrder,
           updating: false,
         });
-        // console.log('✅ useOrder: Pedido cancelado', cancelledOrder);
         return cancelledOrder;
       } catch (error) {
-        // console.error('❌ useOrder: Erro ao cancelar pedido', error);
         updateState({
           updating: false,
           error:
@@ -227,7 +216,6 @@ export const useOrder = (): UseOrderReturn => {
   const completeOrder = useCallback(
     async (orderId: string): Promise<Order | null> => {
       try {
-        // console.log('✅ useOrder: Finalizando pedido', orderId);
         updateState({ updating: true, error: null });
 
         const completedOrder = await orderService.completeOrder(orderId);
@@ -245,10 +233,8 @@ export const useOrder = (): UseOrderReturn => {
               : state.currentOrder,
           updating: false,
         });
-        // console.log('✅ useOrder: Pedido finalizado', completedOrder);
         return completedOrder;
       } catch (error) {
-        // console.error('❌ useOrder: Erro ao finalizar pedido', error);
         updateState({
           updating: false,
           error:
@@ -263,7 +249,6 @@ export const useOrder = (): UseOrderReturn => {
   // Adicionar item ao carrinho
   const addToCart = useCallback(
     (item: OrderItemCreate) => {
-      // console.log('🛒 useOrder: Adicionando item ao carrinho', item);
 
       const newCart = [...state.cart, item];
       updateState({ cart: newCart });
@@ -274,7 +259,6 @@ export const useOrder = (): UseOrderReturn => {
   // Remover item do carrinho
   const removeFromCart = useCallback(
     (index: number) => {
-      // console.log('🗑️ useOrder: Removendo item do carrinho', index);
 
       const newCart = state.cart.filter((_, i) => i !== index);
       updateState({ cart: newCart });
@@ -285,7 +269,6 @@ export const useOrder = (): UseOrderReturn => {
   // Atualizar item do carrinho
   const updateCartItem = useCallback(
     (index: number, updates: Partial<OrderItemCreate>) => {
-      // console.log('🔄 useOrder: Atualizando item do carrinho', index, updates);
 
       const newCart = state.cart.map((item, i) =>
         i === index ? { ...item, ...updates } : item
@@ -297,7 +280,6 @@ export const useOrder = (): UseOrderReturn => {
 
   // Limpar carrinho
   const clearCart = useCallback(() => {
-    // console.log('🧹 useOrder: Limpando carrinho');
     updateState({ cart: [], cartTotal: 0 });
   }, [updateState]);
 
@@ -307,7 +289,6 @@ export const useOrder = (): UseOrderReturn => {
       orderId: string,
       _paymentMethod: PaymentMethod
     ): Promise<Order | null> => {
-      // console.log('💳 useOrder: Finalizando pedido com pagamento', orderId, paymentMethod);
 
       // Implementar lógica de finalização com pagamento
       return completeOrder(orderId);
@@ -318,7 +299,6 @@ export const useOrder = (): UseOrderReturn => {
   // Definir pedido atual
   const setCurrentOrder = useCallback(
     (order: Order | null) => {
-      // console.log('📝 useOrder: Definindo pedido atual', order);
       updateState({ currentOrder: order });
     },
     [updateState]

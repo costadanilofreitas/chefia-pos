@@ -1,14 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { useNavigate, useParams } from 'react-router-dom';
+import Toast, { useToast } from '../components/Toast';
 import { useAuth } from '../hooks/useAuth';
-import { useProduct } from '../hooks/useProduct';
 import { useOrder } from '../hooks/useOrder';
-import { OrderType, OrderStatus } from '../types/order';
-import { Product } from '../services/ProductService';
+import { useProduct } from '../hooks/useProduct';
 import '../index.css';
-import Toast from '../components/Toast';
-import { useToast } from '../components/Toast';
+import { Product } from '../services/ProductService';
+import { OrderStatus, OrderType } from '../types/order';
 
 interface TableOrder {
   id: string;
@@ -85,15 +84,23 @@ export default function WaiterPage() {
   const [notes, setNotes] = useState('');
   
   // Transform backend categories for display with icons
-  const categoriesWithIcons = backendCategories?.map(cat => ({
-    ...cat,
-    icon: cat.icon || 
-      (cat.name?.toLowerCase().includes('entrada') ? '🥗' :
-       cat.name?.toLowerCase().includes('prato') ? '🍽️' :
-       cat.name?.toLowerCase().includes('bebida') ? '🥤' :
-       cat.name?.toLowerCase().includes('sobremesa') ? '🍰' : '📦'),
-    color: cat.color || 'bg-blue-500'
-  })) || [];
+  const categoriesWithIcons = backendCategories?.map(cat => {
+    const getCategoryIcon = () => {
+      if (cat.icon) return cat.icon;
+      const name = cat.name?.toLowerCase() || '';
+      if (name.includes('entrada')) return '🥗';
+      if (name.includes('prato')) return '🍽️';
+      if (name.includes('bebida')) return '🥤';
+      if (name.includes('sobremesa')) return '🍰';
+      return '📦';
+    };
+    
+    return {
+      ...cat,
+      icon: getCategoryIcon(),
+      color: cat.color || 'bg-blue-500'
+    };
+  }) || [];
 
   const categories = [
     { id: 'all', name: 'Todos', icon: '🍽️', color: 'bg-gray-500' },
@@ -265,7 +272,7 @@ export default function WaiterPage() {
       } else if (currentOrder) {
         // Update existing order
         await updateOrder(currentOrder.id, {
-          status: OrderStatus.PENDING
+          status: OrderStatus.PENDING,
         });
       }
 
@@ -273,7 +280,6 @@ export default function WaiterPage() {
       success('Pedido enviado para a cozinha!');
     } catch {
       error('Erro ao enviar pedido');
-// console.error(err);
     }
   };
 
@@ -364,11 +370,12 @@ export default function WaiterPage() {
             <button
               key={tab.key}
               onClick={() => setSelectedTab(tab.key as 'order' | 'items' | 'payment')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                selectedTab === tab.key
-                  ? 'bg-blue-500 text-white shadow-lg'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+              className={(() => {
+                const baseClasses = 'px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2';
+                const activeClasses = 'bg-blue-500 text-white shadow-lg';
+                const inactiveClasses = 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600';
+                return `${baseClasses} ${selectedTab === tab.key ? activeClasses : inactiveClasses}`;
+              })()}
             >
               <span className="text-lg">{tab.icon}</span>
               {tab.label}
@@ -412,20 +419,27 @@ export default function WaiterPage() {
               </div>
               
               {/* Products Grid - Mobile optimized */}
-              {productsLoading ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Carregando produtos...</p>
-                  </div>
-                </div>
-              ) : filteredProducts.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-6xl mb-4">📦</div>
-                  <p className="text-gray-500 dark:text-gray-400">Nenhum produto disponível</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-4">
+              {(() => {
+                if (productsLoading) {
+                  return (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                        <p className="text-gray-600 dark:text-gray-400">Carregando produtos...</p>
+                      </div>
+                    </div>
+                  );
+                }
+                if (filteredProducts.length === 0) {
+                  return (
+                    <div className="text-center py-8">
+                      <div className="text-6xl mb-4">📦</div>
+                      <p className="text-gray-500 dark:text-gray-400">Nenhum produto disponível</p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-4">
                   {filteredProducts.map(product => (
                     <button
                       key={product.id}
@@ -433,10 +447,13 @@ export default function WaiterPage() {
                         setSelectedProduct(product as ExtendedProduct);
                         setShowProductModal(true);
                       }}
-                      disabled={!(product.is_available ?? true)}
-                      className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 lg:p-4 text-left hover:shadow-xl transition-all ${
-                        !(product.is_available ?? true) ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-                      }`}
+                      disabled={!product?.is_available !== false}
+                      className={(() => {
+                        const baseClasses = 'bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 lg:p-4 text-left hover:shadow-xl transition-all';
+                        const isAvailable = product?.is_available !== false;
+                        const availabilityClasses = isAvailable ? 'hover:scale-105' : 'opacity-50 cursor-not-allowed';
+                        return `${baseClasses} ${availabilityClasses}`;
+                      })()}
                     >
                       {product.image_url ? (
                         <img
@@ -463,8 +480,9 @@ export default function WaiterPage() {
                       </div>
                     </button>
                   ))}
-                </div>
-              )}
+                  </div>
+                );
+              })()}
             </div>
             
             {/* Cart Sidebar - Hidden on mobile, shown as bottom sheet */}
@@ -776,7 +794,7 @@ export default function WaiterPage() {
                 </p>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="item-quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Quantidade
                   </label>
                   <div className="flex items-center gap-3">
@@ -789,6 +807,7 @@ export default function WaiterPage() {
                       </svg>
                     </button>
                     <input
+                      id="item-quantity"
                       type="number"
                       value={quantity}
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
@@ -806,10 +825,11 @@ export default function WaiterPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="item-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Observações
                   </label>
                   <textarea
+                    id="item-notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Ex: Sem cebola, bem passado..."

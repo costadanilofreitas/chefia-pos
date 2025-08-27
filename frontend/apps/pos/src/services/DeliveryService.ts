@@ -169,7 +169,7 @@ export class DeliveryService {
     courier_id?: string,
     date?: string
   ): Promise<DeliveryOrder[]> {
-    const params: any = {};
+    const params: Record<string, string> = {};
     if (status) params.status = status;
     if (courier_id) params.courier_id = courier_id;
     if (date) params.date = date;
@@ -257,7 +257,7 @@ export class DeliveryService {
    * Lista todos os entregadores
    */
   async listCouriers(status?: CourierStatus, is_active?: boolean): Promise<DeliveryCourier[]> {
-    const params: any = {};
+    const params: Record<string, string | boolean> = {};
     if (status) params.status = status;
     if (is_active !== undefined) params.is_active = is_active;
 

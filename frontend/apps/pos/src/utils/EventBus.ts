@@ -5,7 +5,7 @@
 type EventCallback = (...args: unknown[]) => void;
 
 class EventBus {
-  private events: Map<string, EventCallback[]> = new Map();
+  private readonly events: Map<string, EventCallback[]> = new Map();
 
   /**
    * Subscribe to an event
@@ -14,7 +14,7 @@ class EventBus {
     if (!this.events.has(event)) {
       this.events.set(event, []);
     }
-    this.events.get(event)!.push(callback);
+    this.events.get(event).push(callback);
   }
 
   /**
@@ -36,7 +36,7 @@ class EventBus {
   emit(event: string, ...args: unknown[]): void {
     const callbacks = this.events.get(event);
     if (callbacks) {
-      callbacks.forEach(callback => {
+      callbacks.forEach((callback) => {
         try {
           callback(...args);
         } catch {

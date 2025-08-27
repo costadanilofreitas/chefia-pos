@@ -1,5 +1,6 @@
-import axios from 'axios';
-import logger, { LogSource } from './LocalLoggerService';
+import axios from "axios";
+import { API_CONFIG, buildApiUrl } from "../config/api";
+import logger, { LogSource } from "./LocalLoggerService";
 
 // Interfaces para o sistema de autenticação
 export interface LoginRequest {
@@ -33,13 +34,13 @@ export interface AuthUser {
 }
 
 class AuthService {
-  private static readonly API_BASE_URL = 'http://localhost:8001/api/v1';
   private currentUser: AuthUser | null = null;
-  private baseURL = AuthService.API_BASE_URL;
 
   constructor() {
     // Carregar usuário do localStorage se existir
     this.loadUserFromStorage();
+    // Configurar interceptors do axios
+    this.setupAxiosInterceptors();
   }
 
   /**
@@ -47,94 +48,116 @@ class AuthService {
    */
   async login(credentials: LoginRequest): Promise<AuthUser> {
     try {
-      await logger.info('Tentativa de login', { operator_id: credentials.operator_id }, 'AuthService', LogSource.SECURITY);
-      
+      await logger.info(
+        "Tentativa de login",
+        { operator_id: credentials.operator_id },
+        "AuthService",
+        LogSource.SECURITY
+      );
+
       // Fazer chamada real para o backend de autenticação
       const formData = new FormData();
-      formData.append('username', credentials.operator_id);
-      formData.append('password', credentials.password);
+      formData.append("username", credentials.operator_id);
+      formData.append("password", credentials.password);
 
-      const response = await axios.post(`${this.baseURL}/auth/token`, formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      });
+      const response = await axios.post(
+        buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.TOKEN),
+        formData,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
 
       const loginResponse = response.data;
-      
+
       // Buscar informações do usuário
-      const userResponse = await axios.get(`${this.baseURL}/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${loginResponse.access_token}`
+      const userResponse = await axios.get(
+        buildApiUrl(API_CONFIG.ENDPOINTS.AUTH.ME),
+        {
+          headers: {
+            Authorization: `Bearer ${loginResponse.access_token}`,
+          },
         }
-      });
+      );
 
       const userData = userResponse.data;
-      
+
       const user: AuthUser = {
         operator_id: userData.username,
         operator_name: userData.full_name,
         roles: [userData.role],
         permissions: userData.permissions,
         access_token: loginResponse.access_token,
-        expires_at: new Date(Date.now() + loginResponse.expires_in * 1000)
+        expires_at: new Date(Date.now() + loginResponse.expires_in * 1000),
       };
 
       this.currentUser = user;
       this.saveUserToStorage(user);
-      
-      await logger.info('Login realizado com sucesso', 
-        { operator_id: user.operator_id, operator_name: user.operator_name, roles: user.roles }, 
-        'AuthService', 
+
+      await logger.info(
+        "Login realizado com sucesso",
+        {
+          operator_id: user.operator_id,
+          operator_name: user.operator_name,
+          roles: user.roles,
+        },
+        "AuthService",
         LogSource.SECURITY
       );
-      
+
       return user;
     } catch (error) {
-      await logger.critical('Erro ao realizar login', 
-        { operator_id: credentials.operator_id, error }, 
-        'AuthService', 
+      await logger.critical(
+        "Erro ao realizar login",
+        { operator_id: credentials.operator_id, error },
+        "AuthService",
         LogSource.SECURITY
       );
       throw error;
     }
   }
 
-
   /**
    * Cria novas credenciais para um operador
    */
   async createCredentials(data: CreateCredentialRequest): Promise<void> {
     try {
-      await logger.info('Criando credenciais para operador', 
-        { operator_id: data.operator_id }, 
-        'AuthService', 
+      await logger.info(
+        "Criando credenciais para operador",
+        { operator_id: data.operator_id },
+        "AuthService",
         LogSource.SECURITY
       );
-      
+
       // Implementar chamada real para o backend
-      const response = await fetch(`${this.baseURL}/auth/credentials`, {
-        method: 'POST',
+      const response = await fetch(buildApiUrl("/api/v1/auth/credentials"), {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(
+          errorData.detail || `HTTP ${response.status}: ${response.statusText}`
+        );
       }
-      
-      await logger.info('Credenciais criadas com sucesso', 
-        { operator_id: data.operator_id }, 
-        'AuthService', 
+
+      await logger.info(
+        "Credenciais criadas com sucesso",
+        { operator_id: data.operator_id },
+        "AuthService",
         LogSource.SECURITY
       );
     } catch (error) {
-      await logger.critical('Erro ao criar credenciais', 
-        { operator_id: data.operator_id, error }, 
-        'AuthService', 
+      await logger.critical(
+        "Erro ao criar credenciais",
+        { operator_id: data.operator_id, error },
+        "AuthService",
         LogSource.SECURITY
       );
       throw error;
@@ -146,8 +169,8 @@ class AuthService {
    */
   logout(): void {
     this.currentUser = null;
-    localStorage.removeItem('auth_user');
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem("auth_user");
+    localStorage.removeItem("auth_token");
   }
 
   /**
@@ -201,11 +224,14 @@ class AuthService {
    * Salva usuário no localStorage
    */
   private saveUserToStorage(user: AuthUser): void {
-    localStorage.setItem('auth_user', JSON.stringify({
-      ...user,
-      expires_at: user.expires_at.toISOString()
-    }));
-    localStorage.setItem('auth_token', user.access_token);
+    localStorage.setItem(
+      "auth_user",
+      JSON.stringify({
+        ...user,
+        expires_at: user.expires_at.toISOString(),
+      })
+    );
+    localStorage.setItem("auth_token", user.access_token);
   }
 
   /**
@@ -213,11 +239,11 @@ class AuthService {
    */
   private loadUserFromStorage(): void {
     try {
-      const userData = localStorage.getItem('auth_user');
+      const userData = localStorage.getItem("auth_user");
       if (userData) {
         const user = JSON.parse(userData);
         user.expires_at = new Date(user.expires_at);
-        
+
         if (new Date() < user.expires_at) {
           this.currentUser = user;
         } else {
@@ -226,7 +252,14 @@ class AuthService {
         }
       }
     } catch (error) {
-      logger.error('Erro ao carregar usuário do storage', error, 'AuthService', LogSource.SECURITY).catch(console.error);
+      logger
+        .error(
+          "Erro ao carregar usuário do storage",
+          error,
+          "AuthService",
+          LogSource.SECURITY
+        )
+        .catch(console.error);
       this.logout();
     }
   }
@@ -244,7 +277,17 @@ class AuthService {
         }
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => {
+        let normalizedError: Error;
+        if (error instanceof Error) {
+          normalizedError = error;
+        } else if (typeof error === "string") {
+          normalizedError = new Error(error);
+        } else {
+          normalizedError = new Error(JSON.stringify(error));
+        }
+        return Promise.reject(normalizedError);
+      }
     );
 
     // Response interceptor - trata erros de autenticação
@@ -254,9 +297,17 @@ class AuthService {
         if (error.response?.status === 401) {
           this.logout();
           // Redirecionar para login se necessário
-          window.location.href = '/login';
+          window.location.href = "/login";
         }
-        return Promise.reject(error);
+        let normalizedError: Error;
+        if (error instanceof Error) {
+          normalizedError = error;
+        } else if (typeof error === "string") {
+          normalizedError = new Error(error);
+        } else {
+          normalizedError = new Error(JSON.stringify(error));
+        }
+        return Promise.reject(normalizedError);
       }
     );
   }
@@ -265,8 +316,4 @@ class AuthService {
 // Instância singleton
 export const authService = new AuthService();
 
-// Configurar interceptors do axios
-authService.setupAxiosInterceptors();
-
 export default authService;
-

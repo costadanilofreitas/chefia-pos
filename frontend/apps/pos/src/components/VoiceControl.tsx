@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useVoiceCommands, posVoiceCommands } from '../hooks/useVoiceCommands';
+import React, { useEffect, useState } from 'react';
+import { posVoiceCommands, useVoiceCommands } from '../hooks/useVoiceCommands';
 import { cn } from '../utils/cn';
 
 interface VoiceControlProps {
@@ -235,8 +235,8 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
                 <div>
                   <h3 className="font-semibold text-blue-600 dark:text-blue-400 mb-2">📍 Navegação</h3>
                   <div className="space-y-1">
-                    {posVoiceCommands.navigation.map((cmd, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
+                    {posVoiceCommands.navigation.map((cmd) => (
+                      <div key={cmd.phrases[0]} className="flex items-center gap-2 text-sm">
                         <span className="text-gray-400">•</span>
                         <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                           &quot;{cmd.phrases[0]}&quot;
@@ -251,8 +251,8 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
                 <div>
                   <h3 className="font-semibold text-green-600 dark:text-green-400 mb-2">🛒 Pedidos</h3>
                   <div className="space-y-1">
-                    {posVoiceCommands.order.map((cmd, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
+                    {posVoiceCommands.order.map((cmd) => (
+                      <div key={cmd.phrases[0]} className="flex items-center gap-2 text-sm">
                         <span className="text-gray-400">•</span>
                         <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                           &quot;{cmd.phrases[0]}&quot;
@@ -267,8 +267,8 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
                 <div>
                   <h3 className="font-semibold text-purple-600 dark:text-purple-400 mb-2">💳 Pagamento</h3>
                   <div className="space-y-1">
-                    {posVoiceCommands.payment.map((cmd, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
+                    {posVoiceCommands.payment.map((cmd) => (
+                      <div key={cmd.phrases[0]} className="flex items-center gap-2 text-sm">
                         <span className="text-gray-400">•</span>
                         <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                           &quot;{cmd.phrases[0]}&quot;
@@ -283,8 +283,8 @@ const VoiceControl: React.FC<VoiceControlProps> = ({ onCommand, className }) => 
                 <div>
                   <h3 className="font-semibold text-orange-600 dark:text-orange-400 mb-2">🔍 Busca</h3>
                   <div className="space-y-1">
-                    {posVoiceCommands.search.map((cmd, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
+                    {posVoiceCommands.search.map((cmd) => (
+                      <div key={cmd.phrases[0]} className="flex items-center gap-2 text-sm">
                         <span className="text-gray-400">•</span>
                         <span className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                           &quot;{cmd.phrases[0]}&quot;

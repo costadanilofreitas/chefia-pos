@@ -1,22 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { cacheService } from "../services/CacheService";
 import { productService } from "../services/ProductService";
+import { getErrorMessage } from "../types/error";
+import { Product } from "../types/product";
 
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  category_id?: string;
-  is_combo?: boolean;
-  combo_items?: Array<unknown>;
-  type?: string;
-  description?: string;
-  image_url?: string;
-  sku?: string;
-  is_available?: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
+// Re-export Product type for backward compatibility
+export type { Product } from "../types/product";
 
 export interface Category {
   id: string;
@@ -34,73 +22,22 @@ export const useProduct = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
-  const loadProducts = useCallback(async (useCache: boolean = true) => {
-    setLoading(true);
-    setError(null);
-
+  const loadProducts = useCallback(async () => {
     try {
-      // Verificar cache primeiro
-      if (useCache) {
-        const cachedProducts = cacheService.getProducts();
-        if (cachedProducts) {
-// console.log("🗄️ Products loaded from cache");
-          setProducts(cachedProducts as Product[]);
-          setLoading(false);
-          return;
-        }
-      }
-// console.log("🌐 Loading products from backend...");
-      // Carregar produtos reais do backend
-      const backendProducts = await productService.getProducts();
-
-      // Converter para formato esperado pelo frontend
-      const convertedProducts = backendProducts.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        price: p.price,
-        category_id: p.category_id,
-        is_combo: p.type === "COMBO",
-        combo_items: p.combo_items || [],
-        description: p.description || "",
-        image_url: p.image_url || "",
-        is_available:
-          p.status === "ACTIVE" && p.is_available !== false,
-        created_at: p.created_at,
-        updated_at: p.updated_at,
-      }));
-
-      setProducts(convertedProducts);
-
-      // Salvar no cache
-      cacheService.setProducts(convertedProducts);
-// console.log(`✅ Products loaded: ${convertedProducts.length} items`);
-    } catch (error: any) {
-// console.error("❌ Error loading products:", error);
-      setError(error.message);
-      setProducts([]); // Sem fallback mock - mostrar erro real
-    } finally {
-      setLoading(false);
+      // Carregar produtos do backend (backend já gerencia cache)
+      const products = await productService.getProducts();
+      setProducts(products);
+    } catch (error) {
+      setError(getErrorMessage(error));
+      setProducts([]);
     }
   }, []);
 
-  const loadCategories = useCallback(async (useCache: boolean = true) => {
-    setLoading(true);
-    setError(null);
-
+  const loadCategories = useCallback(async () => {
     try {
-      // Verificar cache primeiro
-      if (useCache) {
-        const cachedCategories = cacheService.getCategories();
-        if (cachedCategories) {
-// console.log("🗄️ Categories loaded from cache");
-          setCategories(cachedCategories as Category[]);
-          setLoading(false);
-          return;
-        }
-      }
-// console.log("🌐 Loading categories from backend...");
-      // Carregar categorias reais do backend
+      // Carregar categorias do backend (backend já gerencia cache)
       const backendCategories = await productService.getCategories();
 
       // Converter para formato esperado pelo frontend
@@ -108,20 +45,13 @@ export const useProduct = () => {
         id: c.id,
         name: c.name,
         description: c.description,
-        icon: getIconForCategory(c.name), // Função para mapear ícones
+        icon: getIconForCategory(c.name),
       }));
 
       setCategories(convertedCategories);
-
-      // Salvar no cache
-      cacheService.setCategories(convertedCategories);
-// console.log(`✅ Categories loaded: ${convertedCategories.length} items`);
-    } catch (error: any) {
-// console.error("❌ Error loading categories:", error);
-      setError(error.message);
+    } catch (error) {
+      setError(getErrorMessage(error));
       setCategories([]);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -154,9 +84,8 @@ export const useProduct = () => {
           (p) => p.category_id === categoryId
         );
         return filteredProducts;
-      } catch (error: any) {
-// console.error("❌ Erro ao buscar produtos por categoria:", error);
-        setError(error.message);
+      } catch (error) {
+        setError(getErrorMessage(error));
         return [];
       } finally {
         setLoading(false);
@@ -172,9 +101,8 @@ export const useProduct = () => {
       try {
         const product = products.find((p) => p.id === productId);
         return product;
-      } catch (error: any) {
-// console.error("❌ Erro ao buscar produto:", error);
-        setError(error.message);
+      } catch (error) {
+        setError(getErrorMessage(error));
         return undefined;
       } finally {
         setLoading(false);
@@ -192,9 +120,8 @@ export const useProduct = () => {
           p.name.toLowerCase().includes(query.toLowerCase())
         );
         return filteredProducts;
-      } catch (error: any) {
-// console.error("❌ Erro ao pesquisar produtos:", error);
-        setError(error.message);
+      } catch (error) {
+        setError(getErrorMessage(error));
         return [];
       } finally {
         setLoading(false);
@@ -205,9 +132,45 @@ export const useProduct = () => {
 
   // Carregar dados automaticamente quando o hook é inicializado
   useEffect(() => {
-    loadProducts();
-    loadCategories();
-  }, [loadProducts, loadCategories]);
+    // Evitar múltiplas chamadas simultâneas
+    let isCancelled = false;
+    
+    const loadData = async () => {
+      // Se já carregou, não recarregar
+      if (hasLoaded) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // Carregar produtos e categorias em paralelo
+        await Promise.all([
+          loadProducts(),
+          loadCategories()
+        ]);
+        
+        // Só marcar como carregado se não foi cancelado
+        if (!isCancelled) {
+          setHasLoaded(true);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          setError(getErrorMessage(error));
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadData();
+    
+    // Cleanup function para evitar updates em componente desmontado
+    return () => {
+      isCancelled = true;
+    };
+  }, []); // Empty dependency array - load only once
 
   return {
     products,

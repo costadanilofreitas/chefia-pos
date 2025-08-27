@@ -1,6 +1,6 @@
 {
   "statistics": {
-    "detectionDate": "2025-08-26T23:07:09.146Z",
+    "detectionDate": "2025-08-27T00:58:35.960Z",
     "formats": {
       "typescript": {
         "sources": {
@@ -29,8 +29,8 @@
             "newClones": 0
           },
           "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/mocks/useCashier.ts": {
-            "lines": 106,
-            "tokens": 1000,
+            "lines": 115,
+            "tokens": 1066,
             "sources": 1,
             "clones": 0,
             "duplicatedLines": 0,
@@ -100,6 +100,42 @@
             "newDuplicatedLines": 0,
             "newClones": 0
           },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/report.ts": {
+            "lines": 176,
+            "tokens": 1271,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/report-guards.ts": {
+            "lines": 250,
+            "tokens": 1989,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/product.ts": {
+            "lines": 125,
+            "tokens": 1059,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 24,
+            "duplicatedTokens": 234,
+            "percentage": 19.2,
+            "percentageTokens": 22.1,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
           "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/order.ts": {
             "lines": 185,
             "tokens": 1372,
@@ -112,9 +148,45 @@
             "newDuplicatedLines": 0,
             "newClones": 0
           },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/error.ts": {
+            "lines": 90,
+            "tokens": 610,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
           "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/common.ts": {
-            "lines": 88,
-            "tokens": 643,
+            "lines": 79,
+            "tokens": 559,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/cashier.ts": {
+            "lines": 170,
+            "tokens": 1261,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/browser.ts": {
+            "lines": 99,
+            "tokens": 854,
             "sources": 1,
             "clones": 0,
             "duplicatedLines": 0,
@@ -365,8 +437,8 @@
             "newClones": 0
           },
           "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/CashierService.ts": {
-            "lines": 243,
-            "tokens": 2143,
+            "lines": 223,
+            "tokens": 1951,
             "sources": 1,
             "clones": 0,
             "duplicatedLines": 0,
@@ -436,18 +508,6 @@
             "newDuplicatedLines": 0,
             "newClones": 0
           },
-          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/ApiClient.ts": {
-            "lines": 186,
-            "tokens": 1954,
-            "sources": 1,
-            "clones": 0,
-            "duplicatedLines": 0,
-            "duplicatedTokens": 0,
-            "percentage": 0,
-            "percentageTokens": 0,
-            "newDuplicatedLines": 0,
-            "newClones": 0
-          },
           "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/services/AnalyticsService.ts": {
             "lines": 400,
             "tokens": 3364,
@@ -496,18 +556,6 @@
             "newDuplicatedLines": 0,
             "newClones": 0
           },
-          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useTerminalConfig.ts": {
-            "lines": 94,
-            "tokens": 938,
-            "sources": 1,
-            "clones": 0,
-            "duplicatedLines": 0,
-            "duplicatedTokens": 0,
-            "percentage": 0,
-            "percentageTokens": 0,
-            "newDuplicatedLines": 0,
-            "newClones": 0
-          },
           "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useTable.ts": {
             "lines": 149,
             "tokens": 1576,
@@ -545,8 +593,8 @@
             "newClones": 0
           },
           "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useReport.ts": {
-            "lines": 133,
-            "tokens": 1537,
+            "lines": 154,
+            "tokens": 1720,
             "sources": 1,
             "clones": 0,
             "duplicatedLines": 0,
@@ -569,8 +617,8 @@
             "newClones": 0
           },
           "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/hooks/useProduct.ts": {
-            "lines": 222,
-            "tokens": 1803,
+            "lines": 195,
+            "tokens": 1559,
             "sources": 1,
             "clones": 0,
             "duplicatedLines": 0,
@@ -798,14 +846,14 @@
           }
         },
         "total": {
-          "lines": 14698,
-          "tokens": 134775,
-          "sources": 66,
-          "clones": 15,
-          "duplicatedLines": 131,
-          "duplicatedTokens": 1686,
-          "percentage": 0.89,
-          "percentageTokens": 1.25,
+          "lines": 15582,
+          "tokens": 141548,
+          "sources": 72,
+          "clones": 16,
+          "duplicatedLines": 143,
+          "duplicatedTokens": 1803,
+          "percentage": 0.92,
+          "percentageTokens": 1.27,
           "newDuplicatedLines": 0,
           "newClones": 0
         }
@@ -839,6 +887,30 @@
           "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/Input.tsx": {
             "lines": 59,
             "tokens": 421,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/form-utils.tsx": {
+            "lines": 0,
+            "tokens": 3,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/DialogShared.tsx": {
+            "lines": 77,
+            "tokens": 619,
             "sources": 1,
             "clones": 0,
             "duplicatedLines": 0,
@@ -1232,7 +1304,7 @@
             "newDuplicatedLines": 0,
             "newClones": 0
           },
-          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ErrorBoundaryModern.tsx": {
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ErrorBoundary.tsx": {
             "lines": 59,
             "tokens": 497,
             "sources": 1,
@@ -1270,14 +1342,14 @@
           }
         },
         "total": {
-          "lines": 5722,
-          "tokens": 50720,
-          "sources": 38,
+          "lines": 5799,
+          "tokens": 51342,
+          "sources": 40,
           "clones": 4,
           "duplicatedLines": 56,
           "duplicatedTokens": 621,
-          "percentage": 0.98,
-          "percentageTokens": 1.22,
+          "percentage": 0.97,
+          "percentageTokens": 1.21,
           "newDuplicatedLines": 0,
           "newClones": 0
         }
@@ -1317,6 +1389,30 @@
             "duplicatedTokens": 256,
             "percentage": 33.33,
             "percentageTokens": 34.78,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/form-utils.tsx": {
+            "lines": 85,
+            "tokens": 796,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ui/DialogShared.tsx": {
+            "lines": 110,
+            "tokens": 872,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
@@ -1657,8 +1753,8 @@
             "newClones": 0
           },
           "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/POSLayout.tsx": {
-            "lines": 399,
-            "tokens": 4262,
+            "lines": 400,
+            "tokens": 4279,
             "sources": 1,
             "clones": 0,
             "duplicatedLines": 0,
@@ -1681,8 +1777,8 @@
             "newClones": 0
           },
           "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/OptimizedImage.tsx": {
-            "lines": 135,
-            "tokens": 1188,
+            "lines": 136,
+            "tokens": 1192,
             "sources": 1,
             "clones": 0,
             "duplicatedLines": 0,
@@ -1704,7 +1800,7 @@
             "newDuplicatedLines": 0,
             "newClones": 0
           },
-          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ErrorBoundaryModern.tsx": {
+          "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/components/ErrorBoundary.tsx": {
             "lines": 174,
             "tokens": 1385,
             "sources": 1,
@@ -1766,14 +1862,14 @@
           }
         },
         "total": {
-          "lines": 10467,
-          "tokens": 96868,
-          "sources": 40,
+          "lines": 10664,
+          "tokens": 98557,
+          "sources": 42,
           "clones": 34,
           "duplicatedLines": 349,
           "duplicatedTokens": 3849,
-          "percentage": 3.33,
-          "percentageTokens": 3.97,
+          "percentage": 3.27,
+          "percentageTokens": 3.91,
           "newDuplicatedLines": 0,
           "newClones": 0
         }
@@ -1808,14 +1904,14 @@
       }
     },
     "total": {
-      "lines": 30887,
-      "tokens": 282365,
-      "sources": 145,
-      "clones": 53,
-      "duplicatedLines": 536,
-      "duplicatedTokens": 6156,
-      "percentage": 1.74,
-      "percentageTokens": 2.18,
+      "lines": 32045,
+      "tokens": 291449,
+      "sources": 155,
+      "clones": 54,
+      "duplicatedLines": 548,
+      "duplicatedTokens": 6273,
+      "percentage": 1.71,
+      "percentageTokens": 2.15,
       "newDuplicatedLines": 0,
       "newClones": 0
     }
@@ -2898,6 +2994,42 @@
           "line": 256,
           "column": 117,
           "position": 2426
+        }
+      }
+    },
+    {
+      "format": "typescript",
+      "lines": 13,
+      "fragment": ";\r\n  is_available?: boolean;\r\n  image_url?: string | null;\r\n  description?: string | null;\r\n  barcode?: string | null;\r\n  sku?: string | null;\r\n  ncm?: string | null;\r\n  cfop?: string | null;\r\n  created_at?: string;\r\n  updated_at?: string;\r\n}\r\n\r\nexport interface ProductCategory",
+      "tokens": 0,
+      "firstFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/product.ts",
+        "start": 40,
+        "end": 52,
+        "startLoc": {
+          "line": 40,
+          "column": 8,
+          "position": 348
+        },
+        "endLoc": {
+          "line": 52,
+          "column": 16,
+          "position": 465
+        }
+      },
+      "secondFile": {
+        "name": "C:/Users/Consultor/Documents/projetos/chefia-pos/frontend/apps/pos/src/types/product.ts",
+        "start": 10,
+        "end": 22,
+        "startLoc": {
+          "line": 10,
+          "column": 7,
+          "position": 93
+        },
+        "endLoc": {
+          "line": 22,
+          "column": 10,
+          "position": 210
         }
       }
     },

@@ -2,9 +2,10 @@
  * Dashboard de Analytics em tempo real
  */
 
-import React, { useState, useEffect } from 'react';
-import {useAnalytics} from '../hooks/useAnalytics';
-import {cn} from '../utils/cn';
+import React, { useEffect, useState } from 'react';
+import { useAnalytics } from '../hooks/useAnalytics';
+import { cn } from '../utils/cn';
+import logger from '../services/LocalLoggerService';
 
 // Componente de métrica individual
 const MetricCard: React.FC<{
@@ -86,17 +87,21 @@ const BarChart: React.FC<{
       <h3 className="text-lg font-semibold mb-4">{title}</h3>
       <div className="space-y-3">
         {data.map((item, index) => (
-          <div key={index} className="flex items-center">
+          <div key={`${title}-item-${item.label}-${index}`} className="flex items-center">
             <span className="text-sm text-gray-600 w-20 truncate">{item.label}</span>
             <div className="flex-1 mx-3">
               <div className="h-6 bg-gray-100 rounded-full overflow-hidden">
                 <div 
                   className={cn(
                     'h-full rounded-full transition-all duration-500',
-                    color === 'blue' ? 'bg-blue-500' :
-                    color === 'green' ? 'bg-green-500' :
-                    color === 'purple' ? 'bg-purple-500' :
-                    'bg-gray-500'
+                    (() => {
+                      const colorMap: Record<string, string> = {
+                        'blue': 'bg-blue-500',
+                        'green': 'bg-green-500',
+                        'purple': 'bg-purple-500'
+                      };
+                      return colorMap[color] || 'bg-gray-500';
+                    })()
                   )}
                   style={{ width: `${(item.value / maxValue) * 100}%` }}
                 />
@@ -151,8 +156,9 @@ const AnalyticsDashboardPage: React.FC = () => {
       URL.revokeObjectURL(url);
       
       setShowExportMenu(false);
-    } catch {
-// console.error('Erro ao exportar:', error);
+    } catch (error) {
+      // eslint-disable-next-line no-secrets/no-secrets
+      await logger.error('Failed to export analytics data', { format, error }, 'AnalyticsDashboardPage');
     }
   };
 
@@ -163,7 +169,8 @@ const AnalyticsDashboardPage: React.FC = () => {
     }, 30000);
     
     return () => clearInterval(interval);
-  }, [refreshMetrics]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Set interval only once on mount
 
   if (error) {
     return (
@@ -210,7 +217,11 @@ const AnalyticsDashboardPage: React.FC = () => {
                       : 'text-gray-700 hover:bg-gray-100'
                   )}
                 >
-                  {period === 'day' ? 'Hoje' : period === 'week' ? 'Semana' : 'Mês'}
+                  {(() => {
+                    if (period === 'day') return 'Hoje';
+                    if (period === 'week') return 'Semana';
+                    return 'Mês';
+                  })()}
                 </button>
               ))}
             </div>
@@ -354,14 +365,14 @@ const AnalyticsDashboardPage: React.FC = () => {
             <h3 className="text-lg font-semibold mb-4">Métodos de Pagamento</h3>
             <div className="space-y-3">
               {metrics?.paymentMethods?.map((method, index) => (
-                <div key={index} className="flex items-center justify-between">
+                <div key={`payment-${method.method}-${index}`} className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className={cn(
                       'w-3 h-3 rounded-full mr-3',
-                      index === 0 ? 'bg-blue-500' :
-                      index === 1 ? 'bg-green-500' :
-                      index === 2 ? 'bg-purple-500' :
-                      'bg-orange-500'
+                      (() => {
+                        const colorMap = ['bg-blue-500', 'bg-green-500', 'bg-purple-500'];
+                        return colorMap[index] || 'bg-orange-500';
+                      })()
                     )} />
                     <span className="text-sm text-gray-700">{method.method}</span>
                   </div>

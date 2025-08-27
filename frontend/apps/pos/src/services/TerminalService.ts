@@ -37,8 +37,8 @@ interface TerminalSession {
 }
 
 class TerminalService {
-  private static STORAGE_PREFIX = 'pos_terminal_';
-  private static CONFIG_CACHE: Map<string, TerminalConfig> = new Map();
+  private static readonly STORAGE_PREFIX = "pos_terminal_";
+  private static readonly CONFIG_CACHE: Map<string, TerminalConfig> = new Map();
   private static AVAILABLE_TERMINALS_CACHE: string[] | null = null;
 
   /**
@@ -61,11 +61,12 @@ class TerminalService {
 
     // Import all config files statically
     // Vite will handle this with glob import at build time - very fast!
-    const modules = import.meta.glob('../config/pos/*.json', { eager: false });
-    
+    const modules = import.meta.glob("../config/pos/*.json", { eager: false });
+
     for (const path in modules) {
       // Extract terminal ID from path (e.g., "../config/pos/1.json" -> "1")
-      const match = path.match(/\/(\d+)\.json$/);
+      const regex = /\/(\d+)\.json$/;
+      const match = regex.exec(path);
       if (match) {
         possibleTerminals.push(match[1]);
       }
@@ -98,7 +99,7 @@ class TerminalService {
   static getSession(terminalId: string): TerminalSession | null {
     const key = this.getSessionKey(terminalId);
     const sessionData = localStorage.getItem(key);
-    
+
     if (sessionData) {
       try {
         const session = JSON.parse(sessionData);
@@ -112,23 +113,26 @@ class TerminalService {
         return null;
       }
     }
-    
+
     return null;
   }
 
   /**
    * Save session for a specific terminal
    */
-  static saveSession(terminalId: string, session: Partial<TerminalSession>): void {
+  static saveSession(
+    terminalId: string,
+    session: Partial<TerminalSession>
+  ): void {
     const key = this.getSessionKey(terminalId);
     const fullSession: TerminalSession = {
       terminalId,
       operatorId: session.operatorId || null,
       operatorName: session.operatorName || null,
       loginTime: session.loginTime || new Date(),
-      token: session.token || null
+      token: session.token || null,
     };
-    
+
     localStorage.setItem(key, JSON.stringify(fullSession));
   }
 
@@ -145,41 +149,49 @@ class TerminalService {
    */
   static getAllSessions(): Map<string, TerminalSession> {
     const sessions = new Map<string, TerminalSession>();
-    
+
     // Iterate through localStorage to find all terminal sessions
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith(this.STORAGE_PREFIX + 'session_')) {
-        const terminalId = key.replace(this.STORAGE_PREFIX + 'session_', '');
+      if (key?.startsWith(this.STORAGE_PREFIX + "session_")) {
+        const terminalId = key.replace(this.STORAGE_PREFIX + "session_", "");
         const session = this.getSession(terminalId);
         if (session) {
           sessions.set(terminalId, session);
         }
       }
     }
-    
+
     return sessions;
   }
 
   /**
    * Check if another terminal has an active session for the same operator
    */
-  static isOperatorLoggedInElsewhere(operatorId: string, currentTerminalId: string): string | null {
+  static isOperatorLoggedInElsewhere(
+    operatorId: string,
+    currentTerminalId: string
+  ): string | null {
     const sessions = this.getAllSessions();
-    
+
     for (const [terminalId, session] of sessions.entries()) {
-      if (terminalId !== currentTerminalId && session.operatorId === operatorId) {
+      if (
+        terminalId !== currentTerminalId &&
+        session.operatorId === operatorId
+      ) {
         return terminalId;
       }
     }
-    
+
     return null;
   }
 
   /**
    * Get terminal configuration
    */
-  static async getTerminalConfig(terminalId: string): Promise<TerminalConfig | null> {
+  static async getTerminalConfig(
+    terminalId: string
+  ): Promise<TerminalConfig | null> {
     // Check cache first
     if (this.CONFIG_CACHE.has(terminalId)) {
       return this.CONFIG_CACHE.get(terminalId) || null;

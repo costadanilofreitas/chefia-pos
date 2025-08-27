@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { useNavigate, useParams } from 'react-router-dom';
+import Toast, { useToast } from '../components/Toast';
 import { useRemoteOrders } from '../hooks/useRemoteOrders';
-import { RemoteOrder } from '../services/RemoteOrdersService';
 import '../index.css';
-import Toast from '../components/Toast';
-import { useToast } from '../components/Toast';
+import { RemoteOrder } from '../services/RemoteOrdersService';
 
 // Types are now imported from useRemoteOrders hook
 
@@ -187,7 +186,7 @@ export default function RemoteOrdersPage() {
           ].map(tab => (
             <button
               key={tab.key}
-              onClick={() => setSelectedTab(tab.key as any)}
+              onClick={() => setSelectedTab(tab.key as 'orders' | 'integrations' | 'analytics')}
               className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
                 selectedTab === tab.key
                   ? 'bg-blue-500 text-white shadow-lg'
@@ -210,7 +209,7 @@ export default function RemoteOrdersPage() {
               <div className="flex flex-wrap gap-3">
                 <select
                   value={selectedPlatform}
-                  onChange={(e) => setSelectedPlatform(e.target.value as any)}
+                  onChange={(e) => setSelectedPlatform(e.target.value as 'all' | RemoteOrder['platform'])}
                   className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="all">Todas as Plataformas</option>
@@ -224,7 +223,7 @@ export default function RemoteOrdersPage() {
                 
                 <select
                   value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value as any)}
+                  onChange={(e) => setSelectedStatus(e.target.value as 'all' | RemoteOrder['status'])}
                   className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="all">Todos os Status</option>
@@ -242,15 +241,16 @@ export default function RemoteOrdersPage() {
             {/* Orders List */}
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredOrders.map(order => (
-                <div
+                <button
                   key={order.id}
                   className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer ${
                     order.status === 'pending' ? 'ring-2 ring-yellow-400 animate-pulse' : ''
-                  }`}
+                  } w-full text-left`}
                   onClick={() => {
                     setSelectedOrder(order);
                     setShowOrderModal(true);
                   }}
+                  type="button"
                 >
                   {/* Order Header */}
                   <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -290,8 +290,8 @@ export default function RemoteOrdersPage() {
                   
                   {/* Order Items */}
                   <div className="p-4 space-y-2 max-h-32 overflow-y-auto">
-                    {order.items.map((item, index) => (
-                      <div key={index} className="flex justify-between text-sm">
+                    {order.items.map((item) => (
+                      <div key={`${item.id}-${item.quantity}`} className="flex justify-between text-sm">
                         <span className="text-gray-700 dark:text-gray-300">
                           {item.quantity}x {item.name}
                         </span>
@@ -336,7 +336,7 @@ export default function RemoteOrdersPage() {
                       </button>
                     </div>
                   )}
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -522,13 +522,15 @@ export default function RemoteOrdersPage() {
       
       {/* Order Details Modal */}
       {showOrderModal && selectedOrder && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        <button 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 w-full text-left"
           onClick={() => setShowOrderModal(false)}
+          type="button"
         >
-          <div 
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto"
+          <button 
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto w-full text-left"
             onClick={(e) => e.stopPropagation()}
+            type="button"
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -584,8 +586,8 @@ export default function RemoteOrdersPage() {
                 <div>
                   <h3 className="font-medium text-gray-900 dark:text-white mb-2">Itens do Pedido</h3>
                   <div className="space-y-2">
-                    {selectedOrder.items.map((item, index) => (
-                      <div key={index} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    {selectedOrder.items.map((item) => (
+                      <div key={`${item.id}-${item.quantity}`} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         <div className="flex justify-between">
                           <span className="font-medium text-gray-900 dark:text-white">
                             {item.quantity}x {item.name}
@@ -601,8 +603,8 @@ export default function RemoteOrdersPage() {
                         )}
                         {item.modifiers && item.modifiers.length > 0 && (
                           <div className="mt-1">
-                            {item.modifiers.map((mod, idx) => (
-                              <p key={idx} className="text-sm text-gray-600 dark:text-gray-400">
+                            {item.modifiers.map((mod) => (
+                              <p key={mod.name} className="text-sm text-gray-600 dark:text-gray-400">
                                 + {mod.name} ({formatCurrency(mod.price)})
                               </p>
                             ))}
@@ -678,19 +680,21 @@ export default function RemoteOrdersPage() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
+          </button>
+        </button>
       )}
 
       {/* Configuration Modal */}
       {showConfigModal && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        <button 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 w-full text-left"
           onClick={() => setShowConfigModal(null)}
+          type="button"
         >
-          <div 
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4"
+          <button 
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 w-full text-left"
             onClick={(e) => e.stopPropagation()}
+            type="button"
           >
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               Configurar {getPlatformName(showConfigModal as RemoteOrder['platform'])}
@@ -756,8 +760,8 @@ export default function RemoteOrdersPage() {
                 Salvar
               </button>
             </div>
-          </div>
-        </div>
+          </button>
+        </button>
       )}
 
       {/* Toast Messages */}

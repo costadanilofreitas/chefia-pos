@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useOrder } from '../hooks/useOrder';
-import { formatCurrency } from '../utils/formatters';
-import { Order, OrderStatus, OrderType } from '../types/order';
 import '../index.css';
+import { Order, OrderStatus, OrderType } from '../types/order';
+import { formatCurrency } from '../utils/formatters';
 
 export default function CounterOrdersPage() {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ export default function CounterOrdersPage() {
   const {
     orders,
     loading,
-    // error, // TODO: usar para tratamento de erros
+    error,
     getOrders,
     updateOrder,
     cancelOrder,
@@ -51,7 +51,7 @@ export default function CounterOrdersPage() {
     try {
       await getOrders();
     } catch {
-// console.error('Error loading orders:', err);
+      alert('Erro ao carregar pedidos');
     }
   }, [getOrders]);
   
@@ -82,7 +82,6 @@ export default function CounterOrdersPage() {
       await loadOrders();
       alert('Pedido confirmado e enviado para preparo!');
     } catch {
-// console.error('Error confirming order:', error);
       alert('Erro ao confirmar pedido');
     }
   }, [updateOrder, loadOrders]);
@@ -93,7 +92,6 @@ export default function CounterOrdersPage() {
       await loadOrders();
       alert('Pedido marcado como pronto!');
     } catch {
-// console.error('Error marking order as ready:', error);
       alert('Erro ao marcar pedido como pronto');
     }
   }, [updateOrder, loadOrders]);
@@ -104,7 +102,6 @@ export default function CounterOrdersPage() {
       await loadOrders();
       alert('Pedido finalizado com sucesso!');
     } catch {
-// console.error('Error completing order:', error);
       alert('Erro ao finalizar pedido');
     }
   }, [completeOrder, loadOrders]);
@@ -123,7 +120,6 @@ export default function CounterOrdersPage() {
       setSelectedOrder(null);
       alert('Pedido cancelado com sucesso');
     } catch {
-// console.error('Error canceling order:', error);
       alert('Erro ao cancelar pedido');
     }
   }, [selectedOrder, cancelReason, cancelOrder, loadOrders]);
@@ -246,7 +242,7 @@ export default function CounterOrdersPage() {
           ].map(tab => (
             <button
               key={tab.key}
-              onClick={() => setSelectedTab(tab.key as any)}
+              onClick={() => setSelectedTab(tab.key as 'pending' | 'preparing' | 'ready' | 'completed')}
               className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
                 selectedTab === tab.key
                   ? 'bg-blue-500 text-white shadow-lg'
@@ -267,38 +263,71 @@ export default function CounterOrdersPage() {
       
       {/* Orders Grid */}
       <div className="flex-1 overflow-auto p-4">
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Carregando pedidos...</p>
-            </div>
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="text-6xl mb-4">📋</div>
-              <p className="text-xl font-medium text-gray-600 dark:text-gray-400">
-                Nenhum pedido {selectedTab === 'pending' ? 'pendente' : 
-                            selectedTab === 'preparing' ? 'em preparo' :
-                            selectedTab === 'ready' ? 'pronto' : 'finalizado'}
-              </p>
-            </div>
-          </div>
-        ) : (
+        {(() => {
+          if (error) {
+            return (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="text-red-500 text-6xl mb-4">⚠️</div>
+                  <p className="text-xl font-medium text-red-600 dark:text-red-400">Erro ao carregar pedidos</p>
+                  <p className="text-gray-600 dark:text-gray-400 mt-2">{error}</p>
+                  <button
+                    onClick={loadOrders}
+                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  >
+                    Tentar novamente
+                  </button>
+                </div>
+              </div>
+            );
+          }
+          
+          if (loading) {
+            return (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-400">Carregando pedidos...</p>
+                </div>
+              </div>
+            );
+          }
+          
+          if (filteredOrders.length === 0) {
+            const tabStatusText = {
+              pending: 'pendente',
+              preparing: 'em preparo',
+              ready: 'pronto',
+              completed: 'finalizado'
+            }[selectedTab];
+            
+            return (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📋</div>
+                  <p className="text-xl font-medium text-gray-600 dark:text-gray-400">
+                    Nenhum pedido {tabStatusText}
+                  </p>
+                </div>
+              </div>
+            );
+          }
+          
+          return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredOrders.map(order => {
               const typeInfo = getOrderTypeInfo(order.order_type);
               const statusInfo = getStatusInfo(order.status);
               
               return (
-                <div
+                <button
                   key={order.id}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transform hover:scale-105 transition-all duration-150 cursor-pointer"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transform hover:scale-105 transition-all duration-150 cursor-pointer w-full text-left"
                   onClick={() => {
                     setSelectedOrder(order);
                     setShowOrderDetails(true);
                   }}
+                  type="button"
                 >
                   {/* Order Header */}
                   <div className="p-4 border-b border-gray-200 dark:border-gray-700">
@@ -324,7 +353,7 @@ export default function CounterOrdersPage() {
                   <div className="p-4">
                     <div className="space-y-2 mb-3">
                       {order.items.slice(0, 3).map((item, index) => (
-                        <div key={index} className="flex justify-between text-sm">
+                        <div key={`${order.id}-item-${item.product_id || index}-${item.product_name}`} className="flex justify-between text-sm">
                           <span className="text-gray-700 dark:text-gray-300">
                             {item.quantity}x {item.product_name}
                           </span>
@@ -406,11 +435,12 @@ export default function CounterOrdersPage() {
                       </button>
                     )}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
-        )}
+          );
+        })()}
       </div>
       
       {/* Order Details Modal */}
@@ -465,7 +495,7 @@ export default function CounterOrdersPage() {
                 <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Itens do Pedido</h4>
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 space-y-2">
                   {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="flex justify-between">
+                    <div key={`${selectedOrder.id}-detail-${item.product_id || index}-${item.product_name}`} className="flex justify-between">
                       <span className="text-gray-700 dark:text-gray-300">
                         {item.quantity}x {item.product_name}
                       </span>
@@ -524,10 +554,11 @@ export default function CounterOrdersPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="cancel-reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Motivo do cancelamento
                 </label>
                 <textarea
+                  id="cancel-reason"
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
                   className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"

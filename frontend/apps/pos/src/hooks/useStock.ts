@@ -1,9 +1,28 @@
 import { useCallback, useState } from "react";
 import logger, { LogSource } from "../services/LocalLoggerService";
+import { buildApiUrl } from "../config/api";
 
 interface Stock {
   id: string;
-  [key: string]: any;
+  name: string;
+  sku?: string;
+  quantity: number;
+  min_quantity?: number;
+  unit?: string;
+  price?: number;
+  category?: string;
+  supplier?: string;
+}
+
+interface StockUpdate {
+  name?: string;
+  sku?: string;
+  quantity?: number;
+  min_quantity?: number;
+  unit?: string;
+  price?: number;
+  category?: string;
+  supplier?: string;
 }
 
 export const useStock = () => {
@@ -13,7 +32,7 @@ export const useStock = () => {
   const loadStocks = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8001/api/v1/stock", {
+      const response = await fetch(buildApiUrl("/api/v1/stock"), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -34,7 +53,7 @@ export const useStock = () => {
     }
   }, []);
 
-  const updateStock = useCallback(async (id: string, data: any) => {
+  const updateStock = useCallback(async (id: string, data: StockUpdate) => {
     setStocks((prev) => prev.map((s) => (s.id === id ? { ...s, ...data } : s)));
   }, []);
 

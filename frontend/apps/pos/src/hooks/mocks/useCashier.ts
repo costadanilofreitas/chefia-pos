@@ -1,4 +1,5 @@
 import { Cashier, CashierCreate, CashierWithdrawal, TerminalStatus } from '../../services/CashierService';
+import { CashierOperation, CashierSummary } from '../../types/cashier';
 import { UseCashierReturn } from '../useCashier';
 
 export const useCashier = (): UseCashierReturn => ({
@@ -43,11 +44,20 @@ export const useCashier = (): UseCashierReturn => ({
       cashier_id: 'test-cashier-1',
       operator_id: 'test-operator',
       operator_name: 'Test Operator',
-      opened_at: new Date().toISOString(),
-      initial_balance: 100.00,
-      current_balance: 150.00,
-      business_day_id: 'test-business-day-1',
-      status: 'OPEN',
+      cashier: {
+        id: 'test-cashier-1',
+        terminal_id: terminalId,
+        operator_id: 'test-operator',
+        operator_name: 'Test Operator',
+        business_day_id: 'test-business-day-1',
+        opened_at: new Date().toISOString(),
+        initial_balance: 100.00,
+        current_balance: 150.00,
+        status: 'OPEN',
+        current_operator_id: 'test-operator',
+        current_operator_name: 'Test Operator',
+        opened_by_name: 'Test Operator'
+      }
     };
   },
   openCashier: async (cashierData: CashierCreate): Promise<Cashier> => {
@@ -86,8 +96,16 @@ export const useCashier = (): UseCashierReturn => ({
       current_operator_name: 'Test Operator',
     };
   },
-  registerWithdrawal: async (_cashierId: string, _withdrawal: CashierWithdrawal): Promise<unknown> => {
-    return Promise.resolve();
+  registerWithdrawal: async (_cashierId: string, withdrawal: CashierWithdrawal): Promise<CashierOperation> => {
+    return Promise.resolve({
+      id: 'withdrawal-' + Date.now(),
+      operation_type: 'WITHDRAWAL',
+      amount: withdrawal.amount,
+      operator_id: withdrawal.operator_id || 'test-operator',
+      operator_name: 'Test Operator',
+      description: withdrawal.reason,
+      created_at: new Date().toISOString()
+    });
   },
   refreshCashier: async (_cashierId: string): Promise<void> => {
     return Promise.resolve();
@@ -95,13 +113,37 @@ export const useCashier = (): UseCashierReturn => ({
   clearError: (): void => {
     // Mock implementation
   },
-  getSummary: async (): Promise<unknown> => {
+  getSummary: async (): Promise<CashierSummary> => {
     return {
-      sales: 50.00,
-      withdrawals: 0.00,
-      deposits: 0.00
+      currentCashier: {
+        id: 'test-cashier-1',
+        status: 'OPEN',
+        opening_cash_amount: 100.00,
+        current_cash_amount: 150.00,
+        total_sales: 50.00,
+        total_withdrawals: 0,
+        total_deposits: 0,
+        total_cash: 50.00,
+        total_credit: 0,
+        total_debit: 0,
+        total_pix: 0,
+        total_other: 0,
+        current_operator_id: 'test-operator',
+        current_operator_name: 'Test Operator',
+        opened_by_id: 'test-operator',
+        opened_by_name: 'Test Operator',
+        opened_at: new Date().toISOString()
+      },
+      operations: [],
+      totals: {
+        sales: 50.00,
+        withdrawals: 0.00,
+        deposits: 0.00,
+        adjustments: 0.00,
+        refunds: 0.00
+      }
     };
-  },
+  }
 });
 
 export default useCashier;

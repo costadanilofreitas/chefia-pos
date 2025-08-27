@@ -1,12 +1,63 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { useBusinessDay } from '../hooks/useBusinessDay';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useBusinessDay } from '../hooks/useBusinessDay';
 import { useCashier } from '../hooks/useCashier';
 import { useReport } from '../hooks/useReport';
-import { formatCurrency } from '../utils/formatters';
 import '../index.css';
+import {
+  CashierOperation,
+  CashierSummary,
+  CurrentCashier
+} from '../types/cashier';
+import { getReportField } from '../types/report-guards';
+import { formatCurrency } from '../utils/formatters';
+
+// Helper function to convert cashier data to CashierSummary
+interface CashierData {
+  currentCashier?: Partial<CurrentCashier> & {
+    operator_id?: string;
+    operator_name?: string;
+    initial_balance?: number;
+    current_balance?: number;
+  };
+  operations?: CashierOperation[];
+}
+
+const convertToCashierSummary = (cashier: CashierData): CashierSummary => {
+  return {
+    currentCashier: {
+      id: cashier.currentCashier?.id || '',
+      status: cashier.currentCashier?.status || 'OPEN',
+      opening_cash_amount: cashier.currentCashier?.initial_balance || 0,
+      current_cash_amount: cashier.currentCashier?.current_balance || 0,
+      total_sales: cashier.currentCashier?.total_sales || 0,
+      total_withdrawals: cashier.currentCashier?.total_withdrawals || 0,
+      total_deposits: cashier.currentCashier?.total_deposits || 0,
+      total_cash: cashier.currentCashier?.total_cash || 0,
+      total_credit: cashier.currentCashier?.total_credit || 0,
+      total_debit: cashier.currentCashier?.total_debit || 0,
+      total_pix: cashier.currentCashier?.total_pix || 0,
+      total_other: 0,
+      current_operator_id: cashier.currentCashier?.current_operator_id || '',
+      current_operator_name: cashier.currentCashier?.current_operator_name || '',
+      opened_by_id: cashier.currentCashier?.operator_id || '',
+      opened_by_name: cashier.currentCashier?.operator_name || '',
+      opened_at: cashier.currentCashier?.opened_at || '',
+      terminal_id: cashier.currentCashier?.terminal_id,
+      business_day_id: cashier.currentCashier?.business_day_id
+    },
+    operations: cashier.operations || [],
+    totals: {
+      sales: cashier.currentCashier?.total_sales || 0,
+      withdrawals: cashier.currentCashier?.total_withdrawals || 0,
+      deposits: cashier.currentCashier?.total_deposits || 0,
+      adjustments: 0,
+      refunds: 0
+    }
+  };
+};
 
 export default function BusinessDayPage() {
   const navigate = useNavigate();
@@ -330,10 +381,11 @@ export default function BusinessDayPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="open-day-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Observações (opcional)
                 </label>
                 <textarea
+                  id="open-day-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
@@ -399,10 +451,11 @@ export default function BusinessDayPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label htmlFor="close-day-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Observações (opcional)
                     </label>
                     <textarea
+                      id="close-day-notes"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
@@ -504,13 +557,8 @@ export default function BusinessDayPage() {
                       setGeneratingReport(true);
                       
                       try {
-                        // Simpler data gathering
-                        const reportData = {
-                          currentCashier: cashier.currentCashier || null,
-                          summary: null,
-                          operations: cashier.operations || [],
-                          businessDay: currentBusinessDay || null
-                        };
+                        // Use helper function to convert data
+                        const reportData = convertToCashierSummary(cashier);
                         
                         // Calling generateReport with data
                         const report = await generateReport('summary', reportData);
@@ -520,9 +568,9 @@ export default function BusinessDayPage() {
                           setSelectedReportType('summary');
                           setReportGenerated(true);
                         }
-                      } catch {
-                        // Full error silenciado
-                        alert('Erro ao gerar relatório: ' + error);
+                      } catch (error) {
+                        // Error handling for report generation
+                        alert('Erro ao gerar relatório: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
                       } finally {
                         setGeneratingReport(false);
                       }
@@ -545,13 +593,7 @@ export default function BusinessDayPage() {
                       setGeneratingReport(true);
                       
                       try {
-                        const reportData = {
-                          currentCashier: cashier.currentCashier || null,
-                          summary: null,
-                          operations: cashier.operations || [],
-                          businessDay: currentBusinessDay || null
-                        };
-                        
+                        const reportData = convertToCashierSummary(cashier);
                         const report = await generateReport('cashflow', reportData);
                         
                         if (report) {
@@ -583,13 +625,7 @@ export default function BusinessDayPage() {
                       setGeneratingReport(true);
                       
                       try {
-                        const reportData = {
-                          currentCashier: cashier.currentCashier || null,
-                          summary: null,
-                          operations: cashier.operations || [],
-                          businessDay: currentBusinessDay || null
-                        };
-                        
+                        const reportData = convertToCashierSummary(cashier);
                         const report = await generateReport('sales', reportData);
                         
                         if (report) {
@@ -621,13 +657,7 @@ export default function BusinessDayPage() {
                       setGeneratingReport(true);
                       
                       try {
-                        const reportData = {
-                          currentCashier: cashier.currentCashier || null,
-                          summary: null,
-                          operations: cashier.operations || [],
-                          businessDay: currentBusinessDay || null
-                        };
-                        
+                        const reportData = convertToCashierSummary(cashier);
                         const report = await generateReport('payments', reportData);
                         
                         if (report) {
@@ -659,13 +689,7 @@ export default function BusinessDayPage() {
                       setGeneratingReport(true);
                       
                       try {
-                        const reportData = {
-                          currentCashier: cashier.currentCashier || null,
-                          summary: null,
-                          operations: cashier.operations || [],
-                          businessDay: currentBusinessDay || null
-                        };
-                        
+                        const reportData = convertToCashierSummary(cashier);
                         const report = await generateReport('operators', reportData);
                         
                         if (report) {
@@ -697,13 +721,7 @@ export default function BusinessDayPage() {
                       setGeneratingReport(true);
                       
                       try {
-                        const reportData = {
-                          currentCashier: cashier.currentCashier || null,
-                          summary: null,
-                          operations: cashier.operations || [],
-                          businessDay: currentBusinessDay || null
-                        };
-                        
+                        const reportData = convertToCashierSummary(cashier);
                         const report = await generateReport('closure', reportData);
                         
                         if (report) {
@@ -774,37 +792,37 @@ export default function BusinessDayPage() {
                               <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Operador</p>
                                 <p className="font-medium text-gray-900 dark:text-white">
-                                  {currentReport?.data?.operatorName || 'N/A'}
+                                  {getReportField<string>(currentReport?.data, 'operatorName', 'N/A')}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Valor de Abertura</p>
                                 <p className="font-medium text-gray-900 dark:text-white">
-                                  {formatCurrency(currentReport?.data?.openingAmount || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'openingAmount', 0))}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Total de Vendas</p>
                                 <p className="font-medium text-green-600 dark:text-green-400">
-                                  {formatCurrency(currentReport?.data?.totalSales || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'totalSales', 0))}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Total de Retiradas</p>
                                 <p className="font-medium text-red-600 dark:text-red-400">
-                                  {formatCurrency(currentReport?.data?.totalWithdrawals || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'totalWithdrawals', 0))}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Quantidade de Vendas</p>
                                 <p className="font-medium text-gray-900 dark:text-white">
-                                  {currentReport?.data?.salesCount || 0}
+                                  {getReportField<number>(currentReport?.data, 'salesCount', 0)}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Valor em Caixa</p>
                                 <p className="font-medium text-blue-600 dark:text-blue-400">
-                                  {formatCurrency(currentReport?.data?.cashInRegister || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'cashInRegister', 0))}
                                 </p>
                               </div>
                             </div>
@@ -823,31 +841,31 @@ export default function BusinessDayPage() {
                               <div className="flex justify-between items-center pb-2 border-b dark:border-gray-600">
                                 <span className="text-gray-600 dark:text-gray-400">Saldo Inicial</span>
                                 <span className="font-medium text-gray-900 dark:text-white">
-                                  {formatCurrency(currentReport?.data?.openingAmount || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'openingAmount', 0))}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-600 dark:text-gray-400">➕ Total de Entradas</span>
                                 <span className="font-medium text-green-600 dark:text-green-400">
-                                  {formatCurrency(currentReport?.data?.totalEntries || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'totalEntries', 0))}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-600 dark:text-gray-400">➖ Total de Saídas</span>
                                 <span className="font-medium text-red-600 dark:text-red-400">
-                                  {formatCurrency(currentReport?.data?.totalExits || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'totalExits', 0))}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center pt-2 border-t dark:border-gray-600">
                                 <span className="text-gray-600 dark:text-gray-400">Fluxo Líquido</span>
-                                <span className={`font-bold text-lg ${(currentReport?.data?.netFlow || 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                  {formatCurrency(currentReport?.data?.netFlow || 0)}
+                                <span className={`font-bold text-lg ${getReportField<number>(currentReport?.data, 'netFlow', 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'netFlow', 0))}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center pt-2 border-t dark:border-gray-600">
                                 <span className="font-semibold text-gray-900 dark:text-white">Saldo Atual</span>
                                 <span className="font-bold text-xl text-blue-600 dark:text-blue-400">
-                                  {formatCurrency(currentReport?.data?.currentAmount || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'currentAmount', 0))}
                                 </span>
                               </div>
                             </div>
@@ -865,29 +883,41 @@ export default function BusinessDayPage() {
                             <div className="grid grid-cols-3 gap-4 mb-4">
                               <div className="text-center">
                                 <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                  {currentReport?.data?.totalSales || 0}
+                                  {getReportField<number>(currentReport?.data, 'totalSales', 0)}
                                 </p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Total de Vendas</p>
                               </div>
                               <div className="text-center">
                                 <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                  {formatCurrency(currentReport?.data?.totalAmount || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'totalAmount', 0))}
                                 </p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Valor Total</p>
                               </div>
                               <div className="text-center">
                                 <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                                  {formatCurrency(currentReport?.data?.averageTicket || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'averageTicket', 0))}
                                 </p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Ticket Médio</p>
                               </div>
                             </div>
                             
-                            {currentReport?.data?.operations && currentReport?.data?.operations.length > 0 && (
+                            {getReportField<Array<{
+                              id: string;
+                              type: string;
+                              amount: number;
+                              timestamp?: string;
+                              operator?: string;
+                            }>>(currentReport?.data, 'operations', []).length > 0 && (
                               <div className="mt-4">
                                 <h4 className="font-medium text-gray-900 dark:text-white mb-2">Últimas Vendas</h4>
                                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                                  {currentReport?.data?.operations?.slice(0, 10).map((op: any, idx: number) => (
+                                  {getReportField<Array<{
+                                    id: string;
+                                    type: string;
+                                    amount: number;
+                                    timestamp?: string;
+                                    operator?: string;
+                                  }>>(currentReport?.data, 'operations', []).slice(0, 10).map((op, idx) => (
                                     <div key={idx} className="flex justify-between items-center py-1 border-b dark:border-gray-600">
                                       <span className="text-sm text-gray-600 dark:text-gray-400">
                                         Venda #{idx + 1}
@@ -915,31 +945,31 @@ export default function BusinessDayPage() {
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-600 dark:text-gray-400">💵 Dinheiro</span>
                                 <span className="font-medium text-gray-900 dark:text-white">
-                                  {formatCurrency(currentReport?.data?.cash || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'cash', 0))}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-600 dark:text-gray-400">💳 Crédito</span>
                                 <span className="font-medium text-gray-900 dark:text-white">
-                                  {formatCurrency(currentReport?.data?.credit || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'credit', 0))}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-600 dark:text-gray-400">💳 Débito</span>
                                 <span className="font-medium text-gray-900 dark:text-white">
-                                  {formatCurrency(currentReport?.data?.debit || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'debit', 0))}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-600 dark:text-gray-400">📱 PIX</span>
                                 <span className="font-medium text-gray-900 dark:text-white">
-                                  {formatCurrency(currentReport?.data?.pix || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'pix', 0))}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center pt-3 border-t dark:border-gray-600">
                                 <span className="font-semibold text-gray-900 dark:text-white">Total</span>
                                 <span className="font-bold text-xl text-green-600 dark:text-green-400">
-                                  {formatCurrency(currentReport?.data?.total || 0)}
+                                  {formatCurrency(getReportField<number>(currentReport?.data, 'total', 0))}
                                 </span>
                               </div>
                             </div>
@@ -958,28 +988,44 @@ export default function BusinessDayPage() {
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-600 dark:text-gray-400">Operador Atual</span>
                                 <span className="font-medium text-gray-900 dark:text-white">
-                                  {currentReport?.data?.currentOperator || 'N/A'}
+                                  {getReportField<string>(currentReport?.data, 'currentOperator', 'N/A')}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-gray-600 dark:text-gray-400">Aberto Por</span>
                                 <span className="font-medium text-gray-900 dark:text-white">
-                                  {currentReport?.data?.openedBy || 'N/A'}
+                                  {getReportField<string>(currentReport?.data, 'openedBy', 'N/A')}
                                 </span>
                               </div>
                               
-                              {Object.keys(currentReport?.data?.operatorSales || {}).length > 0 && (
+                              {Object.keys(getReportField<Record<string, {
+                                operatorId: string;
+                                operatorName: string;
+                                salesCount: number;
+                                salesTotal: number;
+                                withdrawalsCount: number;
+                                withdrawalsTotal: number;
+                                averageTicket: number;
+                              }>>(currentReport?.data, 'operatorSales', {})).length > 0 && (
                                 <div className="mt-4 pt-3 border-t dark:border-gray-600">
                                   <h4 className="font-medium text-gray-900 dark:text-white mb-2">Vendas por Operador</h4>
-                                  {Object.entries(currentReport?.data?.operatorSales || {}).map(([operator, data]: [string, any]) => (
+                                  {Object.entries(getReportField<Record<string, {
+                                    operatorId: string;
+                                    operatorName: string;
+                                    salesCount: number;
+                                    salesTotal: number;
+                                    withdrawalsCount: number;
+                                    withdrawalsTotal: number;
+                                    averageTicket: number;
+                                  }>>(currentReport?.data, 'operatorSales', {})).map(([operator, data]) => (
                                     <div key={operator} className="flex justify-between items-center py-2">
                                       <span className="text-gray-600 dark:text-gray-400">{operator}</span>
                                       <div className="text-right">
                                         <p className="font-medium text-gray-900 dark:text-white">
-                                          {formatCurrency(data.total)}
+                                          {formatCurrency(data.salesTotal)}
                                         </p>
                                         <p className="text-xs text-gray-500">
-                                          {data.count} venda{data.count !== 1 ? 's' : ''}
+                                          {data.salesCount} venda{data.salesCount !== 1 ? 's' : ''}
                                         </p>
                                       </div>
                                     </div>
@@ -1002,25 +1048,25 @@ export default function BusinessDayPage() {
                               <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Terminal</p>
                                 <p className="font-medium text-gray-900 dark:text-white">
-                                  {currentReport?.data?.terminalId || 'N/A'}
+                                  {getReportField<string>(currentReport?.data, 'terminalId', 'N/A')}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Operador</p>
                                 <p className="font-medium text-gray-900 dark:text-white">
-                                  {currentReport?.data?.operatorName || 'N/A'}
+                                  {getReportField<string>(currentReport?.data, 'operatorName', 'N/A')}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Abertura</p>
                                 <p className="font-medium text-gray-900 dark:text-white">
-                                  {formatDateTime(currentReport?.data?.openingDate || new Date())}
+                                  {formatDateTime(getReportField<string | Date>(currentReport?.data, 'openingDate', new Date()))}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Fechamento</p>
                                 <p className="font-medium text-gray-900 dark:text-white">
-                                  {formatDateTime(currentReport?.data?.closingDate || new Date())}
+                                  {formatDateTime(getReportField<string | Date>(currentReport?.data, 'closingDate', new Date()))}
                                 </p>
                               </div>
                             </div>
@@ -1031,19 +1077,19 @@ export default function BusinessDayPage() {
                                 <div className="flex justify-between items-center">
                                   <span className="text-gray-600 dark:text-gray-400">Total de Vendas</span>
                                   <span className="font-medium text-green-600 dark:text-green-400">
-                                    {formatCurrency(currentReport?.data?.totalSales || 0)}
+                                    {formatCurrency(getReportField<number>(currentReport?.data, 'totalSales', 0))}
                                   </span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                   <span className="text-gray-600 dark:text-gray-400">Total de Retiradas</span>
                                   <span className="font-medium text-red-600 dark:text-red-400">
-                                    {formatCurrency(currentReport?.data?.totalWithdrawals || 0)}
+                                    {formatCurrency(getReportField<number>(currentReport?.data, 'totalWithdrawals', 0))}
                                   </span>
                                 </div>
                                 <div className="flex justify-between items-center pt-2 border-t dark:border-gray-600">
                                   <span className="font-semibold text-gray-900 dark:text-white">Valor Esperado</span>
                                   <span className="font-bold text-lg text-blue-600 dark:text-blue-400">
-                                    {formatCurrency(currentReport?.data?.expectedCash || 0)}
+                                    {formatCurrency(getReportField<number>(currentReport?.data, 'expectedCash', 0))}
                                   </span>
                                 </div>
                               </div>

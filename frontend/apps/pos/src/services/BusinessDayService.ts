@@ -2,6 +2,13 @@ import { apiInterceptor } from './ApiInterceptor';
 import { API_ENDPOINTS } from '../config/api';
 import logger, { LogSource } from './LocalLoggerService';
 
+interface ApiError extends Error {
+  response?: {
+    status: number;
+    data?: unknown;
+  };
+}
+
 export interface BusinessDay {
   id: string;
   date: string;
@@ -105,13 +112,14 @@ class BusinessDayService {
       
       await logger.debug('Dia operacional atual encontrado', { businessDayId: response.data.id }, 'BusinessDayService', LogSource.POS);
       return response.data;
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error) {
+      const apiError = error as ApiError;
+      if (apiError.response?.status === 404) {
         await logger.debug('Nenhum dia operacional aberto', {}, 'BusinessDayService', LogSource.POS);
         return null; // Nenhum dia aberto
       }
-      await logger.error('Erro ao buscar dia operacional atual', error, 'BusinessDayService', LogSource.POS);
-      throw error;
+      await logger.error('Erro ao buscar dia operacional atual', apiError, 'BusinessDayService', LogSource.POS);
+      throw apiError;
     }
   }
 

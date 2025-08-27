@@ -1,4 +1,51 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import logger from '../services/LocalLoggerService';
+
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: 'no-speech' | 'aborted' | 'audio-capture' | 'network' | 'not-allowed' | 'service-not-allowed' | 'bad-grammar' | 'language-not-supported';
+  message?: string;
+}
+
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: ((this: SpeechRecognitionInstance, ev: Event) => void) | null;
+  onend: ((this: SpeechRecognitionInstance, ev: Event) => void) | null;
+  onerror: ((this: SpeechRecognitionInstance, ev: SpeechRecognitionErrorEvent) => void) | null;
+  onresult: ((this: SpeechRecognitionInstance, ev: SpeechRecognitionEvent) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+interface WindowWithSpeechRecognition extends Window {
+  SpeechRecognition?: new() => SpeechRecognitionInstance;
+  webkitSpeechRecognition?: new() => SpeechRecognitionInstance;
+}
 
 interface VoiceCommand {
   phrases: string[];
@@ -13,12 +60,12 @@ interface UseVoiceCommandsOptions {
   autoStart?: boolean;
   onStart?: () => void;
   onEnd?: () => void;
-  onError?: (error) => void;
+  onError?: (error: string) => void;
   onResult?: (_transcript: string) => void;
 }
 
 // Check if browser supports speech recognition
-const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+const SpeechRecognition = (window as WindowWithSpeechRecognition).SpeechRecognition || (window as WindowWithSpeechRecognition).webkitSpeechRecognition;
 const isSpeechRecognitionSupported = !!SpeechRecognition;
 
 export const useVoiceCommands = (
@@ -41,13 +88,12 @@ export const useVoiceCommands = (
   const [interimTranscript, setInterimTranscript] = useState('');
   const [isSupported, setIsSupported] = useState(isSpeechRecognitionSupported);
   
-  const recognition = useRef<any>(null);
+  const recognition = useRef<SpeechRecognitionInstance | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   // Initialize speech recognition
   useEffect(() => {
     if (!isSpeechRecognitionSupported) {
-// console.warn('Speech recognition is not supported in this browser');
       setIsSupported(false);
       return;
     }
@@ -108,21 +154,17 @@ export const useVoiceCommands = (
     };
 
     // Handle errors
-    recognition.current.onerror = (event) => {
-// console.error('Speech recognition error:', event.error);
+    recognition.current.onerror = (event: SpeechRecognitionErrorEvent) => {
       setIsListening(false);
       onError?.(event.error);
       
       // Handle specific errors
       switch (event.error) {
         case 'not-allowed':
-// console.error('Microphone permission denied');
           break;
         case 'no-speech':
-// console.log('No speech detected');
           break;
         case 'network':
-// console.error('Network error');
           break;
       }
     };
@@ -170,14 +212,14 @@ export const useVoiceCommands = (
   // Start listening
   const startListening = useCallback(() => {
     if (!isSupported || !recognition.current) {
-// console.warn('Speech recognition not available');
       return;
     }
 
     try {
       recognition.current.start();
-    } catch {
-// console.error('Failed to start speech recognition:', error);
+    } catch (error) {
+      // Voice recognition may fail in some browsers or if permission is denied
+      void logger.info('Failed to start voice recognition', { error }, 'useVoiceCommands');
     }
   }, [isSupported]);
 

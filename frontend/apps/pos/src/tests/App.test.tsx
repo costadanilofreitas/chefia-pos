@@ -3,18 +3,6 @@ import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
 
 // Mock all the hooks and components
-jest.mock('../hooks/useTerminalConfig', () => ({
-  useTerminalConfig: () => ({
-    config: {
-      terminal_id: 'terminal-001',
-      store_id: 'store-001',
-      services: {}
-    },
-    loading: false,
-    error: null
-  })
-}));
-
 jest.mock('../hooks/mocks/useAuth', () => ({
   useAuth: () => ({
     user: null,

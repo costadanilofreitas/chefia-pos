@@ -29,7 +29,7 @@ export default function CashWithdrawalPage() {
   const [notes, setNotes] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [movements, setMovements] = useState<CashMovement[]>([]);
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Predefined reasons
   const predefinedReasons = [
@@ -81,7 +81,7 @@ export default function CashWithdrawalPage() {
       return;
     }
     
-    setLoading(true);
+    setIsLoading(true);
     try {
       await registerWithdrawal(currentCashier.id, {
         operator_id: user?.id || '',
@@ -104,7 +104,7 @@ export default function CashWithdrawalPage() {
       // Error registering withdrawal silenciado
       alert('Erro ao realizar sangria');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   }, [amount, reason, notes, currentCashier, user, registerWithdrawal, loadMovements]);
   
@@ -185,8 +185,8 @@ export default function CashWithdrawalPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3 select-none">
-                <span className="text-4xl">💸</span>
-                Sangria de Caixa
+                <span className="text-4xl" aria-hidden="true">💸</span>
+                <span>Sangria de Caixa</span>
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-2 select-none">
                 Registre retiradas de dinheiro do caixa
@@ -211,10 +211,11 @@ export default function CashWithdrawalPage() {
             <div className="space-y-4">
               {/* Amount Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 select-none">
+                <label htmlFor="withdrawal-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 select-none">
                   Valor da Sangria
                 </label>
                 <input
+                  id="withdrawal-amount"
                   type="text"
                   value={amount ? `R$ ${amount}` : ''}
                   readOnly
@@ -244,10 +245,11 @@ export default function CashWithdrawalPage() {
               
               {/* Reason Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 select-none">
+                <label htmlFor="withdrawal-reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 select-none">
                   Motivo da Sangria
                 </label>
                 <select
+                  id="withdrawal-reason"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
@@ -261,10 +263,11 @@ export default function CashWithdrawalPage() {
               
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 select-none">
+                <label htmlFor="withdrawal-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 select-none">
                   Observações (opcional)
                 </label>
                 <textarea
+                  id="withdrawal-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"

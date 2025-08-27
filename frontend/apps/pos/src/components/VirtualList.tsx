@@ -26,7 +26,7 @@ function VirtualList<T>({
   emptyMessage = 'Nenhum item encontrado',
   loading = false,
   onScroll
-}: VirtualListProps<T>) {
+}: Readonly<VirtualListProps<T>>) {
   const containerRef = useRef<HTMLDivElement>(null);
   
   const {
