@@ -94,7 +94,7 @@ class SATEventHandler:
     def _register_handlers(self) -> None:
         """Registra handlers para eventos relevantes."""
         # Ouvir eventos de finalização de pedido para emitir CF-e
-        self.event_bus.subscribe(EventType.ORDER_COMPLETED, self.handle_order_finalized)
+        self.event_bus.subscribe(EventType.ORDER_FINALIZED, self.handle_order_finalized)
 
         # Ouvir eventos de cancelamento de pedido para cancelar CF-e
         self.event_bus.subscribe(EventType.ORDER_CANCELLED, self.handle_order_canceled)

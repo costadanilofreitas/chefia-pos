@@ -230,7 +230,7 @@ class PrintService:
 
             # Navegar pela estrutura de dados
             parts = var_path.split(".")
-            value = data
+            value: Any = data
 
             try:
                 for part in parts:
@@ -264,7 +264,8 @@ class PrintService:
                     elif formatter.startswith("number:"):
                         try:
                             decimals = int(formatter.split(":")[1])
-                            value = f"{float(value):.{decimals}f}"
+                            if value is not None:
+                                value = f"{float(value):.{decimals}f}"
                         except (ValueError, IndexError):
                             pass
 

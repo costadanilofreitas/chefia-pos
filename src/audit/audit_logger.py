@@ -375,7 +375,7 @@ class AuditLogger:
         """
         Busca logs com filtros
         """
-        results = []
+        results: List[AuditEntry] = []
         
         # Determinar arquivos para buscar
         if not start_date:
@@ -429,7 +429,7 @@ class AuditLogger:
         """
         logs = await self.search_logs(start_date, end_date, limit=10000)
         
-        stats = {
+        stats: Dict[str, Any] = {
             "total_entries": len(logs),
             "by_action": {},
             "by_entity": {},
@@ -442,27 +442,39 @@ class AuditLogger:
         
         for log in logs:
             # Por ação
-            stats["by_action"][log.action] = stats["by_action"].get(log.action, 0) + 1
+            by_action = stats["by_action"]
+            if isinstance(by_action, dict):
+                by_action[log.action] = by_action.get(log.action, 0) + 1
             
             # Por entidade
-            stats["by_entity"][log.entity_type] = stats["by_entity"].get(log.entity_type, 0) + 1
+            by_entity = stats["by_entity"]
+            if isinstance(by_entity, dict):
+                by_entity[log.entity_type] = by_entity.get(log.entity_type, 0) + 1
             
             # Por terminal
-            stats["by_terminal"][log.terminal_id] = stats["by_terminal"].get(log.terminal_id, 0) + 1
+            by_terminal = stats["by_terminal"]
+            if isinstance(by_terminal, dict):
+                by_terminal[log.terminal_id] = by_terminal.get(log.terminal_id, 0) + 1
             
             # Por usuário
-            stats["by_user"][log.user_id] = stats["by_user"].get(log.user_id, 0) + 1
+            by_user = stats["by_user"]
+            if isinstance(by_user, dict):
+                by_user[log.user_id] = by_user.get(log.user_id, 0) + 1
             
             # Por severidade
-            stats["by_severity"][log.severity] = stats["by_severity"].get(log.severity, 0) + 1
+            by_severity = stats["by_severity"]
+            if isinstance(by_severity, dict):
+                by_severity[log.severity] = by_severity.get(log.severity, 0) + 1
             
             # Conflitos
             if log.action == AuditAction.CONFLICT.value:
-                stats["conflicts"] += 1
+                if isinstance(stats["conflicts"], int):
+                    stats["conflicts"] += 1
             
             # Falhas de sync
             if log.sync_status == "FAILED":
-                stats["sync_failures"] += 1
+                if isinstance(stats["sync_failures"], int):
+                    stats["sync_failures"] += 1
         
         return stats
 

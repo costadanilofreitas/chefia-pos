@@ -275,8 +275,8 @@ class KDSKeyboardHandler:
             # Apenas atualizar itens que não estão prontos ou entregues
             if current_status not in [ItemStatus.READY, ItemStatus.DELIVERED]:
                 await self.event_bus.publish(
-                    "kds.item_status_changed",
                     Event(
+                        event_type=EventType.KDS_ITEM_STATUS_CHANGED,
                         data={
                             "order_id": current_order.id,
                             "item_id": item_id,
@@ -285,7 +285,7 @@ class KDSKeyboardHandler:
                             "updated_by": "keyboard",
                             "timestamp": datetime.now().isoformat(),
                         }
-                    ),
+                    )
                 )
 
         logger.info(
@@ -311,8 +311,8 @@ class KDSKeyboardHandler:
 
         # Publicar evento de atualização de status
         await self.event_bus.publish(
-            "kds.item_status_changed",
             Event(
+                event_type=EventType.KDS_ITEM_STATUS_CHANGED,
                 data={
                     "order_id": current_order.id,
                     "item_id": item_id,

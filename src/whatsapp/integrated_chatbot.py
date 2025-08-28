@@ -268,8 +268,13 @@ class WhatsAppIntegratedChatbot:
             description = response.get("description", f"Pedido #{order_id}")
 
             # Buscar cliente no Asaas ou criar novo
+            from_number = message_data.get("from_number")
+            if not from_number:
+                logger.error("Número de telefone não encontrado")
+                return
+            
             customer_result = await self.payment_integration.find_customer_by_phone(
-                message_data.get("from_number")
+                from_number
             )
 
             if not customer_result.get("success"):
@@ -299,6 +304,10 @@ class WhatsAppIntegratedChatbot:
                 asaas_customer_id = create_result.get("customer", {}).get("id")
 
             # Criar pagamento PIX
+            if not asaas_customer_id or not value:
+                logger.error("Dados insuficientes para criar pagamento")
+                return
+                
             payment_result = await self.payment_integration.create_pix_payment(
                 asaas_customer_id, value, description, order_id
             )
@@ -310,13 +319,20 @@ class WhatsAppIntegratedChatbot:
                 return
 
             # Registrar pedido para confirmação
-            await self.order_confirmation.register_order(
-                order_id,
-                response.get("restaurant_id"),
-                customer_id,
-                payment_result.get("payment", {}).get("id"),
-                response.get("order_data"),
-            )
+            restaurant_id = response.get("restaurant_id")
+            payment_id = payment_result.get("payment", {}).get("id")
+            order_data = response.get("order_data")
+            
+            if restaurant_id and payment_id and order_data:
+                await self.order_confirmation.register_order(
+                    order_id,
+                    restaurant_id,
+                    customer_id,
+                    payment_id,
+                    order_data,
+                )
+            else:
+                logger.warning("Dados incompletos para registrar pedido")
 
             # Adicionar código PIX à resposta
             response["pix_code"] = payment_result.get("pix_code")
@@ -337,7 +353,10 @@ class WhatsAppIntegratedChatbot:
         if action == "order_confirm":
             # Confirmar pedido
             order_id = response.get("order_id")
-            await self.order_confirmation.confirm_order(order_id)
+            if order_id:
+                await self.order_confirmation.confirm_order(order_id)
+            else:
+                logger.warning("ID do pedido não encontrado para confirmação")
 
         elif action == "order_cancel":
             # Cancelar pedido
@@ -391,9 +410,9 @@ class WhatsAppIntegratedChatbot:
                             )
 
                         # Excluir mensagem processada
-                        await self.sqs_integration.delete_message(
-                            message.get("receipt_handle")
-                        )
+                        receipt_handle = message.get("receipt_handle")
+                        if receipt_handle:
+                            await self.sqs_integration.delete_message(receipt_handle)
 
                     except Exception as e:
                         logger.error(f"Erro ao processar mensagem SQS: {str(e)}")

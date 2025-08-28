@@ -33,7 +33,7 @@ class KeyboardManager:
         self.configs: Dict[str, Any] = {}  # Configurações carregadas do arquivo
         self.running = False
         self.threads: List[Any] = []
-        self.main_loop = None  # Referência ao event loop principal
+        self.main_loop: Optional[asyncio.AbstractEventLoop] = None  # Referência ao event loop principal
 
         # Carregar configurações
         self._load_configs()

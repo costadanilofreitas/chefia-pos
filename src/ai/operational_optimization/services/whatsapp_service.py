@@ -11,7 +11,7 @@ import logging
 import os
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from fastapi import HTTPException
 
@@ -42,7 +42,7 @@ class WhatsAppCampaignService:
         # self.bedrock_client = boto3.client('bedrock-runtime')
 
         # Parâmetros padrão para campanhas
-        self.default_parameters = {
+        self.default_parameters: Dict[str, Any] = {
             # Taxa de resposta esperada para diferentes tipos de campanha
             "expected_response_rates": {
                 "inactive_customers": 0.15,  # 15% para clientes inativos
@@ -232,7 +232,7 @@ class WhatsAppCampaignService:
             description=f"Oferta de {discount}% de desconto para clientes que não visitam há mais de {target_segment.get('days_since_last_visit', 30)} dias",
             campaign_type="inactive_customers",
             target_segment=target_segment,
-            message_template=self.default_parameters["message_templates"][
+            message_template=cast(Dict[str, str], self.default_parameters["message_templates"])[
                 "inactive_customers"
             ],
             message_variables={
@@ -248,7 +248,7 @@ class WhatsAppCampaignService:
             created_at=datetime.now(),
             scheduled_time=None,
             status="draft",
-            expected_response_rate=self.default_parameters["expected_response_rates"][
+            expected_response_rate=cast(Dict[str, float], self.default_parameters["expected_response_rates"])[
                 "inactive_customers"
             ],
             expected_roi=3.5,
@@ -291,9 +291,9 @@ class WhatsAppCampaignService:
                 created_at=datetime.now(),
                 scheduled_time=None,
                 status="draft",
-                expected_response_rate=self.default_parameters[
+                expected_response_rate=cast(Dict[str, float], self.default_parameters[
                     "expected_response_rates"
-                ]["inactive_customers"]
+                ])["inactive_customers"]
                 * 1.2,  # 20% maior para clientes VIP
                 expected_roi=4.2,
                 confidence=0.9,
@@ -330,7 +330,7 @@ class WhatsAppCampaignService:
             description="Solicitação de feedback com oferta de desconto na próxima visita",
             campaign_type="post_purchase",
             target_segment=target_segment,
-            message_template=self.default_parameters["message_templates"][
+            message_template=cast(Dict[str, str], self.default_parameters["message_templates"])[
                 "post_purchase"
             ],
             message_variables={"discount": discount},
@@ -341,7 +341,7 @@ class WhatsAppCampaignService:
             created_at=datetime.now(),
             scheduled_time=None,
             status="draft",
-            expected_response_rate=self.default_parameters["expected_response_rates"][
+            expected_response_rate=cast(Dict[str, float], self.default_parameters["expected_response_rates"])[
                 "post_purchase"
             ],
             expected_roi=2.8,
@@ -381,9 +381,9 @@ class WhatsAppCampaignService:
                 created_at=datetime.now(),
                 scheduled_time=None,
                 status="draft",
-                expected_response_rate=self.default_parameters[
+                expected_response_rate=cast(Dict[str, float], self.default_parameters[
                     "expected_response_rates"
-                ]["post_purchase"]
+                ])["post_purchase"]
                 * 1.1,  # 10% maior para recomendações personalizadas
                 expected_roi=3.2,
                 confidence=0.88,
@@ -414,12 +414,14 @@ class WhatsAppCampaignService:
         campaign_id = f"campaign-{restaurant_id}-{uuid.uuid4().hex[:8]}"
 
         # Obter template e taxa de resposta esperada
-        template = self.default_parameters["message_templates"].get(
+        templates = cast(Dict[str, str], self.default_parameters["message_templates"])
+        template = templates.get(
             campaign_type,
             "Olá {customer_name}, temos uma mensagem especial para você do {restaurant_name}!",
         )
 
-        response_rate = self.default_parameters["expected_response_rates"].get(
+        response_rates = cast(Dict[str, float], self.default_parameters["expected_response_rates"])
+        response_rate = response_rates.get(
             campaign_type, 0.15  # Taxa padrão
         )
 

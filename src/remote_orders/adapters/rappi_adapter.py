@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import aiohttp
 
@@ -31,17 +31,19 @@ class RappiAdapter:
         self.restaurant_id = config.get("restaurant_id")
         self.store_id = config.get("store_id")
         self.base_url = "https://api.rappi.com/api/v1"
-        self.session = None
+        self.session: Optional[aiohttp.ClientSession] = None
 
     async def __aenter__(self):
         """Inicializa a sessão HTTP."""
-        self.session = aiohttp.ClientSession(
-            headers={
-                "Content-Type": "application/json",
-                "X-API-Key": self.api_key,
-                "X-API-Secret": self.api_secret,
-            }
-        )
+        headers: Dict[str, str] = {
+            "Content-Type": "application/json"
+        }
+        if self.api_key:
+            headers["X-API-Key"] = self.api_key
+        if self.api_secret:
+            headers["X-API-Secret"] = self.api_secret
+        
+        self.session = aiohttp.ClientSession(headers=headers)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -270,7 +272,7 @@ class RappiAdapter:
 
         url = f"{self.base_url}/orders/{order_id}/refund"
 
-        payload = {"reason": reason}
+        payload: Dict[str, Any] = {"reason": reason}
 
         if amount is not None:
             payload["amount"] = amount

@@ -113,22 +113,22 @@ async def register_product_event_handlers():
     event_bus = get_event_bus()
 
     # Registrar handlers
-    await event_bus.subscribe(
-        EventType.BUSINESS_DAY_OPENED,
+    event_bus.subscribe(
+        EventType.DAY_OPENED,
         EventHandler(ProductEventHandlers.handle_business_day_opened),
     )
 
-    await event_bus.subscribe(
-        EventType.BUSINESS_DAY_CLOSED,
+    event_bus.subscribe(
+        EventType.DAY_CLOSED,
         EventHandler(ProductEventHandlers.handle_business_day_closed),
     )
 
-    await event_bus.subscribe(
+    event_bus.subscribe(
         EventType.ORDER_CREATED, EventHandler(ProductEventHandlers.handle_order_created)
     )
 
-    await event_bus.subscribe(
-        EventType.INVENTORY_UPDATED,
+    event_bus.subscribe(
+        EventType.PRODUCT_STATUS_CHANGED,
         EventHandler(ProductEventHandlers.handle_inventory_updated),
     )
 

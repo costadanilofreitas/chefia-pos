@@ -143,8 +143,11 @@ class SATService:
                                 sat_config = pos_config["sat"]
 
                                 # Mesclar com configuração global
-                                merged_config = self.config.dict()
-                                merged_config.update(sat_config)
+                                if self.config:
+                                    merged_config = self.config.dict()
+                                    merged_config.update(sat_config)
+                                else:
+                                    merged_config = sat_config
 
                                 # Criar configuração específica para este terminal
                                 terminal_config = SATConfig(**merged_config)
@@ -354,6 +357,7 @@ class SATService:
             # Se estiver em modo de contingência e falhar, armazenar para reenvio
             if (
                 not response.success
+                and self.config
                 and self.config.contingency_mode != ContingencyMode.NONE
             ):
                 cfe.status = "pendente"
@@ -517,10 +521,13 @@ class SATService:
         """Atualiza a configuração global do SAT."""
         try:
             # Atualizar configuração
-            updated_config = self.config.copy()
-            for key, value in config_data.items():
-                if hasattr(updated_config, key):
-                    setattr(updated_config, key, value)
+            if self.config:
+                updated_config = self.config.copy()
+                for key, value in config_data.items():
+                    if hasattr(updated_config, key):
+                        setattr(updated_config, key, value)
+            else:
+                updated_config = SATConfig(**config_data)
 
             # Validar configuração
             updated_config = SATConfig(**updated_config.dict())
@@ -571,8 +578,11 @@ class SATService:
                 current_driver = self.drivers[terminal_id]
                 if isinstance(current_driver, SATConfig):
                     # Mesclar com configuração global
-                    merged_config = self.config.dict()
-                    merged_config.update(pos_config["sat"])
+                    if self.config:
+                        merged_config = self.config.dict()
+                        merged_config.update(pos_config["sat"])
+                    else:
+                        merged_config = pos_config["sat"]
 
                     # Criar configuração específica para este terminal
                     terminal_config = SATConfig(**merged_config)

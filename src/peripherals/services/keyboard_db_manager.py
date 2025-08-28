@@ -86,7 +86,7 @@ class KeyboardDBManager:
             # Create keyboard configuration
             keyboard_config = self.peripheral_service.repository.create_keyboard_config(
                 config_id="keyboard_standard_1",
-                peripheral_id=standard_peripheral.id,
+                peripheral_id=str(standard_peripheral.id),
                 name="Standard Keyboard",
                 description="Teclado padrão para operações do KDS",
                 device_type="standard_keyboard",
@@ -97,7 +97,7 @@ class KeyboardDBManager:
             # Create default key mappings
             default_mappings = self._get_default_key_mappings()
             self.peripheral_service.repository.update_key_mappings(
-                keyboard_config.id, default_mappings
+                str(keyboard_config.id), default_mappings
             )
 
             # Create numeric keypad peripheral
@@ -117,7 +117,7 @@ class KeyboardDBManager:
             # Create numeric keyboard configuration
             numeric_config = self.peripheral_service.repository.create_keyboard_config(
                 config_id="keyboard_numeric_1",
-                peripheral_id=numeric_peripheral.id,
+                peripheral_id=str(numeric_peripheral.id),
                 name="Numeric Keypad",
                 description="Teclado numérico para operações rápidas do KDS",
                 device_type="numeric_keypad",
@@ -128,7 +128,7 @@ class KeyboardDBManager:
             # Create numeric key mappings
             numeric_mappings = self._get_numeric_key_mappings()
             self.peripheral_service.repository.update_key_mappings(
-                numeric_config.id, numeric_mappings
+                str(numeric_config.id), numeric_mappings
             )
 
             logger.info("Configurações padrão de teclado criadas")

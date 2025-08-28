@@ -10,7 +10,7 @@ Este serviço implementa funcionalidades para:
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from fastapi import HTTPException
 
@@ -77,7 +77,7 @@ class TableOptimizationService:
 
         # Se time_windows não for fornecido, usar janelas padrão
         if not time_windows:
-            time_windows = self.default_parameters["time_windows"]
+            time_windows = list(self.default_parameters["time_windows"])
 
         try:
             # Obter previsão de demanda para o dia
@@ -383,25 +383,26 @@ class TableOptimizationService:
         total_customers = int(expected_demand)
 
         # Calcular número de grupos com base na distribuição padrão
+        group_dist = cast(Dict[str, float], self.default_parameters["default_group_distribution"])
         groups = {
             "1-2": int(
                 total_customers
-                * self.default_parameters["default_group_distribution"]["1-2"]
+                * group_dist["1-2"]
                 / 1.5
             ),
             "3-4": int(
                 total_customers
-                * self.default_parameters["default_group_distribution"]["3-4"]
+                * group_dist["3-4"]
                 / 3.5
             ),
             "5-6": int(
                 total_customers
-                * self.default_parameters["default_group_distribution"]["5-6"]
+                * group_dist["5-6"]
                 / 5.5
             ),
             "7+": int(
                 total_customers
-                * self.default_parameters["default_group_distribution"]["7+"]
+                * group_dist["7+"]
                 / 8
             ),
         }
@@ -440,7 +441,7 @@ class TableOptimizationService:
                         "action": "add",
                         "table_type": table_type,
                         "count": diff,
-                        "reason": f"Adicionar {diff} mesas do tipo {table_type} para acomodar grupos de {self.default_parameters['table_capacities'][table_type]} pessoas",
+                        "reason": f"Adicionar {diff} mesas do tipo {table_type} para acomodar grupos de {cast(Dict[str, int], self.default_parameters['table_capacities'])[table_type]} pessoas",
                     }
                 )
             elif diff < 0:
@@ -499,7 +500,7 @@ class TableOptimizationService:
             )
 
         # Recomendações para rotatividade
-        avg_table_time = self.default_parameters["avg_table_time"]
+        avg_table_time = cast(int, self.default_parameters["avg_table_time"])
         if total_customers > sum(t["capacity"] for t in current_layout) * (
             240 / avg_table_time
         ):

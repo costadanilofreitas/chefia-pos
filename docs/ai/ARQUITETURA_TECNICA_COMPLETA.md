@@ -112,6 +112,10 @@ Waiter:
 - **Routing**: React Router 6.30 ✅
 - **Testing**: Vitest + React Testing Library ✅
 - **Components**: Custom (SEM Material UI) ✅
+- **Real-time**: WebSocket client with auto-reconnection ✅
+- **Caching**: RequestCache service with memory management ✅
+- **Synchronization**: Multi-terminal sync with conflict resolution ✅
+- **Offline Support**: IndexedDB with backup/restore system ✅
 
 #### Infrastructure
 
@@ -432,43 +436,252 @@ import { POSKeypad } from "@pos-modern/common-v2"; // Não deve existir
 
 ### 3.3 Real-time & Integrações Diferenciais
 
-#### WebSocket Implementation (PRIORIDADE)
+#### WebSocket Implementation (IMPLEMENTADO) ✅
 
 ```python
-# Backend - FastAPI WebSocket
+# Backend - Advanced WebSocket Manager
 from fastapi import WebSocket
-from typing import Dict, Set
+from typing import Dict, Set, List
+import asyncio
+import json
+from datetime import datetime
 
-class ConnectionManager:
+class WebSocketManager:
     def __init__(self):
-        self.active_connections: Dict[str, Set[WebSocket]] = {}
-
-    async def connect(self, websocket: WebSocket, client_id: str):
+        self.active_connections: Dict[str, Dict[str, WebSocket]] = {}
+        self.terminal_info: Dict[str, Dict] = {}
+        self.message_history: List[Dict] = []
+        
+    async def connect(self, websocket: WebSocket, terminal_id: str, terminal_type: str):
         await websocket.accept()
-        if client_id not in self.active_connections:
-            self.active_connections[client_id] = set()
-        self.active_connections[client_id].add(websocket)
+        
+        if terminal_id not in self.active_connections:
+            self.active_connections[terminal_id] = {}
+            
+        self.active_connections[terminal_id]['websocket'] = websocket
+        self.terminal_info[terminal_id] = {
+            'type': terminal_type,
+            'connected_at': datetime.now(),
+            'last_ping': datetime.now(),
+            'status': 'online'
+        }
+        
+        # Send connection confirmation
+        await self.send_to_terminal(terminal_id, {
+            'type': 'connection_confirmed',
+            'terminal_id': terminal_id,
+            'server_time': datetime.now().isoformat()
+        })
+        
+        # Broadcast terminal status to monitors
+        await self.broadcast_terminal_status()
+    
+    async def disconnect(self, terminal_id: str):
+        if terminal_id in self.active_connections:
+            del self.active_connections[terminal_id]
+            self.terminal_info[terminal_id]['status'] = 'offline'
+            self.terminal_info[terminal_id]['disconnected_at'] = datetime.now()
+            
+        await self.broadcast_terminal_status()
+    
+    async def send_to_terminal(self, terminal_id: str, message: dict):
+        if terminal_id in self.active_connections:
+            websocket = self.active_connections[terminal_id]['websocket']
+            try:
+                await websocket.send_text(json.dumps(message))
+            except Exception:
+                await self.disconnect(terminal_id)
+    
+    async def broadcast_to_all(self, message: dict, exclude_terminal: str = None):
+        """Broadcast message to all connected terminals"""
+        for terminal_id in list(self.active_connections.keys()):
+            if terminal_id != exclude_terminal:
+                await self.send_to_terminal(terminal_id, message)
+    
+    async def broadcast_data_sync(self, data_type: str, data: dict, source_terminal: str):
+        """Synchronize data across all terminals"""
+        sync_message = {
+            'type': 'data_sync',
+            'data_type': data_type,
+            'data': data,
+            'source_terminal': source_terminal,
+            'timestamp': datetime.now().isoformat(),
+            'version': data.get('version', 1)
+        }
+        
+        # Add to message history for audit
+        self.message_history.append(sync_message)
+        
+        # Keep only last 1000 messages
+        if len(self.message_history) > 1000:
+            self.message_history = self.message_history[-1000:]
+        
+        # Broadcast to all terminals except source
+        await self.broadcast_to_all(sync_message, exclude_terminal=source_terminal)
+    
+    async def broadcast_terminal_status(self):
+        """Send terminal status to monitoring dashboards"""
+        status_message = {
+            'type': 'terminal_status_update',
+            'terminals': {
+                terminal_id: {
+                    'type': info['type'],
+                    'status': info['status'],
+                    'connected_at': info.get('connected_at', '').isoformat() if info.get('connected_at') else None,
+                    'last_ping': info.get('last_ping', '').isoformat() if info.get('last_ping') else None
+                }
+                for terminal_id, info in self.terminal_info.items()
+            },
+            'total_online': len([t for t in self.terminal_info.values() if t['status'] == 'online']),
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # Send to monitoring terminals
+        monitor_terminals = [tid for tid, info in self.terminal_info.items() 
+                           if info['type'] == 'monitor']
+        
+        for terminal_id in monitor_terminals:
+            await self.send_to_terminal(terminal_id, status_message)
 
-    async def broadcast_order_update(self, order_data: dict):
-        """Notifica KDS, POS e Waiter em real-time"""
-        for connections in self.active_connections.values():
-            for connection in connections:
-                await connection.send_json(order_data)
+    def get_connection_stats(self) -> dict:
+        """Get current connection statistics"""
+        return {
+            'total_connections': len(self.active_connections),
+            'terminals_by_type': {},
+            'online_terminals': len([t for t in self.terminal_info.values() if t['status'] == 'online']),
+            'message_history_count': len(self.message_history),
+            'terminals': self.terminal_info
+        }
 
-# Frontend - React Hook
-const useWebSocket = (url: string) => {
-    const [data, setData] = useState(null);
-    const ws = useRef<WebSocket>();
+# Frontend - Advanced WebSocket Hook with Reconnection
+interface WebSocketMessage {
+  type: string;
+  data?: any;
+  timestamp?: string;
+  terminal_id?: string;
+}
 
-    useEffect(() => {
-        ws.current = new WebSocket(url);
-        ws.current.onmessage = (event) => {
-            setData(JSON.parse(event.data));
-        };
-        return () => ws.current?.close();
-    }, [url]);
+interface UseWebSocketOptions {
+  terminalId: string;
+  terminalType: 'pos' | 'kds' | 'monitor' | 'waiter';
+  autoReconnect?: boolean;
+  maxReconnectAttempts?: number;
+  onMessage?: (message: WebSocketMessage) => void;
+  onStatusChange?: (status: 'connecting' | 'connected' | 'disconnected' | 'error') => void;
+}
 
-    return { data, send: (msg) => ws.current?.send(msg) };
+export const useWebSocket = (options: UseWebSocketOptions) => {
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
+  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptRef = useRef(0);
+  const messageQueueRef = useRef<WebSocketMessage[]>([]);
+
+  const { terminalId, terminalType, autoReconnect = true, maxReconnectAttempts = 5 } = options;
+
+  const connect = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      return;
+    }
+
+    setConnectionStatus('connecting');
+    options.onStatusChange?.('connecting');
+
+    const wsUrl = `ws://localhost:8001/ws/${terminalId}?type=${terminalType}`;
+    wsRef.current = new WebSocket(wsUrl);
+
+    wsRef.current.onopen = () => {
+      console.log(`WebSocket connected: ${terminalId}`);
+      setConnectionStatus('connected');
+      options.onStatusChange?.('connected');
+      reconnectAttemptRef.current = 0;
+
+      // Send queued messages
+      while (messageQueueRef.current.length > 0) {
+        const message = messageQueueRef.current.shift();
+        if (message && wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify(message));
+        }
+      }
+    };
+
+    wsRef.current.onmessage = (event) => {
+      try {
+        const message: WebSocketMessage = JSON.parse(event.data);
+        setLastMessage(message);
+        options.onMessage?.(message);
+      } catch (error) {
+        console.error('Failed to parse WebSocket message:', error);
+      }
+    };
+
+    wsRef.current.onclose = (event) => {
+      console.log(`WebSocket disconnected: ${terminalId}`, event.code, event.reason);
+      setConnectionStatus('disconnected');
+      options.onStatusChange?.('disconnected');
+
+      if (autoReconnect && reconnectAttemptRef.current < maxReconnectAttempts) {
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttemptRef.current), 30000);
+        console.log(`Attempting to reconnect in ${delay}ms...`);
+        
+        reconnectTimeoutRef.current = setTimeout(() => {
+          reconnectAttemptRef.current++;
+          connect();
+        }, delay);
+      }
+    };
+
+    wsRef.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setConnectionStatus('error');
+      options.onStatusChange?.('error');
+    };
+  }, [terminalId, terminalType, autoReconnect, maxReconnectAttempts, options]);
+
+  const disconnect = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    setConnectionStatus('disconnected');
+    options.onStatusChange?.('disconnected');
+  }, [options]);
+
+  const sendMessage = useCallback((message: Omit<WebSocketMessage, 'timestamp' | 'terminal_id'>) => {
+    const fullMessage: WebSocketMessage = {
+      ...message,
+      timestamp: new Date().toISOString(),
+      terminal_id: terminalId
+    };
+
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(fullMessage));
+    } else {
+      // Queue message for when connection is restored
+      messageQueueRef.current.push(fullMessage);
+    }
+  }, [terminalId]);
+
+  useEffect(() => {
+    connect();
+    return disconnect;
+  }, [connect, disconnect]);
+
+  return {
+    connectionStatus,
+    lastMessage,
+    sendMessage,
+    connect,
+    disconnect,
+    isConnected: connectionStatus === 'connected'
+  };
 };
 ```
 
@@ -534,33 +747,353 @@ class CustomerRetentionAI:
         # - Sazonalidade
 ```
 
-### 3.4 Offline & Sync
+### 3.4 Real-time Multi-Terminal Synchronization (IMPLEMENTADO) ✅
 
-#### Strategies
+#### RequestCache Service with Memory Management
 
-1. **Service Workers + IndexedDB**
+```typescript
+class RequestCache {
+  private cache = new Map<string, CacheEntry>();
+  private memoryUsage = 0;
+  private readonly MAX_MEMORY_MB = 50;
+  private readonly CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  private readonly DEFAULT_TTL = 10 * 60 * 1000; // 10 minutes
 
-   - Cache API responses
-   - Queue offline operations
-   - Background sync
+  constructor() {
+    this.startPeriodicCleanup();
+  }
 
-2. **CRDTs (Conflict-free Replicated Data Types)**
+  async get<T>(key: string): Promise<T | null> {
+    const entry = this.cache.get(key);
+    
+    if (!entry) return null;
+    
+    if (this.isExpired(entry)) {
+      this.cache.delete(key);
+      this.updateMemoryUsage();
+      return null;
+    }
+    
+    entry.lastAccessed = Date.now();
+    entry.accessCount++;
+    
+    return entry.data as T;
+  }
 
-   - Yjs, Automerge
-   - Automatic conflict resolution
-   - Real-time collaboration
+  async set<T>(key: string, data: T, ttl?: number): Promise<void> {
+    const entry: CacheEntry = {
+      data,
+      timestamp: Date.now(),
+      ttl: ttl || this.DEFAULT_TTL,
+      lastAccessed: Date.now(),
+      accessCount: 1,
+      size: this.estimateSize(data)
+    };
 
-3. **Event Sourcing**
-   - Immutable event log
-   - Rebuild state from events
-   - Perfect audit trail
+    // Check memory limits before adding
+    if (this.memoryUsage + entry.size > this.MAX_MEMORY_MB * 1024 * 1024) {
+      await this.performMemoryCleanup();
+    }
 
-#### Sync Solutions
+    this.cache.set(key, entry);
+    this.updateMemoryUsage();
+  }
 
-- **PouchDB/CouchDB**: Built-in sync
-- **WatermelonDB**: React Native + Web
-- **Electric SQL**: Postgres sync
-- **PowerSync**: SQLite sync
+  private async performMemoryCleanup(): Promise<void> {
+    const entries = Array.from(this.cache.entries());
+    
+    // Sort by priority: expired first, then by access frequency and recency
+    entries.sort(([, a], [, b]) => {
+      if (this.isExpired(a) && !this.isExpired(b)) return -1;
+      if (!this.isExpired(a) && this.isExpired(b)) return 1;
+      
+      const aPriority = a.accessCount * (Date.now() - a.lastAccessed);
+      const bPriority = b.accessCount * (Date.now() - b.lastAccessed);
+      
+      return bPriority - aPriority;
+    });
+
+    // Remove least important entries until memory is under 70% limit
+    const targetSize = this.MAX_MEMORY_MB * 1024 * 1024 * 0.7;
+    let currentSize = this.memoryUsage;
+    
+    for (const [key] of entries) {
+      if (currentSize <= targetSize) break;
+      
+      const entry = this.cache.get(key);
+      if (entry) {
+        currentSize -= entry.size;
+        this.cache.delete(key);
+      }
+    }
+    
+    this.updateMemoryUsage();
+  }
+}
+```
+
+#### RealtimeSyncService for Multi-Terminal Coordination
+
+```typescript
+class RealtimeSyncService {
+  private websocket: ReturnType<typeof useWebSocket>;
+  private syncQueue: SyncOperation[] = [];
+  private conflictResolver: ConflictResolver;
+  private auditLogger: AuditLogger;
+
+  constructor(terminalId: string, terminalType: string) {
+    this.websocket = useWebSocket({
+      terminalId,
+      terminalType,
+      onMessage: this.handleIncomingSync.bind(this),
+      onStatusChange: this.handleConnectionStatusChange.bind(this)
+    });
+    
+    this.conflictResolver = new ConflictResolver();
+    this.auditLogger = new AuditLogger();
+  }
+
+  async syncData(operation: SyncOperation): Promise<void> {
+    // Add optimistic locking
+    operation.version = await this.getDataVersion(operation.entityType, operation.entityId);
+    operation.lockId = this.generateLockId();
+    
+    // Apply locally first (optimistic update)
+    const rollbackData = await this.applyLocalUpdate(operation);
+    
+    try {
+      // Send to other terminals
+      this.websocket.sendMessage({
+        type: 'data_sync',
+        data: operation
+      });
+      
+      // Log for audit
+      await this.auditLogger.logSync(operation);
+      
+    } catch (error) {
+      // Rollback on failure
+      await this.rollbackLocalUpdate(rollbackData);
+      throw error;
+    }
+  }
+
+  private async handleIncomingSync(message: WebSocketMessage): Promise<void> {
+    if (message.type !== 'data_sync') return;
+    
+    const operation = message.data as SyncOperation;
+    
+    // Check for conflicts
+    const conflict = await this.detectConflict(operation);
+    
+    if (conflict) {
+      const resolution = await this.conflictResolver.resolve(conflict);
+      await this.applyResolution(resolution);
+    } else {
+      await this.applyRemoteUpdate(operation);
+    }
+    
+    // Notify UI of changes
+    this.notifyDataChanged(operation.entityType, operation.entityId);
+  }
+
+  private async detectConflict(operation: SyncOperation): Promise<Conflict | null> {
+    const currentVersion = await this.getDataVersion(operation.entityType, operation.entityId);
+    
+    if (currentVersion > operation.version) {
+      return {
+        type: 'version_conflict',
+        entityType: operation.entityType,
+        entityId: operation.entityId,
+        localVersion: currentVersion,
+        remoteVersion: operation.version,
+        operation
+      };
+    }
+    
+    return null;
+  }
+}
+```
+
+#### Offline Backup & Restore System
+
+```typescript
+class OfflineBackupService {
+  private db: IDBDatabase;
+  private readonly BACKUP_STORES = ['orders', 'products', 'customers', 'sync_queue'];
+
+  async createBackup(): Promise<BackupData> {
+    const backup: BackupData = {
+      timestamp: Date.now(),
+      version: '1.0',
+      stores: {}
+    };
+
+    for (const storeName of this.BACKUP_STORES) {
+      const transaction = this.db.transaction([storeName], 'readonly');
+      const store = transaction.objectStore(storeName);
+      const request = store.getAll();
+      
+      backup.stores[storeName] = await new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    // Compress backup data
+    const compressed = await this.compressData(backup);
+    
+    // Store in IndexedDB
+    await this.storeBackup(compressed);
+    
+    return backup;
+  }
+
+  async restoreFromBackup(backupId: string): Promise<void> {
+    const compressedBackup = await this.getStoredBackup(backupId);
+    const backup = await this.decompressData(compressedBackup);
+
+    // Validate backup integrity
+    if (!this.validateBackup(backup)) {
+      throw new Error('Invalid backup data');
+    }
+
+    // Clear current data
+    await this.clearAllStores();
+
+    // Restore data
+    for (const [storeName, data] of Object.entries(backup.stores)) {
+      await this.restoreStore(storeName, data);
+    }
+
+    // Trigger full sync after restore
+    await this.triggerFullSync();
+  }
+
+  private async compressData(data: any): Promise<string> {
+    // Using LZ-string or similar compression
+    return LZString.compress(JSON.stringify(data));
+  }
+}
+```
+
+#### Terminal Monitor Dashboard
+
+```typescript
+interface TerminalStatus {
+  id: string;
+  type: 'pos' | 'kds' | 'waiter' | 'monitor';
+  status: 'online' | 'offline' | 'error';
+  lastPing: Date;
+  location?: string;
+  version?: string;
+  performance?: {
+    responseTime: number;
+    errorRate: number;
+    memoryUsage: number;
+  };
+}
+
+const TerminalMonitor: React.FC = () => {
+  const [terminals, setTerminals] = useState<TerminalStatus[]>([]);
+  const [syncActivity, setSyncActivity] = useState<SyncActivity[]>([]);
+  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
+
+  const { sendMessage, lastMessage, connectionStatus } = useWebSocket({
+    terminalId: 'monitor-dashboard',
+    terminalType: 'monitor',
+    onMessage: handleMonitorMessage
+  });
+
+  function handleMonitorMessage(message: WebSocketMessage) {
+    switch (message.type) {
+      case 'terminal_status_update':
+        setTerminals(message.data.terminals);
+        break;
+      
+      case 'sync_activity':
+        setSyncActivity(prev => [...prev.slice(-50), message.data]);
+        break;
+      
+      case 'system_health':
+        setSystemHealth(message.data);
+        break;
+    }
+  }
+
+  return (
+    <div className="terminal-monitor">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* System Overview */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">System Overview</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span>Total Terminals:</span>
+              <span className="font-semibold">{terminals.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Online:</span>
+              <span className="font-semibold text-green-600">
+                {terminals.filter(t => t.status === 'online').length}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Offline:</span>
+              <span className="font-semibold text-red-600">
+                {terminals.filter(t => t.status === 'offline').length}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Real-time Activity */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Real-time Activity</h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {syncActivity.slice(-10).map((activity, index) => (
+              <div key={index} className="text-sm border-l-2 border-blue-500 pl-2">
+                <div className="flex justify-between">
+                  <span>{activity.type}</span>
+                  <span className="text-xs text-gray-500">
+                    {format(activity.timestamp, 'HH:mm:ss')}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-600">
+                  {activity.source} → {activity.targets.join(', ')}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Terminal List */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Connected Terminals</h3>
+          <div className="space-y-2">
+            {terminals.map(terminal => (
+              <div key={terminal.id} className="flex items-center justify-between p-2 border rounded">
+                <div>
+                  <div className="font-medium">{terminal.id}</div>
+                  <div className="text-xs text-gray-600">{terminal.type}</div>
+                </div>
+                <div className={`px-2 py-1 rounded text-xs ${
+                  terminal.status === 'online' ? 'bg-green-100 text-green-800' :
+                  terminal.status === 'offline' ? 'bg-red-100 text-red-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {terminal.status}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+```
 
 ## 4. MELHORES PRÁTICAS
 
@@ -1627,16 +2160,16 @@ def calculate_tax(
 
 ### Top 10 Recomendações Prioritárias
 
-1. **Melhorar cobertura de testes do POS** (40% → 80%)
-2. **Criar common-v2 com componentes maduros do POS**
-3. **Documentar componentes do POS com Storybook**
-4. **Migrar KDS usando common-v2 + componentes próprios**
-5. **Implementar PWA features no POS**
-6. **Adicionar virtual scrolling no POS**
-7. **Eliminar Material UI de KDS/Kiosk/Waiter**
-8. **Implementar CI/CD pipeline completo**
-9. **Adicionar monitoring (Grafana + Prometheus)**
-10. **Criar guia de migração para common-v2**
+1. ✅ **Implementar sistema de sincronização multi-terminal em tempo real**
+2. ✅ **Criar RequestCache service com gerenciamento inteligente de memória**
+3. ✅ **Implementar WebSocket com auto-reconexão e fila de mensagens**
+4. ✅ **Adicionar sistema de backup/restore offline com IndexedDB**
+5. ✅ **Implementar Terminal Monitor dashboard para monitoramento**
+6. **Melhorar cobertura de testes do POS** (40% → 80%)
+7. **Criar common-v2 com componentes maduros do POS**
+8. **Documentar componentes do POS com Storybook**
+9. **Implementar CI/CD pipeline completo**
+10. **Adicionar monitoring (Grafana + Prometheus)**
 
 ### Tecnologias a MANTER (já provadas)
 

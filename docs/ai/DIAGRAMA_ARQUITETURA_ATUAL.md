@@ -498,44 +498,170 @@ graph TB
     DRIVER --> |Pulse| DRAWER
 ```
 
-## 10. FLUXO DE SINCRONIZAÇÃO OFFLINE
+## 10. FLUXO DE SINCRONIZAÇÃO MULTI-TERMINAL EM TEMPO REAL (IMPLEMENTADO)
 
 ```mermaid
 graph TB
-    subgraph "Online Mode"
-        ON_APP[Application]
-        ON_API[API Server]
-        ON_DB[(Cloud Database)]
+    subgraph "Terminal POS 1"
+        POS1[POS App]
+        CACHE1[RequestCache]
+        SYNC1[RealtimeSyncService]
+        WS1[WebSocket Client]
     end
     
-    subgraph "Offline Mode"
-        OFF_APP[Application]
-        OFF_SW[Service Worker]
-        OFF_IDB[(IndexedDB)]
-        OFF_QUEUE[Sync Queue]
+    subgraph "Terminal KDS 1"
+        KDS1[KDS App]
+        CACHE2[RequestCache]
+        SYNC2[RealtimeSyncService]
+        WS2[WebSocket Client]
     end
     
-    subgraph "Sync Process"
-        DETECT[Connection Monitor]
-        SYNC[Sync Engine]
-        CONFLICT[Conflict Resolution]
-        MERGE[Data Merger]
+    subgraph "Terminal Monitor"
+        MON1[Monitor Dashboard]
+        SYNC3[RealtimeSyncService]
+        WS3[WebSocket Client]
     end
     
-    ON_APP --> |Normal Flow| ON_API
-    ON_API --> ON_DB
+    subgraph "Backend Server"
+        WSMANAGER[WebSocket Manager]
+        CONFLICTRES[Conflict Resolver]
+        AUDITLOG[Audit Logger]
+        LOCKMANAGER[Lock Manager]
+    end
     
-    OFF_APP --> |Offline Detection| OFF_SW
-    OFF_SW --> OFF_IDB
-    OFF_SW --> OFF_QUEUE
+    subgraph "Data Layer"
+        POSTGRES[(PostgreSQL)]
+        REDIS[(Redis Cache)]
+        INDEXEDDB1[(IndexedDB POS)]
+        INDEXEDDB2[(IndexedDB KDS)]
+    end
     
-    DETECT --> |Online| SYNC
-    OFF_QUEUE --> SYNC
-    SYNC --> CONFLICT
-    CONFLICT --> MERGE
-    MERGE --> ON_API
-    ON_API --> |Update| ON_DB
-    ON_DB --> |Sync Back| OFF_IDB
+    %% WebSocket Connections
+    WS1 --> WSMANAGER
+    WS2 --> WSMANAGER
+    WS3 --> WSMANAGER
+    
+    %% Data Sync Flow
+    POS1 --> |User Action| SYNC1
+    SYNC1 --> |Check Cache| CACHE1
+    SYNC1 --> |Acquire Lock| LOCKMANAGER
+    SYNC1 --> |Send Sync| WS1
+    
+    WSMANAGER --> |Broadcast| WS2
+    WSMANAGER --> |Broadcast| WS3
+    
+    WS2 --> |Receive Sync| SYNC2
+    SYNC2 --> |Detect Conflict| CONFLICTRES
+    CONFLICTRES --> |Resolve| SYNC2
+    SYNC2 --> |Update Cache| CACHE2
+    SYNC2 --> |Update UI| KDS1
+    
+    %% Audit & Storage
+    WSMANAGER --> AUDITLOG
+    AUDITLOG --> POSTGRES
+    SYNC1 --> INDEXEDDB1
+    SYNC2 --> INDEXEDDB2
+    CACHE1 --> REDIS
+    CACHE2 --> REDIS
+```
+
+### 10.1 Fluxo Detalhado de Sincronização
+
+```mermaid
+sequenceDiagram
+    participant POS as Terminal POS
+    participant Cache as RequestCache
+    participant Sync as RealtimeSyncService
+    participant WS as WebSocket
+    participant Server as Backend
+    participant KDS as Terminal KDS
+    participant Monitor as Dashboard
+    
+    Note over POS: User modifica pedido
+    POS->>Sync: syncData(order_update)
+    
+    Note over Sync: Verifica necessidade de lock
+    Sync->>Server: acquire_lock(order_123)
+    Server-->>Sync: lock_acquired: true
+    
+    Note over Sync: Atualização otimista local
+    Sync->>Cache: set(order_123, updated_data)
+    Sync->>POS: update_ui(optimistic)
+    
+    Note over Sync: Envia para outros terminais
+    Sync->>WS: send({type: 'data_sync', operation})
+    WS->>Server: WebSocket Message
+    
+    Note over Server: Processa e distribui
+    Server->>Server: validate_operation()
+    Server->>Server: log_audit(operation)
+    Server->>KDS: broadcast_sync(operation)
+    Server->>Monitor: broadcast_sync(operation)
+    
+    Note over KDS: Recebe sincronização
+    KDS->>KDS: detect_conflict()
+    KDS->>KDS: apply_remote_update()
+    KDS->>KDS: update_ui()
+    
+    Note over Monitor: Atualiza dashboard
+    Monitor->>Monitor: update_activity_feed()
+    Monitor->>Monitor: update_terminal_status()
+    
+    Note over Server: Confirma sincronização
+    Server->>Sync: sync_confirmed(operation_id)
+    Sync->>Server: release_lock(order_123)
+    
+    Note over Sync: Finaliza operação
+    Sync->>POS: sync_completed(order_123)
+```
+
+### 10.2 Sistema de Resolução de Conflitos
+
+```mermaid
+graph TB
+    subgraph "Detecção de Conflito"
+        CHANGE1[Terminal 1: Update]
+        CHANGE2[Terminal 2: Update]
+        DETECTOR[Conflict Detector]
+    end
+    
+    subgraph "Tipos de Conflito"
+        VERSION[Version Conflict]
+        DATA[Data Conflict]
+        LOCK[Lock Conflict]
+    end
+    
+    subgraph "Estratégias de Resolução"
+        LWW[Last Write Wins]
+        MERGE[Merge Changes]
+        MANUAL[Manual Resolution]
+        PRIORITY[Priority Based]
+    end
+    
+    subgraph "Resultado"
+        RESOLVED[Conflict Resolved]
+        AUDIT[Audit Log]
+        NOTIFY[Notify Terminals]
+    end
+    
+    CHANGE1 --> DETECTOR
+    CHANGE2 --> DETECTOR
+    
+    DETECTOR --> VERSION
+    DETECTOR --> DATA
+    DETECTOR --> LOCK
+    
+    VERSION --> LWW
+    DATA --> MERGE
+    LOCK --> PRIORITY
+    
+    LWW --> RESOLVED
+    MERGE --> RESOLVED
+    MANUAL --> RESOLVED
+    PRIORITY --> RESOLVED
+    
+    RESOLVED --> AUDIT
+    RESOLVED --> NOTIFY
 ```
 
 ## 11. MONITORAMENTO E OBSERVABILIDADE
@@ -665,13 +791,123 @@ graph LR
 - **Serial/USB**: Hardware
 - **AMQP**: Message queue
 
+## 13. TERMINAL MONITOR DASHBOARD ARCHITECTURE
+
+```mermaid
+graph TB
+    subgraph "Monitor Dashboard"
+        UI[Dashboard UI]
+        STATS[Statistics Engine]
+        ALERTS[Alert System]
+        CHARTS[Real-time Charts]
+    end
+    
+    subgraph "Data Sources"
+        WSCONN[WebSocket Connections]
+        METRICS[Performance Metrics]
+        LOGS[Audit Logs]
+        CACHE[Cache Statistics]
+    end
+    
+    subgraph "Terminal Status"
+        ONLINE[Online Terminals]
+        OFFLINE[Offline Terminals]
+        ERROR[Error States]
+        PERFORMANCE[Performance Data]
+    end
+    
+    subgraph "Real-time Feeds"
+        SYNCFEED[Sync Activity]
+        ERRORFEED[Error Feed]
+        PERFEED[Performance Feed]
+        ALERTFEED[Alert Feed]
+    end
+    
+    WSCONN --> UI
+    METRICS --> STATS
+    LOGS --> STATS
+    CACHE --> STATS
+    
+    STATS --> ONLINE
+    STATS --> OFFLINE
+    STATS --> ERROR
+    STATS --> PERFORMANCE
+    
+    UI --> SYNCFEED
+    UI --> ERRORFEED
+    UI --> PERFEED
+    UI --> ALERTFEED
+    
+    ALERTS --> ALERTFEED
+    CHARTS --> PERFEED
+```
+
+## 14. BACKUP & RESTORE SYSTEM ARCHITECTURE
+
+```mermaid
+graph TB
+    subgraph "Backup Sources"
+        INDEXEDDB[(IndexedDB)]
+        CACHE[RequestCache]
+        SYNCQUEUE[Sync Queue]
+        LOCALDATA[Local Data]
+    end
+    
+    subgraph "Backup Process"
+        COLLECTOR[Data Collector]
+        VALIDATOR[Data Validator]
+        COMPRESSOR[Data Compressor]
+        ENCRYPTOR[Data Encryptor]
+    end
+    
+    subgraph "Storage"
+        LOCALBACKUP[Local Backup Store]
+        METADATA[Backup Metadata]
+        VERSIONS[Version Control]
+    end
+    
+    subgraph "Restore Process"
+        SELECTOR[Backup Selector]
+        DECOMPRESSOR[Data Decompressor]
+        VALIDATOR2[Data Validator]
+        APPLIER[Data Applier]
+    end
+    
+    INDEXEDDB --> COLLECTOR
+    CACHE --> COLLECTOR
+    SYNCQUEUE --> COLLECTOR
+    LOCALDATA --> COLLECTOR
+    
+    COLLECTOR --> VALIDATOR
+    VALIDATOR --> COMPRESSOR
+    COMPRESSOR --> ENCRYPTOR
+    ENCRYPTOR --> LOCALBACKUP
+    
+    LOCALBACKUP --> METADATA
+    METADATA --> VERSIONS
+    
+    LOCALBACKUP --> SELECTOR
+    SELECTOR --> DECOMPRESSOR
+    DECOMPRESSOR --> VALIDATOR2
+    VALIDATOR2 --> APPLIER
+    
+    APPLIER --> INDEXEDDB
+    APPLIER --> CACHE
+```
+
 ## NOTAS DE ARQUITETURA
 
 1. **Modular Monolith**: Sistema organizado em módulos mas deployado como unidade única
 2. **Event-Driven**: Comunicação assíncrona entre módulos via Event Bus
 3. **Multi-Tenant Ready**: Preparado para múltiplos restaurantes/franquias
-4. **Offline-First**: Capacidade parcial offline com sincronização
-5. **Hardware Agnostic**: Suporte a múltiplas marcas de periféricos
-6. **Cloud Ready**: Preparado para deploy em nuvem mas funciona on-premise
+4. **Real-time Sync**: Sincronização multi-terminal em tempo real com WebSocket
+5. **Offline-First**: Capacidade total offline com backup/restore automático
+6. **Hardware Agnostic**: Suporte a múltiplas marcas de periféricos
+7. **Cloud Ready**: Preparado para deploy em nuvem mas funciona on-premise
+8. **Conflict Resolution**: Sistema avançado de resolução automática de conflitos
+9. **Optimistic Locking**: Previne conflitos de dados entre terminais
+10. **Intelligent Cache**: Gerenciamento automático de memória com cleanup LRU
+11. **Audit Complete**: Log completo de todas operações para compliance
+12. **Terminal Monitoring**: Dashboard em tempo real para observabilidade
 
-Este diagrama representa a arquitetura atual do sistema Chefia POS, mostrando todos os componentes principais, suas interações e fluxos de dados.
+Este diagrama representa a arquitetura atual do sistema Chefia POS com capacidades avançadas de sincronização multi-terminal, mostrando todos os componentes principais, suas interações, fluxos de dados em tempo real, sistemas de backup/restore e monitoramento completo.
