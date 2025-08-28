@@ -33,19 +33,19 @@ SERVICES = {
         "host": os.getenv("DB_HOST", "localhost"),
         "port": int(os.getenv("DB_PORT", "5432")),
         "user": os.getenv("DB_USER", "posmodern"),
-        "password": os.getenv("DB_PASSWORD", "posmodern123"),
+        "password": os.getenv("DB_PASSWORD"),  # Must be set via environment
         "database": os.getenv("DB_NAME", "posmodern")
     },
     "Redis": {
         "host": os.getenv("REDIS_HOST", "localhost"),
         "port": int(os.getenv("REDIS_PORT", "6379")),
-        "password": os.getenv("REDIS_PASSWORD", "posmodern123")
+        "password": os.getenv("REDIS_PASSWORD")  # Must be set via environment
     },
     "RabbitMQ": {
         "host": os.getenv("RABBITMQ_HOST", "localhost"),
         "port": int(os.getenv("RABBITMQ_PORT", "5672")),
         "user": os.getenv("RABBITMQ_USER", "posmodern"),
-        "password": os.getenv("RABBITMQ_PASSWORD", "posmodern123")
+        "password": os.getenv("RABBITMQ_PASSWORD")  # Must be set via environment
     },
     "Backend API": {
         "url": f"http://localhost:{os.getenv('BACKEND_PORT', '8001')}/health"

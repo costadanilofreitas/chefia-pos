@@ -393,8 +393,8 @@ class CommandCardService:
                 session_id=UUID(session_id),
                 card_id=session.card_id,
                 product_id=UUID(product_id),
-                product_name="",  # Would be fetched from product service
-                product_code="",  # Would be fetched from product service
+                product_name=f"Product {product_id}",  # TODO: Integrate with product service when available
+                product_code=f"PRD{product_id[:8]}",  # TODO: Integrate with product service when available
                 quantity=quantity,
                 unit_price=unit_price,
                 total_price=quantity * unit_price,
@@ -624,8 +624,8 @@ class CommandCardService:
 
             else:
                 # Transfer specific items
-                # Would need to create new session and move items
-                pass
+                # TODO: Implement specific item transfer logic
+                raise NotImplementedError("Transfer of specific items is not yet implemented")
 
             # Update transfer
             transfer.status = "COMPLETED"
