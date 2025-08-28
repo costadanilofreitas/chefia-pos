@@ -10,6 +10,7 @@ export enum UserRole {
   CASHIER = "cashier",
   WAITER = "waiter",
   COOK = "cook",
+  OPERATOR = "operator",
 }
 
 export enum Permission {

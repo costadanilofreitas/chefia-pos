@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useCashier } from '../hooks/useCashier';
 import '../index.css';
 import { formatCurrency } from '../utils/formatters';
+import { showError, showSuccess } from '../utils/notifications';
 
 interface CashMovement {
   id: string;
@@ -67,17 +68,17 @@ export default function CashWithdrawalPage() {
   // Handle withdrawal
   const handleWithdrawal = useCallback(async () => {
     if (!amount || parseFloat(amount) <= 0) {
-      alert('Digite um valor válido');
+      showError('Digite um valor válido');
       return;
     }
     
     if (!reason) {
-      alert('Selecione ou digite um motivo');
+      showError('Selecione ou digite um motivo');
       return;
     }
     
     if (!currentCashier) {
-      alert('Nenhum caixa aberto');
+      showError('Nenhum caixa aberto');
       return;
     }
     
@@ -99,10 +100,10 @@ export default function CashWithdrawalPage() {
       // Reload movements
       await loadMovements();
       
-      alert('Sangria realizada com sucesso!');
+      showSuccess('Sangria realizada com sucesso!');
     } catch {
       // Error registering withdrawal silenciado
-      alert('Erro ao realizar sangria');
+      showError('Erro ao realizar sangria');
     } finally {
       setIsLoading(false);
     }

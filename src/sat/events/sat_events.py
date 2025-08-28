@@ -1,6 +1,4 @@
 import logging
-from datetime import datetime
-from typing import Any, Dict
 
 from src.core.events.event_bus import Event, EventType, get_event_bus
 from src.sat.services.sat_service import get_sat_service

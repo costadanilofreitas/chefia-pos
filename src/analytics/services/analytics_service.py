@@ -24,7 +24,7 @@ from src.analytics.models.dashboard_models import (
     FilterOperator,
     ScheduledReport,
 )
-from src.core.events.event_bus import EventBus, Event, EventType
+from src.core.events.event_bus import Event, EventBus, EventType
 
 
 class AnalyticsService:
@@ -128,8 +128,8 @@ class DashboardService:
                 category=dashboard_data.get("category"),
                 tags=dashboard_data.get("tags"),
                 layout=dashboard_data.get("layout", DashboardLayout(
-                    id=str(uuid.uuid4()), 
-                    name="Layout Padrão", 
+                    id=str(uuid.uuid4()),
+                    name="Layout Padrão",
                     description="",
                     grid_columns=12,
                     grid_rows=10,
@@ -307,8 +307,8 @@ class DashboardService:
                     category="sales",
                     tags=["vendas", "desempenho"],
                     layout=DashboardLayout(
-                        id=str(uuid.uuid4()), 
-                        name="Layout Padrão", 
+                        id=str(uuid.uuid4()),
+                        name="Layout Padrão",
                         description="",
                         grid_columns=12,
                         grid_rows=10,

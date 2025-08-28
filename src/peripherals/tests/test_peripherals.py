@@ -13,7 +13,6 @@ from src.peripherals.drivers.barcode_reader import SimulatedBarcodeReader
 from src.peripherals.drivers.cash_drawer import SimulatedCashDrawer
 from src.peripherals.drivers.payment_terminal import SimulatedPaymentTerminal
 from src.peripherals.drivers.pix_reader import SimulatedPixReader
-from src.peripherals.drivers.simulated_printer import SimulatedPrinter
 from src.peripherals.models.peripheral_models import PeripheralConfig, PeripheralStatus
 from src.peripherals.services.peripheral_manager import (
     PeripheralFactory,

@@ -4,17 +4,22 @@ Endpoints da API para gerenciamento de filas
 """
 
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, Depends, status
-from uuid import UUID
 
-from src.queue.models.queue_models import (
-    QueueEntry, QueueEntryCreate, QueueEntryUpdate,
-    QueueStatus, QueueNotification, QueuePosition,
-    WaitTimeEstimate, QueueStatistics, TableSuggestion
-)
-from src.queue.services.queue_service import queue_service
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from src.auth.dependencies import get_current_user
 from src.core.models.user import User
+from src.queue.models.queue_models import (
+    QueueEntry,
+    QueueEntryCreate,
+    QueueEntryUpdate,
+    QueueNotification,
+    QueuePosition,
+    QueueStatistics,
+    QueueStatus,
+    TableSuggestion,
+    WaitTimeEstimate,
+)
+from src.queue.services.queue_service import queue_service
 
 router = APIRouter(prefix="/api/v1/tables/queue", tags=["Queue Management"])
 

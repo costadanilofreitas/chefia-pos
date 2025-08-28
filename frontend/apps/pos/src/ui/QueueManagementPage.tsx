@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { confirmAction } from '../utils/notifications';
 import { 
   FiUsers, FiClock, FiPhone, FiBell, FiCheck, 
   FiX, FiMessageSquare, FiTrendingUp, FiUserPlus,
@@ -17,7 +18,7 @@ interface QueueEntry {
   status: 'WAITING' | 'NOTIFIED' | 'SEATED' | 'CANCELLED' | 'NO_SHOW';
   position_in_queue: number;
   check_in_time: string;
-  estimated_wait_minutes: number;
+  estimated_wait_minutes?: number;
   notification_method: 'SMS' | 'WHATSAPP' | 'ANNOUNCEMENT' | 'NONE';
   table_preferences?: string[];
   notes?: string;
@@ -127,7 +128,7 @@ const QueueManagementPage: React.FC = () => {
   };
 
   const handleCancel = async (entry: QueueEntry) => {
-    if (confirm(`Cancelar entrada de ${entry.customer_name}?`)) {
+    if (await confirmAction(`Cancelar entrada de ${entry.customer_name}?`)) {
       try {
         await cancelEntry(entry.id, 'Cancelado pelo staff');
         info('Entrada cancelada');

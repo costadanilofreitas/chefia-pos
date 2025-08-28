@@ -6,17 +6,16 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from src.core.events.event_bus import Event, EventType, get_event_bus
-from ..events.kiosk_events import (
-    create_kiosk_event,
-    KIOSK_CONFIG_CREATED,
-    KIOSK_CONFIG_UPDATED,
-    KIOSK_CONFIG_DELETED,
-    KIOSK_SESSION_STARTED,
-    KIOSK_SESSION_ENDED,
-    KIOSK_ORDER_CREATED,
-)
+from src.core.events.event_bus import get_event_bus
 
+from ..events.kiosk_events import (
+    KIOSK_CONFIG_CREATED,
+    KIOSK_CONFIG_DELETED,
+    KIOSK_CONFIG_UPDATED,
+    KIOSK_SESSION_ENDED,
+    KIOSK_SESSION_STARTED,
+    create_kiosk_event,
+)
 from ..models.kiosk_models import KioskAnalytics, KioskConfig, KioskOrder, KioskSession
 
 # Simulação de banco de dados com arquivo JSON
@@ -313,19 +312,19 @@ class KioskService:
             raise ValueError(f"Session with ID {session_id} not found")
 
         # Convert kiosk order to regular order format
-        from src.order.services.order_service import order_service
         from src.core.models.core_models import (
             OrderCreate,
             OrderItemCreate,
             OrderType,
         )
+        from src.order.services.order_service import order_service
 
         # Create order items
         order_items = []
         for item in order_data.items:
             customizations = [
                 {
-                    "name": c["name"], 
+                    "name": c["name"],
                     "price_adjustment": c["price_adjustment"]
                 }
                 for c in item.customizations

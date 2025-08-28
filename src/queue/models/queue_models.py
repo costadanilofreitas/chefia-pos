@@ -3,12 +3,12 @@ Queue Management Models
 Modelos para o sistema de gerenciamento de filas de mesas
 """
 
-from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from typing import Any, Dict, List, Optional
 from uuid import UUID
+
+from pydantic import BaseModel, Field, validator
 
 
 class PartySize(Enum):
@@ -52,7 +52,7 @@ class QueueEntryBase(BaseModel):
     table_preferences: Optional[List[str]] = Field(default_factory=list)
     notification_method: NotificationMethod = NotificationMethod.SMS
     notes: Optional[str] = Field(None, max_length=500)
-    
+
     @validator('customer_phone')
     def validate_phone(cls, v):
         # Remove caracteres não numéricos
@@ -60,7 +60,7 @@ class QueueEntryBase(BaseModel):
         if len(cleaned) < 10 or len(cleaned) > 15:
             raise ValueError('Phone number must be between 10-15 digits')
         return cleaned
-    
+
     @validator('party_size')
     def validate_party_size(cls, v):
         if v <= 0:
@@ -93,23 +93,23 @@ class QueueEntry(QueueEntryBase):
     status: QueueStatus = QueueStatus.WAITING
     position_in_queue: int
     party_size_category: PartySize
-    
+
     # Timing
     check_in_time: datetime
     estimated_wait_minutes: Optional[int] = None
     notification_time: Optional[datetime] = None
     seated_time: Optional[datetime] = None
-    
+
     # Assignment
     assigned_table_id: Optional[UUID] = None
     assigned_by: Optional[UUID] = None
-    
+
     # Metadata
     store_id: str
     created_at: datetime
     updated_at: datetime
     version: int = 1
-    
+
     @property
     def actual_wait_minutes(self) -> Optional[int]:
         """Calcula o tempo real de espera"""
@@ -117,12 +117,12 @@ class QueueEntry(QueueEntryBase):
             delta = self.seated_time - self.check_in_time
             return int(delta.total_seconds() / 60)
         return None
-    
+
     @property
     def is_waiting(self) -> bool:
         """Verifica se ainda está esperando"""
         return self.status == QueueStatus.WAITING
-    
+
     def get_party_size_category(self) -> PartySize:
         """Determina a categoria do tamanho do grupo"""
         if self.party_size <= 2:
@@ -133,7 +133,7 @@ class QueueEntry(QueueEntryBase):
             return PartySize.LARGE
         else:
             return PartySize.XLARGE
-    
+
     class Config:
         use_enum_values = True
         json_encoders = {
@@ -154,7 +154,7 @@ class QueueNotification(BaseModel):
     error_message: Optional[str] = None
     retry_count: int = 0
     created_at: datetime
-    
+
     class Config:
         use_enum_values = True
         json_encoders = {
@@ -175,14 +175,14 @@ class QueueAnalytics(BaseModel):
     day_of_week: int
     hour_of_day: int
     created_at: datetime
-    
+
     @property
     def prediction_error(self) -> Optional[int]:
         """Calcula o erro de previsão em minutos"""
         if self.actual_wait_minutes and self.estimated_wait_minutes:
             return abs(self.actual_wait_minutes - self.estimated_wait_minutes)
         return None
-    
+
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat(),
@@ -196,7 +196,7 @@ class WaitTimeEstimate(BaseModel):
     estimated_minutes: int
     confidence_level: float  # 0.0 a 1.0
     factors: Dict[str, Any]  # Fatores considerados na estimativa
-    
+
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat()
@@ -212,7 +212,7 @@ class QueueStatistics(BaseModel):
     estimated_total_clear_time: int
     no_show_rate: float
     accuracy_last_24h: Optional[float]
-    
+
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat()
@@ -228,7 +228,7 @@ class TableSuggestion(BaseModel):
     estimated_availability: Optional[datetime]
     requires_combination: bool = False
     combined_tables: Optional[List[UUID]] = None
-    
+
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat(),
@@ -243,7 +243,7 @@ class QueuePosition(BaseModel):
     estimated_wait_minutes: int
     status: QueueStatus
     last_updated: datetime
-    
+
     class Config:
         use_enum_values = True
         json_encoders = {

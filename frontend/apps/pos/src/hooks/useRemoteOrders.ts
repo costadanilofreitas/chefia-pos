@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "../components/Toast";
 import logger, { LogSource } from "../services/LocalLoggerService";
+import { showError, confirmAction } from '../utils/notifications';
 import {
   PlatformIntegration,
   RemoteOrder,
@@ -82,7 +83,7 @@ export const useRemoteOrders = () => {
       const order = orders.find((o) => o.id === orderId);
       if (!order) return;
 
-      if (!window.confirm("Tem certeza que deseja rejeitar este pedido?")) {
+      if (!(await confirmAction("Tem certeza que deseja rejeitar este pedido?"))) {
         return;
       }
 

@@ -5,6 +5,7 @@ import Toast, { useToast } from '../components/Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useOrder } from '../hooks/useOrder';
 import { useTable } from '../hooks/useTable';
+import { confirmAction } from '../utils/notifications';
 import '../index.css';
 import { formatCurrency } from '../utils/formatters';
 
@@ -230,7 +231,7 @@ export default function TablePage() {
   };
   
   const handleDeleteTable = async (tableId: string) => {
-    if (!confirm('Tem certeza que deseja remover esta mesa?')) return;
+    if (!confirmAction('Tem certeza que deseja remover esta mesa?')) return;
     try {
       await deleteTable(tableId);
       success('Mesa removida com sucesso!');

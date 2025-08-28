@@ -167,7 +167,7 @@ class UserRepository:
         async with self.db_manager.get_session() as session:
             # Generate a unique operator code if not provided
             operator_code = credential_data.operator_id[:6]  # Use first 6 chars as code
-            
+
             db_credential = NumericCredential(
                 credential_id=uuid4(),
                 user_id=UUID(credential_data.operator_id),  # operator_id is the user_id
@@ -224,17 +224,17 @@ class UserRepository:
             await session.commit()
 
     # Helper methods
-    
+
     def _extract_permissions(self, permissions: Any) -> List[Any]:
         """Extract permissions from database field."""
         from ..models.user_models import Permission
-        
+
         if not permissions:
             return []
-        
+
         if not isinstance(permissions, list):
             return []
-            
+
         result = []
         for p in permissions:
             if isinstance(p, str):
@@ -245,7 +245,7 @@ class UserRepository:
 
     def _db_user_to_model(self, db_user: User) -> UserModel:
         """Convert database user to Pydantic model."""
-        from ..models.user_models import Permission, UserRole
+        from ..models.user_models import UserRole
 
         return UserModel(
             id=str(db_user.user_id),
@@ -261,7 +261,7 @@ class UserRepository:
 
     def _db_user_to_user_in_db(self, db_user: User) -> UserInDB:
         """Convert database user to UserInDB model."""
-        from ..models.user_models import Permission, UserRole
+        from ..models.user_models import UserRole
 
         return UserInDB(
             id=str(db_user.user_id),

@@ -106,7 +106,7 @@ class LoyaltyRepository:
             if hasattr(db_coupon, field):
                 setattr(db_coupon, field, value)
 
-        setattr(db_coupon, 'updated_at', datetime.utcnow())
+        db_coupon.updated_at = datetime.utcnow()
         self.db.commit()
         self.db.refresh(db_coupon)
         return db_coupon
@@ -129,8 +129,8 @@ class LoyaltyRepository:
         if not db_coupon:
             return None
 
-        setattr(db_coupon, 'uses_count', int(db_coupon.uses_count) + 1)
-        setattr(db_coupon, 'updated_at', datetime.utcnow())
+        db_coupon.uses_count = int(db_coupon.uses_count) + 1
+        db_coupon.updated_at = datetime.utcnow()
         self.db.commit()
         self.db.refresh(db_coupon)
         return db_coupon
@@ -241,7 +241,7 @@ class LoyaltyRepository:
             if hasattr(db_program, field):
                 setattr(db_program, field, value)
 
-        setattr(db_program, 'updated_at', datetime.utcnow())
+        db_program.updated_at = datetime.utcnow()
         self.db.commit()
         self.db.refresh(db_program)
         return db_program
@@ -324,7 +324,7 @@ class LoyaltyRepository:
             if hasattr(db_campaign, field):
                 setattr(db_campaign, field, value)
 
-        setattr(db_campaign, 'updated_at', datetime.utcnow())
+        db_campaign.updated_at = datetime.utcnow()
         self.db.commit()
         self.db.refresh(db_campaign)
         return db_campaign
@@ -427,7 +427,7 @@ class LoyaltyRepository:
             if hasattr(db_loyalty, field):
                 setattr(db_loyalty, field, value)
 
-        setattr(db_loyalty, 'updated_at', datetime.utcnow())
+        db_loyalty.updated_at = datetime.utcnow()
         self.db.commit()
         self.db.refresh(db_loyalty)
         return db_loyalty
@@ -540,7 +540,7 @@ class LoyaltyRepository:
         # Update reward total redeemed count
         reward = self.get_reward_by_id(reward_id)
         if reward:
-            setattr(reward, 'total_redeemed', int(reward.total_redeemed) + 1)
+            reward.total_redeemed = int(reward.total_redeemed) + 1
 
         self.db.commit()
         self.db.refresh(db_redemption)

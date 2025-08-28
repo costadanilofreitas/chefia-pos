@@ -52,18 +52,18 @@ async def create_log_batch(
 ):
     """Create multiple log entries at once for better performance."""
     _check_permissions(current_user, ["logs.write"])
-    
+
     # Process logs in batch
     processed = 0
     errors = []
-    
+
     for entry in batch.logs:
         try:
             # Add user information if not provided
             if not entry.user_id and current_user:
                 entry.user_id = current_user.id
                 entry.user_name = current_user.username
-            
+
             await log_service.log(entry)
             processed += 1
         except Exception as e:
@@ -71,7 +71,7 @@ async def create_log_batch(
                 "message": entry.message,
                 "error": str(e)
             })
-    
+
     return {
         "success": len(errors) == 0,
         "processed": processed,

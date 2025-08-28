@@ -6,7 +6,7 @@ from src.sat.models.sat_models import SATConfig
 
 class DimepDriver(SimulatedSATDriver):
     """Driver para SAT Dimep."""
-    
+
     def __init__(self, config: SATConfig):
         """Inicializa o driver Dimep."""
         super().__init__(config)

@@ -1502,7 +1502,7 @@ class WhatsAppChatbotService:
                 "type": "text",
                 "text": f"Desculpe, não encontramos nenhum pedido com o número {message_text}. Por favor, verifique o número e tente novamente.",
             }
-        
+
         # Default return case
         return {
             "type": "text",

@@ -1,9 +1,10 @@
 import unittest
 import uuid
+from enum import Enum
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.order.models.db_models import Order
-from enum import Enum
+
 
 class OrderStatus(Enum):
     """Status enum for orders."""

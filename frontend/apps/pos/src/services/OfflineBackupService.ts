@@ -8,6 +8,8 @@
 
 import { requestCache } from './RequestCache';
 import eventBus from '../utils/EventBus';
+import { confirmAction } from '../utils/notifications';
+import { offlineStorage } from './OfflineStorage';
 
 interface BackupMetadata {
   version: number;
@@ -72,13 +74,13 @@ class OfflineBackupService {
       const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
       
       request.onerror = () => {
-        console.error('Failed to open IndexedDB:', request.error);
+        offlineStorage.log('error', 'Failed to open IndexedDB:', request.error);
         reject(request.error);
       };
       
       request.onsuccess = () => {
         this.db = request.result;
-        console.info('IndexedDB initialized for offline storage');
+        offlineStorage.log('info', 'IndexedDB initialized for offline storage');
         resolve();
       };
       
@@ -205,12 +207,12 @@ class OfflineBackupService {
       // Salvar no IndexedDB
       await this.saveBackup(backupData);
       
-      console.info(`Backup created with ${backupData.metadata.totalEntries} entries`);
+      offlineStorage.log('info', `Backup created with ${backupData.metadata.totalEntries} entries`);
       eventBus.emit('backup:created', backupData.metadata);
       
       return backupData.metadata;
     } catch (error) {
-      console.error('Failed to create backup:', error);
+      offlineStorage.log('error', 'Failed to create backup:', error);
       throw error;
     }
   }
@@ -256,7 +258,7 @@ class OfflineBackupService {
       // Invalidar cache para forçar reload
       requestCache.clear();
       
-      console.info(`Backup restored from ${backup.metadata.timestamp}`);
+      offlineStorage.log('info', `Backup restored from ${backup.metadata.timestamp}`);
       eventBus.emit('backup:restored', backup.metadata);
       
       // Se online, tentar sincronizar
@@ -264,7 +266,7 @@ class OfflineBackupService {
         this.processSyncQueue();
       }
     } catch (error) {
-      console.error('Failed to restore backup:', error);
+      offlineStorage.log('error', 'Failed to restore backup:', error);
       throw error;
     }
   }
@@ -307,7 +309,7 @@ class OfflineBackupService {
       return;
     }
     
-    console.info(`Processing ${items.length} items in sync queue`);
+    offlineStorage.log('info', `Processing ${items.length} items in sync queue`);
     
     for (const item of items) {
       try {
@@ -317,7 +319,7 @@ class OfflineBackupService {
         // Se sucesso, remover da fila
         await this.removeFromSyncQueue(item.id);
       } catch (error) {
-        console.error(`Failed to sync ${item.entity}:`, error);
+        offlineStorage.log('error', `Failed to sync ${item.entity}:`, error);
         
         // Incrementar tentativas
         item.attempts++;
@@ -354,7 +356,7 @@ class OfflineBackupService {
    */
   private async handleOnline(): Promise<void> {
     this.isOnline = true;
-    console.info('Connection restored, processing sync queue');
+    offlineStorage.log('info', 'Connection restored, processing sync queue');
     eventBus.emit('connection:online');
     
     // Processar fila de sincronização
@@ -363,7 +365,7 @@ class OfflineBackupService {
 
   private async handleOffline(): Promise<void> {
     this.isOnline = false;
-    console.warn('Connection lost, entering offline mode');
+    offlineStorage.log('warn', 'Connection lost, entering offline mode');
     eventBus.emit('connection:offline');
     
     // Criar backup imediato
@@ -494,7 +496,7 @@ class OfflineBackupService {
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
-      console.error(`Failed to save ${key} to storage:`, error);
+      offlineStorage.log('error', `Failed to save ${key} to storage:`, error);
     }
   }
 
@@ -556,7 +558,7 @@ class OfflineBackupService {
     await this.saveBackup(backup);
     
     // Opcionalmente restaurar
-    const shouldRestore = confirm('Deseja restaurar este backup agora?');
+    const shouldRestore = confirmAction('Deseja restaurar este backup agora?');
     if (shouldRestore) {
       await this.restoreBackup(backup.metadata.timestamp);
     }

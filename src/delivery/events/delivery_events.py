@@ -105,7 +105,7 @@ async def register_delivery_event_handlers():
     order_created_handler = OrderCreatedHandler(callback=lambda e: None)
     order_status_handler = OrderStatusChangedHandler(callback=lambda e: None)
     delivery_status_handler = DeliveryOrderStatusChangedHandler(callback=lambda e: None)
-    
+
     event_bus.subscribe(EventType.ORDER_CREATED, order_created_handler.handle)
     event_bus.subscribe(EventType.ORDER_STATUS_CHANGED, order_status_handler.handle)
     event_bus.subscribe(EventType.ORDER_STATUS_CHANGED, delivery_status_handler.handle)

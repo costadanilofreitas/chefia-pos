@@ -2,7 +2,7 @@
  * Tests for OfflineBackupService
  */
 
-import { OfflineBackupService } from './OfflineBackupService';
+import offlineBackup from './OfflineBackupService';
 import { requestCache } from './RequestCache';
 import eventBus from '../utils/EventBus';
 import { setupIndexedDBMock } from '../tests/mocks/indexeddb.mock';
@@ -34,7 +34,7 @@ jest.mock('../utils/EventBus', () => ({
 }));
 
 describe('OfflineBackupService', () => {
-  let service: OfflineBackupService;
+  let service = offlineBackup;
   let dbSetup: ReturnType<typeof setupIndexedDBMock>;
   let mockLocalStorage: Record<string, string>;
   let originalNavigatorOnLine: boolean;

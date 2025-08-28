@@ -223,7 +223,12 @@ src/
 ├── kds/            # Kitchen display
 ├── waiter/         # Waiter operations
 ├── remote_orders/  # External orders (iFood, Rappi)
-└── peripherals/    # Hardware integration
+├── peripherals/    # Hardware integration
+├── tables/         # Table management & layout
+├── queue/          # Waiting queue system
+├── reservation/    # Table reservations
+├── command/        # Command cards (comandas)
+└── selfservice/    # Self-service & weight billing
 ```
 
 Cada módulo possui:
@@ -234,6 +239,46 @@ Cada módulo possui:
 - `events/` - Event definitions
 - `repositories/` - Data access
 - `tests/` - Unit tests
+
+#### 🆕 Novos Módulos de Gestão de Mesas (2024)
+
+**📋 Queue Management (`src/queue/`)**
+- Sistema de fila de espera para restaurantes
+- Cálculo inteligente de tempo estimado baseado em ocupação
+- Notificações SMS/WhatsApp para clientes
+- Categorização por tamanho de grupo (1-2, 3-4, 5-6, 7+)
+- Detecção automática de no-show
+- Integração com sistema de mesas
+
+**📅 Reservation System (`src/reservation/`)**  
+- Reservas com antecedência configurável
+- Alocação automática de mesas baseada em preferências
+- Suporte a reservas recorrentes (aniversários, eventos)
+- Gestão de depósitos e garantias
+- Sistema de confirmação e lembretes
+- Detecção e tracking de no-shows
+- Integração com fila para walk-ins
+
+**🎫 Command Cards (`src/command/`)**
+- Comandas físicas e digitais (QR, NFC, RFID)  
+- Gestão de sessões com controle de crédito
+- Transferência entre comandas/mesas
+- Configuração de responsabilidade de pagamento
+- Rastreamento completo de itens consumidos
+- Estatísticas de uso e faturamento
+
+**⚖️ Self-Service System (`src/selfservice/`)**
+- Sistema de cobrança por peso para buffets
+- Integração com balanças seriais/USB/rede
+- Gestão de taras e calibrações
+- Itens adicionais (bebidas, sobremesas)
+- Controle de containers e recipientes
+
+**🪑 Table Management (`src/tables/`)**
+- Layout dinâmico de mesas configurável
+- Estados em tempo real (disponível, ocupada, reservada, limpeza)
+- Histórico de ocupação e análises
+- Integração com todos os sistemas (queue, reservas, comandas)
 
 ### 2.3 API Design
 

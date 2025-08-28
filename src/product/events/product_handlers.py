@@ -91,7 +91,7 @@ class ProductEventHandlers:
 
             # Atualizar status com base no estoque
             from ..models.product import ProductStatus, ProductUpdate
-            
+
             if quantity <= 0 and product.status != "out_of_stock":
                 update_data = ProductUpdate(status=ProductStatus.OUT_OF_STOCK)
                 await product_service.update_product(

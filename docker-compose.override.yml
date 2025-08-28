@@ -1,0 +1,106 @@
+# Docker Compose Override for Development
+# This file is automatically loaded by docker-compose in development
+# It provides development-specific configurations
+
+services:
+  # Backend with hot reload for development
+  backend:
+    build:
+      context: ./src
+      dockerfile: ../Dockerfile
+      target: development  # Use development stage if multi-stage build
+    volumes:
+      - ./src:/app  # Mount source code for hot reload
+      - ./logs:/var/log/pos-modern
+      - /app/__pycache__  # Exclude Python cache
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=DEBUG
+      - DB_ECHO=false
+      - DEBUG_SQL=false
+      - DEBUG_REDIS=false
+      - DEBUG_EVENTS=false
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload --reload-dir /app
+
+  # Frontend services with hot reload
+  frontend-pos:
+    volumes:
+      - ./frontend/apps/pos/src:/app/src  # Mount source for hot reload
+      - ./frontend/apps/pos/public:/app/public
+      - ./frontend/common:/app/../common  # Access to common modules
+      - /app/node_modules  # Exclude node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_DEBUG=true
+      - VITE_ENABLE_DEBUG_TOOLBAR=true
+      - VITE_ENABLE_CONSOLE_LOGS=true
+
+  frontend-kds:
+    volumes:
+      - ./frontend/apps/kds/src:/app/src
+      - ./frontend/apps/kds/public:/app/public
+      - ./frontend/common:/app/../common
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_DEBUG=true
+
+  frontend-kiosk:
+    volumes:
+      - ./frontend/apps/kiosk/src:/app/src
+      - ./frontend/apps/kiosk/public:/app/public
+      - ./frontend/common:/app/../common
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_DEBUG=true
+
+  frontend-waiter:
+    volumes:
+      - ./frontend/apps/waiter/src:/app/src
+      - ./frontend/apps/waiter/public:/app/public
+      - ./frontend/common:/app/../common
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_DEBUG=true
+
+  # Database with additional development settings
+  postgres:
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"  # Expose for external tools
+    environment:
+      - POSTGRES_LOG_STATEMENT=all  # Log all SQL statements in development
+      - POSTGRES_LOG_DURATION=on
+
+  # Redis with additional monitoring
+  redis:
+    command: redis-server --requirepass ${REDIS_PASSWORD:-posmodern123} --loglevel debug
+
+  # Optional: Adminer for database management
+  adminer:
+    image: adminer:latest
+    container_name: chefia_adminer
+    restart: always
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    networks:
+      - chefia_network
+    depends_on:
+      - postgres
+    profiles: ["dev-tools"]
+
+  # Optional: Redis Commander for Redis management
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: chefia_redis_commander
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:${REDIS_PASSWORD:-posmodern123}
+    ports:
+      - "${REDIS_COMMANDER_PORT:-8081}:8081"
+    networks:
+      - chefia_network
+    depends_on:
+      - redis
+    profiles: ["dev-tools"]

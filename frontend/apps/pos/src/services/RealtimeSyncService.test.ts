@@ -2,7 +2,7 @@
  * Tests for RealtimeSyncService
  */
 
-import { RealtimeSyncService } from './RealtimeSyncService';
+import realtimeSync from './RealtimeSyncService';
 import { requestCache } from './RequestCache';
 import eventBus from '../utils/EventBus';
 import { setupWebSocketMock, MockWebSocket } from '../tests/mocks/websocket.mock';
@@ -27,7 +27,7 @@ jest.mock('../utils/EventBus', () => ({
 
 describe('RealtimeSyncService', () => {
   let wsSetup: ReturnType<typeof setupWebSocketMock>;
-  let service: RealtimeSyncService;
+  let service = realtimeSync;
   let mockLocalStorage: Record<string, string>;
 
   beforeEach(() => {

@@ -1,6 +1,7 @@
 
 import { Component, ErrorInfo, ReactNode } from 'react';
 import logger, { LogSource } from '../services/LocalLoggerService';
+import { showError } from '../utils/notifications';
 
 interface Props {
   children: ReactNode;
@@ -79,7 +80,7 @@ class ErrorBoundary extends Component<Props, State> {
       );
       
       // Show feedback to user
-      alert('Erro reportado com sucesso. Obrigado pelo feedback!');
+      showError('Erro reportado com sucesso. Obrigado pelo feedback!');
     }
   };
 

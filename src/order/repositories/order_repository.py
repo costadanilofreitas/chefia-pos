@@ -18,7 +18,6 @@ from src.core.models.core_models import (
     OrderStatus,
     OrderType,
     OrderUpdate,
-    PaymentMethod,
     PaymentStatus,
 )
 
@@ -110,8 +109,8 @@ class OrderRepository:
                     total_amount += item_subtotal
 
             # Update totals
-            setattr(db_order, 'subtotal', total_amount)
-            setattr(db_order, 'total', total_amount)
+            db_order.subtotal = total_amount
+            db_order.total = total_amount
 
             # Log order creation
             await self._log_order_history(

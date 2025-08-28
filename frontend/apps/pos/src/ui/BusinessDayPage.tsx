@@ -13,6 +13,7 @@ import {
 } from '../types/cashier';
 import { getReportField } from '../types/report-guards';
 import { formatCurrency } from '../utils/formatters';
+import { showError } from '../utils/notifications';
 
 // Helper function to convert cashier data to CashierSummary
 interface CashierData {
@@ -119,14 +120,14 @@ export default function BusinessDayPage() {
       await refreshCurrentBusinessDay();
     } catch {
       // Error opening business day silenciado
-      alert('Erro ao abrir dia operacional');
+      showError('Erro ao abrir dia operacional');
     }
   }, [terminalId, user, notes, openBusinessDay, refreshCurrentBusinessDay]);
   
   // Handle closing business day
   const handleCloseBusinessDay = useCallback(async () => {
     if (hasOpenCashiers) {
-      alert('Existem caixas abertos. Feche todos os caixas antes de encerrar o dia operacional.');
+      showError('Existem caixas abertos. Feche todos os caixas antes de encerrar o dia operacional.');
       return;
     }
     
@@ -140,7 +141,7 @@ export default function BusinessDayPage() {
       await refreshCurrentBusinessDay();
     } catch {
       // Error closing business day silenciado
-      alert('Erro ao fechar dia operacional');
+      showError('Erro ao fechar dia operacional');
     }
   }, [hasOpenCashiers, user, notes, closeBusinessDay, refreshCurrentBusinessDay]);
   
@@ -570,7 +571,7 @@ export default function BusinessDayPage() {
                         }
                       } catch (error) {
                         // Error handling for report generation
-                        alert('Erro ao gerar relatório: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+                        showError('Erro ao gerar relatório: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
                       } finally {
                         setGeneratingReport(false);
                       }
@@ -602,7 +603,7 @@ export default function BusinessDayPage() {
                         }
                       } catch {
                         // Error generating report silenciado
-                        alert('Erro ao gerar relatório: ' + error);
+                        showError('Erro ao gerar relatório');
                       } finally {
                         setGeneratingReport(false);
                       }
@@ -634,7 +635,7 @@ export default function BusinessDayPage() {
                         }
                       } catch {
                         // Error generating report silenciado
-                        alert('Erro ao gerar relatório: ' + error);
+                        showError('Erro ao gerar relatório');
                       } finally {
                         setGeneratingReport(false);
                       }
@@ -666,7 +667,7 @@ export default function BusinessDayPage() {
                         }
                       } catch {
                         // Error generating report silenciado
-                        alert('Erro ao gerar relatório: ' + error);
+                        showError('Erro ao gerar relatório');
                       } finally {
                         setGeneratingReport(false);
                       }
@@ -698,7 +699,7 @@ export default function BusinessDayPage() {
                         }
                       } catch {
                         // Error generating report silenciado
-                        alert('Erro ao gerar relatório: ' + error);
+                        showError('Erro ao gerar relatório');
                       } finally {
                         setGeneratingReport(false);
                       }
@@ -730,7 +731,7 @@ export default function BusinessDayPage() {
                         }
                       } catch {
                         // Error generating report silenciado
-                        alert('Erro ao gerar relatório: ' + error);
+                        showError('Erro ao gerar relatório');
                       } finally {
                         setGeneratingReport(false);
                       }

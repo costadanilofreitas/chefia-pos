@@ -608,7 +608,7 @@ class InstagramChatbotService(BaseChatbotService):
                         {"id": "checkout", "title": "Finalizar Pedido"},
                     ],
                 }
-        
+
         # Return padrão caso nenhuma condição seja atendida
         return {
             "type": MessageType.TEXT,
@@ -696,7 +696,7 @@ class InstagramChatbotService(BaseChatbotService):
                     {"id": "category_bebidas", "title": "Bebidas"},
                 ],
             }
-        
+
         # Return padrão
         return {
             "type": MessageType.TEXT,

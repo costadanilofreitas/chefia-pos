@@ -3,13 +3,13 @@ Core exceptions for the POS system
 """
 
 from src.core.exceptions.base_exceptions import (
-    CoreException,
-    ValidationException,
-    ResourceNotFoundException,
     AuthorizationException,
-    ExternalServiceException,
+    BusinessRuleException,
+    CoreException,
     DatabaseException,
-    BusinessRuleException
+    ExternalServiceException,
+    ResourceNotFoundException,
+    ValidationException,
 )
 
 # Alias for compatibility

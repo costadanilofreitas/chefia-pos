@@ -528,6 +528,185 @@ Suportados:
 - Por valor mínimo de compra
 - Pontos em dobro/triplo
 
+## 8.6. GESTÃO DE MESAS E RESERVAS (NOVO 2024)
+
+### 8.6.1 Fila de Espera (Queue Management)
+
+#### Regras de Entrada na Fila
+
+- **Máximo 50 pessoas na fila simultaneamente** (configurável)
+- **Tamanho de grupo**: 1-2, 3-4, 5-6, 7+ pessoas
+- **Dados obrigatórios**: Nome, telefone, quantidade pessoas
+- **Tempo máximo na fila**: 3 horas (auto-cancelamento)
+- **Nome não pode estar duplicado** na fila ativa
+
+#### Cálculo de Tempo de Espera
+
+- **Baseado na ocupação atual** das mesas
+- **Histórico de tempo médio** de permanência por tamanho de grupo
+- **Tempo de limpeza** entre clientes (configurável 5-15 min)
+- **Margem de erro**: ±10 minutos máximo
+- **Recalculo automático** a cada mudança de status de mesa
+
+#### Notificações
+
+- **SMS**: Para números brasileiros (+55)
+- **WhatsApp**: Integração com API oficial
+- **Sistema**: Alto-falantes internos
+- **Tempo limite para resposta**: 5 minutos após notificação
+- **Máximo 3 tentativas** de contato
+
+#### Estados da Fila
+
+1. **WAITING**: Cliente aguardando na fila
+2. **NOTIFIED**: Cliente foi chamado
+3. **SEATED**: Cliente foi acomodado
+4. **NO_SHOW**: Cliente não compareceu após 5 min
+5. **CANCELLED**: Cliente cancelou ou saiu
+
+### 8.6.2 Sistema de Reservas
+
+#### Regras de Criação
+
+- **Antecedência mínima**: 1 hora (configurável)
+- **Antecedência máxima**: 30 dias
+- **Horário de funcionamento**: Respeitar horários do restaurante
+- **Máximo por dia**: 80% da capacidade reservável
+- **Sobreposição**: Não permitir mesmo horário para mesma mesa
+
+#### Depósitos e Garantias
+
+- **Depósito obrigatório**: Para grupos 6+ pessoas
+- **Valor mínimo**: R$ 10,00 por pessoa
+- **Prazo para pagamento**: 2 horas após reserva
+- **Cancelamento gratuito**: Até 4 horas antes
+- **Reembolso**: 50% se cancelar até 2 horas antes
+
+#### Confirmações e Lembretes
+
+- **SMS de confirmação**: Imediato após reserva
+- **Lembrete 24h antes**: Automático
+- **Lembrete 2h antes**: Com opção de cancelar
+- **Tolerância de atraso**: 15 minutos
+- **No-show automático**: Após 15 min sem contato
+
+#### Reservas Recorrentes
+
+- **Aniversários**: Automático anual
+- **Encontros empresariais**: Semanal/mensal
+- **Mesa cativa**: Mesmo dia/horário por período
+- **Desconto fidelidade**: 5-10% após 5 reservas cumpridas
+
+### 8.6.3 Sistema de Comandas (Command Cards)
+
+#### Tipos de Comanda Suportados
+
+1. **BARCODE**: Código de barras Code128
+2. **QRCODE**: QR Code com URL ou código
+3. **RFID**: Tags de radiofrequência (13.56MHz)
+4. **NFC**: Near Field Communication
+5. **MANUAL**: Digitação direta do código
+
+#### Regras de Sessão
+
+- **Uma comanda por cliente/mesa**
+- **Limite de crédito**: R$ 500,00 (configurável)
+- **Tempo máximo sessão**: 8 horas
+- **Auto-fechamento**: Após inatividade de 2 horas
+- **Transferência**: Entre mesas permitida
+
+#### Controle de Itens
+
+- **Adição**: Qualquer funcionário autorizado
+- **Remoção**: Apenas manager ou superior
+- **Limite por item**: 10 unidades (anti-fraude)
+- **Taxa de serviço**: 10% automática (configurável)
+- **Desconto máximo**: 20% do total
+
+#### Responsabilidade de Pagamento
+
+- **Individual**: Cada comanda paga separadamente
+- **Mesa**: Uma pessoa paga todas as comandas
+- **Divisão**: Split automático por número de pessoas
+- **Grupo**: Definir responsável na abertura
+
+#### Estados da Comanda
+
+1. **OPEN**: Aberta para consumo
+2. **SUSPENDED**: Temporariamente suspensa
+3. **CLOSED**: Fechada para pagamento
+4. **PAID**: Paga e finalizada
+5. **CANCELLED**: Cancelada (apenas manager)
+
+### 8.6.4 Self-Service com Balança
+
+#### Configuração de Balanças
+
+- **Protocolo**: Serial RS-232, USB, TCP/IP
+- **Precisão mínima**: 5 gramas
+- **Capacidade**: 2-15 kg
+- **Tara automática**: Pratos padrão (150g)
+- **Calibração**: Semanal obrigatória
+
+#### Regras de Cobrança
+
+- **Preço por kg**: Configurável por horário/dia
+- **Peso mínimo**: 100g para cobrança
+- **Peso máximo**: 2kg por transação
+- **Tara personalizada**: Para containers especiais
+- **Desconto grupo**: Crianças até 6 anos (50%)
+
+#### Itens Adicionais
+
+- **Bebidas**: Preço fixo por unidade
+- **Sobremesas**: Preço especial
+- **Acompanhamentos**: Pães, molhos gratuitos
+- **Limite bebidas**: 3 por pessoa no buffet
+- **Promoções**: Happy hour, desconto estudante
+
+#### Controles Anti-Fraude
+
+- **Pesagem obrigatória**: Não permite bypass
+- **Foto do prato**: Câmera opcional para auditoria
+- **Limite de tara**: Máximo 300g por container
+- **Supervisor**: Aprovação para pesos > 1.5kg
+- **Bloqueio automático**: 3 tentativas de tara inválida
+
+### 8.6.5 Layout de Mesas
+
+#### Configuração Visual
+
+- **Grid flexível**: Arrastar e soltar mesas
+- **Formas suportadas**: Redonda, quadrada, retangular
+- **Capacidade**: 1-12 pessoas por mesa
+- **Numeração**: Automática ou manual
+- **Cores por status**: Verde (livre), Vermelho (ocupada), Azul (reservada)
+
+#### Estados em Tempo Real
+
+1. **AVAILABLE**: Mesa livre e limpa
+2. **OCCUPIED**: Mesa com clientes
+3. **RESERVED**: Mesa reservada
+4. **CLEANING**: Em processo de limpeza
+5. **MAINTENANCE**: Fora de uso
+6. **BLOCKED**: Bloqueada para eventos
+
+#### Integração com Sistemas
+
+- **Reservas**: Automático quando horário chega
+- **Fila**: Notificação quando mesa adequada fica livre
+- **Comandas**: Vinculação automática mesa-comanda
+- **KDS**: Status de pedidos por mesa
+- **Pagamento**: Fechamento de conta por mesa
+
+#### Regras de Ocupação
+
+- **Tolerância de pessoas**: +1 pessoa além da capacidade
+- **Junção de mesas**: Para grupos grandes
+- **Divisão não permitida**: Mesa unitária não pode dividir
+- **Prioridade**: Reserva > Fila > Walk-in
+- **Tempo médio**: 90 min para almoço, 120 min para jantar
+
 ## 9. RELATÓRIOS E ANALYTICS
 
 ### 9.1 Relatórios Operacionais

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional
 
 import aiohttp
 
@@ -42,7 +42,7 @@ class RappiAdapter:
             headers["X-API-Key"] = self.api_key
         if self.api_secret:
             headers["X-API-Secret"] = self.api_secret
-        
+
         self.session = aiohttp.ClientSession(headers=headers)
         return self
 

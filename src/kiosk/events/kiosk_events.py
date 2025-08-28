@@ -1,7 +1,8 @@
 # /home/ubuntu/pos-modern/src/kiosk/events/kiosk_events.py
 
-from src.core.events.event_bus import EventType, Event
 from typing import Any, Dict
+
+from src.core.events.event_bus import Event, EventType
 
 # Kiosk event type constants
 KIOSK_CONFIG_CREATED = "kiosk_config_created"
@@ -16,11 +17,11 @@ def create_kiosk_event(event_subtype: str, data: Dict[str, Any], metadata: Dict[
     """Helper function to create kiosk events."""
     if metadata is None:
         metadata = {}
-    
+
     # Add kiosk-specific metadata
     metadata["source"] = "kiosk"
     metadata["event_subtype"] = event_subtype
-    
+
     # Use SYSTEM_CONFIG_CHANGED as the base event type
     return Event(
         event_type=EventType.SYSTEM_CONFIG_CHANGED,

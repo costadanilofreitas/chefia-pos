@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
-  # Banco de Dados
+  # Database
   postgres:
     image: postgres:14
-    container_name: pos_postgres
+    container_name: chefia_postgres
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-posmodern}
@@ -16,17 +14,35 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     networks:
-      - pos_network
+      - chefia_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-posmodern} -d ${POSTGRES_DB:-posmodern}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Message Broker
+  # Cache
+  redis:
+    image: redis:6-alpine
+    container_name: chefia_redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-posmodern123}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - chefia_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--auth", "${REDIS_PASSWORD:-posmodern123}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Message Broker (Optional - can be enabled when needed)
   rabbitmq:
-    image: rabbitmq:3-management
-    container_name: pos_rabbitmq
+    image: rabbitmq:3-management-alpine
+    container_name: chefia_rabbitmq
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-posmodern}
@@ -37,36 +53,173 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - pos_network
+      - chefia_network
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
       timeout: 5s
       retries: 5
+    profiles: ["full"]  # Only starts when explicitly requested
 
-  # Cache
-  redis:
-    image: redis:6
-    container_name: pos_redis
+  # Backend API
+  backend:
+    build:
+      context: ./src
+      dockerfile: ../Dockerfile
+    container_name: chefia_backend
     restart: always
-    command: redis-server --requirepass ${REDIS_PASSWORD:-posmodern123}
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-posmodern}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-posmodern123}
+      DB_NAME: ${POSTGRES_DB:-posmodern}
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-posmodern123}
+      
+      # RabbitMQ (when enabled)
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-posmodern}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-posmodern123}
+      
+      # Application
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-your-secret-key-change-this}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003}
+      
+      # External Services
+      ASAAS_API_KEY: ${ASAAS_API_KEY:-}
+      ASAAS_ENV: ${ASAAS_ENV:-sandbox}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_WHATSAPP_FROM: ${TWILIO_WHATSAPP_FROM:-}
+      
     volumes:
-      - redis_data:/data
+      - ./src:/app
+      - ./logs:/var/log/pos-modern
+    ports:
+      - "${BACKEND_PORT:-8001}:8001"
     networks:
-      - pos_network
+      - chefia_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+
+  # Frontend - POS Terminal
+  frontend-pos:
+    build:
+      context: ./frontend/apps/pos
+      dockerfile: Dockerfile
+    container_name: chefia_frontend_pos
+    restart: always
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8001}
+      VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:8001/ws}
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "${POS_PORT:-3000}:3000"
+    networks:
+      - chefia_network
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/apps/pos:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 3000
+
+  # Frontend - KDS (Kitchen Display System)
+  frontend-kds:
+    build:
+      context: ./frontend/apps/kds
+      dockerfile: ../pos/Dockerfile
+    container_name: chefia_frontend_kds
+    restart: always
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8001}
+      VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:8001/ws}
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "${KDS_PORT:-3001}:3001"
+    networks:
+      - chefia_network
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/apps/kds:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 3001
+    profiles: ["full"]
+
+  # Frontend - Kiosk (Self-service)
+  frontend-kiosk:
+    build:
+      context: ./frontend/apps/kiosk
+      dockerfile: ../pos/Dockerfile
+    container_name: chefia_frontend_kiosk
+    restart: always
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8001}
+      VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:8001/ws}
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "${KIOSK_PORT:-3002}:3002"
+    networks:
+      - chefia_network
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/apps/kiosk:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 3002
+    profiles: ["full"]
+
+  # Frontend - Waiter Terminal
+  frontend-waiter:
+    build:
+      context: ./frontend/apps/waiter
+      dockerfile: ../pos/Dockerfile
+    container_name: chefia_frontend_waiter
+    restart: always
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8001}
+      VITE_WS_URL: ${VITE_WS_URL:-ws://localhost:8001/ws}
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - "${WAITER_PORT:-3003}:3003"
+    networks:
+      - chefia_network
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/apps/waiter:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 3003
+    profiles: ["full"]
 
 networks:
-  pos_network:
+  chefia_network:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
 
 volumes:
   postgres_data:
-  rabbitmq_data:
   redis_data:
+  rabbitmq_data:

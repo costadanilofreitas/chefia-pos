@@ -3,29 +3,28 @@ Reservation Router
 API endpoints for managing table reservations
 """
 
-from typing import List, Optional
 from datetime import date, datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
-from uuid import UUID
+from typing import List, Optional
 
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from src.auth.auth import get_current_user
+from src.core.event_bus import get_event_bus
+from src.core.exceptions import BusinessException, ConflictException
+from src.database.db_service import get_db_service
+from src.queue.services.queue_service import QueueService
 from src.reservation.models.reservation_models import (
-    Reservation,
-    ReservationCreate,
-    ReservationUpdate,
-    ReservationStatus,
-    ReservationAvailability,
-    ReservationStatistics,
-    TableAllocation,
     BlockedSlot,
-    ReservationSettings
+    Reservation,
+    ReservationAvailability,
+    ReservationCreate,
+    ReservationSettings,
+    ReservationStatistics,
+    ReservationStatus,
+    ReservationUpdate,
+    TableAllocation,
 )
 from src.reservation.services.reservation_service import ReservationService
 from src.waiter.services.table_layout_service import TableLayoutService
-from src.queue.services.queue_service import QueueService
-from src.database.db_service import get_db_service
-from src.core.event_bus import get_event_bus
-from src.auth.auth import get_current_user
-from src.core.exceptions import BusinessException, ConflictException
 
 router = APIRouter(
     prefix="/api/v1/reservations",
@@ -127,7 +126,7 @@ async def cancel_reservation(
     """Cancel a reservation"""
     try:
         success = await service.update_status(
-            reservation_id, 
+            reservation_id,
             ReservationStatus.CANCELLED,
             reason
         )
@@ -272,10 +271,10 @@ async def confirm_reservation(
     reservation = await service.get_reservation(reservation_id)
     if not reservation:
         raise HTTPException(status_code=404, detail="Reservation not found")
-        
+
     if reservation.confirmation_code != confirmation_code:
         raise HTTPException(status_code=400, detail="Invalid confirmation code")
-        
+
     success = await service.update_status(reservation_id, ReservationStatus.CONFIRMED)
     if success:
         return {"success": True, "message": "Reservation confirmed"}
@@ -294,15 +293,15 @@ async def check_in_reservation(
     reservation = await service.get_reservation(reservation_id)
     if not reservation:
         raise HTTPException(status_code=404, detail="Reservation not found")
-        
+
     if reservation.confirmation_code != confirmation_code:
         raise HTTPException(status_code=400, detail="Invalid confirmation code")
-        
+
     # Check if within acceptable time window (e.g., 30 minutes before)
     now = datetime.now()
     if reservation.reservation_datetime > now + timedelta(minutes=30):
         raise HTTPException(status_code=400, detail="Too early to check in")
-        
+
     success = await service.update_status(reservation_id, ReservationStatus.ARRIVED)
     if success:
         return {"success": True, "message": "Checked in successfully"}

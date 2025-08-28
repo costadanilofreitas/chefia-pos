@@ -272,7 +272,7 @@ class WhatsAppIntegratedChatbot:
             if not from_number:
                 logger.error("Número de telefone não encontrado")
                 return
-            
+
             customer_result = await self.payment_integration.find_customer_by_phone(
                 from_number
             )
@@ -307,7 +307,7 @@ class WhatsAppIntegratedChatbot:
             if not asaas_customer_id or not value:
                 logger.error("Dados insuficientes para criar pagamento")
                 return
-                
+
             payment_result = await self.payment_integration.create_pix_payment(
                 asaas_customer_id, value, description, order_id
             )
@@ -322,7 +322,7 @@ class WhatsAppIntegratedChatbot:
             restaurant_id = response.get("restaurant_id")
             payment_id = payment_result.get("payment", {}).get("id")
             order_data = response.get("order_data")
-            
+
             if restaurant_id and payment_id and order_data:
                 await self.order_confirmation.register_order(
                     order_id,

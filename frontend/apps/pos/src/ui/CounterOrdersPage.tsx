@@ -3,6 +3,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useOrder } from '../hooks/useOrder';
+import { showError } from '../utils/notifications';
 import '../index.css';
 import { Order, OrderStatus, OrderType } from '../types/order';
 import { formatCurrency } from '../utils/formatters';
@@ -51,7 +52,7 @@ export default function CounterOrdersPage() {
     try {
       await getOrders();
     } catch {
-      alert('Erro ao carregar pedidos');
+      showError('Erro ao carregar pedidos');
     }
   }, [getOrders]);
   
@@ -80,9 +81,9 @@ export default function CounterOrdersPage() {
     try {
       await updateOrder(order.id, { status: OrderStatus.PREPARING });
       await loadOrders();
-      alert('Pedido confirmado e enviado para preparo!');
+      showError('Pedido confirmado e enviado para preparo!');
     } catch {
-      alert('Erro ao confirmar pedido');
+      showError('Erro ao confirmar pedido');
     }
   }, [updateOrder, loadOrders]);
   
@@ -90,9 +91,9 @@ export default function CounterOrdersPage() {
     try {
       await updateOrder(order.id, { status: OrderStatus.READY });
       await loadOrders();
-      alert('Pedido marcado como pronto!');
+      showError('Pedido marcado como pronto!');
     } catch {
-      alert('Erro ao marcar pedido como pronto');
+      showError('Erro ao marcar pedido como pronto');
     }
   }, [updateOrder, loadOrders]);
   
@@ -100,15 +101,15 @@ export default function CounterOrdersPage() {
     try {
       await completeOrder(order.id);
       await loadOrders();
-      alert('Pedido finalizado com sucesso!');
+      showError('Pedido finalizado com sucesso!');
     } catch {
-      alert('Erro ao finalizar pedido');
+      showError('Erro ao finalizar pedido');
     }
   }, [completeOrder, loadOrders]);
   
   const handleCancelOrder = useCallback(async () => {
     if (!selectedOrder || !cancelReason) {
-      alert('Por favor, informe o motivo do cancelamento');
+      showError('Por favor, informe o motivo do cancelamento');
       return;
     }
     
@@ -118,9 +119,9 @@ export default function CounterOrdersPage() {
       setShowCancelDialog(false);
       setCancelReason('');
       setSelectedOrder(null);
-      alert('Pedido cancelado com sucesso');
+      showError('Pedido cancelado com sucesso');
     } catch {
-      alert('Erro ao cancelar pedido');
+      showError('Erro ao cancelar pedido');
     }
   }, [selectedOrder, cancelReason, cancelOrder, loadOrders]);
   

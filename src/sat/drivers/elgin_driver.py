@@ -6,7 +6,7 @@ from src.sat.models.sat_models import SATConfig
 
 class ElginDriver(SimulatedSATDriver):
     """Driver para SAT Elgin."""
-    
+
     def __init__(self, config: SATConfig):
         """Inicializa o driver Elgin."""
         super().__init__(config)

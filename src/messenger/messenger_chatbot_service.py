@@ -565,7 +565,7 @@ class MessengerChatbotService(BaseChatbotService):
                         {"id": "checkout", "title": "Finalizar Pedido"},
                     ],
                 }
-        
+
         # Return padrão caso nenhuma condição seja atendida
         return {
             "type": MessageType.TEXT,
@@ -743,7 +743,7 @@ class MessengerChatbotService(BaseChatbotService):
                     "body": "Seu carrinho foi limpo. Deseja ver o cardápio?",
                     "options": [{"id": "continue_shopping", "title": "Ver Cardápio"}],
                 }
-            
+
             # Payload não reconhecido
             else:
                 return {
@@ -1148,7 +1148,7 @@ class MessengerChatbotService(BaseChatbotService):
                             {"id": "cancel_order", "title": "Cancelar"},
                         ],
                     }
-        
+
         # Return padrão caso nenhuma condição seja atendida
         return {
             "type": MessageType.TEXT,
@@ -1377,7 +1377,7 @@ class MessengerChatbotService(BaseChatbotService):
                         "type": MessageType.TEXT,
                         "text": "Para verificar o status do seu pedido, por favor, informe o número do pedido.",
                     }
-        
+
         # Return padrão
         return {
             "type": MessageType.TEXT,
@@ -1495,7 +1495,7 @@ class MessengerChatbotService(BaseChatbotService):
                     "timestamp": datetime.now().isoformat(),
                 },
             }
-        
+
         # Return padrão
         return {
             "type": MessageType.TEXT,

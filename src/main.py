@@ -22,6 +22,7 @@ from src.analytics.router.analytics_router import (
 from src.auth.auth_router import router as auth_router
 from src.business_day.router.business_day_router import router as business_day_router
 from src.cashier.router.cashier_router import router as cashier_router
+from src.command_card.router.command_card_router import router as command_card_router
 from src.core.middleware.error_handling import (
     error_handling_middleware,
     register_exception_handlers,
@@ -37,12 +38,12 @@ from src.payment.router.payment_router import router as payment_router
 from src.payment.router.split_payment_router import router as split_payment_router
 from src.peripherals.router.keyboard_router import router as keyboard_router
 from src.product.router.product_router import router as product_router
+from src.queue.router.queue_router import router as queue_router
+from src.realtime.websocket_sync import router as websocket_router
 from src.remote_orders.router.rappi_router import router as rappi_router
 from src.remote_orders.router.remote_order_router import router as remote_order_router
-from src.waiter.router.table_layout_router import router as table_layout_router
-from src.realtime.websocket_sync import router as websocket_router
-from src.queue.router.queue_router import router as queue_router
 from src.reservation.router.reservation_router import router as reservation_router
+from src.waiter.router.table_layout_router import router as table_layout_router
 
 # Configurar logging
 log_file = os.environ.get("LOG_FILE", "/var/log/pos-modern/app.log")
@@ -93,6 +94,7 @@ app.include_router(keyboard_router)
 app.include_router(websocket_router)
 app.include_router(queue_router)
 app.include_router(reservation_router)
+app.include_router(command_card_router)
 
 
 @app.on_event("startup")

@@ -38,6 +38,11 @@
     }
   },
   "include": ["src"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/tests/**/*"
+  ],
   "references": [{ "path": "../../common/tsconfig.json" }]
 }
 

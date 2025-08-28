@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { showError, confirmAction } from '../utils/notifications';
 import '../index.css';
 import { formatCurrency } from '../utils/formatters';
 
@@ -138,7 +139,7 @@ export default function PaymentPage() {
     if (!order) return;
 
     if (selectedPayment === 'cash' && (!paymentAmount || parseFloat(paymentAmount) < order.total)) {
-      alert('Valor insuficiente para pagamento em dinheiro');
+      showError('Valor insuficiente para pagamento em dinheiro');
       return;
     }
 
@@ -166,7 +167,7 @@ export default function PaymentPage() {
 
     } catch {
       // Payment error silenciado
-      alert('Erro ao processar pagamento');
+      showError('Erro ao processar pagamento');
     } finally {
       setLoading(false);
     }
@@ -178,8 +179,8 @@ export default function PaymentPage() {
   }, [navigate, terminalId]);
 
   // Cancel payment
-  const cancelPayment = useCallback(() => {
-    if (confirm('Deseja cancelar o pagamento?')) {
+  const cancelPayment = useCallback(async () => {
+    if (await confirmAction('Deseja cancelar o pagamento?')) {
       navigate(`/pos/${terminalId}/order`);
     }
   }, [navigate, terminalId]);
@@ -192,7 +193,7 @@ export default function PaymentPage() {
     const totalSplit = splitPayments.reduce((sum, p) => sum + p.amount, 0);
     
     if (order && totalSplit + amount > order.total) {
-      alert('Valor total dos pagamentos excede o total do pedido');
+      showError('Valor total dos pagamentos excede o total do pedido');
       return;
     }
 

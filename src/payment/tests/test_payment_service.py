@@ -33,7 +33,6 @@ class MockOrderService:
 
 
 # Criar módulos mock antes de importar
-from unittest.mock import MagicMock
 order_service_mock = MagicMock()
 order_service_mock.OrderService = MockOrderService
 sys.modules["src.order.services.order_service"] = order_service_mock

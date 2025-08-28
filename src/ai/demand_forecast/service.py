@@ -118,7 +118,7 @@ class DemandForecastService:
     async def get_forecast(self, forecast_id: str):
         """Get a forecast by ID."""
         # Simulated implementation
-        from .models import ForecastResult, TimeGranularity, ModelType
+        from .models import ForecastResult, ModelType, TimeGranularity
         return ForecastResult(
             request_id=forecast_id,
             restaurant_id="rest123",
@@ -133,9 +133,10 @@ class DemandForecastService:
 
     async def get_alerts(self, restaurant_id: str):
         """Get alerts for a restaurant."""
-        from .models import DemandAlert, AlertLevel
         import uuid
-        
+
+        from .models import AlertLevel, DemandAlert
+
         # Return stored alerts or generate some sample ones
         if not self._alerts:
             self._alerts = [
@@ -152,9 +153,10 @@ class DemandForecastService:
 
     async def get_recommendations(self, restaurant_id: str):
         """Get stock recommendations for a restaurant."""
-        from .models import StockRecommendation
         import uuid
-        
+
+        from .models import StockRecommendation
+
         # Return stored recommendations or generate sample ones
         if not self._recommendations:
             self._recommendations = [

@@ -2,10 +2,10 @@
  * Tests for RequestCache Service
  */
 
-import { RequestCache } from './RequestCache';
+import { requestCache } from './RequestCache';
 
 describe('RequestCache', () => {
-  let cache: RequestCache;
+  let cache = requestCache;
 
   beforeEach(() => {
     jest.clearAllMocks();

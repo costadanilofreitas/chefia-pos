@@ -128,8 +128,8 @@ class StockRepository:
             if hasattr(db_item, field):
                 setattr(db_item, field, value)
 
-        setattr(db_item, 'updated_at', datetime.utcnow())
-        setattr(db_item, 'last_updated', datetime.utcnow())
+        db_item.updated_at = datetime.utcnow()
+        db_item.last_updated = datetime.utcnow()
         self.db.commit()
         self.db.refresh(db_item)
         return db_item
@@ -171,15 +171,15 @@ class StockRepository:
             )
 
         # Update quantities
-        setattr(db_item, 'current_quantity', max(0, new_quantity))
+        db_item.current_quantity = max(0, new_quantity)
         available = float(db_item.current_quantity) - float(db_item.reserved_quantity)
-        setattr(db_item, 'available_quantity', max(0, available))
-        setattr(db_item, 'last_updated', datetime.utcnow())
-        setattr(db_item, 'updated_at', datetime.utcnow())
+        db_item.available_quantity = max(0, available)
+        db_item.last_updated = datetime.utcnow()
+        db_item.updated_at = datetime.utcnow()
 
         # Update total value if unit cost is available
         if db_item.unit_cost:
-            setattr(db_item, 'total_value', float(db_item.current_quantity * db_item.unit_cost))
+            db_item.total_value = float(db_item.current_quantity * db_item.unit_cost)
 
         # Create movement record
         self.create_stock_movement(
@@ -340,8 +340,8 @@ class StockRepository:
 
         if existing_alert:
             # Update existing alert
-            setattr(existing_alert, 'current_quantity', current_quantity)
-            setattr(existing_alert, 'created_at', datetime.utcnow())
+            existing_alert.current_quantity = current_quantity
+            existing_alert.created_at = datetime.utcnow()
             self.db.commit()
             self.db.refresh(existing_alert)
             return existing_alert
@@ -392,9 +392,9 @@ class StockRepository:
         if not db_alert:
             return None
 
-        setattr(db_alert, 'is_acknowledged', True)
-        setattr(db_alert, 'acknowledged_by', acknowledged_by)
-        setattr(db_alert, 'acknowledged_at', datetime.utcnow())
+        db_alert.is_acknowledged = True
+        db_alert.acknowledged_by = acknowledged_by
+        db_alert.acknowledged_at = datetime.utcnow()
 
         self.db.commit()
         self.db.refresh(db_alert)

@@ -14,7 +14,12 @@ from typing import List, Optional
 
 from fastapi import HTTPException
 
-from ...demand_forecast.models import ForecastResult, TimeGranularity, ModelType, ForecastDimension
+from ...demand_forecast.models import (
+    ForecastDimension,
+    ForecastResult,
+    ModelType,
+    TimeGranularity,
+)
 from ...demand_forecast.service import DemandForecastService
 from ..models import DeliveryOptimization
 

@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from src.auth.models import Permission, TokenData, UserInDB, UserRole
+from src.auth.models import TokenData, UserInDB, UserRole
 
 # Configurações de segurança
 SECRET_KEY = os.getenv("SECRET_KEY", "temporarysecretkey123456789")

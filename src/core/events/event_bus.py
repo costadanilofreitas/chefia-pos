@@ -95,7 +95,7 @@ class EventType(str, Enum):
     SYSTEM_STARTED = "system.started"
     SYSTEM_STOPPED = "system.stopped"
     SYSTEM_ERROR = "system.error"
-    
+
     # Eventos de autenticação
     USER_LOGGED_IN = "user.logged_in"
     USER_LOGGED_OUT = "user.logged_out"
@@ -352,7 +352,7 @@ class EventBus:
             return {event_type_str: self.subscribers.get(event_type_str, [])}
 
         return self.subscribers
-    
+
     async def emit(self, event: Event) -> None:
         """
         Alias para publish() para manter compatibilidade.

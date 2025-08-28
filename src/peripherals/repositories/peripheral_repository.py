@@ -96,7 +96,7 @@ class PeripheralRepository:
             if hasattr(db_peripheral, field):
                 setattr(db_peripheral, field, value)
 
-        setattr(db_peripheral, 'updated_at', datetime.utcnow())
+        db_peripheral.updated_at = datetime.utcnow()
         self.db.commit()
         self.db.refresh(db_peripheral)
         return db_peripheral
@@ -112,14 +112,14 @@ class PeripheralRepository:
         if not db_peripheral:
             return None
 
-        setattr(db_peripheral, 'status', status)
+        db_peripheral.status = status
         if status == PeripheralStatus.CONNECTED:
-            setattr(db_peripheral, 'last_connected', datetime.utcnow())
-            setattr(db_peripheral, 'last_error', None)
+            db_peripheral.last_connected = datetime.utcnow()
+            db_peripheral.last_error = None
         elif status == PeripheralStatus.ERROR and error_message:
-            setattr(db_peripheral, 'last_error', error_message)
+            db_peripheral.last_error = error_message
 
-        setattr(db_peripheral, 'updated_at', datetime.utcnow())
+        db_peripheral.updated_at = datetime.utcnow()
         self.db.commit()
         self.db.refresh(db_peripheral)
         return db_peripheral
@@ -207,7 +207,7 @@ class PeripheralRepository:
             if hasattr(db_config, field):
                 setattr(db_config, field, value)
 
-        setattr(db_config, 'updated_at', datetime.utcnow())
+        db_config.updated_at = datetime.utcnow()
         self.db.commit()
         self.db.refresh(db_config)
         return db_config
@@ -345,7 +345,7 @@ class PeripheralRepository:
             if hasattr(db_config, field):
                 setattr(db_config, field, value)
 
-        setattr(db_config, 'updated_at', datetime.utcnow())
+        db_config.updated_at = datetime.utcnow()
         self.db.commit()
         self.db.refresh(db_config)
         return db_config
