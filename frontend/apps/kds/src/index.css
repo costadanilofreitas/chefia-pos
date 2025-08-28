@@ -1,0 +1,144 @@
+/* Import Tailwind layers */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for KDS */
+@layer base {
+  /* Prevent text selection in kitchen environment */
+  * {
+    @apply select-none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  
+  /* Allow text selection only where needed */
+  .selectable {
+    @apply select-text;
+  }
+  
+  /* Touch-optimized scrolling */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+}
+
+@layer components {
+  /* Touch-optimized button base */
+  .kds-button {
+    @apply min-h-[44px] min-w-[44px] px-4 py-2 font-semibold rounded-lg 
+           transition-all duration-150 active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  /* Order card base styles */
+  .order-card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4
+           border-2 border-transparent transition-all duration-300;
+  }
+  
+  /* Priority indicators */
+  .priority-urgent {
+    @apply border-red-500 animate-pulse-fast;
+  }
+  
+  .priority-high {
+    @apply border-orange-500;
+  }
+  
+  .priority-normal {
+    @apply border-green-500;
+  }
+  
+  /* Status badges */
+  .status-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .status-new {
+    @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200;
+  }
+  
+  .status-preparing {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200;
+  }
+  
+  .status-ready {
+    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+  }
+  
+  /* Timer display */
+  .timer {
+    @apply font-mono text-2xl font-bold;
+  }
+  
+  .timer-warning {
+    @apply text-orange-600 dark:text-orange-400;
+  }
+  
+  .timer-danger {
+    @apply text-red-600 dark:text-red-400 animate-pulse;
+  }
+}
+
+@layer utilities {
+  /* Touch target sizing */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  .touch-target-lg {
+    @apply min-h-[60px] min-w-[60px];
+  }
+  
+  /* Kitchen-specific utilities */
+  .kitchen-grid {
+    @apply grid gap-4 grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3;
+  }
+  
+  /* High contrast mode for bright kitchens */
+  .high-contrast {
+    filter: contrast(1.2);
+  }
+  
+  /* Prevent double-tap zoom on mobile */
+  .no-zoom {
+    touch-action: manipulation;
+  }
+}
+
+/* Dark mode adjustments */
+.dark {
+  color-scheme: dark;
+}
+
+/* Custom scrollbar for order lists */
+.order-list::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.order-list::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-900;
+}
+
+.order-list::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 dark:bg-gray-600 rounded-full;
+}
+
+.order-list::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500 dark:bg-gray-500;
+}
+
+/* Print styles for order tickets */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .order-ticket {
+    @apply text-black bg-white;
+    page-break-inside: avoid;
+  }
+}

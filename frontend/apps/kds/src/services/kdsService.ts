@@ -1,9 +1,10 @@
-import { ApiClient } from '@common/services/apiClient';
+import { ApiService } from './api';
 
 export interface Order {
   id: number;
   order_number: string;
   source: string;
+  status: string;
   priority: 'high' | 'medium' | 'normal';
   created_at: string;
   updated_at: string;
@@ -22,17 +23,26 @@ export interface OrderItem {
   preparation_time?: number;
 }
 
+export interface Station {
+  id: string;
+  name: string;
+  active: boolean;
+  order_count?: number;
+}
+
+export interface KDSMetrics {
+  total_orders: number;
+  completed_orders: number;
+  average_preparation_time: number;
+  orders_by_station: Record<string, number>;
+  peak_hours: number[];
+}
+
 /**
  * Service for managing KDS orders and kitchen operations
  */
 export class KDSService {
-  private apiClient: ApiClient;
-
-  constructor() {
-    // Use the base URL from environment or default to /api
-    const baseURL = process.env['REACT_APP_API_URL'] || '/api';
-    this.apiClient = new ApiClient(`${baseURL}/kds`);
-  }
+  private baseEndpoint = '/kds';
 
   /**
    * Get all pending orders
@@ -40,10 +50,12 @@ export class KDSService {
    */
   async getOrders(): Promise<Order[]> {
     try {
-      const response = await this.apiClient.get<{success: boolean, data: Order[]}>('/orders');
+      const response = await ApiService.get<{ success: boolean; data: Order[] }>(
+        `${this.baseEndpoint}/orders`
+      );
       
-      if (response.data && response.data.success) {
-        return response.data.data;
+      if (response.success) {
+        return response.data;
       }
       
       throw new Error('Failed to fetch orders');
@@ -57,12 +69,14 @@ export class KDSService {
    * Get all kitchen stations
    * @returns Promise with stations data
    */
-  async getStations(): Promise<{id: string, name: string}[]> {
+  async getStations(): Promise<Station[]> {
     try {
-      const response = await this.apiClient.get<{success: boolean, data: {id: string, name: string}[]}>('/stations');
+      const response = await ApiService.get<{ success: boolean; data: Station[] }>(
+        `${this.baseEndpoint}/stations`
+      );
       
-      if (response.data && response.data.success) {
-        return response.data.data;
+      if (response.success) {
+        return response.data;
       }
       
       throw new Error('Failed to fetch stations');
@@ -79,15 +93,36 @@ export class KDSService {
    * @param status - New status
    * @returns Promise with update result
    */
-  async updateItemStatus(orderId: string, itemId: string, status: string): Promise<boolean> {
+  async updateItemStatus(orderId: string | number, itemId: string | number, status: string): Promise<boolean> {
     try {
-      const response = await this.apiClient.put<{success: boolean}>(`/orders/${orderId}/items/${itemId}/status`, {
-        status
-      });
+      const response = await ApiService.put<{ success: boolean }>(
+        `${this.baseEndpoint}/orders/${orderId}/items/${itemId}/status`,
+        { status }
+      );
       
-      return response.data && response.data.success;
+      return response.success;
     } catch (error) {
       console.error(`Error updating item ${itemId} status:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update the status of an entire order
+   * @param orderId - ID of the order
+   * @param status - New status
+   * @returns Promise with update result
+   */
+  async updateOrderStatus(orderId: string | number, status: string): Promise<boolean> {
+    try {
+      const response = await ApiService.put<{ success: boolean }>(
+        `${this.baseEndpoint}/orders/${orderId}/status`,
+        { status }
+      );
+      
+      return response.success;
+    } catch (error) {
+      console.error(`Error updating order ${orderId} status:`, error);
       throw error;
     }
   }
@@ -97,11 +132,14 @@ export class KDSService {
    * @param orderId - ID of the order
    * @returns Promise with completion result
    */
-  async completeOrder(orderId: string): Promise<boolean> {
+  async completeOrder(orderId: string | number): Promise<boolean> {
     try {
-      const response = await this.apiClient.put<{success: boolean}>(`/orders/${orderId}/complete`);
+      const response = await ApiService.put<{ success: boolean }>(
+        `${this.baseEndpoint}/orders/${orderId}/complete`,
+        {}
+      );
       
-      return response.data && response.data.success;
+      return response.success;
     } catch (error) {
       console.error(`Error completing order ${orderId}:`, error);
       throw error;
@@ -115,7 +153,7 @@ export class KDSService {
    * @param endDate - Custom end date (if range is 'custom')
    * @returns Promise with metrics data
    */
-  async getMetrics(dateRange: string = 'today', startDate?: string, endDate?: string): Promise<any> {
+  async getMetrics(dateRange: string = 'today', startDate?: string, endDate?: string): Promise<KDSMetrics> {
     try {
       const params = new URLSearchParams();
       
@@ -126,15 +164,39 @@ export class KDSService {
         params.append('range', dateRange);
       }
       
-      const response = await this.apiClient.get<{success: boolean, data: any}>(`/metrics?${params.toString()}`);
+      const response = await ApiService.get<{ success: boolean; data: KDSMetrics }>(
+        `${this.baseEndpoint}/metrics?${params.toString()}`
+      );
       
-      if (response.data && response.data.success) {
-        return response.data.data;
+      if (response.success) {
+        return response.data;
       }
       
       throw new Error('Failed to fetch metrics');
     } catch (error) {
       console.error('Error fetching KDS metrics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get orders by station
+   * @param stationId - ID of the station
+   * @returns Promise with filtered orders
+   */
+  async getOrdersByStation(stationId: string): Promise<Order[]> {
+    try {
+      const response = await ApiService.get<{ success: boolean; data: Order[] }>(
+        `${this.baseEndpoint}/stations/${stationId}/orders`
+      );
+      
+      if (response.success) {
+        return response.data;
+      }
+      
+      throw new Error(`Failed to fetch orders for station ${stationId}`);
+    } catch (error) {
+      console.error(`Error fetching orders for station ${stationId}:`, error);
       throw error;
     }
   }

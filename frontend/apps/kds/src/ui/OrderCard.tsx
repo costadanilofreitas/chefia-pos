@@ -1,16 +1,9 @@
 import React from 'react';
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Chip,
-  Button,
-  Grid,
-  Divider
-} from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import TimerIcon from '@mui/icons-material/Timer';
+import { FaCheckCircle } from 'react-icons/fa';
+import { Card, CardHeader, CardContent, CardFooter } from '../components/Card';
+import { Button } from '../components/Button';
+import { Badge } from '../components/Badge';
+import { Timer } from '../components/Timer';
 
 type OrderItem = {
   id: string | number;
@@ -48,23 +41,10 @@ const OrderCard: React.FC<OrderCardProps> = ({
   onItemStatusChange,
   nextStatus
 }) => {
-  const getElapsedTime = (timestamp: string | Date): string => {
-    const now = new Date();
-    const orderTime = new Date(timestamp);
-    const diffMs = now.getTime() - orderTime.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 1) return 'Agora';
-    if (diffMins === 1) return '1 min';
-    return `${diffMins} mins`;
-  };
-
-  const getPriorityColor = (
-    priority: string
-  ): 'error' | 'warning' | 'info' | 'success' | 'default' => {
+  const getPriorityVariant = (priority: string): 'danger' | 'warning' | 'info' | 'success' => {
     switch (priority) {
       case 'urgent':
-        return 'error';
+        return 'danger';
       case 'high':
         return 'warning';
       case 'normal':
@@ -72,7 +52,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       case 'low':
         return 'success';
       default:
-        return 'default';
+        return 'info';
     }
   };
 
@@ -89,116 +69,94 @@ const OrderCard: React.FC<OrderCardProps> = ({
     }
   };
 
+  const getPriorityLevel = (priority: string): 'urgent' | 'high' | 'normal' => {
+    switch (priority) {
+      case 'urgent':
+        return 'urgent';
+      case 'high':
+        return 'high';
+      default:
+        return 'normal';
+    }
+  };
+
   return (
-    <Card
-      sx={{
-        mb: 2,
-        border: '1px solid',
-        borderColor:
-          getPriorityColor(order.priority) === 'default'
-            ? 'grey.300'
-            : `${getPriorityColor(order.priority)}.main`,
-        boxShadow: 2
-      }}
+    <Card 
+      priority={getPriorityLevel(order.priority)}
+      className="mb-4"
     >
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            Pedido #{order.id}
+          </h3>
+          <Badge variant={getPriorityVariant(order.priority)} size="sm">
+            {order.priority.toUpperCase()}
+          </Badge>
+        </div>
+        
+        <div className="flex justify-between items-center mt-2">
+          <Timer startTime={order.created_at} />
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {order.type === 'delivery' ? '🛵 Delivery' : '🍽️ Mesa'}{' '}
+            <strong>{order.table_number || order.delivery_id}</strong>
+          </span>
+        </div>
+      </CardHeader>
+
       <CardContent>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            mb: 1
-          }}
-        >
-          <Typography variant="h6">Pedido #{order.id}</Typography>
-          <Chip
-            label={order.priority.toUpperCase()}
-            color={getPriorityColor(order.priority)}
-            size="small"
-          />
-        </Box>
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <TimerIcon fontSize="small" sx={{ mr: 0.5 }} />
-            <Typography variant="body2">
-              {getElapsedTime(order.created_at)}
-            </Typography>
-          </Box>
-          <Typography variant="body2">
-            {order.type === 'delivery' ? 'Delivery' : 'Mesa'}{' '}
-            {order.table_number || order.delivery_id}
-          </Typography>
-        </Box>
-
-        <Divider sx={{ mb: 2 }} />
-
-        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
           Itens:
-        </Typography>
-
-        {order.items &&
-          order.items.map((item) => (
-            <Grid container key={item.id} sx={{ mb: 1 }}>
-              <Grid item xs={1}>
-                <Typography variant="body2">{item.quantity}x</Typography>
-              </Grid>
-              <Grid item xs={8}>
-                <Typography variant="body2">
-                  <strong>{item.name}</strong>
-                  {item.notes && (
-                    <Box
-                      component="span"
-                      sx={{
-                        display: 'block',
-                        fontSize: '0.8rem',
-                        color: 'text.secondary'
-                      }}
-                    >
-                      {item.notes}
-                    </Box>
-                  )}
-                </Typography>
-              </Grid>
-              <Grid item xs={3} sx={{ textAlign: 'right' }}>
-                <Button
-                  size="small"
-                  variant={item.status === nextStatus ? 'contained' : 'outlined'}
-                  color={item.status === nextStatus ? 'success' : 'primary'}
-                  startIcon={
-                    item.status === nextStatus ? <CheckCircleIcon /> : null
-                  }
-                  onClick={() =>
-                    onItemStatusChange(order.id, item.id, nextStatus)
-                  }
-                >
-                  {item.status === nextStatus ? 'Pronto' : 'Marcar'}
-                </Button>
-              </Grid>
-            </Grid>
+        </h4>
+        
+        <div className="space-y-3">
+          {order.items?.map((item) => (
+            <div key={item.id} className="flex items-start gap-3">
+              <span className="text-lg font-bold text-gray-700 dark:text-gray-300 min-w-[30px]">
+                {item.quantity}x
+              </span>
+              
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {item.name}
+                </p>
+                {item.notes && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    📝 {item.notes}
+                  </p>
+                )}
+              </div>
+              
+              <Button
+                size="sm"
+                variant={item.status === nextStatus ? 'success' : 'secondary'}
+                icon={item.status === nextStatus ? <FaCheckCircle /> : null}
+                onClick={() => onItemStatusChange(order.id, item.id, nextStatus)}
+                className="touch-target"
+              >
+                {item.status === nextStatus ? 'Pronto' : 'Marcar'}
+              </Button>
+            </div>
           ))}
+        </div>
+      </CardContent>
 
-        <Divider sx={{ my: 2 }} />
-
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}
-        >
-          <Typography variant="body2">
-            Cliente: {order.customer_name || 'Não identificado'}
-          </Typography>
+      <CardFooter>
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            Cliente: <strong>{order.customer_name || 'Não identificado'}</strong>
+          </span>
+          
           <Button
-            variant="contained"
-            color="primary"
+            variant="primary"
+            size="lg"
             onClick={() => onStatusChange(order.id, nextStatus)}
+            className="touch-target-lg"
           >
             {getButtonText(nextStatus)}
           </Button>
-        </Box>
-      </CardContent>
+        </div>
+      </CardFooter>
     </Card>
   );
 };
