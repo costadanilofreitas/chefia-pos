@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   deliveryService, 
   DeliveryOrder, 
@@ -81,6 +81,8 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
     assigning: false,
     error: null
   });
+  
+  const hasInitialLoad = useRef(false);
 
   // Load delivery orders with filters
   const loadDeliveryOrders = useCallback(async (
@@ -489,12 +491,15 @@ export const useDelivery = (): UseDeliveryState & UseDeliveryActions => {
     await loadCouriers();
   }, [loadCouriers]);
 
-  // Load initial data on mount
+  // Load initial data on mount - only once
   useEffect(() => {
-    loadDeliveryOrders();
-    loadCouriers();
-    loadDeliveryZones();
-  }, [loadDeliveryOrders, loadCouriers, loadDeliveryZones]);
+    if (!hasInitialLoad.current) {
+      hasInitialLoad.current = true;
+      loadDeliveryOrders();
+      loadCouriers();
+      loadDeliveryZones();
+    }
+  }, []); // Remove dependencies to prevent re-runs
 
   return {
     ...state,

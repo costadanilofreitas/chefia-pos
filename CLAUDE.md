@@ -71,6 +71,13 @@ npm run lint             # Lint all workspaces
 
 # Type checking (per app)
 cd apps/pos && npm run type-check
+
+# Security & Quality Analysis (POS app)
+cd apps/pos
+npm run lint:security    # Security linting
+npm run analyze:duplicates  # Find duplicate code
+npm run audit           # Security audit
+npm run analyze:all     # All checks combined
 ```
 
 ### E2E Testing
@@ -96,7 +103,7 @@ npm run test:e2e:report   # View test report
 │                    BACKEND (FastAPI)                     │
 ├─────────────────────────────────────────────────────────┤
 │ 30+ Business Modules | Event Bus | Async Operations     │
-│ Python 3.11+ | Pydantic 2 | SQLAlchemy 2 | JWT Auth    │
+│ Python 3.12+ | Pydantic 2 | SQLAlchemy 2 | JWT Auth    │
 └─────────────────────────────────────────────────────────┘
                         ↕ 
 ┌─────────────────────────────────────────────────────────┐
@@ -127,7 +134,7 @@ src/
 
 ## Critical Development Rules
 
-### ⚠️ MANDATORY: Code Quality Standards
+### ⚠️ MANDATORY: Code Quality Standards (SonarLint Compliance)
 
 #### NEVER in Production Code:
 ```python
@@ -141,6 +148,13 @@ def get_user():
 
 # ❌ NEVER use 'any' type in TypeScript
 let data: any;  # USE SPECIFIC TYPES
+
+# ❌ NEVER leave empty catch blocks
+try {
+  doSomething();
+} catch (error) {
+  // Silent fail - NEVER DO THIS
+}
 ```
 
 #### ALWAYS Do:
@@ -155,6 +169,10 @@ try:
 except SpecificError as e:
     logger.error(f"Operation failed: {e}")
     raise
+
+# ✅ Use logging instead of console (Frontend)
+import { offlineStorage } from '@/services/offlineStorage';
+offlineStorage.log('Order processed', { orderId: data.id });
 
 # ✅ Remove unused imports
 # Run: poetry run ruff check --fix
@@ -185,9 +203,11 @@ except SpecificError as e:
 □ No console.log/print statements
 □ No mocks in production code
 □ All tests passing
-□ No linting errors
-□ No type errors
+□ No linting errors (ESLint/Ruff)
+□ No type errors (TypeScript/mypy)
 □ No unused imports
+□ No security vulnerabilities (npm audit)
+□ No duplicate code (jscpd)
 □ No known bugs in the feature
 ```
 
@@ -209,7 +229,7 @@ except SpecificError as e:
 - **Brazilian Tax**: Full compliance
 
 ### Hardware
-- **Printers**: Epson, Bematech, Star support
+- **Printers**: Epson, Bematech, Daruma, Elgin support
 - **Card Readers**: Multiple TEF providers
 - **Kitchen Hardware**: Displays, buzzers, printers
 
@@ -229,7 +249,7 @@ event_bus.subscribe("order.*", handle_order_event)
 
 ### Frontend Reference (POS App)
 ```typescript
-// Component structure
+// Component structure - FOLLOW THIS PATTERN
 interface ComponentProps {
   id: string;
   onUpdate?: (data: Data) => void;
@@ -273,6 +293,19 @@ async def test_create_order():
     mock_repo.create.assert_called_once()
 ```
 
+```typescript
+// Frontend test example
+import { render, screen, waitFor } from '@testing-library/react';
+
+test('should display order', async () => {
+  render(<Order orderId="123" />);
+  
+  await waitFor(() => {
+    expect(screen.getByText('Order #123')).toBeInTheDocument();
+  });
+});
+```
+
 ## Git Workflow & Commits
 
 ### Branch Strategy
@@ -292,6 +325,8 @@ docs(module): update documentation
 refactor(module): improve code structure
 test(module): add/fix tests
 chore: maintenance tasks
+perf(module): performance improvement
+style(module): code formatting only
 ```
 
 ## Performance Guidelines
@@ -321,9 +356,10 @@ Since this is a **local POS application** (frontend and backend on same device),
 ```python
 # Backend (Python) - WHERE CACHE HAPPENS
 from functools import lru_cache
+from fastapi_cache.decorator import cache
 
 @router.get("/products")
-@lru_cache(maxsize=100, ttl=300)  # 5 min cache
+@cache(expire=300)  # 5 min cache
 async def get_products():
     return await product_service.get_all()
 ```
@@ -332,7 +368,7 @@ async def get_products():
 // Frontend (React) - SIMPLE, NO CACHE
 const loadProducts = async () => {
   // Just fetch - backend handles cache!
-  const products = await fetch('/api/products');
+  const products = await fetch('/api/v1/products');
   setProducts(await products.json());
 };
 ```
@@ -403,7 +439,17 @@ npm run type-check
 **Performance Issues**
 - Check for N+1 queries in backend
 - Verify React component memoization
-- Review bundle size with `npm run build --analyze`
+- Review bundle size with `npm run build:analyze`
+
+**ESLint Security Issues**
+```bash
+# Check security rules
+cd frontend/apps/pos
+npm run lint:security
+
+# Fix security issues
+npm run lint:fix
+```
 
 ## Module-Specific Notes
 
@@ -413,6 +459,7 @@ npm run type-check
 - **Bundle**: 250KB optimized
 - **Performance**: <100ms interactions
 - **Touch-first**: Designed for tablets
+- **Security**: ESLint security plugin configured
 
 ### Critical Business Rules
 - Orders can only be created during business hours
@@ -420,6 +467,7 @@ npm run type-check
 - Auto-cancel unpaid orders after 2 hours
 - Fiscal documents required for all sales
 - Inventory updates must be atomic
+- Cash drawer operations require authentication
 
 ### Offline-First Architecture
 - 100% functional without internet
@@ -428,26 +476,77 @@ npm run type-check
 - Conflict resolution strategies per module
 - <50ms local operation latency
 
+## Code Quality Enforcement
+
+### SonarLint Rules Applied
+```typescript
+// ✅ Use centralized logging instead of console
+import { offlineStorage } from '@/services/offlineStorage';
+offlineStorage.log('Event occurred', { context: data });
+
+// ✅ Use API configuration instead of hardcoded URLs
+import { API_CONFIG } from '@/config/api';
+const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORDERS}`);
+
+// ✅ Extract nested ternary to functions
+function getStatusColor(status: OrderStatus): string {
+  const colorMap: Record<OrderStatus, string> = {
+    pending: 'yellow',
+    confirmed: 'green',
+    preparing: 'blue',
+    ready: 'purple',
+    cancelled: 'red'
+  };
+  return colorMap[status] || 'gray';
+}
+
+// ✅ Use semantic HTML for accessibility
+<button onClick={handleClick} aria-label="Submit order">
+  Submit
+</button>
+
+// ✅ Complete error handling
+try {
+  const result = await api.getData();
+} catch (error) {
+  offlineStorage.log('Failed to fetch data', error);
+  showNotification('Error loading data', 'error');
+  throw error;
+}
+```
+
 ## Quick Debug Commands
 
 ```bash
-# Check for console.logs
-grep -r "console\." frontend/ --include="*.ts" --include="*.tsx" | grep -v test
+# Check for console.logs in TypeScript/JavaScript
+grep -r "console\." frontend/ --include="*.ts" --include="*.tsx" | grep -v test | grep -v node_modules
 
-# Check for prints
-grep -r "print(" src/ --include="*.py" | grep -v test
+# Check for prints in Python
+grep -r "print(" src/ --include="*.py" | grep -v test | grep -v __pycache__
+
+# Check for 'any' types in TypeScript
+grep -r ": any" frontend/apps/ --include="*.ts" --include="*.tsx" | grep -v node_modules | grep -v ".d.ts"
+
+# Check for empty catch blocks
+grep -r "catch.*{[[:space:]]*}" frontend/ --include="*.ts" --include="*.tsx"
+
+# Find duplicate code
+cd frontend/apps/pos && npm run analyze:duplicates
+
+# Run security audit
+cd frontend/apps/pos && npm audit
 
 # Run all quality checks (Python)
 cd src && poetry run black . && poetry run ruff check --fix && poetry run mypy . && poetry run pytest
 
 # Run all quality checks (Frontend)
-cd frontend && npm run lint && npm run test && npm run build
+cd frontend/apps/pos && npm run analyze:all && npm run test && npm run build
 ```
 
 ## Important Resources
 
 - **Main Docs**: `/docs/ai/` - Comprehensive technical documentation
-- **Dev Guide**: `/docs/ai/GUIA_DESENVOLVIMENTO.md` - Development best practices
+- **Dev Guide**: `/docs/ai/GUIA_DESENVOLVIMENTO.md` - Development best practices (Portuguese)
 - **Architecture**: `/docs/ai/ARQUITETURA_TECNICA_COMPLETA.md` - Full technical architecture
 - **Business Rules**: `/docs/ai/REGRAS_NEGOCIO_CONSOLIDADAS.md` - Business logic documentation
 

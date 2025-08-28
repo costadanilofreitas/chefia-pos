@@ -1,6 +1,8 @@
 import { apiInterceptor } from './ApiInterceptor';
 import { API_ENDPOINTS } from '../config/api';
 import logger, { LogSource } from './LocalLoggerService';
+import realtimeSync from './RealtimeSyncService';
+import eventBus from '../utils/EventBus';
 import {
   Cashier,
   CashierOperation,
@@ -70,6 +72,11 @@ export class CashierService {
         'CashierService', 
         LogSource.POS
       );
+      
+      // Notificar outros terminais sobre abertura de caixa
+      realtimeSync.notifyCreate('cashier', response.data);
+      eventBus.emit('cashier:opened', response.data);
+      
       return response.data;
     } catch (error) {
       await logger.critical('Erro ao abrir caixa', { cashierData, error }, 'CashierService', LogSource.POS);
@@ -98,6 +105,11 @@ export class CashierService {
         'CashierService', 
         LogSource.POS
       );
+      
+      // Notificar outros terminais sobre fechamento de caixa
+      realtimeSync.notifyUpdate('cashier', cashierId, response.data);
+      eventBus.emit('cashier:closed', response.data);
+      
       return response.data;
     } catch (error) {
       await logger.critical('Erro ao fechar caixa', { cashierId, error }, 'CashierService', LogSource.POS);
@@ -114,6 +126,11 @@ export class CashierService {
       `/api/v1/cashier/${cashierId}/operation`,
       operation
     );
+    
+    // Notificar outros terminais sobre operação no caixa
+    realtimeSync.notifyUpdate('cashier', cashierId, { operation: response.data });
+    eventBus.emit('cashier:operation', { cashierId, operation: response.data });
+    
     return response.data;
   
   }
@@ -127,6 +144,11 @@ export class CashierService {
       API_ENDPOINTS.CASHIER.WITHDRAW(cashierId),
       withdrawal
     );
+    
+    // Notificar outros terminais sobre retirada
+    realtimeSync.notifyUpdate('cashier', cashierId, { withdrawal: response.data });
+    eventBus.emit('cashier:withdrawal', { cashierId, withdrawal: response.data });
+    
     return response.data;
   
   }

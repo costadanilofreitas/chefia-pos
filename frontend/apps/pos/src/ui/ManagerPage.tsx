@@ -1121,10 +1121,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-operator-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         ID Operador
                       </label>
                       <input
+                        id="employee-operator-id"
                         type="text"
                         value={employeeForm.operator_id}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, operator_id: e.target.value })}
@@ -1133,10 +1134,11 @@ export default function ManagerPage() {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label htmlFor="employee-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Cargo
                       </label>
                       <select
+                        id="employee-role"
                         value={employeeForm.role}
                         onChange={(e) => setEmployeeForm({ ...employeeForm, role: e.target.value })}
                         className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
@@ -1609,10 +1611,11 @@ export default function ManagerPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="bill-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Valor
                 </label>
                 <input
+                  id="bill-amount"
                   type="number"
                   value={billForm.amount}
                   onChange={(e) => setBillForm({ ...billForm, amount: parseFloat(e.target.value) || 0 })}
@@ -1623,10 +1626,11 @@ export default function ManagerPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="bill-due-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Data de Vencimento
                 </label>
                 <input
+                  id="bill-due-date"
                   type="date"
                   value={billForm.due_date}
                   onChange={(e) => setBillForm({ ...billForm, due_date: e.target.value })}
@@ -1635,10 +1639,11 @@ export default function ManagerPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="bill-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Observações
                 </label>
                 <textarea
+                  id="bill-notes"
                   value={billForm.notes}
                   onChange={(e) => setBillForm({ ...billForm, notes: e.target.value })}
                   className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"

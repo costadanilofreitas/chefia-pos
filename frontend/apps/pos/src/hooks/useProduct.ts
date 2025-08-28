@@ -17,6 +17,10 @@ export interface Category {
   updated_at?: string;
 }
 
+// Singleton para garantir que os dados sejam carregados apenas uma vez
+let globalLoadPromise: Promise<void> | null = null;
+let globalHasLoaded = false;
+
 export const useProduct = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -136,18 +140,67 @@ export const useProduct = () => {
     let isCancelled = false;
     
     const loadData = async () => {
-      // Se já carregou, não recarregar
-      if (hasLoaded) return;
+      // Se já carregou globalmente, apenas pegar os dados do cache
+      if (globalHasLoaded) {
+        try {
+          const cachedProducts = await productService.getProducts();
+          const cachedCategories = await productService.getCategories();
+          
+          if (!isCancelled) {
+            setProducts(cachedProducts);
+            setCategories(cachedCategories);
+            setHasLoaded(true);
+            setLoading(false);
+          }
+        } catch (error) {
+          if (!isCancelled) {
+            setError(getErrorMessage(error));
+            setLoading(false);
+          }
+        }
+        return;
+      }
       
+      // Se já existe uma promise global de carregamento, aguardar ela
+      if (globalLoadPromise) {
+        setLoading(true);
+        try {
+          await globalLoadPromise;
+          
+          // Após a promise global, pegar os dados do cache
+          const cachedProducts = await productService.getProducts();
+          const cachedCategories = await productService.getCategories();
+          
+          if (!isCancelled) {
+            setProducts(cachedProducts);
+            setCategories(cachedCategories);
+            setHasLoaded(true);
+          }
+        } catch (error) {
+          if (!isCancelled) {
+            setError(getErrorMessage(error));
+          }
+        } finally {
+          if (!isCancelled) {
+            setLoading(false);
+          }
+        }
+        return;
+      }
+      
+      // Primeira vez carregando - criar promise global
       setLoading(true);
       setError(null);
       
+      globalLoadPromise = Promise.all([
+        loadProducts(),
+        loadCategories()
+      ]).then(() => {
+        globalHasLoaded = true;
+      });
+      
       try {
-        // Carregar produtos e categorias em paralelo
-        await Promise.all([
-          loadProducts(),
-          loadCategories()
-        ]);
+        await globalLoadPromise;
         
         // Só marcar como carregado se não foi cancelado
         if (!isCancelled) {
@@ -157,6 +210,9 @@ export const useProduct = () => {
         if (!isCancelled) {
           setError(getErrorMessage(error));
         }
+        // Em caso de erro, resetar para permitir retry
+        globalLoadPromise = null;
+        globalHasLoaded = false;
       } finally {
         if (!isCancelled) {
           setLoading(false);

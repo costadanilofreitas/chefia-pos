@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 // import { useOrder } from '../hooks/useOrder';
 import { useProduct } from '../hooks/useProduct';
@@ -7,12 +7,139 @@ import { useToast } from '../components/Toast';
 import { useConfirmDialog } from '../components/ConfirmDialog';
 import { SimpleTooltip } from '../components/Tooltip';
 import type { CartItem } from '../hooks/useCart';
+import { performanceMonitor } from '../utils/performance';
 // Temporarily removed hotkeys until library issue is resolved
 // import { useHotkeys } from 'react-hotkeys-hook';
+
+// Componente de produto memoizado para evitar re-renders desnecessários
+const ProductCard = memo<{
+  product: any;
+  isLastAdded: boolean;
+  onAddToCart: (product: any) => void;
+  formatCurrency: (value: number) => string;
+}>(({ product, isLastAdded, onAddToCart, formatCurrency }) => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onAddToCart(product);
+  }, [product, onAddToCart]);
+
+  return (
+    <div
+      onClick={handleClick}
+      onPointerDown={(e) => e.preventDefault()}
+      className={`
+        min-h-[120px] lg:min-h-[140px] bg-white dark:bg-gray-800 rounded-lg shadow-sm 
+        hover:shadow-lg transform transition-all duration-75 overflow-hidden group
+        select-none cursor-pointer active:scale-95 relative
+        ${isLastAdded ? 'ring-2 ring-green-500 animate-pulse' : ''}
+      `}
+      style={{ 
+        WebkitTapHighlightColor: 'transparent', 
+        userSelect: 'none',
+        touchAction: 'manipulation'
+      }}
+    >
+      <div className="h-20 lg:h-24 bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
+        {product.image_url ? (
+          <img 
+            src={product.image_url} 
+            alt={product.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-3xl">
+            🍽️
+          </div>
+        )}
+      </div>
+      <div className="p-2">
+        <h3 className="font-medium text-xs lg:text-sm text-gray-900 dark:text-white truncate">
+          {product.name}
+        </h3>
+        <p className="text-base lg:text-lg font-bold text-blue-600 dark:text-blue-400 mt-1">
+          {formatCurrency(product.price)}
+        </p>
+      </div>
+    </div>
+  );
+});
+
+ProductCard.displayName = 'ProductCard';
+
+// Componente de item do carrinho memoizado
+const CartItemComponent = memo<{
+  item: CartItem;
+  onUpdateQuantity: (id: string, delta: number) => void;
+  onRemove: (id: string) => void;
+  formatCurrency: (value: number) => string;
+}>(({ item, onUpdateQuantity, onRemove, formatCurrency }) => {
+  const handleDecrease = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onUpdateQuantity(item.id, -1);
+  }, [item.id, onUpdateQuantity]);
+  
+  const handleIncrease = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onUpdateQuantity(item.id, 1);
+  }, [item.id, onUpdateQuantity]);
+  
+  const handleRemove = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onRemove(item.id);
+  }, [item.id, onRemove]);
+  
+  return (
+    <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+      <div className="flex-1">
+        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+          {item.name}
+        </h4>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {formatCurrency(item.price)} x {item.quantity}
+        </p>
+      </div>
+      
+      {/* Quick quantity controls */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={handleDecrease}
+          className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-xs transition-colors duration-75"
+        >
+          -
+        </button>
+        <span className="w-8 text-center text-sm font-medium">
+          {item.quantity}
+        </span>
+        <button
+          onClick={handleIncrease}
+          className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-xs transition-colors duration-75"
+        >
+          +
+        </button>
+        <button
+          onClick={handleRemove}
+          className="w-6 h-6 rounded bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs ml-1 transition-colors duration-75"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+});
+
+CartItemComponent.displayName = 'CartItemComponent';
 
 const MainPage: React.FC = () => {
   const navigate = useNavigate();
   const { terminalId } = useParams();
+  
+  // Monitorar tempo de carregamento dos dados
+  useEffect(() => {
+    performanceMonitor.startTimer('MainPage-DataLoad');
+  }, []);
+  
   const { products, categories, loading } = useProduct();
   // const { createOrder } = useOrder(); // TODO: usar quando implementar
   // const { customers } = useCustomer(); // TODO: usar quando implementar  
@@ -30,6 +157,21 @@ const MainPage: React.FC = () => {
 
   const searchRef = useRef<HTMLInputElement>(null);
   const productGridRef = useRef<HTMLDivElement>(null);
+  
+  // Registrar métricas quando os dados carregarem
+  useEffect(() => {
+    if (!loading && products.length > 0) {
+      const loadTime = performanceMonitor.endTimer('MainPage-DataLoad');
+      performanceMonitor.recordMetric('MainPage', {
+        apiCallTime: loadTime,
+        totalLoadTime: loadTime,
+      });
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ MainPage carregado em ${loadTime.toFixed(2)}ms com ${products.length} produtos`);
+      }
+    }
+  }, [loading, products.length]);
 
   const selectCategoryByIndex = useCallback((index: number) => {
     if (categories[index]) {
@@ -72,8 +214,8 @@ const MainPage: React.FC = () => {
     [cart]
   );
 
-  // Optimized add to cart - SINGLE CLICK
-  const addToCart = useCallback((product) => {
+  // Optimized add to cart - SINGLE CLICK - Memoizado para evitar recriação
+  const addToCart = useCallback((product: any) => {
     // Remove focus from unknown active element (especially inputs)
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
@@ -205,12 +347,13 @@ const MainPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [speedMode, processPayment, clearCart, categories, selectCategoryByIndex]);
 
-  const formatCurrency = (value: number) => {
+  // Memoizar formatCurrency para evitar recriação a cada render
+  const formatCurrency = useCallback((value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     }).format(value);
-  };
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
@@ -372,51 +515,13 @@ const MainPage: React.FC = () => {
                   }
                 }}>
                 {filteredProducts.map(product => (
-                  <div
+                  <ProductCard
                     key={product.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      addToCart(product);
-                    }}
-                    onPointerDown={(e) => e.preventDefault()}
-                    className={`
-                      min-h-[120px] lg:min-h-[140px] bg-white dark:bg-gray-800 rounded-lg shadow-sm 
-                      hover:shadow-lg transform transition-all duration-75 overflow-hidden group
-                      select-none cursor-pointer active:scale-95 relative
-                      ${lastAddedProduct === product.id ? 'ring-2 ring-green-500 animate-pulse' : ''}
-                    `}
-                    style={{ 
-                      WebkitTapHighlightColor: 'transparent', 
-                      userSelect: 'none',
-                      touchAction: 'manipulation'
-                    }}
-                  >
-                    {/* Quick Badge for popular items - could be added based on order frequency */}
-                    
-                    <div className="h-20 lg:h-24 bg-gray-200 dark:bg-gray-700 relative overflow-hidden">
-                      {product.image_url ? (
-                        <img 
-                          src={product.image_url} 
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-3xl">
-                          🍽️
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-2">
-                      <h3 className="font-medium text-xs lg:text-sm text-gray-900 dark:text-white truncate">
-                        {product.name}
-                      </h3>
-                      <p className="text-base lg:text-lg font-bold text-blue-600 dark:text-blue-400 mt-1">
-                        {formatCurrency(product.price)}
-                      </p>
-                    </div>
-                  </div>
+                    product={product}
+                    isLastAdded={lastAddedProduct === product.id}
+                    onAddToCart={addToCart}
+                    formatCurrency={formatCurrency}
+                  />
                 ))}
               </div>
             )}
@@ -452,53 +557,13 @@ const MainPage: React.FC = () => {
               ) : (
                 <div className="space-y-2">
                   {cart.map(item => (
-                    <div
+                    <CartItemComponent
                       key={item.id}
-                      className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                    >
-                      <div className="flex-1">
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                          {item.name}
-                        </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {formatCurrency(item.price)} x {item.quantity}
-                        </p>
-                      </div>
-                      
-                      {/* Quick quantity controls */}
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateQuantity(item.id, -1);
-                          }}
-                          className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-xs transition-colors duration-75"
-                        >
-                          -
-                        </button>
-                        <span className="w-8 text-center text-sm font-medium">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateQuantity(item.id, 1);
-                          }}
-                          className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-xs transition-colors duration-75"
-                        >
-                          +
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeFromCart(item.id);
-                          }}
-                          className="w-6 h-6 rounded bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 text-xs ml-1 transition-colors duration-75"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
+                      item={item}
+                      onUpdateQuantity={updateQuantity}
+                      onRemove={removeFromCart}
+                      formatCurrency={formatCurrency}
+                    />
                   ))}
                 </div>
               )}

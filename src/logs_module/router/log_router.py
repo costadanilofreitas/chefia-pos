@@ -1,12 +1,20 @@
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 
 from src.auth.models import Permission, User
 from src.auth.security import get_current_user
 
 from ..models.log_models import LogConfig, LogEntry, LogQuery, LogSource, LogStats
 from ..services.log_service import log_error, log_info, log_service, log_warning
+
+
+class LogBatch(BaseModel):
+    """Model for batch log submission"""
+    logs: List[LogEntry]
+    client_timestamp: str
+    client_id: str
 
 router = APIRouter(prefix="/api/v1", tags=["logging"])
 
@@ -36,6 +44,42 @@ async def create_log_entry(
         entry.user_name = current_user.username
 
     return await log_service.log(entry)
+
+
+@router.post("/logs/batch", response_model=Dict[str, Any])
+async def create_log_batch(
+    batch: LogBatch, current_user: User = Depends(get_current_user)
+):
+    """Create multiple log entries at once for better performance."""
+    _check_permissions(current_user, ["logs.write"])
+    
+    # Process logs in batch
+    processed = 0
+    errors = []
+    
+    for entry in batch.logs:
+        try:
+            # Add user information if not provided
+            if not entry.user_id and current_user:
+                entry.user_id = current_user.id
+                entry.user_name = current_user.username
+            
+            await log_service.log(entry)
+            processed += 1
+        except Exception as e:
+            errors.append({
+                "message": entry.message,
+                "error": str(e)
+            })
+    
+    return {
+        "success": len(errors) == 0,
+        "processed": processed,
+        "total": len(batch.logs),
+        "errors": errors if errors else None,
+        "client_timestamp": batch.client_timestamp,
+        "client_id": batch.client_id
+    }
 
 
 @router.post("/logs/query", response_model=List[LogEntry])

@@ -568,10 +568,11 @@ export default function FiscalPage() {
               
               {contingencyMode.active && (
                 <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="contingency-reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Motivo da Contingência
                   </label>
                   <textarea
+                    id="contingency-reason"
                     value={contingencyReason}
                     onChange={(e) => setContingencyReason(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -678,10 +679,11 @@ export default function FiscalPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="cancel-reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Motivo do Cancelamento *
                   </label>
                   <textarea
+                    id="cancel-reason"
                     value={cancelReason}
                     onChange={(e) => setCancelReason(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
@@ -742,10 +744,11 @@ export default function FiscalPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="report-start-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Data Inicial
                   </label>
                   <input
+                    id="report-start-date"
                     type="date"
                     value={reportDateRange.startDate}
                     onChange={(e) => setReportDateRange({ ...reportDateRange, startDate: e.target.value })}
@@ -754,10 +757,11 @@ export default function FiscalPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="report-end-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Data Final
                   </label>
                   <input
+                    id="report-end-date"
                     type="date"
                     value={reportDateRange.endDate}
                     onChange={(e) => setReportDateRange({ ...reportDateRange, endDate: e.target.value })}

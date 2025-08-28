@@ -6,8 +6,7 @@ import Toast, { useToast } from '../components/Toast';
 import { useAI } from '../hooks/useAI';
 import { useCoupons } from '../hooks/useCoupons';
 import type { Coupon } from '../services/CouponsService';
-import { useCustomer } from '../hooks/useCustomer';
-import { useLoyalty } from '../hooks/useLoyalty';
+import { useLoyaltyData } from '../hooks/useLoyaltyData';
 import '../index.css';
 
 interface LoyaltyCustomer {
@@ -73,7 +72,18 @@ export default function LoyaltyPage() {
   const { terminalId } = useParams();
   const { toasts, removeToast, success, warning, error /* , info */ } = useToast();
   const { showConfirm, ConfirmDialogComponent } = useConfirmDialog();
-  const { createCustomer, loadCustomers, creating } = useCustomer();
+  const { 
+    customers,
+    rewards,
+    transactions,
+    loyaltyProgram,
+    loading: loadingLoyalty,
+    dataLoaded,
+    createCustomer,
+    addPoints,
+    redeemPoints,
+    forceReload
+  } = useLoyaltyData();
   const { 
     coupons, 
     // loading: loadingCoupons, // TODO: usar para indicador de carregamento
@@ -95,28 +105,6 @@ export default function LoyaltyPage() {
     optimizeLoyaltyProgram,
     generatePersonalizedOffer
   } = useAI();
-  const {
-    loading: loadingLoyalty,
-    addPoints,
-    redeemPoints,
-    // checkBalance, // TODO: usar quando implementar consulta de saldo
-    // getTransactionHistory, // TODO: usar quando implementar histórico
-    loadRewards,
-    loadTransactions,
-    loyaltyProgram = {
-      name: 'Programa de Fidelidade',
-      pointsPerCurrency: 10,
-      tiers: {
-        bronze: { min: 0, multiplier: 1, benefits: ['Acumule pontos'] },
-        silver: { min: 500, multiplier: 1.2, benefits: ['20% mais pontos'] },
-        gold: { min: 1500, multiplier: 1.5, benefits: ['50% mais pontos'] },
-        platinum: { min: 5000, multiplier: 2, benefits: ['Pontos em dobro'] }
-      },
-      birthdayBonus: 500,
-      welcomeBonus: 100,
-      referralBonus: 250
-    }
-  } = useLoyalty();
   
   const [selectedTab, setSelectedTab] = useState<'customers' | 'rewards' | 'transactions' | 'coupons' | 'ai' | 'program'>('customers');
   const [searchTerm, setSearchTerm] = useState('');
@@ -156,20 +144,8 @@ export default function LoyaltyPage() {
     per_customer_limit: 0
   });
   
-  // Use real customers from hook
-  const [customers /* , setCustomers */] = useState<LoyaltyCustomer[]>([]);
-
-  const [rewards] = useState<LoyaltyReward[]>([]);
-  const [transactions] = useState<LoyaltyTransaction[]>([]);
-
-  // Load loyalty data on mount
-  useEffect(() => {
-    // Load customers, rewards and transactions from API
-    loadCustomers();
-    loadRewards(); 
-    loadTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Load only once on mount
+  // Dados já são carregados pelo useLoyaltyData hook
+  // Não precisa de useState nem useEffect duplicados
 
   useEffect(() => {
     if (!terminalId || isNaN(Number(terminalId))) {
@@ -1228,10 +1204,11 @@ export default function LoyaltyPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="customer-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Nome Completo *
                   </label>
                   <input
+                    id="customer-name"
                     type="text"
                     value={newCustomerForm.name}
                     onChange={(e) => setNewCustomerForm({ ...newCustomerForm, name: e.target.value })}
@@ -1242,10 +1219,11 @@ export default function LoyaltyPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="customer-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Email *
                   </label>
                   <input
+                    id="customer-email"
                     type="email"
                     value={newCustomerForm.email}
                     onChange={(e) => setNewCustomerForm({ ...newCustomerForm, email: e.target.value })}
@@ -1256,10 +1234,11 @@ export default function LoyaltyPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="customer-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Telefone *
                   </label>
                   <input
+                    id="customer-phone"
                     type="tel"
                     value={newCustomerForm.phone}
                     onChange={(e) => setNewCustomerForm({ ...newCustomerForm, phone: e.target.value })}
@@ -1270,10 +1249,11 @@ export default function LoyaltyPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="customer-cpf" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     CPF
                   </label>
                   <input
+                    id="customer-cpf"
                     type="text"
                     value={newCustomerForm.document}
                     onChange={(e) => setNewCustomerForm({ ...newCustomerForm, document: e.target.value })}
@@ -1283,10 +1263,11 @@ export default function LoyaltyPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="customer-birthdate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Data de Nascimento
                   </label>
                   <input
+                    id="customer-birthdate"
                     type="date"
                     value={newCustomerForm.birthDate}
                     onChange={(e) => setNewCustomerForm({ ...newCustomerForm, birthDate: e.target.value })}
@@ -1335,15 +1316,15 @@ export default function LoyaltyPage() {
                           document: '',
                           birthDate: ''
                         });
-                        loadCustomers(); // Refresh the customer list
+                        forceReload(); // Refresh the customer list
                       } else {
                         error('Erro ao criar cliente. Tente novamente.');
                       }
                     }}
-                    disabled={creating || !newCustomerForm.name || !newCustomerForm.email || !newCustomerForm.phone}
+                    disabled={loadingLoyalty || !newCustomerForm.name || !newCustomerForm.email || !newCustomerForm.phone}
                     className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {creating ? 'Criando...' : 'Criar Cliente'}
+                    {loadingLoyalty ? 'Criando...' : 'Criar Cliente'}
                   </button>
                 </div>
               </div>
@@ -1376,10 +1357,11 @@ export default function LoyaltyPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="coupon-code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Código do Cupom *
                   </label>
                   <input
+                    id="coupon-code"
                     type="text"
                     value={couponForm.code}
                     onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
@@ -1389,10 +1371,11 @@ export default function LoyaltyPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="coupon-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Descrição *
                   </label>
                   <input
+                    id="coupon-description"
                     type="text"
                     value={couponForm.description}
                     onChange={(e) => setCouponForm({ ...couponForm, description: e.target.value })}
@@ -1402,10 +1385,11 @@ export default function LoyaltyPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="coupon-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Tipo de Desconto
                   </label>
                   <select
+                    id="coupon-type"
                     value={couponForm.discount_type}
                     onChange={(e) => setCouponForm({ ...couponForm, discount_type: e.target.value as 'percentage' | 'fixed' | 'product' | 'shipping' })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -1419,10 +1403,11 @@ export default function LoyaltyPage() {
                 
                 {(couponForm.discount_type === 'percentage' || couponForm.discount_type === 'fixed') && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="coupon-value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Valor do Desconto
                     </label>
                     <input
+                      id="coupon-value"
                       type="number"
                       value={couponForm.discount_value}
                       onChange={(e) => setCouponForm({ ...couponForm, discount_value: parseFloat(e.target.value) || 0 })}
@@ -1434,10 +1419,11 @@ export default function LoyaltyPage() {
                 )}
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="coupon-min-purchase" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Compra Mínima
                   </label>
                   <input
+                    id="coupon-min-purchase"
                     type="number"
                     value={couponForm.min_purchase}
                     onChange={(e) => setCouponForm({ ...couponForm, min_purchase: parseFloat(e.target.value) || 0 })}
@@ -1449,10 +1435,11 @@ export default function LoyaltyPage() {
                 
                 {couponForm.discount_type === 'percentage' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="coupon-max-discount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Desconto Máximo
                     </label>
                     <input
+                      id="coupon-max-discount"
                       type="number"
                       value={couponForm.max_discount}
                       onChange={(e) => setCouponForm({ ...couponForm, max_discount: parseFloat(e.target.value) || 0 })}
@@ -1465,10 +1452,11 @@ export default function LoyaltyPage() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="coupon-valid-from" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Válido De
                     </label>
                     <input
+                      id="coupon-valid-from"
                       type="date"
                       value={couponForm.valid_from}
                       onChange={(e) => setCouponForm({ ...couponForm, valid_from: e.target.value })}
@@ -1477,10 +1465,11 @@ export default function LoyaltyPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="coupon-valid-until" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Válido Até
                     </label>
                     <input
+                      id="coupon-valid-until"
                       type="date"
                       value={couponForm.valid_until}
                       onChange={(e) => setCouponForm({ ...couponForm, valid_until: e.target.value })}
@@ -1491,10 +1480,11 @@ export default function LoyaltyPage() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="coupon-usage-limit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Limite de Uso Total
                     </label>
                     <input
+                      id="coupon-usage-limit"
                       type="number"
                       value={couponForm.usage_limit}
                       onChange={(e) => setCouponForm({ ...couponForm, usage_limit: parseInt(e.target.value) || 0 })}
@@ -1504,10 +1494,11 @@ export default function LoyaltyPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="coupon-customer-limit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Limite por Cliente
                     </label>
                     <input
+                      id="coupon-customer-limit"
                       type="number"
                       value={couponForm.per_customer_limit}
                       onChange={(e) => setCouponForm({ ...couponForm, per_customer_limit: parseInt(e.target.value) || 0 })}
@@ -1692,10 +1683,11 @@ export default function LoyaltyPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="points-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Quantidade de Pontos
                   </label>
                   <input
+                    id="points-amount"
                     type="number"
                     value={pointsAmount}
                     onChange={(e) => setPointsAmount(parseInt(e.target.value) || 0)}
@@ -1706,10 +1698,11 @@ export default function LoyaltyPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="points-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Descrição
                   </label>
                   <input
+                    id="points-description"
                     type="text"
                     value={pointsDescription}
                     onChange={(e) => setPointsDescription(e.target.value)}

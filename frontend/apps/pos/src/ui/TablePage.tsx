@@ -126,7 +126,7 @@ export default function TablePage() {
   // Load data on mount
   useEffect(() => {
     loadOrders();
-    loadTables();
+    // loadTables() removed - already called in useTable hook
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Load only once on mount
   
@@ -980,10 +980,11 @@ export default function TablePage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="table-number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Número da Mesa
                   </label>
                   <input
+                    id="table-number"
                     type="text"
                     value={newTable.number}
                     onChange={(e) => setNewTable({ ...newTable, number: e.target.value })}
@@ -992,10 +993,11 @@ export default function TablePage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="table-seats" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Número de Lugares
                   </label>
                   <input
+                    id="table-seats"
                     type="number"
                     value={newTable.seats}
                     onChange={(e) => setNewTable({ ...newTable, seats: parseInt(e.target.value) || 2 })}
@@ -1006,10 +1008,11 @@ export default function TablePage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="table-area" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Área
                   </label>
                   <select
+                    id="table-area"
                     value={newTable.area}
                     onChange={(e) => setNewTable({ ...newTable, area: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"

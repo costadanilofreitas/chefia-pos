@@ -25,6 +25,8 @@ from src.core.models.core_models import (
 from src.customer.models.customer_models import PurchaseHistoryEntry
 from src.customer.services.customer_service import customer_service
 from src.product.models.product import ProductType
+from src.core.optimistic_lock import optimistic_lock_manager, check_version_conflict
+from src.realtime.websocket_sync import notify_data_change
 
 # Simulação de banco de dados com arquivo JSON
 DATA_DIR = os.path.join("/home/ubuntu/pos-modern/data")

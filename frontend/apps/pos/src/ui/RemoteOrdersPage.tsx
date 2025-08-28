@@ -702,10 +702,11 @@ export default function RemoteOrdersPage() {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="api-token" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Token de API
                 </label>
                 <input
+                  id="api-token"
                   type="password"
                   placeholder="Digite o token de integração"
                   className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"
@@ -713,10 +714,11 @@ export default function RemoteOrdersPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="establishment-id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   ID do Estabelecimento
                 </label>
                 <input
+                  id="establishment-id"
                   type="text"
                   placeholder="Digite o ID do estabelecimento"
                   className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 dark:text-white"

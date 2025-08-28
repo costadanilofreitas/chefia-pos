@@ -1,11 +1,18 @@
 /**
- * Local Logger Service
- * Sistema de logging local integrado com o backend logs_module
- * Para aplicação POS offline-first on-premise
+ * Local Logger Service - Versão Híbrida
+ * Sistema de logging com WebSocket primário e HTTP como fallback
+ * 
+ * MELHORIAS:
+ * - WebSocket como transporte primário (zero requisições HTTP duplicadas)
+ * - HTTP batch como fallback quando WebSocket não disponível
+ * - Envio automático a cada 10 segundos (apenas se usando HTTP)
+ * - Flush imediato para logs críticos
+ * - Fallback local quando offline
  */
 
 import { apiInterceptor } from './ApiInterceptor';
 import { offlineStorage, type StorageLogEntry } from './OfflineStorage';
+import { wsLogger } from './WebSocketLoggerService';
 
 export enum LogLevel {
   DEBUG = 'debug',
@@ -57,6 +64,9 @@ interface LogConfig {
   enableLocal: boolean;
   minLevel: LogLevel;
   maxLocalLogs: number;
+  batchSize: number;
+  batchIntervalMs: number;
+  maxRetries: number;
 }
 
 class LocalLoggerService {
@@ -65,22 +75,27 @@ class LocalLoggerService {
     enableRemote: true,
     enableLocal: true,
     minLevel: LogLevel.INFO,
-    maxLocalLogs: 10000
+    maxLocalLogs: 10000,
+    batchSize: 50, // Enviar logs em lotes de 50 (apenas para HTTP fallback)
+    batchIntervalMs: 10000, // Enviar a cada 10 segundos (apenas para HTTP fallback)
+    maxRetries: 3
   };
+  
+  private useWebSocket = true; // Usar WebSocket por padrão
 
-  private readonly STORAGE_KEY = 'app_logs';
-  private pendingLogs: LogEntry[] = [];
-  private syncTimeout: NodeJS.Timeout | null = null;
+  private logBuffer: LogEntry[] = [];
+  private batchTimer: NodeJS.Timeout | null = null;
+  private isProcessing = false;
+  private retryCount = 0;
 
   constructor() {
-    // Restaurar logs pendentes do storage
-    this.loadPendingLogs();
+    // Inicializar timer de batch apenas se não usar WebSocket
+    if (!this.useWebSocket) {
+      this.startBatchTimer();
+    }
     
-    // Sincronizar logs a cada 30 segundos
-    setInterval(() => this.syncLogs(), 30000);
-    
-    // Capturar erros globais
-    if (typeof window !== 'undefined') {
+    // WebSocket logger já captura erros globais, então só fazer se usar HTTP
+    if (!this.useWebSocket && typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
       window.addEventListener('unhandledrejection', (event) => {
         this.error('Unhandled Promise Rejection', {
           reason: event.reason,
@@ -98,6 +113,13 @@ class LocalLoggerService {
         }, 'system', LogSource.SYSTEM);
       });
     }
+
+    // Enviar logs pendentes ao fechar a página (apenas para HTTP)
+    if (!this.useWebSocket && typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', () => {
+        this.flush();
+      });
+    }
   }
 
   /**
@@ -105,12 +127,21 @@ class LocalLoggerService {
    */
   configure(config: Partial<LogConfig>) {
     this.config = { ...this.config, ...config };
+    
+    // Reiniciar timer se intervalo mudou
+    if (config.batchIntervalMs) {
+      this.stopBatchTimer();
+      this.startBatchTimer();
+    }
   }
 
   /**
    * Log de debug
    */
   async debug(message: string, details?: unknown, module: string = 'app', source: LogSource = LogSource.POS) {
+    if (this.useWebSocket) {
+      return wsLogger.debug(message, details, module, source);
+    }
     await this.log(LogLevel.DEBUG, message, details, module, source);
   }
 
@@ -118,6 +149,9 @@ class LocalLoggerService {
    * Log de informação
    */
   async info(message: string, details?: unknown, module: string = 'app', source: LogSource = LogSource.POS) {
+    if (this.useWebSocket) {
+      return wsLogger.info(message, details, module, source);
+    }
     await this.log(LogLevel.INFO, message, details, module, source);
   }
 
@@ -125,6 +159,9 @@ class LocalLoggerService {
    * Log de aviso
    */
   async warn(message: string, details?: unknown, module: string = 'app', source: LogSource = LogSource.POS) {
+    if (this.useWebSocket) {
+      return wsLogger.warn(message, details, module, source);
+    }
     await this.log(LogLevel.WARNING, message, details, module, source);
   }
 
@@ -141,6 +178,9 @@ class LocalLoggerService {
       };
     }
     
+    if (this.useWebSocket) {
+      return wsLogger.error(message, details, module, source);
+    }
     await this.log(LogLevel.ERROR, message, details, module, source);
   }
 
@@ -148,11 +188,16 @@ class LocalLoggerService {
    * Log crítico
    */
   async critical(message: string, details?: unknown, module: string = 'app', source: LogSource = LogSource.POS) {
+    if (this.useWebSocket) {
+      return wsLogger.critical(message, details, module, source);
+    }
     await this.log(LogLevel.CRITICAL, message, details, module, source);
+    // Para logs críticos, fazer flush imediato
+    this.flush();
   }
 
   /**
-   * Log principal
+   * Log principal otimizado
    */
   private async log(
     level: LogLevel,
@@ -165,6 +210,7 @@ class LocalLoggerService {
     if (!this.shouldLog(level)) return;
 
     const logEntry: LogEntry = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
       level,
       source,
@@ -183,14 +229,126 @@ class LocalLoggerService {
       this.consoleLog(level, message, details);
     }
 
-    // Salvar localmente
-    if (this.config.enableLocal) {
+    // Adicionar ao buffer ao invés de enviar imediatamente
+    this.addToBuffer(logEntry);
+
+    // Salvar localmente para logs importantes
+    if (this.config.enableLocal && (level === LogLevel.ERROR || level === LogLevel.CRITICAL)) {
       await this.saveLocal(logEntry);
     }
+  }
 
-    // Enviar para o backend
-    if (this.config.enableRemote) {
-      await this.sendToBackend(logEntry);
+  /**
+   * Adicionar log ao buffer
+   */
+  private addToBuffer(logEntry: LogEntry) {
+    this.logBuffer.push(logEntry);
+
+    // Se atingiu o tamanho do batch, processar imediatamente
+    if (this.logBuffer.length >= this.config.batchSize) {
+      this.processBatch();
+    }
+  }
+
+  /**
+   * Iniciar timer de batch
+   */
+  private startBatchTimer() {
+    if (this.batchTimer) return;
+
+    this.batchTimer = setInterval(() => {
+      this.processBatch();
+    }, this.config.batchIntervalMs);
+  }
+
+  /**
+   * Parar timer de batch
+   */
+  private stopBatchTimer() {
+    if (this.batchTimer) {
+      clearInterval(this.batchTimer);
+      this.batchTimer = null;
+    }
+  }
+
+  /**
+   * Processar batch de logs
+   */
+  private async processBatch() {
+    // Evitar processamento concorrente
+    if (this.isProcessing || this.logBuffer.length === 0) return;
+
+    this.isProcessing = true;
+    const batch = [...this.logBuffer];
+    this.logBuffer = [];
+
+    try {
+      if (this.config.enableRemote && navigator.onLine) {
+        await this.sendBatchToBackend(batch);
+        this.retryCount = 0;
+      } else {
+        // Se offline, salvar localmente
+        await this.saveBatchLocal(batch);
+      }
+    } catch (error) {
+      // Em caso de erro, re-adicionar ao buffer para retry
+      if (this.retryCount < this.config.maxRetries) {
+        this.logBuffer = [...batch, ...this.logBuffer];
+        this.retryCount++;
+      } else {
+        // Se excedeu retries, salvar localmente
+        await this.saveBatchLocal(batch);
+        this.retryCount = 0;
+      }
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  /**
+   * Enviar batch para o backend
+   */
+  private async sendBatchToBackend(batch: LogEntry[]) {
+    if (batch.length === 0) return;
+
+    // Enviar como batch único
+    await apiInterceptor.post('/api/v1/logs/batch', {
+      logs: batch,
+      client_timestamp: new Date().toISOString(),
+      client_id: localStorage.getItem('terminal_id') || 'unknown'
+    });
+  }
+
+  /**
+   * Salvar batch localmente
+   */
+  private async saveBatchLocal(batch: LogEntry[]) {
+    try {
+      const existingLogs = await offlineStorage.getAll('logs') || [];
+      const storageEntries = batch.map(log => this.toStorageLogEntry(log));
+      
+      const allLogs = [...existingLogs, ...storageEntries];
+      
+      // Limitar quantidade de logs locais
+      if (allLogs.length > this.config.maxLocalLogs) {
+        allLogs.splice(0, allLogs.length - this.config.maxLocalLogs);
+      }
+      
+      await offlineStorage.update('logs', allLogs as StorageLogEntry[]);
+    } catch (error) {
+      console.error('Failed to save batch locally:', error);
+    }
+  }
+
+  /**
+   * Forçar envio de todos os logs pendentes
+   */
+  async flush() {
+    if (this.useWebSocket) {
+      return wsLogger.flush();
+    }
+    if (this.logBuffer.length > 0) {
+      await this.processBatch();
     }
   }
 
@@ -209,6 +367,9 @@ class LocalLoggerService {
    */
   // eslint-disable-next-line no-console
   private consoleLog(level: LogLevel, message: string, details?: unknown) {
+    // Em produção, não fazer console.log
+    if (process.env.NODE_ENV === 'production') return;
+    
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
     
@@ -242,105 +403,14 @@ class LocalLoggerService {
   }
 
   /**
-   * Salvar log localmente
+   * Salvar log localmente (apenas para logs críticos)
    */
   private async saveLocal(logEntry: LogEntry) {
     try {
-      // Buscar logs existentes
-      const existingLogs = await offlineStorage.getAll('logs') || [];
-      
-      // Converter e adicionar novo log
-      const storageLogEntry = this.toStorageLogEntry(logEntry);
-      existingLogs.push(storageLogEntry);
-      
-      // Limitar quantidade de logs locais
-      if (existingLogs.length > this.config.maxLocalLogs) {
-        existingLogs.splice(0, existingLogs.length - this.config.maxLocalLogs);
-      }
-      
-      // Salvar no IndexedDB
-      await offlineStorage.update('logs', existingLogs as StorageLogEntry[]);
+      const storageEntry = this.toStorageLogEntry(logEntry);
+      await offlineStorage.update(`log_${logEntry.id}`, storageEntry);
     } catch (error) {
-      console.error('Failed to save log locally:', error);
-    }
-  }
-
-  /**
-   * Enviar log para o backend
-   */
-  private async sendToBackend(logEntry: LogEntry) {
-    try {
-      // Se offline, adicionar à fila
-      if (!navigator.onLine) {
-        this.pendingLogs.push(logEntry);
-        await this.savePendingLogs();
-        return;
-      }
-
-      // Enviar para o backend
-      await apiInterceptor.post('/api/v1/logs', logEntry);
-    } catch {
-      // Se falhar, adicionar à fila para retry (erro silenciosamente ignorado para evitar recursao)
-      this.pendingLogs.push(logEntry);
-      await this.savePendingLogs();
-      
-      // Agendar sincronização
-      if (!this.syncTimeout) {
-        this.syncTimeout = setTimeout(() => {
-          this.syncLogs();
-          this.syncTimeout = null;
-        }, 5000);
-      }
-    }
-  }
-
-  /**
-   * Sincronizar logs pendentes com o backend
-   */
-  private async syncLogs() {
-    if (!navigator.onLine || this.pendingLogs.length === 0) return;
-
-    const logsToSync = [...this.pendingLogs];
-    this.pendingLogs = [];
-
-    for (const log of logsToSync) {
-      try {
-        await apiInterceptor.post('/api/v1/logs', log);
-      } catch {
-        // Re-adicionar à fila se falhar (erro silenciosamente ignorado para evitar recursao)
-        this.pendingLogs.push(log);
-      }
-    }
-
-    // Salvar logs que falharam
-    if (this.pendingLogs.length > 0) {
-      await this.savePendingLogs();
-    }
-  }
-
-  /**
-   * Salvar logs pendentes no storage
-   */
-  private async savePendingLogs() {
-    try {
-      const storageLogEntries = this.pendingLogs.map(log => this.toStorageLogEntry(log));
-      await offlineStorage.update('pending_logs', storageLogEntries);
-    } catch (error) {
-      console.error('Failed to save pending logs:', error);
-    }
-  }
-
-  /**
-   * Carregar logs pendentes do storage
-   */
-  private async loadPendingLogs() {
-    try {
-      const pending = await offlineStorage.getConfig('pending_logs');
-      if (pending && Array.isArray(pending)) {
-        this.pendingLogs = pending as LogEntry[];
-      }
-    } catch (error) {
-      console.error('Failed to load pending logs:', error);
+      console.error('Failed to save critical log locally:', error);
     }
   }
 
@@ -350,7 +420,6 @@ class LocalLoggerService {
   private generateTags(level: LogLevel, source: LogSource, module: string): string[] {
     const tags: string[] = [level, source, module];
     
-    // Adicionar tags específicas
     if (level === LogLevel.ERROR || level === LogLevel.CRITICAL) {
       tags.push('error-tracking');
     }
@@ -367,7 +436,7 @@ class LocalLoggerService {
   }
 
   /**
-   * Buscar logs locais
+   * Buscar logs locais (mantido para compatibilidade)
    */
   async getLocalLogs(filters?: {
     level?: LogLevel;
@@ -408,32 +477,6 @@ class LocalLoggerService {
   }
 
   /**
-   * Limpar logs locais
-   */
-  async clearLocalLogs(olderThanDays?: number) {
-    try {
-      if (olderThanDays) {
-        const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
-        
-        // const allLogs = await offlineStorage.getAll('logs') || [];
-        // const recentLogs = (allLogs as LogEntry[]).filter((log: LogEntry) => 
-        //   new Date(log.timestamp!) > cutoffDate
-        // );
-        
-        // Não há método para atualizar todo o store, precisa ser por item
-        // TODO: Implementar limpeza completa de logs
-        console.warn('Clear logs not fully implemented');
-      } else {
-        // Não há método para limpar todo o store
-        console.warn('Clear all logs not implemented');
-      }
-    } catch (error) {
-      console.error('Failed to clear local logs:', error);
-    }
-  }
-
-  /**
    * Exportar logs para arquivo
    */
   async exportLogs(format: 'json' | 'csv' = 'json'): Promise<string> {
@@ -460,6 +503,41 @@ class LocalLoggerService {
     ].join('\n');
     
     return csv;
+  }
+
+  /**
+   * Obter estatísticas do logger
+   */
+  getStats() {
+    if (this.useWebSocket) {
+      return wsLogger.getStats();
+    }
+    return {
+      bufferSize: this.logBuffer.length,
+      isProcessing: this.isProcessing,
+      retryCount: this.retryCount,
+      config: this.config,
+      mode: 'http-batch'
+    };
+  }
+
+  /**
+   * Limpar buffer (usar com cuidado)
+   */
+  clearBuffer() {
+    this.logBuffer = [];
+  }
+
+  /**
+   * Destruir logger (limpar timers)
+   */
+  destroy() {
+    if (this.useWebSocket) {
+      wsLogger.destroy();
+    } else {
+      this.stopBatchTimer();
+      this.flush();
+    }
   }
 }
 

@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { businessDayService, BusinessDay, BusinessDayCreate, BusinessDayClose, BusinessDaySummary } from '../services/BusinessDayService';
 import { getApiErrorMessage } from '../types/error';
+import { requestCache } from '../services/RequestCache';
+
+// Singleton para garantir que dia operacional seja carregado apenas uma vez
+let globalLoadPromise: Promise<BusinessDay | null> | null = null;
+let globalHasLoaded = false;
 
 interface UseBusinessDayReturn {
   // Estado
@@ -54,14 +59,19 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
   }, []);
 
   /**
-   * Carregar dia operacional atual
+   * Carregar dia operacional atual com cache
    */
   const refreshCurrentBusinessDay = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const businessDay = await businessDayService.getCurrentBusinessDay();
+      // Usar cache para evitar requisições duplicadas
+      const businessDay = await requestCache.execute(
+        'business-day-current',
+        () => businessDayService.getCurrentBusinessDay(),
+        { ttl: 30 * 1000 } // Cache de 30 segundos
+      );
       setCurrentBusinessDay(businessDay);
       setHasInitialized(true);
     } catch (err) {
@@ -149,32 +159,85 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
     }
   }, []);
 
-  // Carregar dia operacional atual na inicialização (apenas uma vez)
+  // Carregar dia operacional atual com singleton
   useEffect(() => {
-    let isMounted = true;
-    let hasRun = false;
+    let isCancelled = false;
     
     const loadInitial = async () => {
-      if (!isMounted || hasRun) return;
-      hasRun = true;
+      // Se já carregou globalmente, apenas retornar
+      if (globalHasLoaded) {
+        try {
+          const cachedDay = await requestCache.execute(
+            'business-day-current',
+            () => businessDayService.getCurrentBusinessDay(),
+            { ttl: 30 * 1000 }
+          );
+          if (!isCancelled) {
+            setCurrentBusinessDay(cachedDay);
+            setHasInitialized(true);
+          }
+        } catch (err) {
+          if (!isCancelled) {
+            setError(getApiErrorMessage(err));
+            setHasInitialized(true);
+          }
+        }
+        return;
+      }
+      
+      // Se já existe uma promise global de carregamento, aguardar ela
+      if (globalLoadPromise) {
+        setLoading(true);
+        try {
+          const businessDay = await globalLoadPromise;
+          if (!isCancelled) {
+            setCurrentBusinessDay(businessDay);
+            setHasInitialized(true);
+          }
+        } catch (err) {
+          if (!isCancelled) {
+            setError(getApiErrorMessage(err));
+            setHasInitialized(true);
+          }
+        } finally {
+          if (!isCancelled) {
+            setLoading(false);
+          }
+        }
+        return;
+      }
+      
+      // Primeira vez carregando - criar promise global
+      setLoading(true);
+      setError(null);
+      
+      globalLoadPromise = requestCache.execute(
+        'business-day-current',
+        () => businessDayService.getCurrentBusinessDay(),
+        { ttl: 30 * 1000 }
+      ).then(businessDay => {
+        globalHasLoaded = true;
+        return businessDay;
+      }).catch(err => {
+        // Em caso de erro, resetar para permitir retry
+        globalLoadPromise = null;
+        globalHasLoaded = false;
+        throw err;
+      });
       
       try {
-        setLoading(true);
-        setError(null);
-        
-        const businessDay = await businessDayService.getCurrentBusinessDay();
-        
-        if (isMounted) {
+        const businessDay = await globalLoadPromise;
+        if (!isCancelled) {
           setCurrentBusinessDay(businessDay);
           setHasInitialized(true);
         }
       } catch (err) {
-        if (isMounted) {
+        if (!isCancelled) {
           setError(getApiErrorMessage(err));
           setHasInitialized(true);
         }
       } finally {
-        if (isMounted) {
+        if (!isCancelled) {
           setLoading(false);
         }
       }
@@ -183,7 +246,7 @@ export const useBusinessDay = (): UseBusinessDayReturn => {
     loadInitial();
     
     return () => {
-      isMounted = false;
+      isCancelled = true;
     };
   }, []); // Executar apenas uma vez na montagem
 

@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { customerService, Customer, CustomerCreate, CustomerUpdate } from '../services/CustomerService';
+import { requestCache } from '../services/RequestCache';
 
 interface UseCustomerState {
   customers: Customer[];
@@ -44,12 +45,18 @@ export const useCustomer = (): UseCustomerState & UseCustomerActions => {
     error: null
   });
 
-  // Load customers with optional search
+  // Load customers with optional search and cache
   const loadCustomers = useCallback(async (search?: string) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
-      const customers = await customerService.listCustomers(search);
+      // Usar cache para evitar requisições duplicadas
+      const cacheKey = search ? `customers-search-${search}` : 'customers-all';
+      const customers = await requestCache.execute(
+        cacheKey,
+        () => customerService.listCustomers(search),
+        { ttl: 2 * 60 * 1000 } // Cache de 2 minutos
+      );
       setState(prev => ({ 
         ...prev, 
         customers,
@@ -251,10 +258,8 @@ export const useCustomer = (): UseCustomerState & UseCustomerActions => {
     await loadCustomers();
   }, [loadCustomers]);
 
-  // Load customers on mount
-  useEffect(() => {
-    loadCustomers();
-  }, [loadCustomers]);
+  // NÃO carregar automaticamente - deixar o componente decidir quando carregar
+  // Isso previne múltiplas requisições duplicadas
 
   return {
     ...state,

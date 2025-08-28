@@ -1,5 +1,6 @@
 import { apiInterceptor } from './ApiInterceptor';
 import { API_ENDPOINTS } from '../config/api';
+import { requestCache } from './RequestCache';
 
 // Types para Delivery
 export interface DeliveryOrder {
@@ -173,9 +174,18 @@ export class DeliveryService {
     if (status) params.status = status;
     if (courier_id) params.courier_id = courier_id;
     if (date) params.date = date;
-
-    const response = await apiInterceptor.get<DeliveryOrder[]>(API_ENDPOINTS.DELIVERY.LIST, { params });
-    return response.data;
+    
+    // Create cache key based on params
+    const cacheKey = `delivery-orders-${JSON.stringify(params)}`;
+    
+    return requestCache.execute(
+      cacheKey,
+      async () => {
+        const response = await apiInterceptor.get<DeliveryOrder[]>(API_ENDPOINTS.DELIVERY.LIST, { params });
+        return response.data;
+      },
+      { ttl: 30000 } // Cache for 30 seconds
+    );
   }
 
   /**
@@ -229,6 +239,9 @@ export class DeliveryService {
       API_ENDPOINTS.DELIVERY.ASSIGN.replace(':id', deliveryId),
       { courier_id: courierId }
     );
+    // Invalidate related caches after assignment
+    requestCache.invalidatePattern('delivery-orders');
+    requestCache.invalidatePattern('delivery-couriers');
     return response.data;
   }
 
@@ -239,6 +252,8 @@ export class DeliveryService {
     const response = await apiInterceptor.post<DeliveryOrder>(
       API_ENDPOINTS.DELIVERY.START.replace(':id', deliveryId)
     );
+    // Invalidate cache after status change
+    requestCache.invalidatePattern('delivery-orders');
     return response.data;
   }
 
@@ -250,6 +265,9 @@ export class DeliveryService {
       API_ENDPOINTS.DELIVERY.COMPLETE.replace(':id', deliveryId),
       { notes }
     );
+    // Invalidate cache after completion
+    requestCache.invalidatePattern('delivery-orders');
+    requestCache.invalidatePattern('delivery-couriers');
     return response.data;
   }
 
@@ -260,9 +278,18 @@ export class DeliveryService {
     const params: Record<string, string | boolean> = {};
     if (status) params.status = status;
     if (is_active !== undefined) params.is_active = is_active;
-
-    const response = await apiInterceptor.get<DeliveryCourier[]>('/api/v1/delivery/couriers', { params });
-    return response.data;
+    
+    // Create cache key based on params
+    const cacheKey = `delivery-couriers-${JSON.stringify(params)}`;
+    
+    return requestCache.execute(
+      cacheKey,
+      async () => {
+        const response = await apiInterceptor.get<DeliveryCourier[]>('/api/v1/delivery/couriers', { params });
+        return response.data;
+      },
+      { ttl: 30000 } // Cache for 30 seconds
+    );
   }
 
   /**
@@ -270,6 +297,8 @@ export class DeliveryService {
    */
   async createCourier(courierData: CourierCreate): Promise<DeliveryCourier> {
     const response = await apiInterceptor.post<DeliveryCourier>('/api/v1/delivery/couriers', courierData);
+    // Invalidate cache after creating new courier
+    requestCache.invalidatePattern('delivery-couriers');
     return response.data;
   }
 
@@ -281,6 +310,8 @@ export class DeliveryService {
       `/api/v1/delivery/couriers/${courierId}`,
       courierData
     );
+    // Invalidate cache after updating courier
+    requestCache.invalidatePattern('delivery-couriers');
     return response.data;
   }
 

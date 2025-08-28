@@ -23,6 +23,7 @@ const RemoteOrdersScreen = lazy(() => import('./ui/RemoteOrdersPage'));
 const WaiterScreen = lazy(() => import('./ui/WaiterPage'));
 const LoyaltyScreen = lazy(() => import('./ui/LoyaltyPage'));
 const FiscalScreen = lazy(() => import('./ui/FiscalPage'));
+const TerminalMonitorScreen = lazy(() => import('./ui/TerminalMonitorPage'));
 
 // Loading component
 const LoadingFallback: React.FC<{ message?: string }> = ({ message = 'Carregando...' }) => (
@@ -128,6 +129,17 @@ function App() {
                       <Suspense fallback={<LoadingFallback message="Carregando painel gerencial..." />}>
                         <LayoutRoute requireAuth={true} requiredRole={UserRole.MANAGER} title="Gestão Gerencial">
                           <ManagerScreen />
+                        </LayoutRoute>
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  {/* Terminal Monitor - System monitoring */}
+                  <Route path="/pos/:terminalId/monitor" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando monitor de terminais..." />}>
+                        <LayoutRoute requireAuth={true} requiredRole={UserRole.MANAGER} title="Monitor de Terminais">
+                          <TerminalMonitorScreen />
                         </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>

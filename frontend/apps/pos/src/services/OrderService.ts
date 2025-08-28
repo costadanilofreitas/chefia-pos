@@ -13,6 +13,8 @@ import {
 } from "../types/order";
 import { ApiInterceptor } from "./ApiInterceptor";
 import logger, { LogSource } from "./LocalLoggerService";
+import realtimeSync from "./RealtimeSyncService";
+import eventBus from "../utils/EventBus";
 
 /**
  * Serviço para gerenciamento de pedidos
@@ -43,6 +45,11 @@ export class OrderService {
         "OrderService",
         LogSource.POS
       );
+      
+      // Notificar outros terminais sobre novo pedido
+      realtimeSync.notifyCreate('order', response.data);
+      eventBus.emit('order:created', response.data);
+      
       return response.data;
     } catch (error) {
       await logger.error(
@@ -149,6 +156,11 @@ export class OrderService {
         "OrderService",
         LogSource.POS
       );
+      
+      // Notificar outros terminais sobre atualização
+      realtimeSync.notifyUpdate('order', orderId, response.data);
+      eventBus.emit('order:updated', response.data);
+      
       return response.data;
     } catch (error) {
       await logger.error(
@@ -185,6 +197,11 @@ export class OrderService {
         "OrderService",
         LogSource.POS
       );
+      
+      // Notificar outros terminais sobre cancelamento
+      realtimeSync.notifyUpdate('order', orderId, response.data);
+      eventBus.emit('order:cancelled', response.data);
+      
       return response.data;
     } catch (error) {
       await logger.error(
@@ -349,6 +366,11 @@ export class OrderService {
         buildApiUrl(`/api/v1/orders/${orderId}/items/${itemId}`),
         updateData
       );
+    
+    // Notificar outros terminais sobre atualização do item
+    realtimeSync.notifyUpdate('order', orderId, response.data);
+    eventBus.emit('order:updated', response.data);
+    
     return response.data;
   }
 

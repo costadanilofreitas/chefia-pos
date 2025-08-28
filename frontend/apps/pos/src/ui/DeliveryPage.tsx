@@ -137,12 +137,12 @@ export default function DeliveryPage() {
     };
   });
 
-  // Load delivery orders and couriers on mount
-  useEffect(() => {
-    loadDeliveryOrders();
-    loadCouriers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Load only once on mount
+  // Data is already loaded in useDelivery hook
+  // No need to load again here
+  // useEffect(() => {
+  //   loadDeliveryOrders();
+  //   loadCouriers();
+  // }, []);
 
   // Mock data removed - using real data from useDelivery hook
 

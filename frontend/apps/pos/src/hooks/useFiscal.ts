@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import fiscalService, { FiscalDocument, FiscalConfig, ContingencyMode, FiscalReport } from '../services/FiscalService';
 import { useToast } from './useToast';
 import logger, { LogSource } from '../services/LocalLoggerService';
+import { requestCache } from '../services/RequestCache';
 
 interface FiscalDocumentFilters {
   type?: string;
@@ -14,6 +15,10 @@ interface FiscalDocumentFilters {
   endDate?: string;
   search?: string;
 }
+
+// Singleton para garantir que config seja carregada apenas uma vez
+let globalConfigLoadPromise: Promise<void> | null = null;
+let globalConfigLoaded = false;
 
 interface UseFiscalReturn {
   // Estados
@@ -92,14 +97,23 @@ export const useFiscal = (): UseFiscalReturn => {
     }
   }, [info, showError]);
 
-  // Carrega configuração
+  // Carrega configuração com cache
   const loadConfig = useCallback(async () => {
     try {
-      const fiscalConfig = await fiscalService.getConfig();
+      // Usar cache para evitar requisições duplicadas
+      const fiscalConfig = await requestCache.execute(
+        'fiscal-config',
+        () => fiscalService.getConfig(),
+        { ttl: 5 * 60 * 1000 } // Cache de 5 minutos
+      );
       setConfig(fiscalConfig);
       
-      // Verifica status da contingência
-      const contingencyStatus = await fiscalService.getContingencyStatus();
+      // Verifica status da contingência com cache separado
+      const contingencyStatus = await requestCache.execute(
+        'fiscal-contingency',
+        () => fiscalService.getContingencyStatus(),
+        { ttl: 30 * 1000 } // Cache de 30 segundos para contingência
+      );
       setContingency(contingencyStatus);
     } catch (error) {
       await logger.warn('Erro ao carregar configuração fiscal, usando valores padrão', { error }, 'useFiscal', LogSource.FISCAL);
@@ -322,9 +336,43 @@ export const useFiscal = (): UseFiscalReturn => {
     }
   }, [info, success, showError, loadDocuments]);
 
-  // Carrega apenas configuração inicial (documentos serão carregados pelo componente)
+  // Carrega apenas configuração inicial com singleton
   useEffect(() => {
-    loadConfig();
+    let isCancelled = false;
+    
+    const initConfig = async () => {
+      // Se já carregou globalmente, apenas retornar
+      if (globalConfigLoaded) {
+        await loadConfig();
+        return;
+      }
+      
+      // Se já existe uma promise global de carregamento, aguardar ela
+      if (globalConfigLoadPromise) {
+        await globalConfigLoadPromise;
+        if (!isCancelled) {
+          await loadConfig();
+        }
+        return;
+      }
+      
+      // Primeira vez carregando - criar promise global
+      globalConfigLoadPromise = loadConfig().then(() => {
+        globalConfigLoaded = true;
+      }).catch(() => {
+        // Em caso de erro, resetar para permitir retry
+        globalConfigLoadPromise = null;
+        globalConfigLoaded = false;
+      });
+      
+      await globalConfigLoadPromise;
+    };
+    
+    initConfig();
+    
+    return () => {
+      isCancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array - load config only once on mount
 

@@ -1,6 +1,9 @@
 import { buildApiUrl } from "../config/api";
 import { apiInterceptor } from "./ApiInterceptor";
 import logger from "./LocalLoggerService";
+import { requestCache } from "./RequestCache";
+import realtimeSync from "./RealtimeSyncService";
+import eventBus from "../utils/EventBus";
 
 export interface TableReservation {
   id: string;
@@ -76,6 +79,7 @@ class TableServiceClass {
 
   /**
    * Get active table layout with all tables
+   * NOTE: This method doesn't use requestCache directly because the hook already handles it
    */
   async getTables(): Promise<Table[]> {
     const response = await apiInterceptor.get<{ tables: Table[] }>(
@@ -93,14 +97,18 @@ class TableServiceClass {
    * Create a new table (requires layout update)
    */
   async createTable(table: Partial<Table>): Promise<Table> {
-    // Get current layout
-    const layoutResponse = await apiInterceptor.get<{
-      id: string;
-      tables: Table[];
-    }>(
-      buildApiUrl(
-        `/api/waiter/tables/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
-      )
+    // Get current layout - use cache to avoid duplicate request
+    const layoutResponse = await requestCache.execute(
+      'tables-layout-active-create',
+      () => apiInterceptor.get<{
+        id: string;
+        tables: Table[];
+      }>(
+        buildApiUrl(
+          `/api/waiter/tables/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
+        )
+      ),
+      { ttl: 5000 } // Short cache for create operations
     );
 
     const layout = layoutResponse.data;
@@ -127,6 +135,13 @@ class TableServiceClass {
         tables: layout.tables,
       }
     );
+    
+    // Invalidate cache after create
+    requestCache.invalidatePattern('tables-layout');
+    
+    // Notificar outros terminais sobre nova mesa
+    realtimeSync.notifyCreate('table', newTable);
+    eventBus.emit('table:created', newTable);
 
     return newTable;
   }
@@ -142,6 +157,11 @@ class TableServiceClass {
       buildApiUrl(`/api/waiter/tables/${id}/status`),
       statusUpdate
     );
+    
+    // Notificar outros terminais sobre mudança de status
+    realtimeSync.notifyUpdate('table', id, response.data);
+    eventBus.emit('table:status:changed', response.data);
+    
     return response.data;
   }
 
@@ -156,13 +176,17 @@ class TableServiceClass {
 
     // For other updates, need to update the entire layout
     try {
-      const layoutResponse = await apiInterceptor.get<{
-        id: string;
-        tables: Table[];
-      }>(
-        buildApiUrl(
-          `/api/waiter/tables/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
-        )
+      const layoutResponse = await requestCache.execute(
+        'tables-layout-active-update',
+        () => apiInterceptor.get<{
+          id: string;
+          tables: Table[];
+        }>(
+          buildApiUrl(
+            `/api/waiter/tables/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
+          )
+        ),
+        { ttl: 5000 } // Short cache for update operations
       );
 
       const layout = layoutResponse.data;
@@ -180,6 +204,13 @@ class TableServiceClass {
           tables: layout.tables,
         }
       );
+      
+      // Invalidate cache after update
+      requestCache.invalidatePattern('tables-layout');
+      
+      // Notificar outros terminais sobre atualização
+      realtimeSync.notifyUpdate('table', id, layout.tables[tableIndex]);
+      eventBus.emit('table:updated', layout.tables[tableIndex]);
 
       return layout.tables[tableIndex];
     } catch (error) {
@@ -201,13 +232,17 @@ class TableServiceClass {
    */
   async deleteTable(id: string): Promise<void> {
     try {
-      const layoutResponse = await apiInterceptor.get<{
-        id: string;
-        tables: Table[];
-      }>(
-        buildApiUrl(
-          `/api/waiter/tables/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
-        )
+      const layoutResponse = await requestCache.execute(
+        'tables-layout-active-delete',
+        () => apiInterceptor.get<{
+          id: string;
+          tables: Table[];
+        }>(
+          buildApiUrl(
+            `/api/waiter/tables/layouts/active?restaurant_id=${this.restaurantId}&store_id=${this.storeId}`
+          )
+        ),
+        { ttl: 5000 } // Short cache for delete operations
       );
 
       const layout = layoutResponse.data;
@@ -219,6 +254,13 @@ class TableServiceClass {
           tables: layout.tables,
         }
       );
+      
+      // Invalidate cache after delete
+      requestCache.invalidatePattern('tables-layout');
+      
+      // Notificar outros terminais sobre exclusão
+      realtimeSync.notifyDelete('table', id);
+      eventBus.emit('table:deleted', { id });
     } catch (error) {
       // Failed to update table - error handled silently as this is a non-critical operation
       void logger.debug(
@@ -250,11 +292,20 @@ class TableServiceClass {
     waiterId: string,
     waiterName?: string
   ): Promise<Table> {
-    return this.updateTableStatus(tableId, {
+    const result = await this.updateTableStatus(tableId, {
       status: "occupied",
       waiter_id: waiterId,
       waiter_name: waiterName,
     });
+    
+    // Evento específico para atribuição de garçom
+    eventBus.emit('table:assigned', {
+      tableId,
+      waiterId,
+      waiterName
+    });
+    
+    return result;
   }
 
   /**
@@ -275,12 +326,21 @@ class TableServiceClass {
     waiterId?: string,
     orderId?: string
   ): Promise<Table> {
-    return this.updateTableStatus(tableId, {
+    const result = await this.updateTableStatus(tableId, {
       status: "occupied",
       customer_count: customerCount,
       waiter_id: waiterId,
       order_id: orderId,
     });
+    
+    // Evento específico para ocupação de mesa
+    eventBus.emit('table:occupied', {
+      tableId,
+      customerCount,
+      orderId
+    });
+    
+    return result;
   }
 }
 

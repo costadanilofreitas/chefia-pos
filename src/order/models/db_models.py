@@ -17,14 +17,15 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql import func
+from src.core.optimistic_lock import OptimisticLockMixin
 
 
 class Base(DeclarativeBase):
     pass
 
 
-class Order(Base):
-    """SQLAlchemy model for orders table."""
+class Order(Base, OptimisticLockMixin):
+    """SQLAlchemy model for orders table with optimistic locking."""
 
     __tablename__ = "orders"
     __table_args__ = {"schema": "pos_modern"}

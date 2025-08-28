@@ -38,7 +38,9 @@
       "Bash(done)",
       "Bash(npx vite:*)",
       "Read(/C:\\Users\\Consultor/**)",
-      "Bash(npx jscpd:*)"
+      "Bash(npx jscpd:*)",
+      "Bash(dir:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": [],

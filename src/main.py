@@ -40,6 +40,7 @@ from src.product.router.product_router import router as product_router
 from src.remote_orders.router.rappi_router import router as rappi_router
 from src.remote_orders.router.remote_order_router import router as remote_order_router
 from src.waiter.router.table_layout_router import router as table_layout_router
+from src.realtime.websocket_sync import router as websocket_router
 
 # Configurar logging
 log_file = os.environ.get("LOG_FILE", "/var/log/pos-modern/app.log")
@@ -87,6 +88,7 @@ app.include_router(payment_router)
 app.include_router(split_payment_router)
 app.include_router(table_layout_router)
 app.include_router(keyboard_router)
+app.include_router(websocket_router)
 
 
 @app.on_event("startup")

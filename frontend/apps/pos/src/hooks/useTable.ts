@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '../components/Toast';
 import { tableService, Table } from '../services/TableService';
+import { requestCache } from '../services/RequestCache';
+import eventBus from '../utils/EventBus';
 
 interface TableReservation {
   id: string;
@@ -18,12 +20,24 @@ export const useTable = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { success, error: showError } = useToast();
+  const hasInitialLoad = useRef(false);
 
-  const loadTables = useCallback(async () => {
+  const loadTables = useCallback(async (forceRefresh = false) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await tableService.getTables();
+      const cacheKey = 'tables-layout-active';
+      
+      // Se forceRefresh, invalida o cache
+      if (forceRefresh) {
+        requestCache.invalidate(cacheKey);
+      }
+      
+      const data = await requestCache.execute(
+        cacheKey,
+        () => tableService.getTables(),
+        { ttl: 30000 } // Cache por 30 segundos
+      );
       setTables(data);
     } catch (err) {
       setError(err.message);
@@ -126,10 +140,50 @@ export const useTable = () => {
     });
   }, [updateTable]);
 
-  // Load tables on mount
+  // Load tables on mount - only once
   useEffect(() => {
-    loadTables();
-  }, [loadTables]);
+    if (!hasInitialLoad.current) {
+      hasInitialLoad.current = true;
+      loadTables();
+    }
+  }, []); // Remove loadTables dependency to prevent re-runs
+
+  // Listen for table sync events from other terminals
+  useEffect(() => {
+    const handleTableUpdate = (data: Table) => {
+      setTables(prev => prev.map(t => t.id === data.id ? data : t));
+    };
+    
+    const handleTableCreate = (data: Table) => {
+      setTables(prev => {
+        // Check if table already exists to avoid duplicates
+        if (prev.some(t => t.id === data.id)) return prev;
+        return [...prev, data];
+      });
+    };
+    
+    const handleTableDelete = (data: { id: string }) => {
+      setTables(prev => prev.filter(t => t.id !== data.id));
+    };
+    
+    const handleTableStatusChange = (data: Table) => {
+      setTables(prev => prev.map(t => t.id === data.id ? data : t));
+    };
+    
+    // Subscribe to sync events
+    eventBus.on('sync:table:update', handleTableUpdate);
+    eventBus.on('sync:table:create', handleTableCreate);
+    eventBus.on('sync:table:delete', handleTableDelete);
+    eventBus.on('sync:table:status:changed', handleTableStatusChange);
+    
+    // Cleanup listeners on unmount
+    return () => {
+      eventBus.off('sync:table:update', handleTableUpdate);
+      eventBus.off('sync:table:create', handleTableCreate);
+      eventBus.off('sync:table:delete', handleTableDelete);
+      eventBus.off('sync:table:status:changed', handleTableStatusChange);
+    };
+  }, []);
 
   return {
     tables,

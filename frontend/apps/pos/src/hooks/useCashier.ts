@@ -1,7 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { cashierService, Cashier, CashierCreate, CashierClose, CashierWithdrawal, TerminalStatus } from '../services/CashierService';
 import { CashierOperation, CashierSummary } from '../types/cashier';
 import logger, { LogSource } from '../services/LocalLoggerService';
+import { requestCache } from '../services/RequestCache';
+import eventBus from '../utils/EventBus';
 
 export interface UseCashierReturn {
   // Estado
@@ -29,19 +31,28 @@ export const useCashier = (): UseCashierReturn => {
   const [operations, setOperations] = useState<CashierOperation[]>([]);
 
   /**
-   * Verifica o status do terminal
+   * Verifica o status do terminal com cache
    */
   const checkTerminalStatus = useCallback(async (terminalId: string): Promise<TerminalStatus> => {
     try {
       setLoading(true);
       setError(null);
       
-      const status = await cashierService.getTerminalStatus(terminalId);
+      // Usar cache para evitar requisições duplicadas
+      const status = await requestCache.execute(
+        `terminal-status-${terminalId}`,
+        () => cashierService.getTerminalStatus(terminalId),
+        { ttl: 10 * 1000 } // Cache de 10 segundos
+      );
       setTerminalStatus(status);
       
-      // Se há um caixa aberto, buscar os dados completos
+      // Se há um caixa aberto, buscar os dados completos com cache
       if (status.has_open_cashier && status.cashier_id) {
-        const cashier = await cashierService.getCashier(status.cashier_id);
+        const cashier = await requestCache.execute(
+          `cashier-${status.cashier_id}`,
+          () => cashierService.getCashier(status.cashier_id),
+          { ttl: 30 * 1000 } // Cache de 30 segundos
+        );
         setCurrentCashier(cashier);
       } else {
         setCurrentCashier(null);
@@ -120,14 +131,18 @@ export const useCashier = (): UseCashierReturn => {
   }, [currentCashier]);
 
   /**
-   * Atualiza os dados do caixa atual
+   * Atualiza os dados do caixa atual (invalida cache)
    */
   const refreshCashier = useCallback(async (cashierId: string): Promise<void> => {
     try {
+      // Invalidar cache antes de buscar novos dados
+      requestCache.invalidate(`cashier-${cashierId}`);
+      
       const updatedCashier = await cashierService.getCashier(cashierId);
       setCurrentCashier(updatedCashier);
       
-      // Atualizar status do terminal
+      // Invalidar e atualizar status do terminal
+      requestCache.invalidate(`terminal-status-${updatedCashier.terminal_id}`);
       const status = await cashierService.getTerminalStatus(updatedCashier.terminal_id);
       setTerminalStatus(status);
     } catch (error) {
@@ -233,6 +248,59 @@ export const useCashier = (): UseCashierReturn => {
       throw err;
     }
   }, [currentCashier?.id]);
+
+  // Listen for cashier sync events from other terminals
+  useEffect(() => {
+    const handleCashierOpened = (data: Cashier) => {
+      // Se é o mesmo terminal, atualizar estado
+      if (data.terminal_id === terminalStatus?.terminal_id) {
+        setCurrentCashier(data);
+        setTerminalStatus(prev => prev ? { ...prev, has_open_cashier: true, cashier_id: data.id } : prev);
+      }
+      // Invalidar cache para forçar refresh
+      requestCache.invalidatePattern('cashier');
+      requestCache.invalidatePattern('terminal-status');
+    };
+    
+    const handleCashierClosed = (data: Cashier) => {
+      // Se é o mesmo terminal, limpar estado
+      if (data.terminal_id === terminalStatus?.terminal_id) {
+        setCurrentCashier(null);
+        setTerminalStatus(prev => prev ? { ...prev, has_open_cashier: false, cashier_id: null } : prev);
+      }
+      // Invalidar cache
+      requestCache.invalidatePattern('cashier');
+      requestCache.invalidatePattern('terminal-status');
+    };
+    
+    const handleCashierOperation = (data: { cashierId: string; operation: CashierOperation }) => {
+      if (currentCashier?.id === data.cashierId) {
+        setOperations(prev => [...prev, data.operation]);
+      }
+    };
+    
+    const handleCashierWithdrawal = (data: { cashierId: string; withdrawal: CashierOperation }) => {
+      if (currentCashier?.id === data.cashierId) {
+        setOperations(prev => [...prev, data.withdrawal]);
+        // Atualizar saldo do caixa
+        refreshCashier(data.cashierId);
+      }
+    };
+    
+    // Subscribe to sync events
+    eventBus.on('sync:cashier:create', handleCashierOpened);
+    eventBus.on('sync:cashier:update', handleCashierClosed);
+    eventBus.on('sync:cashier:operation', handleCashierOperation);
+    eventBus.on('sync:cashier:withdrawal', handleCashierWithdrawal);
+    
+    // Cleanup listeners on unmount
+    return () => {
+      eventBus.off('sync:cashier:create', handleCashierOpened);
+      eventBus.off('sync:cashier:update', handleCashierClosed);
+      eventBus.off('sync:cashier:operation', handleCashierOperation);
+      eventBus.off('sync:cashier:withdrawal', handleCashierWithdrawal);
+    };
+  }, [terminalStatus?.terminal_id, currentCashier?.id, refreshCashier]);
 
   return {
     // Estado
