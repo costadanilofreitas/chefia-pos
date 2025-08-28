@@ -24,6 +24,7 @@ const WaiterScreen = lazy(() => import('./ui/WaiterPage'));
 const LoyaltyScreen = lazy(() => import('./ui/LoyaltyPage'));
 const FiscalScreen = lazy(() => import('./ui/FiscalPage'));
 const TerminalMonitorScreen = lazy(() => import('./ui/TerminalMonitorPage'));
+const QueueManagementScreen = lazy(() => import('./ui/QueueManagementPage'));
 
 // Loading component
 const LoadingFallback: React.FC<{ message?: string }> = ({ message = 'Carregando...' }) => (
@@ -140,6 +141,17 @@ function App() {
                       <Suspense fallback={<LoadingFallback message="Carregando monitor de terminais..." />}>
                         <LayoutRoute requireAuth={true} requiredRole={UserRole.MANAGER} title="Monitor de Terminais">
                           <TerminalMonitorScreen />
+                        </LayoutRoute>
+                      </Suspense>
+                    </ErrorBoundary>
+                  } />
+                  
+                  {/* Queue Management - Restaurant queue system */}
+                  <Route path="/pos/:terminalId/queue" element={
+                    <ErrorBoundary>
+                      <Suspense fallback={<LoadingFallback message="Carregando gerenciamento de fila..." />}>
+                        <LayoutRoute requireAuth={true} requiredRole={UserRole.OPERATOR} title="Gerenciamento de Fila">
+                          <QueueManagementScreen />
                         </LayoutRoute>
                       </Suspense>
                     </ErrorBoundary>
