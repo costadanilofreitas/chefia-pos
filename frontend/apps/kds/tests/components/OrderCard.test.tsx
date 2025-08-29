@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import OrderCard from '../../src/ui/OrderCard';
+import OrderCard from '../../src/ui/KDSOrderCard';
 import { createMockOrder } from '../utils/testUtils';
 
 describe('OrderCard Component', () => {

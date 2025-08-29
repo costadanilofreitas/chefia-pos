@@ -19,7 +19,7 @@ jest.mock('../../src/services/audioService');
 jest.mock('../../src/services/logger');
 
 // Mock lazy loaded components
-jest.mock('../../src/ui/OrderCard', () => {
+jest.mock('../../src/ui/KDSOrderCard', () => {
   return {
     __esModule: true,
     default: ({ order, onStatusChange, onItemStatusChange, nextStatus }: any) => (

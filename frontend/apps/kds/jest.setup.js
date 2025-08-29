@@ -80,3 +80,9 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }));
+
+// Ensure timer functions are available
+global.setInterval = setInterval;
+global.clearInterval = clearInterval;
+global.setTimeout = setTimeout;
+global.clearTimeout = clearTimeout;

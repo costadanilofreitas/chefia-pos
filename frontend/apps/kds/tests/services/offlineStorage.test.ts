@@ -2,7 +2,7 @@
  * Offline Storage Service Test Suite
  */
 
-import { OfflineStorage } from '../offlineStorage';
+import { OfflineStorage } from '../../src/services/offlineStorage';
 import { 
   setupMockIndexedDB, 
   cleanupMocks,

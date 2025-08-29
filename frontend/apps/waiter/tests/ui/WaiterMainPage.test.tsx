@@ -1,13 +1,15 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { act } from 'react-dom/test-utils';
-import WaiterMainPage from '../ui/WaiterMainPage';
-import { waiterService } from '../services/waiterService';
-import { useAuth } from '@common/contexts/auth/hooks/useAuth';
-import { useOrder } from '@common/contexts/order/hooks/useOrder';
+import { act } from 'react';
+import WaiterMainPage from '../../src/ui/WaiterMainPage';
+import { waiterService } from '../../src/services/waiterService';
+import { useAuth } from '../../src/hooks/useAuth';
+import { useOrder } from '../../src/hooks/useOrder';
+import { ThemeProvider } from '../../src/contexts/ThemeContext';
+import { NotificationProvider } from '../../src/contexts/NotificationContext';
 
 // Mock the services and hooks
-jest.mock('../services/waiterService', () => ({
+jest.mock('../../src/services/waiterService', () => ({
   waiterService: {
     getTables: jest.fn(),
     getOrders: jest.fn(),
@@ -19,13 +21,24 @@ jest.mock('../services/waiterService', () => ({
   }
 }));
 
-jest.mock('@common/contexts/auth/hooks/useAuth', () => ({
+jest.mock('../../src/hooks/useAuth', () => ({
   useAuth: jest.fn()
 }));
 
-jest.mock('@common/contexts/order/hooks/useOrder', () => ({
+jest.mock('../../src/hooks/useOrder', () => ({
   useOrder: jest.fn()
 }));
+
+// Helper function to render component with providers
+const renderWithProviders = (component: React.ReactElement) => {
+  return render(
+    <ThemeProvider>
+      <NotificationProvider>
+        {component}
+      </NotificationProvider>
+    </ThemeProvider>
+  );
+};
 
 describe('WaiterMainPage Component', () => {
   // Setup mock data
@@ -75,7 +88,7 @@ describe('WaiterMainPage Component', () => {
 
   test('renders loading state initially', async () => {
     await act(async () => {
-      render(<WaiterMainPage />);
+      renderWithProviders(<WaiterMainPage />);
     });
 
     expect(screen.getByText('Carregando dados...')).toBeInTheDocument();
@@ -83,7 +96,7 @@ describe('WaiterMainPage Component', () => {
 
   test('loads and displays tables and orders after loading', async () => {
     await act(async () => {
-      render(<WaiterMainPage />);
+      renderWithProviders(<WaiterMainPage />);
     });
 
     await waitFor(() => {
@@ -97,7 +110,7 @@ describe('WaiterMainPage Component', () => {
 
   test('switches between tabs when clicked', async () => {
     await act(async () => {
-      render(<WaiterMainPage />);
+      renderWithProviders(<WaiterMainPage />);
     });
 
     await waitFor(() => {
@@ -127,7 +140,7 @@ describe('WaiterMainPage Component', () => {
 
   test('selects table when clicked', async () => {
     await act(async () => {
-      render(<WaiterMainPage />);
+      renderWithProviders(<WaiterMainPage />);
     });
 
     await waitFor(() => {
@@ -160,7 +173,7 @@ describe('WaiterMainPage Component', () => {
     });
     
     await act(async () => {
-      render(<WaiterMainPage />);
+      renderWithProviders(<WaiterMainPage />);
     });
 
     await waitFor(() => {
@@ -178,7 +191,7 @@ describe('WaiterMainPage Component', () => {
 
   test('delivers items when button is clicked', async () => {
     await act(async () => {
-      render(<WaiterMainPage />);
+      renderWithProviders(<WaiterMainPage />);
     });
 
     await waitFor(() => {
@@ -228,7 +241,7 @@ describe('WaiterMainPage Component', () => {
     waiterService.getOrders.mockRejectedValue(new Error('Failed to fetch orders'));
     
     await act(async () => {
-      render(<WaiterMainPage />);
+      renderWithProviders(<WaiterMainPage />);
     });
 
     await waitFor(() => {
@@ -250,7 +263,7 @@ describe('WaiterMainPage Component', () => {
     });
     
     await act(async () => {
-      render(<WaiterMainPage />);
+      renderWithProviders(<WaiterMainPage />);
     });
 
     await waitFor(() => {

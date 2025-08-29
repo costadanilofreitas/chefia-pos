@@ -1,6 +1,15 @@
 // Configuração centralizada da API
+declare const __TEST__: boolean | undefined;
+
+// Use different approach based on environment
+// @ts-ignore
+const BASE_URL = (typeof __TEST__ !== 'undefined' && __TEST__) 
+  ? 'http://localhost:8001'
+  // @ts-ignore - import.meta is Vite-specific
+  : (import.meta?.env?.VITE_API_URL || 'http://localhost:8001');
+
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:8001',
+  BASE_URL,
   TIMEOUT: 10000,
   ENDPOINTS: {
     AUTH: {

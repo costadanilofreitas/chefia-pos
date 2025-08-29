@@ -6,6 +6,52 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Chefia POS is a comprehensive point-of-sale system for restaurants built with a modular microservices architecture. The system includes multiple frontend applications (POS, KDS, Kiosk, Waiter, Backoffice), a FastAPI backend with 30+ business modules, and extensive integrations for complete restaurant management.
 
+## Project Structure
+
+```
+chefia-pos/
+├── src/                    # Backend (FastAPI/Python 3.12+)
+│   ├── auth/              # Authentication & authorization
+│   ├── business_day/      # Business day management
+│   ├── cashier/           # Cashier operations
+│   ├── command/           # Command cards system
+│   ├── core/              # Core utilities & middleware
+│   ├── customer/          # Customer management
+│   ├── delivery/          # Delivery management
+│   ├── fiscal/            # Fiscal & tax compliance
+│   ├── inventory/         # Stock control
+│   ├── kds/               # Kitchen display system
+│   ├── loyalty/           # Customer loyalty program
+│   ├── order/             # Order management
+│   ├── payment/           # Payment processing
+│   ├── peripherals/       # Hardware integration
+│   ├── product/           # Product catalog
+│   ├── queue/             # Waiting queue system
+│   ├── remote_orders/     # iFood/Rappi integration
+│   ├── reservation/       # Table reservations
+│   ├── selfservice/       # Self-service kiosk
+│   ├── tables/            # Table management
+│   └── waiter/            # Waiter operations
+├── frontend/              # Frontend monorepo (React 18/TypeScript 5)
+│   ├── apps/
+│   │   ├── pos/          # ⭐⭐⭐⭐⭐ Reference architecture (250KB)
+│   │   ├── kds/          # ⭐⭐⭐⭐ Kitchen display (235KB)
+│   │   ├── kiosk/        # ⭐⭐⭐ Self-service
+│   │   ├── waiter/       # ⭐⭐ Waiter app
+│   │   └── backoffice/   # ⭐⭐ Cloud management
+│   └── common/           # ⚠️ DEPRECATED (being phased out)
+├── docs/
+│   └── ai/               # Technical documentation
+│       ├── ARQUITETURA_TECNICA_COMPLETA.md
+│       ├── GUIA_DESENVOLVIMENTO.md
+│       └── REGRAS_NEGOCIO_CONSOLIDADAS.md
+├── scripts/              # Utility scripts
+│   ├── pos-modern.sh/bat/ps1  # Start system
+│   ├── format-code.py         # Code formatting
+│   └── generate-types.py      # TypeScript generation
+└── docker-compose.yml    # Infrastructure setup
+```
+
 ## Quick Start Commands
 
 ### 🚀 Start Complete System
@@ -550,8 +596,47 @@ cd frontend/apps/pos && npm run analyze:all && npm run test && npm run build
 - **Architecture**: `/docs/ai/ARQUITETURA_TECNICA_COMPLETA.md` - Full technical architecture
 - **Business Rules**: `/docs/ai/REGRAS_NEGOCIO_CONSOLIDADAS.md` - Business logic documentation
 
+## Module Evolution Strategy
+
+### Current State & Migration Path
+
+1. **POS Terminal** ✅ COMPLETE
+   - Zero Material UI
+   - Zero common/ dependencies
+   - 250KB optimized bundle
+   - Reference for other modules
+
+2. **KDS** 🔄 MIGRATING (Phase 2/3)
+   - 60% Material UI removed
+   - 40% Redux → Context migrated
+   - Target: <200KB bundle
+
+3. **Kiosk & Waiter** 📋 PLANNED
+   - Follow KDS migration pattern
+   - Adopt POS architecture
+
+## Important Reminders
+
+### 🚫 NEVER Do This
+- Leave console.log/print in production code
+- Use mocks outside test files
+- Use 'any' type in TypeScript
+- Leave empty catch blocks
+- Hardcode API URLs
+- Start multiple tasks without completing them
+- Commit code with known bugs
+
+### ✅ ALWAYS Do This
+- Complete one task 100% before moving to next
+- Use offlineStorage.log for logging
+- Handle errors completely
+- Use API_CONFIG for endpoints
+- Test before committing
+- Run quality checks (lint, type-check, test)
+- Follow the established patterns
+
 ## Support & Feedback
 
 - **GitHub Issues**: Report bugs and request features
-- **Documentation**: Check `/docs` folder for detailed guides
+- **Documentation**: Check `/docs/ai/` folder for detailed guides
 - **Development Channel**: #chefia-pos-dev on Slack

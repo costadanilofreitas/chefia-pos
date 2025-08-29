@@ -1,6 +1,7 @@
 import { websocketService } from './websocket';
 import { ApiService } from './api';
 import type { WebSocketMessageData } from '../types';
+import { isProduction } from '../utils/env';
 
 export type LogLevel = 'debug' | 'info' | 'warning' | 'error' | 'critical';
 export type LogSource = 'kds' | 'pos' | 'waiter' | 'kiosk' | 'system';
@@ -145,8 +146,8 @@ class LoggerService {
   
   // Public logging methods
   debug(message: string, module: string = 'General', details?: Record<string, unknown>): void {
-    // Use import.meta.env for Vite projects
-    if (import.meta.env.PROD) return;
+    // Use env utility for environment detection
+    if (isProduction()) return;
     const entry = this.createLogEntry('debug', message, module, details);
     this.sendLog(entry);
   }

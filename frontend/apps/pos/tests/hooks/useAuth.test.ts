@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { useAuth } from '../hooks/mocks/useAuth';
+import { useAuth } from '../../src/hooks/useAuth';
 
 describe('useAuth Hook', () => {
   it('should return initial state', () => {

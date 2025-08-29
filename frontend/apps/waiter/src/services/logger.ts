@@ -1,4 +1,5 @@
 import { apiService } from './api';
+import { isProduction } from '@/utils/env';
 
 export type LogLevel = 'debug' | 'info' | 'warning' | 'error' | 'critical';
 export type LogSource = 'waiter' | 'pos' | 'kds' | 'kiosk' | 'system';
@@ -134,7 +135,7 @@ class LoggerService {
   }
   
   debug(message: string, module: string = 'General', details?: Record<string, unknown>): void {
-    if (import.meta.env.PROD) return;
+    if (isProduction()) return;
     const entry = this.createLogEntry('debug', message, module, details);
     this.sendLog(entry);
   }

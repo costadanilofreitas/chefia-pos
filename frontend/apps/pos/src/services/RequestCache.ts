@@ -10,6 +10,8 @@
  * O cache real dos dados está no backend (Python/FastAPI)
  */
 
+import { isDev } from '../utils/env';
+
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
@@ -236,7 +238,7 @@ class RequestCache {
     
     if (entriesRemoved > 0) {
       // Log apenas em desenvolvimento
-      if (import.meta.env.DEV) {
+      if (isDev) {
         console.debug(`Cache cleanup: removed ${entriesRemoved} expired entries`);
       }
     }
@@ -281,7 +283,7 @@ class RequestCache {
         this.cache.delete(keys[i]);
       }
       
-      if (import.meta.env.DEV) {
+      if (isDev) {
         console.warn(`Cache memory limit exceeded (${estimatedMemoryMB}MB). Cleared ${keysToRemove} entries.`);
       }
     }

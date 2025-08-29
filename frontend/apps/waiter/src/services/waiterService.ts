@@ -16,7 +16,7 @@ export interface OrderItem {
   name: string;
   quantity: number;
   price: number;
-  status: 'preparing' | 'ready' | 'delivered';
+  status: 'preparing' | 'ready' | 'delivered' | 'cancelled';
   notes?: string;
 }
 
@@ -33,7 +33,7 @@ export interface MenuItem {
 export interface Order {
   id: number;
   table_id: number;
-  status: 'new' | 'in_progress' | 'ready' | 'delivered' | 'paid';
+  status: 'new' | 'in_progress' | 'ready' | 'delivered' | 'paid' | 'cancelled';
   items: OrderItem[];
   created_at: string;
   updated_at?: string;

@@ -3,14 +3,14 @@
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useCashier } from '../hooks/useCashier';
-import { cashierService } from '../services/CashierService';
-import { requestCache } from '../services/RequestCache';
-import eventBus from '../utils/EventBus';
-import logger from '../services/LocalLoggerService';
+import { useCashier } from '@/hooks/useCashier';
+import { cashierService } from '@/services/CashierService';
+import { requestCache } from '@/services/RequestCache';
+import eventBus from '@/utils/EventBus';
+import logger from '@/services/LocalLoggerService';
 
 // Mock dependencies
-jest.mock('../services/CashierService', () => ({
+jest.mock('@/services/CashierService', () => ({
   cashierService: {
     getTerminalStatus: jest.fn(),
     getCashier: jest.fn(),
@@ -21,7 +21,7 @@ jest.mock('../services/CashierService', () => ({
   }
 }));
 
-jest.mock('../services/RequestCache', () => ({
+jest.mock('@/services/RequestCache', () => ({
   requestCache: {
     execute: jest.fn(),
     invalidate: jest.fn(),
@@ -29,7 +29,7 @@ jest.mock('../services/RequestCache', () => ({
   }
 }));
 
-jest.mock('../utils/EventBus', () => ({
+jest.mock('@/utils/EventBus', () => ({
   __esModule: true,
   default: {
     on: jest.fn(),
@@ -38,7 +38,7 @@ jest.mock('../utils/EventBus', () => ({
   }
 }));
 
-jest.mock('../services/LocalLoggerService', () => ({
+jest.mock('@/services/LocalLoggerService', () => ({
   __esModule: true,
   default: {
     error: jest.fn(),

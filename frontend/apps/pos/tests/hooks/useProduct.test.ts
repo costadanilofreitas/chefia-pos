@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { useProduct } from '../hooks/mocks/useProduct';
+import { useProduct } from '../../src/hooks/useProduct';
 
 describe('useProduct Hook', () => {
   it('should return initial state', () => {

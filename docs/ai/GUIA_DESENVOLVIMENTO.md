@@ -102,27 +102,30 @@ O projeto segue padrões rigorosos de qualidade baseados em análises estáticas
 
 ### 🎯 Regras de Code Quality Implementadas
 
-#### 1. Substituição de console.* por Logging Centralizado
+#### 1. Substituição de console.\* por Logging Centralizado
 
 ```typescript
 // ❌ Antes: Console statements espalhados
-console.log('Processing order:', order);
-console.error('Error:', error);
-console.warn('Warning: Invalid data');
+console.log("Processing order:", order);
+console.error("Error:", error);
+console.warn("Warning: Invalid data");
 
 // ✅ Depois: Logging centralizado com contexto
-import { offlineStorage } from '@/services/offlineStorage';
+import { offlineStorage } from "@/services/offlineStorage";
 
 // Para informações/debug
-offlineStorage.log('Processing order', { orderId: order.id, status: order.status });
+offlineStorage.log("Processing order", {
+  orderId: order.id,
+  status: order.status,
+});
 
 // Para erros (automaticamente inclui stack trace)
-offlineStorage.log('Failed to process order', error);
+offlineStorage.log("Failed to process order", error);
 
 // Para warnings com contexto
-offlineStorage.log('Warning: Invalid data detected', { 
-  data, 
-  validation: 'missing required fields' 
+offlineStorage.log("Warning: Invalid data detected", {
+  data,
+  validation: "missing required fields",
 });
 ```
 
@@ -138,7 +141,7 @@ function processData(data: any): any {
 interface DataItem {
   id: string;
   value: number;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
 }
 
 interface ProcessedData {
@@ -147,10 +150,10 @@ interface ProcessedData {
 }
 
 function processData(data: DataItem[]): ProcessedData {
-  const processedValues = data.map(item => item.value);
+  const processedValues = data.map((item) => item.value);
   return {
     processedValues,
-    totalCount: data.length
+    totalCount: data.length,
   };
 }
 ```
@@ -172,15 +175,15 @@ try {
   setOrders(result);
 } catch (error: unknown) {
   // Log estruturado do erro
-  offlineStorage.log('Failed to fetch remote orders', {
+  offlineStorage.log("Failed to fetch remote orders", {
     error: error instanceof Error ? error.message : String(error),
     timestamp: new Date().toISOString(),
-    context: 'RemoteOrdersPage.fetchOrders'
+    context: "RemoteOrdersPage.fetchOrders",
   });
-  
+
   // Feedback ao usuário
-  addToast('Erro ao carregar pedidos remotos', 'error');
-  
+  addToast("Erro ao carregar pedidos remotos", "error");
+
   // Fallback graceful
   setOrders([]);
 }
@@ -190,27 +193,28 @@ try {
 
 ```typescript
 // ❌ Antes: Nested ternary ilegível
-const statusIcon = order.status === 'pending' 
-  ? '⏳' 
-  : order.status === 'confirmed'
-    ? '✅'
-    : order.status === 'preparing'
-      ? '🔥'
-      : order.status === 'ready'
-        ? '📦'
-        : '❌';
+const statusIcon =
+  order.status === "pending"
+    ? "⏳"
+    : order.status === "confirmed"
+    ? "✅"
+    : order.status === "preparing"
+    ? "🔥"
+    : order.status === "ready"
+    ? "📦"
+    : "❌";
 
 // ✅ Depois: Função pura e testável
 function getOrderStatusIcon(status: OrderStatus): string {
   const iconMap: Record<OrderStatus, string> = {
-    pending: '⏳',
-    confirmed: '✅',
-    preparing: '🔥',
-    ready: '📦',
-    cancelled: '❌'
+    pending: "⏳",
+    confirmed: "✅",
+    preparing: "🔥",
+    ready: "📦",
+    cancelled: "❌",
   };
-  
-  return iconMap[status] || '❓';
+
+  return iconMap[status] || "❓";
 }
 
 const statusIcon = getOrderStatusIcon(order.status);
@@ -218,10 +222,14 @@ const statusIcon = getOrderStatusIcon(order.status);
 // ✅ Alternativa: IIFE para lógica inline complexa
 const statusColor = (() => {
   switch (order.status) {
-    case 'pending': return 'bg-yellow-100 text-yellow-800';
-    case 'confirmed': return 'bg-green-100 text-green-800';
-    case 'preparing': return 'bg-blue-100 text-blue-800';
-    default: return 'bg-gray-100 text-gray-800';
+    case "pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "confirmed":
+      return "bg-green-100 text-green-800";
+    case "preparing":
+      return "bg-blue-100 text-blue-800";
+    default:
+      return "bg-gray-100 text-gray-800";
   }
 })();
 ```
@@ -230,7 +238,7 @@ const statusColor = (() => {
 
 ```typescript
 // ❌ Antes: div com onClick (não acessível)
-<div 
+<div
   onClick={handleOrderClick}
   className="cursor-pointer hover:bg-gray-50"
 >
@@ -248,7 +256,7 @@ const statusColor = (() => {
 </button>
 
 // ✅ Labels com htmlFor adequados
-<label 
+<label
   htmlFor="order-notes"
   className="block text-sm font-medium text-gray-700 mb-1"
 >
@@ -268,39 +276,39 @@ const statusColor = (() => {
 ```typescript
 // ❌ Antes: URLs hardcoded espalhadas
 // Em vários arquivos:
-fetch('http://localhost:8001/api/v1/orders');
-fetch('http://localhost:8001/api/v1/remote-orders');
-fetch('http://localhost:8001/api/v1/products');
+fetch("http://localhost:8001/api/v1/orders");
+fetch("http://localhost:8001/api/v1/remote-orders");
+fetch("http://localhost:8001/api/v1/products");
 
 // ✅ Depois: config/api.ts centralizado
 // config/api.ts
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8001',
+  BASE_URL: process.env.REACT_APP_API_URL || "http://localhost:8001",
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
   ENDPOINTS: {
-    ORDERS: '/api/v1/orders',
-    REMOTE_ORDERS: '/api/v1/remote-orders',
-    PRODUCTS: '/api/v1/products',
-    CUSTOMERS: '/api/v1/customers'
-  }
+    ORDERS: "/api/v1/orders",
+    REMOTE_ORDERS: "/api/v1/remote-orders",
+    PRODUCTS: "/api/v1/products",
+    CUSTOMERS: "/api/v1/customers",
+  },
 } as const;
 
 // services/apiClient.ts
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG } from "@/config/api";
 
 export class ApiClient {
   private baseURL = API_CONFIG.BASE_URL;
-  
+
   async get<T>(endpoint: string): Promise<T> {
     const response = await fetch(`${this.baseURL}${endpoint}`, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { "Content-Type": "application/json" },
     });
-    
+
     if (!response.ok) {
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
-    
+
     return response.json();
   }
 }
@@ -322,15 +330,19 @@ useEffect(() => {
 }, [selectedPlatform]);
 
 // ✅ Depois: Cache inteligente com React Query
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 
-const { data: orders, isLoading, error } = useQuery({
-  queryKey: ['orders', selectedPlatform],
+const {
+  data: orders,
+  isLoading,
+  error,
+} = useQuery({
+  queryKey: ["orders", selectedPlatform],
   queryFn: () => orderService.getOrders({ platform: selectedPlatform }),
   staleTime: 5 * 60 * 1000, // Fresh por 5 minutos
   cacheTime: 10 * 60 * 1000, // Cache por 10 minutos
   retry: 2,
-  refetchOnWindowFocus: false
+  refetchOnWindowFocus: false,
 });
 
 // ✅ Alternativa: Cache manual simples
@@ -340,14 +352,14 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 async function getCachedOrders(platform: string): Promise<Order[]> {
   const cacheKey = `orders-${platform}`;
   const cached = orderCache.get(cacheKey);
-  
+
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
     return cached.data;
   }
-  
+
   const orders = await orderService.getOrders({ platform });
   orderCache.set(cacheKey, { data: orders, timestamp: Date.now() });
-  
+
   return orders;
 }
 ```
@@ -361,18 +373,18 @@ const firstItem = order.items[0].product.name;
 const discountAmount = order.payment.discount.amount;
 
 // ✅ Depois: Optional chaining seguro
-const customerName = order?.customer?.name ?? 'Cliente não identificado';
-const firstItem = order?.items?.[0]?.product?.name ?? 'Item não encontrado';
+const customerName = order?.customer?.name ?? "Cliente não identificado";
+const firstItem = order?.items?.[0]?.product?.name ?? "Item não encontrado";
 const discountAmount = order?.payment?.discount?.amount ?? 0;
 
 // ✅ Com type guards para validação adicional
 function isValidOrder(order: unknown): order is Order {
   return (
-    typeof order === 'object' &&
+    typeof order === "object" &&
     order !== null &&
-    'id' in order &&
-    'status' in order &&
-    'items' in order &&
+    "id" in order &&
+    "status" in order &&
+    "items" in order &&
     Array.isArray((order as any).items)
   );
 }
@@ -410,21 +422,21 @@ npx husky add .husky/pre-commit "npm run lint && npm run type-check"
 ```typescript
 // ✅ PADRÃO: Usar logging centralizado ao invés de console
 // ❌ NUNCA deixe console.log/console.error
-console.log('debug', data);     // REMOVER ANTES DO COMMIT
-console.warn('test');           // REMOVER ANTES DO COMMIT
-console.error('check this');    // REMOVER ANTES DO COMMIT
+console.log("debug", data); // REMOVER ANTES DO COMMIT
+console.warn("test"); // REMOVER ANTES DO COMMIT
+console.error("check this"); // REMOVER ANTES DO COMMIT
 
 // ✅ SEMPRE use logging centralizado
-import { offlineStorage } from '@/services/offlineStorage';
+import { offlineStorage } from "@/services/offlineStorage";
 
 // Para logs de debug/info
-offlineStorage.log('Order processed successfully', { orderId: data.id });
+offlineStorage.log("Order processed successfully", { orderId: data.id });
 
 // Para erros (com stack trace)
 try {
   processOrder(data);
 } catch (error) {
-  offlineStorage.log('Error processing order', error);
+  offlineStorage.log("Error processing order", error);
   // Handle error appropriately
 }
 ```
@@ -654,21 +666,21 @@ Order.displayName = "Order";
 
 ```typescript
 // ✅ PADRÃO: Tratamento de erro centralizado
-import { offlineStorage } from '@/services/offlineStorage';
+import { offlineStorage } from "@/services/offlineStorage";
 
 try {
   const orders = await remoteOrderService.getOrders();
   return orders;
 } catch (error: unknown) {
   // Log centralizado com contexto
-  offlineStorage.log('Failed to fetch remote orders', {
+  offlineStorage.log("Failed to fetch remote orders", {
     error: error instanceof Error ? error.message : String(error),
     timestamp: new Date().toISOString(),
-    context: 'RemoteOrdersPage'
+    context: "RemoteOrdersPage",
   });
-  
+
   // Throw error específico para tratamento upstream
-  throw new Error('Unable to load orders. Please check your connection.');
+  throw new Error("Unable to load orders. Please check your connection.");
 }
 ```
 
@@ -678,54 +690,61 @@ try {
 // ✅ PADRÃO: config/api.ts para centralizar URLs
 // config/api.ts
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8001',
+  BASE_URL: process.env.REACT_APP_API_URL || "http://localhost:8001",
   ENDPOINTS: {
-    ORDERS: '/api/v1/orders',
-    REMOTE_ORDERS: '/api/v1/remote-orders',
-    PRODUCTS: '/api/v1/products'
+    ORDERS: "/api/v1/orders",
+    REMOTE_ORDERS: "/api/v1/remote-orders",
+    PRODUCTS: "/api/v1/products",
   },
-  TIMEOUT: 30000
+  TIMEOUT: 30000,
 };
 
 // ❌ NUNCA hardcode URLs nos componentes
-const response = await fetch('http://localhost:8001/api/v1/orders');
+const response = await fetch("http://localhost:8001/api/v1/orders");
 
 // ✅ USE configuração centralizada
-import { API_CONFIG } from '@/config/api';
-const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORDERS}`);
+import { API_CONFIG } from "@/config/api";
+const response = await fetch(
+  `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ORDERS}`
+);
 ```
 
 #### Evitando Nested Ternary com IIFE
 
 ```typescript
 // ❌ EVITE: Nested ternary difícil de ler
-const statusColor = order.status === 'pending' 
-  ? 'yellow' 
-  : order.status === 'confirmed'
-    ? 'green'
-    : order.status === 'preparing'
-      ? 'blue'
-      : 'red';
+const statusColor =
+  order.status === "pending"
+    ? "yellow"
+    : order.status === "confirmed"
+    ? "green"
+    : order.status === "preparing"
+    ? "blue"
+    : "red";
 
 // ✅ USE: IIFE (Immediately Invoked Function Expression) para lógica complexa
 const statusColor = (() => {
   switch (order.status) {
-    case 'pending': return 'yellow';
-    case 'confirmed': return 'green';
-    case 'preparing': return 'blue';
-    default: return 'red';
+    case "pending":
+      return "yellow";
+    case "confirmed":
+      return "green";
+    case "preparing":
+      return "blue";
+    default:
+      return "red";
   }
 })();
 
 // ✅ OU: Extract para função nomeada
 function getStatusColor(status: OrderStatus): string {
   const colorMap: Record<OrderStatus, string> = {
-    pending: 'yellow',
-    confirmed: 'green',
-    preparing: 'blue',
-    rejected: 'red'
+    pending: "yellow",
+    confirmed: "green",
+    preparing: "blue",
+    rejected: "red",
   };
-  return colorMap[status] || 'gray';
+  return colorMap[status] || "gray";
 }
 
 const statusColor = getStatusColor(order.status);
@@ -740,8 +759,8 @@ const statusColor = getStatusColor(order.status);
 </div>
 
 // ✅ USE: button para ações clicáveis
-<button 
-  onClick={handleClick} 
+<button
+  onClick={handleClick}
   type="button"
   className="bg-blue-500 text-white px-4 py-2 rounded"
 >
@@ -752,7 +771,7 @@ const statusColor = getStatusColor(order.status);
 <label htmlFor="order-notes" className="block mb-2">
   Observações do Pedido
 </label>
-<textarea 
+<textarea
   id="order-notes"
   value={notes}
   onChange={(e) => setNotes(e.target.value)}
@@ -771,26 +790,30 @@ const getOrder = async (orderId: string): Promise<Order> => {
   if (orderCache.has(orderId)) {
     return orderCache.get(orderId)!;
   }
-  
+
   try {
     const order = await api.getOrder(orderId);
     // Salvar no cache
     orderCache.set(orderId, order);
     return order;
   } catch (error) {
-    offlineStorage.log('Failed to fetch order', { orderId, error });
+    offlineStorage.log("Failed to fetch order", { orderId, error });
     throw error;
   }
 };
 
 // ✅ PADRÃO: React Query para cache automático (recomendado)
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 
-const { data: order, isLoading, error } = useQuery({
-  queryKey: ['order', orderId],
+const {
+  data: order,
+  isLoading,
+  error,
+} = useQuery({
+  queryKey: ["order", orderId],
   queryFn: () => orderService.getOrder(orderId),
   staleTime: 5 * 60 * 1000, // Cache por 5 minutos
-  cacheTime: 10 * 60 * 1000 // Manter em cache por 10 minutos
+  cacheTime: 10 * 60 * 1000, // Manter em cache por 10 minutos
 });
 ```
 
@@ -802,15 +825,18 @@ const customerName = order.customer.name;
 const firstItemName = order.items[0].product.name;
 
 // ✅ USE: Optional chaining
-const customerName = order?.customer?.name ?? 'Cliente não identificado';
-const firstItemName = order?.items?.[0]?.product?.name ?? 'Produto não encontrado';
+const customerName = order?.customer?.name ?? "Cliente não identificado";
+const firstItemName =
+  order?.items?.[0]?.product?.name ?? "Produto não encontrado";
 
 // ✅ USE: Type guards para validação
 function isValidOrder(order: any): order is Order {
-  return order && 
-    typeof order.id === 'string' &&
+  return (
+    order &&
+    typeof order.id === "string" &&
     Array.isArray(order.items) &&
-    order.items.length > 0;
+    order.items.length > 0
+  );
 }
 
 if (isValidOrder(order)) {
@@ -2057,7 +2083,7 @@ class TestComponent:
 
 ## 🎯 Resumo - Regras de Ouro
 
-### Os 23 Mandamentos do Desenvolvedor Chefia POS
+### Os 32 Mandamentos do Desenvolvedor Chefia POS
 
 1. **TERMINE O QUE COMEÇOU - Uma tarefa por vez, 100% completa**
 2. **NUNCA finalize uma tarefa com bugs conhecidos**
@@ -2090,6 +2116,7 @@ class TestComponent:
 29. **Use elementos semânticos (button ao invés de div clickable)**
 30. **Implemente cache para evitar chamadas duplicadas à API**
 31. **Use optional chaining (?.) para acesso seguro a propriedades**
+32. **Considere o uso de patterns como solid, event driven, domain-driven-design, clean code, saga, microfrontend, mobile first e outros**
 
 ### 🚫 Os Pecados Capitais do Desenvolvimento
 

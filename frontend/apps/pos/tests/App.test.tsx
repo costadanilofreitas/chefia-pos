@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import App from '../src/App';
 
 // Mock all the hooks and components
-jest.mock('../hooks/mocks/useAuth', () => ({
+jest.mock('../src/hooks/useAuth', () => ({
   useAuth: () => ({
     user: null,
     isAuthenticated: false,
@@ -15,39 +15,33 @@ jest.mock('../hooks/mocks/useAuth', () => ({
 }));
 
 // Mock all UI components to avoid complex rendering
-jest.mock('../ui/BusinessDayPage', () => {
+jest.mock('../src/ui/BusinessDayPage', () => {
   return function MockBusinessDayPage() {
     return <div data-testid="business-day-page">Business Day Page</div>;
   };
 });
 
-jest.mock('../ui/CashWithdrawalPage', () => {
+jest.mock('../src/ui/CashWithdrawalPage', () => {
   return function MockCashWithdrawalPage() {
     return <div data-testid="cash-withdrawal-page">Cash Withdrawal Page</div>;
   };
 });
 
-jest.mock('../ui/CashierOpeningClosingPage', () => {
+jest.mock('../src/ui/CashierOpeningClosingPage', () => {
   return function MockCashierOpeningClosingPage() {
     return <div data-testid="cashier-page">Cashier Page</div>;
   };
 });
 
-jest.mock('../ui/POSMainPage', () => {
-  return function MockPOSMainPage() {
-    return <div data-testid="pos-main-page">POS Main Page</div>;
+jest.mock('../src/ui/MainPage', () => {
+  return function MockMainPage() {
+    return <div data-testid="main-page">Main Page</div>;
   };
 });
 
-jest.mock('../ui/POSOrderPage', () => {
-  return function MockPOSOrderPage() {
-    return <div data-testid="pos-order-page">POS Order Page</div>;
-  };
-});
-
-jest.mock('../ui/POSPaymentPage', () => {
-  return function MockPOSPaymentPage() {
-    return <div data-testid="pos-payment-page">POS Payment Page</div>;
+jest.mock('../src/ui/PaymentPage', () => {
+  return function MockPaymentPage() {
+    return <div data-testid="payment-page">Payment Page</div>;
   };
 });
 

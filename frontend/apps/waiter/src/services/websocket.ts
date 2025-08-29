@@ -1,5 +1,5 @@
 import { API_CONFIG } from '../config/api';
-import type { WebSocketMessage, WebSocketMessageData } from '../types';
+import type { WebSocketMessage } from '../types';
 import { logger } from './logger';
 
 // Timing constants

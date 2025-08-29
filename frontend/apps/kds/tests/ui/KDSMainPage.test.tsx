@@ -5,12 +5,12 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import KDSMainPage from '../KDSMainPage';
-import { ThemeProvider } from '../../contexts/ThemeContext';
-import { createMockOrder, createMockStation } from '../../__tests__/utils/testUtils';
+import KDSMainPage from '../../src/ui/KDSMainPage';
+import { ThemeProvider } from '../../src/contexts/ThemeContext';
+import { createMockOrder, createMockStation } from '../utils/testUtils';
 
 // Mock dependencies
-jest.mock('../../services/api', () => ({
+jest.mock('../../src/services/api', () => ({
   ApiService: {
     get: jest.fn(),
     post: jest.fn(),
@@ -18,7 +18,7 @@ jest.mock('../../services/api', () => ({
   }
 }));
 
-jest.mock('../../services/offlineStorage', () => ({
+jest.mock('../../src/services/offlineStorage', () => ({
   offlineStorage: {
     getAllStations: jest.fn().mockResolvedValue([]),
     log: jest.fn(),
@@ -27,18 +27,18 @@ jest.mock('../../services/offlineStorage', () => ({
   }
 }));
 
-jest.mock('../../hooks/useFullscreen', () => ({
+jest.mock('../../src/hooks/useFullscreen', () => ({
   useFullscreen: () => ({
     isFullscreen: false,
     toggleFullscreen: jest.fn()
   })
 }));
 
-jest.mock('../../hooks/useKeyboardShortcuts', () => ({
+jest.mock('../../src/hooks/useKeyboardShortcuts', () => ({
   useKeyboardShortcuts: jest.fn()
 }));
 
-jest.mock('../../hooks/useKDSOrders', () => ({
+jest.mock('../../src/hooks/useKDSOrders', () => ({
   useKDSOrders: jest.fn(() => ({
     orders: [],
     loading: false,
@@ -56,7 +56,7 @@ jest.mock('../../hooks/useKDSOrders', () => ({
   }))
 }));
 
-jest.mock('../../hooks/useKDSAlerts', () => ({
+jest.mock('../../src/hooks/useKDSAlerts', () => ({
   useKDSAlerts: jest.fn(() => ({
     alerts: [],
     removeAlert: jest.fn(),
@@ -67,7 +67,7 @@ jest.mock('../../hooks/useKDSAlerts', () => ({
   }))
 }));
 
-jest.mock('../../hooks/useKDSWebSocket', () => ({
+jest.mock('../../src/hooks/useKDSWebSocket', () => ({
   useKDSWebSocket: jest.fn(() => ({
     isConnected: true,
     connectionError: null,
@@ -79,7 +79,7 @@ jest.mock('../../hooks/useKDSWebSocket', () => ({
 }));
 
 // Mock lazy loaded components
-jest.mock('../OrderCard', () => {
+jest.mock('../../src/ui/KDSOrderCard', () => {
   return {
     __esModule: true,
     default: ({ order, onStatusChange, onItemStatusChange }: any) => (
@@ -101,7 +101,7 @@ jest.mock('../OrderCard', () => {
   };
 });
 
-jest.mock('../../components/VisualAlert', () => ({
+jest.mock('../../src/components/VisualAlert', () => ({
   AlertSystem: ({ alerts, onRemove }: any) => (
     <div data-testid="alert-system">
       {alerts.map((alert: any) => (
@@ -115,13 +115,13 @@ jest.mock('../../components/VisualAlert', () => ({
 }));
 
 // Import mocked modules for manipulation
-import { ApiService } from '../../services/api';
-import { offlineStorage } from '../../services/offlineStorage';
-import { useKDSOrders } from '../../hooks/useKDSOrders';
-import { useKDSAlerts } from '../../hooks/useKDSAlerts';
-import { useKDSWebSocket } from '../../hooks/useKDSWebSocket';
-import { useFullscreen } from '../../hooks/useFullscreen';
-import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { ApiService } from '../../src/services/api';
+import { offlineStorage } from '../../src/services/offlineStorage';
+import { useKDSOrders } from '../../src/hooks/useKDSOrders';
+import { useKDSAlerts } from '../../src/hooks/useKDSAlerts';
+import { useKDSWebSocket } from '../../src/hooks/useKDSWebSocket';
+import { useFullscreen } from '../../src/hooks/useFullscreen';
+import { useKeyboardShortcuts } from '../../src/hooks/useKeyboardShortcuts';
 
 describe('KDSMainPage', () => {
   const mockOrders = [

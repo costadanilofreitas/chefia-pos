@@ -1,18 +1,18 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { useAuth } from '../hooks/mocks/useAuth';
-import { useCashier } from '../hooks/mocks/useCashier';
-import { useOrder } from '../hooks/mocks/useOrder';
 import PrinterService from '../../src/services/PrinterService';
 import POSPaymentPage from '../../src/ui/PaymentPage';
+import { useAuth } from '../../src/hooks/useAuth';
+import { useCashier } from '../../src/hooks/useCashier';
+import { useOrder } from '../../src/hooks/useOrder';
 
 // Mocking hooks and services
-jest.mock('../hooks/mocks/useAuth');
-jest.mock('../hooks/mocks/useCashier');
-jest.mock('../hooks/mocks/useOrder');
-jest.mock('../services/PrinterService');
+jest.mock('../../src/hooks/useAuth');
+jest.mock('../../src/hooks/useCashier');
+jest.mock('../../src/hooks/useOrder');
+jest.mock('../../src/services/PrinterService');
 
-describe('POSPaymentPage', () => {
+describe('PaymentPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });

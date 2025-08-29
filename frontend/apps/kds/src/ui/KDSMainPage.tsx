@@ -33,7 +33,7 @@ import {
 import type { Station, Order } from '../services/kdsService';
 
 // Lazy load components
-const OrderCard = lazy(() => import('./OrderCard'));
+const OrderCard = lazy(() => import('./KDSOrderCard'));
 const AlertSystem = lazy(() => import('../components/VisualAlert').then(m => ({ default: m.AlertSystem })));
 
 // Loading skeleton component
@@ -117,7 +117,10 @@ const KDSHeader = ({
           {/* Action Buttons */}
           <div className="flex items-center space-x-1 sm:space-x-2">
             <Button
-              onClick={onRefresh}
+              onClick={(e) => {
+                onRefresh();
+                (e.currentTarget as HTMLButtonElement).blur();
+              }}
               size="sm"
               variant="secondary"
               disabled={isLoading}
@@ -128,7 +131,10 @@ const KDSHeader = ({
             </Button>
             
             <Button
-              onClick={onToggleFullscreen}
+              onClick={(e) => {
+                onToggleFullscreen();
+                (e.currentTarget as HTMLButtonElement).blur();
+              }}
               size="sm"
               variant="secondary"
               aria-label="Tela cheia"
@@ -138,7 +144,10 @@ const KDSHeader = ({
             </Button>
             
             <Button
-              onClick={onToggleSound}
+              onClick={(e) => {
+                onToggleSound();
+                (e.currentTarget as HTMLButtonElement).blur();
+              }}
               size="sm"
               variant="secondary"
               aria-label="Som"
@@ -148,7 +157,10 @@ const KDSHeader = ({
             </Button>
             
             <Button
-              onClick={onToggleTheme}
+              onClick={(e) => {
+                onToggleTheme();
+                (e.currentTarget as HTMLButtonElement).blur();
+              }}
               size="sm"
               variant="secondary"
               aria-label="Tema"
@@ -158,7 +170,10 @@ const KDSHeader = ({
             </Button>
             
             <Button
-              onClick={onShowHelp}
+              onClick={(e) => {
+                onShowHelp();
+                (e.currentTarget as HTMLButtonElement).blur();
+              }}
               size="sm"
               variant="secondary"
               aria-label="Ajuda"

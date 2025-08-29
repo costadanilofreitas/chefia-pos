@@ -5,13 +5,13 @@ import { twMerge } from 'tailwind-merge';
 export interface SpinnerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
-  label?: string;
+  label?: string | undefined;
 }
 
 export const Spinner: React.FC<SpinnerProps> = ({ 
   size = 'md', 
   className,
-  label = 'Carregando...'
+  label
 }) => {
   const sizes = {
     sm: 'h-4 w-4',
@@ -70,7 +70,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   return (
     <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl">
-        <Spinner size="lg" label={label || undefined} />
+        <Spinner size="lg" label={label} />
       </div>
     </div>
   );

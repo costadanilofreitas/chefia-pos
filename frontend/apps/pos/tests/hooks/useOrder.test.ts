@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { useOrder } from '../hooks/mocks/useOrder';
+import { useOrder } from '../../src/hooks/useOrder';
 
 describe('useOrder Hook', () => {
   it('should return initial state', () => {

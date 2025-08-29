@@ -2,8 +2,8 @@
  * WebSocket Service Test Suite
  */
 
-import { WebSocketService, WebSocketMessage } from '../websocket';
-import { MockWebSocket, setupMockWebSocket, waitFor, cleanupMocks } from '../../__tests__/utils/testUtils';
+import { WebSocketService, WebSocketMessage } from '../../src/services/websocket';
+import { MockWebSocket, setupMockWebSocket, waitFor, cleanupMocks } from '../utils/testUtils';
 
 describe('WebSocketService', () => {
   let wsService: WebSocketService;

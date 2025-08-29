@@ -24,15 +24,19 @@ export const usePullToRefresh = ({
     // Only trigger if scrolled to top
     if (window.scrollY !== 0) return;
     
-    startY.current = e.touches[0].clientY;
+    if (e.touches[0]) {
+      startY.current = e.touches[0].clientY;
+    }
     setIsPulling(true);
   }, [enabled, isRefreshing]);
   
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!isPulling || !enabled || isRefreshing) return;
     
-    currentY.current = e.touches[0].clientY;
-    const distance = currentY.current - startY.current;
+    if (e.touches[0]) {
+      currentY.current = e.touches[0].clientY;
+    }
+    const distance = currentY.current - (startY.current || 0);
     
     if (distance > 0) {
       // Prevent default scrolling when pulling down

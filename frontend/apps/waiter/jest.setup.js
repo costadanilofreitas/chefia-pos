@@ -1,5 +1,17 @@
 // Import testing-library
-import '@testing-library/jest-dom';
+require('@testing-library/jest-dom');
+
+// Mock import.meta
+global.import = {
+  meta: {
+    env: {
+      DEV: true,
+      PROD: false,
+      VITE_API_URL: 'http://localhost:8001',
+      VITE_WS_URL: 'ws://localhost:8001',
+    }
+  }
+};
 
 // Mock global objects
 global.matchMedia = global.matchMedia || function() {
@@ -68,3 +80,14 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }));
+
+// Mock WebSocket
+global.WebSocket = jest.fn().mockImplementation(() => ({
+  send: jest.fn(),
+  close: jest.fn(),
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+}));
+
+// Mock scrollIntoView
+Element.prototype.scrollIntoView = jest.fn();

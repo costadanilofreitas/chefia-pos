@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import POSMainPage from '../../src/ui/MainPage';
 
-// Mock hooks directly
-jest.mock('../hooks/mocks/useOrder', () => ({
+// Mock hooks from actual source
+jest.mock('../../src/hooks/useOrder', () => ({
   useOrder: () => ({
     currentOrder: { items: [] },
     addItemToOrder: jest.fn(),
@@ -12,7 +12,7 @@ jest.mock('../hooks/mocks/useOrder', () => ({
   })
 }));
 
-jest.mock('../hooks/mocks/useProduct', () => ({
+jest.mock('../../src/hooks/useProduct', () => ({
   useProduct: () => ({
     products: [
       { id: '1', name: 'Product 1', price: 10.0 },
@@ -26,14 +26,14 @@ jest.mock('../hooks/mocks/useProduct', () => ({
   })
 }));
 
-jest.mock('../hooks/mocks/useCashier', () => ({
+jest.mock('../../src/hooks/useCashier', () => ({
   useCashier: () => ({
     currentCashier: { id: '1', status: 'open' },
     openCashier: jest.fn(),
   })
 }));
 
-describe('POSMainPage', () => {
+describe('MainPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });

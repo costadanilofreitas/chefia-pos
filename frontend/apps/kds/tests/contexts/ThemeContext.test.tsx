@@ -5,7 +5,7 @@
 import React from 'react';
 import { renderHook, act } from '@testing-library/react';
 import { render, screen } from '@testing-library/react';
-import { ThemeProvider, useTheme } from '../ThemeContext';
+import { ThemeProvider, useTheme } from '../../src/contexts/ThemeContext';
 
 describe('ThemeContext', () => {
   // Store original matchMedia

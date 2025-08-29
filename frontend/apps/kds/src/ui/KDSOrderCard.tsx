@@ -1,8 +1,8 @@
 import React from 'react';
 import { FaCheckCircle } from 'react-icons/fa';
-import { Card, CardHeader, CardContent, CardFooter } from '../components/Card';
-import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
+import { Button } from '../components/Button';
+import { Card, CardContent, CardFooter, CardHeader } from '../components/Card';
 import { Timer } from '../components/Timer';
 
 type OrderItem = {
@@ -104,14 +104,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="p-6">
         <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
           Itens:
         </h4>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {order.items?.map((item) => (
-            <div key={item.id} className="flex items-start gap-3">
+            <div key={item.id} className="flex items-start gap-4 py-2">
               <span className="text-lg font-bold text-gray-700 dark:text-gray-300 min-w-[30px]">
                 {item.quantity}x
               </span>
@@ -128,11 +128,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
               </div>
               
               <Button
-                size="sm"
+                size="md"
                 variant={item.status === nextStatus ? 'success' : 'secondary'}
                 icon={item.status === nextStatus ? <FaCheckCircle /> : null}
-                onClick={() => onItemStatusChange(order.id, item.id, nextStatus)}
-                className="touch-target"
+                onClick={(e) => {
+                  onItemStatusChange(order.id, item.id, nextStatus);
+                  (e.currentTarget as HTMLButtonElement).blur();
+                }}
+                className="min-h-[48px] min-w-[80px] touch-target"
               >
                 {item.status === nextStatus ? 'Pronto' : 'Marcar'}
               </Button>
@@ -150,8 +153,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
           <Button
             variant="primary"
             size="lg"
-            onClick={() => onStatusChange(order.id, nextStatus)}
-            className="touch-target-lg"
+            onClick={(e) => {
+              onStatusChange(order.id, nextStatus);
+              (e.currentTarget as HTMLButtonElement).blur();
+            }}
+            className="min-h-[56px] min-w-[150px] text-lg font-semibold"
           >
             {getButtonText(nextStatus)}
           </Button>

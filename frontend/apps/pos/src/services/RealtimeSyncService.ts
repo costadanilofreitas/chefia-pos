@@ -8,6 +8,7 @@
 
 import eventBus from '../utils/EventBus';
 import { requestCache } from './RequestCache';
+import { isDev, isTest } from '../utils/env';
 
 interface SyncMessage {
   type: 'UPDATE' | 'DELETE' | 'CREATE' | 'INVALIDATE_CACHE';
@@ -55,7 +56,7 @@ class RealtimeSyncService {
   private connect() {
     try {
       // Usar mesma porta do backend mas endpoint diferente
-      const wsUrl = import.meta.env.DEV 
+      const wsUrl = isDev 
         ? 'ws://localhost:8001/ws/sync'
         : `ws://${window.location.hostname}:8001/ws/sync`;
       
@@ -158,7 +159,7 @@ class RealtimeSyncService {
     }
     
     // Log para auditoria
-    if (import.meta.env.DEV) {
+    if (isDev) {
       console.debug(`[RealtimeSync] ${message.entity} updated by terminal ${message.terminalId}`);
     }
   }
@@ -169,7 +170,7 @@ class RealtimeSyncService {
   private handleDataDelete(message: SyncMessage) {
     requestCache.invalidatePattern(message.entity);
     
-    if (import.meta.env.DEV) {
+    if (isDev) {
       console.debug(`[RealtimeSync] ${message.entity} deleted by terminal ${message.terminalId}`);
     }
   }
@@ -351,7 +352,7 @@ class RealtimeSyncService {
 export const realtimeSync = new RealtimeSyncService();
 
 // Auto-inicializar se não estiver em testes
-if (!import.meta.env.TEST) {
+if (!isTest) {
   // O serviço se auto-conecta no constructor
 }
 

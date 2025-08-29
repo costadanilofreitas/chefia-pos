@@ -3,12 +3,14 @@
  * All API endpoints and WebSocket URLs should be defined here
  */
 
+import { getApiUrl, getWsUrl } from '../utils/env';
+
 export const API_CONFIG = {
   // Base API URL
-  BASE_URL: import.meta.env?.VITE_API_URL || 'http://localhost:8001',
+  BASE_URL: getApiUrl(),
   
   // WebSocket URL
-  WS_URL: import.meta.env?.VITE_WS_URL || 'ws://localhost:8001/ws',
+  WS_URL: getWsUrl() + '/ws',
   
   // API Version
   API_VERSION: '/api/v1',

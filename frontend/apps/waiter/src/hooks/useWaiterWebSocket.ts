@@ -124,12 +124,12 @@ export function useWaiterWebSocket({
     // Register event listeners
     websocketService.on('connected', handleConnected);
     websocketService.on('disconnected', handleDisconnected);
-    websocketService.on('status_changed', handleStatusChange);
-    websocketService.on('reconnecting', handleReconnecting);
-    websocketService.on('table_update', handleTableUpdate);
-    websocketService.on('order_update', handleOrderUpdate);
-    websocketService.on('notification', handleNotification);
-    websocketService.on('kitchen_update', handleKitchenUpdate);
+    websocketService.on('status_changed', handleStatusChange as (...args: unknown[]) => void);
+    websocketService.on('reconnecting', handleReconnecting as (...args: unknown[]) => void);
+    websocketService.on('table_update', handleTableUpdate as (...args: unknown[]) => void);
+    websocketService.on('order_update', handleOrderUpdate as (...args: unknown[]) => void);
+    websocketService.on('notification', handleNotification as (...args: unknown[]) => void);
+    websocketService.on('kitchen_update', handleKitchenUpdate as (...args: unknown[]) => void);
 
     // Auto-connect if enabled
     if (autoConnect) {
@@ -145,12 +145,12 @@ export function useWaiterWebSocket({
     return () => {
       websocketService.off('connected', handleConnected);
       websocketService.off('disconnected', handleDisconnected);
-      websocketService.off('status_changed', handleStatusChange);
-      websocketService.off('reconnecting', handleReconnecting);
-      websocketService.off('table_update', handleTableUpdate);
-      websocketService.off('order_update', handleOrderUpdate);
-      websocketService.off('notification', handleNotification);
-      websocketService.off('kitchen_update', handleKitchenUpdate);
+      websocketService.off('status_changed', handleStatusChange as (...args: unknown[]) => void);
+      websocketService.off('reconnecting', handleReconnecting as (...args: unknown[]) => void);
+      websocketService.off('table_update', handleTableUpdate as (...args: unknown[]) => void);
+      websocketService.off('order_update', handleOrderUpdate as (...args: unknown[]) => void);
+      websocketService.off('notification', handleNotification as (...args: unknown[]) => void);
+      websocketService.off('kitchen_update', handleKitchenUpdate as (...args: unknown[]) => void);
     };
   }, [
     autoConnect,

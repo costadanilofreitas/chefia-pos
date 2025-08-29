@@ -4,6 +4,7 @@ import logger from "./LocalLoggerService";
 import { requestCache } from "./RequestCache";
 import realtimeSync from "./RealtimeSyncService";
 import eventBus from "../utils/EventBus";
+import { getEnv } from "../utils/env";
 
 export interface TableReservation {
   id: string;
@@ -74,8 +75,8 @@ export interface TableStatusUpdate {
 
 class TableServiceClass {
   // Using values from environment or defaults
-  private readonly restaurantId = import.meta.env.VITE_RESTAURANT_ID || "1";
-  private readonly storeId = import.meta.env.VITE_STORE_ID || "1";
+  private readonly restaurantId = getEnv('VITE_RESTAURANT_ID', '1');
+  private readonly storeId = getEnv('VITE_STORE_ID', '1');
 
   /**
    * Get active table layout with all tables

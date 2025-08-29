@@ -2,8 +2,8 @@
  * Test utilities and helper functions for KDS tests
  */
 
-import { Order, Station, OrderItem } from '../../services/kdsService';
-import { WebSocketMessage } from '../../services/websocket';
+import { Order, Station, OrderItem } from '../../src/services/kdsService';
+import { WebSocketMessage } from '../../src/services/websocket';
 
 // Mock data generators
 export const createMockOrder = (overrides?: Partial<Order>): Order => ({

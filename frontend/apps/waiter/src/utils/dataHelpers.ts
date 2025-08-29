@@ -7,7 +7,7 @@
  * Status badge configuration
  */
 export const getStatusConfig = (status: string) => {
-  const configs = {
+  const configs: Record<string, { variant: string; label: string }> = {
     available: { variant: 'success', label: 'Disponível' },
     occupied: { variant: 'warning', label: 'Ocupada' },
     reserved: { variant: 'info', label: 'Reservada' },

@@ -1,25 +1,22 @@
-import { waiterService, Table, Order, OrderItem } from '../services/waiterService';
-import axios from 'axios';
+import { waiterService, Table, Order, OrderItem } from '../../src/services/waiterService';
 
-// Mock axios
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+// Mock the api service
+jest.mock('../../src/services/api', () => ({
+  apiService: {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    patch: jest.fn()
+  }
+}));
+
+import { apiService } from '../../src/services/api';
+const mockApiService = apiService as jest.Mocked<typeof apiService>;
 
 describe('WaiterService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Setup default axios mock
-    mockedAxios.create.mockReturnValue({
-      get: jest.fn().mockResolvedValue({ data: { success: true, data: {} } }),
-      post: jest.fn().mockResolvedValue({ data: { success: true, data: {} } }),
-      put: jest.fn().mockResolvedValue({ data: { success: true, data: {} } }),
-      delete: jest.fn().mockResolvedValue({ data: { success: true, data: {} } }),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
-      }
-    } as any);
   });
   
   test('should get tables', async () => {
@@ -29,17 +26,8 @@ describe('WaiterService', () => {
       { id: 3, number: 3, status: 'reserved', seats: 6, shape: 'rectangle', x: 400, y: 100 }
     ];
     
-    const mockResponse = { data: { success: true, data: mockTables } };
-    mockedAxios.create.mockReturnValue({
-      get: jest.fn().mockResolvedValue(mockResponse),
-      post: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
-      }
-    } as any);
+    const mockResponse = { success: true, data: mockTables };
+    mockApiService.get.mockResolvedValue(mockResponse);
     
     const result = await waiterService.getTables();
     
@@ -60,17 +48,8 @@ describe('WaiterService', () => {
       }
     ];
     
-    const mockResponse = { data: { success: true, data: mockOrders } };
-    mockedAxios.create.mockReturnValue({
-      get: jest.fn().mockResolvedValue(mockResponse),
-      post: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
-      }
-    } as any);
+    const mockResponse = { success: true, data: mockOrders };
+    mockApiService.get.mockResolvedValue(mockResponse);
     
     const result = await waiterService.getOrders();
     
@@ -91,17 +70,8 @@ describe('WaiterService', () => {
       }
     ];
     
-    const mockResponse = { data: { success: true, data: mockOrders } };
-    mockedAxios.create.mockReturnValue({
-      get: jest.fn().mockResolvedValue(mockResponse),
-      post: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
-      }
-    } as any);
+    const mockResponse = { success: true, data: mockOrders };
+    mockApiService.get.mockResolvedValue(mockResponse);
     
     const result = await waiterService.getOrdersByTable(2);
     
@@ -125,17 +95,8 @@ describe('WaiterService', () => {
       created_at: new Date().toISOString()
     };
     
-    const mockResponse = { data: { success: true, data: mockOrder } };
-    mockedAxios.create.mockReturnValue({
-      get: jest.fn(),
-      post: jest.fn().mockResolvedValue(mockResponse),
-      put: jest.fn(),
-      delete: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
-      }
-    } as any);
+    const mockResponse = { success: true, data: mockOrder };
+    mockApiService.post.mockResolvedValue(mockResponse);
     
     const result = await waiterService.createOrder(2, mockItems);
     
@@ -143,17 +104,8 @@ describe('WaiterService', () => {
   });
   
   test('should update table status', async () => {
-    const mockResponse = { data: { success: true } };
-    mockedAxios.create.mockReturnValue({
-      get: jest.fn(),
-      post: jest.fn(),
-      put: jest.fn().mockResolvedValue(mockResponse),
-      delete: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
-      }
-    } as any);
+    const mockResponse = { success: true };
+    mockApiService.put.mockResolvedValue(mockResponse);
     
     const result = await waiterService.updateTableStatus(2, 'occupied');
     
@@ -161,17 +113,8 @@ describe('WaiterService', () => {
   });
   
   test('should deliver order items', async () => {
-    const mockResponse = { data: { success: true } };
-    mockedAxios.create.mockReturnValue({
-      get: jest.fn(),
-      post: jest.fn(),
-      put: jest.fn().mockResolvedValue(mockResponse),
-      delete: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
-      }
-    } as any);
+    const mockResponse = { success: true };
+    mockApiService.put.mockResolvedValue(mockResponse);
     
     const result = await waiterService.deliverOrderItems(1, [1, 2]);
     
@@ -190,17 +133,8 @@ describe('WaiterService', () => {
       ]
     };
     
-    const mockResponse = { data: { success: true, data: mockMenu } };
-    mockedAxios.create.mockReturnValue({
-      get: jest.fn().mockResolvedValue(mockResponse),
-      post: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
-      }
-    } as any);
+    const mockResponse = { success: true, data: mockMenu };
+    mockApiService.get.mockResolvedValue(mockResponse);
     
     const result = await waiterService.getMenu();
     
@@ -208,32 +142,14 @@ describe('WaiterService', () => {
   });
   
   test('should handle API errors', async () => {
-    mockedAxios.create.mockReturnValue({
-      get: jest.fn().mockRejectedValue(new Error('API Error')),
-      post: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
-      }
-    } as any);
+    mockApiService.get.mockRejectedValue(new Error('API Error'));
     
     await expect(waiterService.getTables()).rejects.toThrow('API Error');
   });
   
   test('should handle failed responses', async () => {
-    const mockResponse = { data: { success: false, message: 'Failed to fetch data' } };
-    mockedAxios.create.mockReturnValue({
-      get: jest.fn().mockResolvedValue(mockResponse),
-      post: jest.fn(),
-      put: jest.fn(),
-      delete: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() }
-      }
-    } as any);
+    const mockResponse = { success: false, message: 'Failed to fetch data' };
+    mockApiService.get.mockResolvedValue(mockResponse);
     
     await expect(waiterService.getTables()).rejects.toThrow('Failed to fetch tables');
   });
