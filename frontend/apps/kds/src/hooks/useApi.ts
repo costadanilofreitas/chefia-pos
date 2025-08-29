@@ -7,15 +7,15 @@ interface UseApiState<T> {
   error: string | null;
 }
 
-interface UseApiOptions {
+interface UseApiOptions<T = unknown> {
   immediate?: boolean;
-  onSuccess?: (data: any) => void;
-  onError?: (error: any) => void;
+  onSuccess?: (data: T) => void;
+  onError?: (error: Error) => void;
 }
 
-export function useApi<T = any>(
+export function useApi<T = unknown>(
   endpoint: string,
-  options: UseApiOptions = {}
+  options: UseApiOptions<T> = {}
 ) {
   const [state, setState] = useState<UseApiState<T>>({
     data: null,
@@ -25,7 +25,7 @@ export function useApi<T = any>(
 
   const { immediate = true, onSuccess, onError } = options;
 
-  const execute = useCallback(async (params?: any) => {
+  const execute = useCallback(async (params?: Record<string, unknown>) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
@@ -37,19 +37,20 @@ export function useApi<T = any>(
       }
       
       return response;
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
+    } catch (error) {
+      const err = error as Error & { response?: { data?: { message?: string } } };
+      const errorMessage = err.response?.data?.message || err.message || 'An error occurred';
       setState(prev => ({ ...prev, loading: false, error: errorMessage }));
       
       if (onError) {
-        onError(error);
+        onError(err);
       }
       
       throw error;
     }
   }, [endpoint, onSuccess, onError]);
 
-  const mutate = useCallback(async (method: 'post' | 'put' | 'patch' | 'delete', data?: any) => {
+  const mutate = useCallback(async (method: 'post' | 'put' | 'patch' | 'delete', data?: unknown) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     
     try {
@@ -79,12 +80,13 @@ export function useApi<T = any>(
       }
       
       return response;
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
+    } catch (error) {
+      const err = error as Error & { response?: { data?: { message?: string } } };
+      const errorMessage = err.response?.data?.message || err.message || 'An error occurred';
       setState(prev => ({ ...prev, loading: false, error: errorMessage }));
       
       if (onError) {
-        onError(error);
+        onError(err);
       }
       
       throw error;
@@ -106,9 +108,9 @@ export function useApi<T = any>(
     execute,
     mutate,
     refresh,
-    post: (data?: any) => mutate('post', data),
-    put: (data?: any) => mutate('put', data),
-    patch: (data?: any) => mutate('patch', data),
+    post: (data?: unknown) => mutate('post', data),
+    put: (data?: unknown) => mutate('put', data),
+    patch: (data?: unknown) => mutate('patch', data),
     delete: () => mutate('delete'),
   };
 }

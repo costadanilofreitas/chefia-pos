@@ -21,8 +21,9 @@ Este documento detalha todos os endpoints da API do Chefia POS, incluindo os nov
 9. [**🆕 Self-Service**](#9-self-service)
 10. [**🆕 Table Management**](#10-table-management)
 11. [KDS](#11-kds)
-12. [Relatórios](#12-relatórios)
-13. [WebSocket Events](#13-websocket-events)
+12. [**🆕 Centralized Logging**](#12-centralized-logging)
+13. [Relatórios](#13-relatórios)
+14. [WebSocket Events](#14-websocket-events)
 
 ---
 
@@ -961,7 +962,208 @@ Reportar atraso
 
 ---
 
-## 12. Relatórios
+## 12. Centralized Logging
+
+### 🆕 Sistema de Logging Centralizado
+
+> **Arquitetura**: O sistema de logging foi projetado para funcionar localmente, onde o backend atua como centralizador de logs de todos os módulos frontend (POS, KDS, Kiosk, Waiter). Como o backend roda no mesmo servidor local, não há problemas de latência ou conectividade.
+
+#### POST /logs
+Enviar logs do frontend para o backend
+
+**Request:**
+```json
+{
+  "level": "info",
+  "message": "Order updated successfully",
+  "module": "kds",
+  "timestamp": "2024-08-28T14:30:42Z",
+  "context": {
+    "orderId": "ORD123",
+    "userId": "user456",
+    "action": "status_change"
+  },
+  "session_id": "sess_abc123",
+  "user_agent": "Mozilla/5.0..."
+}
+```
+
+**Response:**
+```json
+{
+  "log_id": "LOG1693305842",
+  "received_at": "2024-08-28T14:30:43Z",
+  "status": "stored"
+}
+```
+
+#### POST /logs/batch
+Enviar múltiplos logs em batch (otimização)
+
+**Request:**
+```json
+{
+  "logs": [
+    {
+      "level": "error",
+      "message": "WebSocket connection failed",
+      "module": "kds",
+      "timestamp": "2024-08-28T14:29:00Z",
+      "context": {
+        "error": "Connection refused",
+        "retry_count": 3
+      }
+    },
+    {
+      "level": "info",
+      "message": "WebSocket reconnected successfully",
+      "module": "kds", 
+      "timestamp": "2024-08-28T14:30:15Z",
+      "context": {
+        "reconnect_time_ms": 15000
+      }
+    }
+  ]
+}
+```
+
+#### GET /logs
+Consultar logs (para debugging e monitoramento)
+
+**Query Parameters:**
+- `level`: error, warn, info, debug
+- `module`: kds, pos, kiosk, waiter
+- `date_from`: Data inicial
+- `date_to`: Data final
+- `limit`: Número de logs (padrão: 100)
+- `search`: Busca por palavra-chave na mensagem
+- `user_id`: Logs de usuário específico
+
+**Response:**
+```json
+{
+  "logs": [
+    {
+      "id": "LOG1693305842",
+      "level": "error",
+      "message": "Failed to update order status",
+      "module": "kds",
+      "timestamp": "2024-08-28T14:30:42Z",
+      "context": {
+        "orderId": "ORD123",
+        "error": "Network timeout"
+      },
+      "session_id": "sess_abc123"
+    }
+  ],
+  "total": 1247,
+  "pagination": {
+    "page": 1,
+    "per_page": 100,
+    "total_pages": 13
+  }
+}
+```
+
+#### GET /logs/stats
+Estatísticas dos logs
+
+**Response:**
+```json
+{
+  "today": {
+    "total_logs": 2456,
+    "errors": 23,
+    "warnings": 156,
+    "info": 2277
+  },
+  "by_module": {
+    "kds": {
+      "total": 856,
+      "errors": 8,
+      "warnings": 45
+    },
+    "pos": {
+      "total": 1200,
+      "errors": 12,
+      "warnings": 89
+    }
+  },
+  "error_trends": [
+    {
+      "hour": "14:00",
+      "error_count": 3,
+      "most_common": "WebSocket connection timeout"
+    }
+  ]
+}
+```
+
+#### DELETE /logs
+Limpar logs antigos (limpeza automática)
+
+**Query Parameters:**
+- `older_than_days`: Logs mais antigos que X dias (padrão: 30)
+- `keep_errors`: Manter logs de erro por mais tempo (padrão: true)
+
+### Integração Frontend
+
+#### Serviço de Logging (KDS)
+```typescript
+// Implementação no KDS (já implementado)
+class OfflineStorage {
+  async log(level: string, message: string, context?: any) {
+    const logEntry = {
+      level,
+      message,
+      module: 'kds',
+      timestamp: new Date().toISOString(),
+      context,
+      session_id: this.getSessionId()
+    };
+
+    try {
+      // Enviar para backend (local)
+      await fetch('/api/v1/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(logEntry)
+      });
+    } catch (error) {
+      // Fallback: armazenar localmente se backend não disponível
+      this.storeLocalLog(logEntry);
+    }
+  }
+}
+```
+
+#### Uso nos Componentes
+```typescript
+// Substitui console.log em produção
+import { offlineStorage } from '@/services/offlineStorage';
+
+// Em vez de:
+// console.log('Order updated', order); ❌
+
+// Use:
+offlineStorage.log('info', 'Order updated successfully', {
+  orderId: order.id,
+  newStatus: order.status
+}); // ✅
+```
+
+### Benefícios da Arquitetura
+
+1. **Centralização Local**: Todos os logs ficam centralizados no backend local
+2. **Zero Latência**: Backend local = resposta imediata
+3. **Persistência**: Logs salvos em banco para auditoria
+4. **Debugging**: Fácil depuração com contexto rico
+5. **Monitoramento**: Dashboard de erros em tempo real
+6. **Compliance**: Trilha de auditoria para regulamentações
+
+---
+
+## 13. Relatórios
 
 ### Vendas
 
@@ -1014,7 +1216,7 @@ Relatório de uso de comandas
 
 ---
 
-## 13. WebSocket Events
+## 14. WebSocket Events
 
 ### Conexão
 ```

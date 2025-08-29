@@ -9,8 +9,20 @@ module.exports = {
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.js'
   },
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest',
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      tsconfig: {
+        module: 'commonjs',
+        target: 'ES2020',
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true
+      }
+    }],
     '^.+\\.(js|jsx)$': 'babel-jest'
+  },
+  globals: {
+    'ts-jest': {
+      isolatedModules: true
+    }
   },
   testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],

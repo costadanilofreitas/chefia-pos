@@ -1,15 +1,24 @@
-import { useState, useEffect, useCallback, useRef, lazy, Suspense, useMemo } from 'react';
-import { FaSync, FaWifi, FaExclamationTriangle, FaExpand, FaCompress, FaVolumeUp, FaVolumeMute, FaKeyboard, FaCog } from 'react-icons/fa';
+import { useState, useEffect, useCallback, lazy, Suspense, useMemo } from 'react';
+import { FaSync, FaWifi, FaExclamationTriangle, FaExpand, FaCompress, FaVolumeUp, FaVolumeMute, FaKeyboard, FaCog, FaMoon, FaSun } from 'react-icons/fa';
 import { Button } from '../components/Button';
 import { Select } from '../components/Select';
 import { Badge } from '../components/Badge';
-import { kdsService, Order, OrderItem, Station } from '../services/kdsService';
-import { useWebSocket } from '../hooks/useWebSocket';
+import type { Station, Order, OrderItem } from '../services/kdsService';
+
+// Time constants in milliseconds
+const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
+const DELAYED_ORDER_CHECK_INTERVAL = 60000; // 1 minute
+const DELAYED_ORDER_THRESHOLD_MINUTES = 15;
+const ALERT_AUTO_REMOVE_DELAY = 5000; // 5 seconds
+import { ApiService } from '../services/api';
 import { offlineStorage } from '../services/offlineStorage';
-import { audioService } from '../services/audioService';
+import { logger } from '../services/logger';
 import { useFullscreen } from '../hooks/useFullscreen';
-import { useKeyboardShortcuts, KDS_SHORTCUTS } from '../hooks/useKeyboardShortcuts';
-import { useVirtualization } from '../hooks/useVirtualization';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { useKDSOrders } from '../hooks/useKDSOrders';
+import { useKDSAlerts } from '../hooks/useKDSAlerts';
+import { useKDSWebSocket } from '../hooks/useKDSWebSocket';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Lazy load heavy components
 const OrderCard = lazy(() => import('./OrderCard'));
@@ -30,484 +39,410 @@ const OrderCardSkeleton = () => (
 );
 
 const KDSMainPage = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [stations, setStations] = useState<Station[]>([]);
   const [selectedStation, setSelectedStation] = useState<string>('all');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [stations, setStations] = useState<Station[]>([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [alerts, setAlerts] = useState<Array<{id: string; type: 'urgent' | 'new' | 'ready' | 'warning'; message: string; duration?: number}>>([]);
   const [showHelp, setShowHelp] = useState(false);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(0);
-  const previousOrdersRef = useRef<Order[]>([]);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const { mode: themeMode, toggleTheme } = useTheme();
+
+  // Use custom hooks
+  const { 
+    alerts, 
+    removeAlert, 
+    newOrder: alertNewOrder,
+    urgentOrder: alertUrgentOrder,
+    orderReady: alertOrderReady,
+    orderDelayed: alertOrderDelayed
+  } = useKDSAlerts({ 
+    soundEnabled,
+    autoRemoveDelay: ALERT_AUTO_REMOVE_DELAY 
+  });
+
+  const {
+    orders,
+    loading,
+    error,
+    stats,
+    loadOrders,
+    updateOrderStatus,
+    updateItemStatus,
+    setError
+  } = useKDSOrders({
+    selectedStation,
+    onNewOrder: (order) => {
+      alertNewOrder(order.id.toString());
+      if (order.priority === 'high') {
+        alertUrgentOrder(order.id.toString());
+      }
+    }
+  });
+
+  const {
+    isConnected,
+    joinStation,
+    leaveStation,
+    markOrderStarted,
+    markOrderCompleted
+  } = useKDSWebSocket({
+    onOrderUpdate: () => {
+      loadOrders(); // Refresh orders on WebSocket update
+    },
+    onOrderDelete: () => {
+      loadOrders(); // Refresh when order is deleted
+    },
+    onStationUpdate: (_station, data) => {
+      if (data.type === 'urgent' && data.orderId) {
+        alertUrgentOrder(data.orderId);
+      }
+    },
+    onConnectionChange: (connected) => {
+      if (connected) {
+        setError(null);
+        loadOrders(); // Reload when reconnected
+      }
+      // Don't set error here - use connectionError from hook
+    }
+  });
 
   // Fullscreen hook
   const { isFullscreen, toggleFullscreen } = useFullscreen();
-  
-  // Memoized callbacks for better performance
-  const addAlert = useCallback((type: 'urgent' | 'new' | 'ready' | 'warning', message: string, duration = 5000) => {
-    const alert = {
-      id: Date.now().toString(),
-      type,
-      message,
-      duration
-    };
-    setAlerts(prev => [...prev, alert]);
-  }, []);
-  
-  const removeAlert = useCallback((id: string) => {
-    setAlerts(prev => prev.filter(a => a.id !== id));
-  }, []);
 
-  // Optimized load orders with debouncing
-  const loadOrdersDebounced = useMemo(() => {
-    let timeoutId: NodeJS.Timeout;
-    return async () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(async () => {
-        setLoading(true);
-        setError(null);
-        
-        try {
-          let data: Order[];
-          
-          if (navigator.onLine) {
-            data = selectedStation === 'all' 
-              ? await kdsService.getOrders()
-              : await kdsService.getOrdersByStation(selectedStation);
-            
-            // Batch cache updates
-            const cachePromises = data.map(order => offlineStorage.saveOrder(order));
-            await Promise.all(cachePromises);
-          } else {
-            data = selectedStation === 'all'
-              ? await offlineStorage.getAllOrders()
-              : (await offlineStorage.getAllOrders()).filter(
-                  (order: Order) => order.items.some((item: OrderItem) => item.station === selectedStation)
-                );
-          }
-          
-          // Check for new orders
-          if (previousOrdersRef.current.length > 0) {
-            const newOrders = data.filter((order: Order) => 
-              !previousOrdersRef.current.find(o => o.id === order.id)
-            );
-            
-            for (const order of newOrders) {
-              if (soundEnabled) {
-                if (order.priority === 'high' || order.priority === 'medium') {
-                  await audioService.playUrgentOrder();
-                  addAlert('urgent', `URGENTE: Pedido #${order.order_number}`, 10000);
-                } else {
-                  await audioService.playNewOrder();
-                  addAlert('new', `Novo pedido #${order.order_number}`, 5000);
-                }
-              }
-            }
-          }
-          
-          previousOrdersRef.current = data;
-          setOrders(data);
-          setLastUpdate(new Date());
-        } catch (err) {
-          setError('Não foi possível carregar os pedidos');
-          await offlineStorage.log('Error loading orders', err);
-          
-          const cachedOrders = await offlineStorage.getAllOrders();
-          if (cachedOrders.length > 0) {
-            setOrders(cachedOrders);
-            setError('Usando dados em cache (modo offline)');
-          }
-        } finally {
-          setLoading(false);
-        }
-      }, 300);
-    };
-  }, [selectedStation, soundEnabled, addAlert]);
+  // Filtered orders based on station - memoized for performance
+  const filteredOrders = useMemo(() => {
+    if (selectedStation === 'all') return orders;
+    return orders.filter(order => 
+      order.items.some(item => item.station === selectedStation)
+    );
+  }, [orders, selectedStation]);
 
   // Load stations
   const loadStations = useCallback(async () => {
     try {
-      let data: Station[];
-      if (navigator.onLine) {
-        data = await kdsService.getStations();
-        await Promise.all(data.map(station => offlineStorage.saveStation(station)));
-      } else {
-        data = await offlineStorage.getAllStations();
-      }
+      const data: Station[] = navigator.onLine
+        ? await ApiService.get('/kds/stations')
+        : await offlineStorage.getAllStations();
       setStations(data);
     } catch (err) {
-      await offlineStorage.log('Error loading stations', err);
+      logger.error('Error loading stations', err, 'KDSMainPage');
     }
   }, []);
 
-  // WebSocket with optimized callbacks
-  const { isConnected, sendMessage } = useWebSocket({
-    onOrderUpdate: useCallback(() => {
-      loadOrdersDebounced();
-    }, [loadOrdersDebounced]),
-    onStationUpdate: useCallback(() => {
-      loadStations();
-    }, [loadStations]),
-    onConnected: useCallback(() => {
-      setError(null);
-    }, []),
-    onDisconnected: useCallback(() => {
-      if (!isOffline) {
-        setError('Conexão WebSocket perdida. Reconectando...');
-      }
-    }, [isOffline]),
-    onReconnecting: useCallback((info: { attempt: number; maxAttempts: number }) => {
-      setError(`Reconectando... Tentativa ${info.attempt}/${info.maxAttempts}`);
-    }, [])
-  });
-
-  // Optimized order status handlers
-  const handleOrderStatusChange = useCallback(async (orderId: string | number, newStatus: string) => {
-    try {
-      setOrders(prevOrders => 
-        prevOrders.map(order => 
-          order.id === orderId 
-            ? { ...order, status: newStatus }
-            : order
-        )
-      );
-      
-      if (navigator.onLine) {
-        await kdsService.updateOrderStatus(orderId, newStatus);
-      } else {
-        const order = orders.find(o => o.id === orderId);
-        if (order) {
-          await offlineStorage.saveOrder({ ...order, status: newStatus, synced: false });
-        }
-      }
-      
-      sendMessage('order.status_changed', { orderId, status: newStatus });
-      
-      if (newStatus === 'ready') {
-        if (soundEnabled) {
-          await audioService.playOrderReady();
-        }
-        const order = orders.find(o => o.id === orderId);
-        if (order) {
-          addAlert('ready', `Pedido #${order.order_number} pronto!`, 5000);
-        }
-        setTimeout(loadOrdersDebounced, 1000);
-      } else if (newStatus === 'delivered') {
-        setTimeout(loadOrdersDebounced, 1000);
-      }
-    } catch (err) {
-      await offlineStorage.log('Error updating order status', err);
-      setError('Erro ao atualizar status do pedido');
+  // Handle station change
+  const handleStationChange = useCallback((station: string) => {
+    if (selectedStation !== 'all') {
+      leaveStation(selectedStation);
     }
-  }, [orders, soundEnabled, sendMessage, addAlert, loadOrdersDebounced]);
-
-  const handleItemStatusChange = useCallback(async (
-    orderId: string | number, 
-    itemId: string | number, 
-    newStatus: string
-  ) => {
-    try {
-      setOrders(prevOrders => 
-        prevOrders.map(order => {
-          if (order.id === orderId) {
-            return {
-              ...order,
-              items: order.items.map(item => 
-                item.item_id === itemId 
-                  ? { ...item, status: newStatus }
-                  : item
-              )
-            };
-          }
-          return order;
-        })
-      );
-      
-      if (navigator.onLine) {
-        await kdsService.updateItemStatus(orderId, itemId, newStatus);
-      } else {
-        const order = orders.find(o => o.id === orderId);
-        if (order) {
-          const updatedOrder = {
-            ...order,
-            items: order.items.map(item => 
-              item.item_id === itemId ? { ...item, status: newStatus } : item
-            ),
-            synced: false
-          };
-          await offlineStorage.saveOrder(updatedOrder);
-        }
-      }
-      
-      sendMessage('order.item_status_changed', { orderId, itemId, status: newStatus });
-      
-      const order = orders.find(o => o.id === orderId);
-      if (order && order.items.every(item => item.item_id === itemId ? newStatus === 'ready' : item.status === 'ready')) {
-        handleOrderStatusChange(orderId, 'ready');
-      }
-    } catch (err) {
-      await offlineStorage.log('Error updating item status', err);
-      setError('Erro ao atualizar status do item');
+    setSelectedStation(station);
+    if (station !== 'all') {
+      joinStation(station);
     }
-  }, [orders, sendMessage, handleOrderStatusChange]);
+  }, [selectedStation, joinStation, leaveStation]);
+
+  // Optimized button handlers to prevent re-renders
+  const handleRefreshClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    loadOrders();
+    e.currentTarget.blur();
+  }, [loadOrders]);
+
+  const handleFullscreenClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    toggleFullscreen();
+    e.currentTarget.blur();
+  }, [toggleFullscreen]);
+
+  const handleSoundToggleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    setSoundEnabled(prev => !prev);
+    e.currentTarget.blur();
+  }, []);
+
+  const handleThemeToggleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    toggleTheme();
+    e.currentTarget.blur();
+  }, [toggleTheme]);
+
+  const handleShowHelpClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    setShowHelp(true);
+    e.currentTarget.blur();
+  }, []);
+
+  const handleCloseHelpClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    setShowHelp(false);
+    e.currentTarget.blur();
+  }, []);
+
+  // Handle order actions
+  const handleStartOrder = useCallback(async (orderId: string | number) => {
+    const orderIdString = orderId.toString();
+    await updateOrderStatus(orderId, 'preparing');
+    markOrderStarted(orderIdString);
+  }, [updateOrderStatus, markOrderStarted]);
+
+  const handleCompleteOrder = useCallback(async (orderId: string | number) => {
+    const orderIdString = orderId.toString();
+    await updateOrderStatus(orderId, 'ready');
+    markOrderCompleted(orderIdString);
+    alertOrderReady(orderIdString);
+  }, [updateOrderStatus, markOrderCompleted, alertOrderReady]);
+
+  // Helper function to calculate elapsed minutes
+  const getMinutesElapsed = (createdAt: string | Date): number => {
+    const createdTime = new Date(createdAt).getTime();
+    return Math.floor((Date.now() - createdTime) / 60000);
+  };
 
   // Keyboard shortcuts
-  const shortcuts = useKeyboardShortcuts([
-    {
-      key: KDS_SHORTCUTS.REFRESH.key,
-      action: loadOrdersDebounced,
-      description: KDS_SHORTCUTS.REFRESH.description
-    },
-    {
-      key: KDS_SHORTCUTS.FULLSCREEN.key,
-      action: toggleFullscreen,
-      description: KDS_SHORTCUTS.FULLSCREEN.description
-    },
-    {
-      key: KDS_SHORTCUTS.TOGGLE_SOUND.key,
-      ctrl: true,
-      action: () => {
-        const newState = audioService.toggle();
-        setSoundEnabled(newState);
-        addAlert('warning', newState ? 'Som ativado' : 'Som desativado', 2000);
-      },
-      description: KDS_SHORTCUTS.TOGGLE_SOUND.description
-    },
-    {
-      key: KDS_SHORTCUTS.FILTER_ALL.key,
-      ctrl: true,
-      action: () => setSelectedStation('all'),
-      description: KDS_SHORTCUTS.FILTER_ALL.description
-    },
-    {
-      key: KDS_SHORTCUTS.HELP.key,
-      action: () => setShowHelp(prev => !prev),
-      description: KDS_SHORTCUTS.HELP.description
-    },
-    {
-      key: KDS_SHORTCUTS.NEXT_ORDER.key,
-      action: () => setSelectedOrderIndex(prev => Math.min(prev + 1, orders.length - 1)),
-      description: KDS_SHORTCUTS.NEXT_ORDER.description
-    },
-    {
-      key: KDS_SHORTCUTS.PREV_ORDER.key,
-      action: () => setSelectedOrderIndex(prev => Math.max(prev - 1, 0)),
-      description: KDS_SHORTCUTS.PREV_ORDER.description
-    }
+  const shortcuts = useMemo(() => [
+    { key: 'ArrowUp', action: () => setSelectedOrderIndex(prev => Math.max(0, prev - 1)), description: 'Navegar para cima' },
+    { key: 'ArrowDown', action: () => setSelectedOrderIndex(prev => Math.min(filteredOrders.length - 1, prev + 1)), description: 'Navegar para baixo' },
+    { key: 'Enter', action: () => {
+      const order = filteredOrders[selectedOrderIndex];
+      if (order) handleStartOrder(order.id);
+    }, description: 'Iniciar pedido' },
+    { key: 'Space', action: () => {
+      const order = filteredOrders[selectedOrderIndex];
+      if (order) handleCompleteOrder(order.id);
+    }, description: 'Completar pedido' },
+    { key: 'r', action: () => { loadOrders(); }, description: 'Atualizar lista' },
+    { key: 'f', action: () => { toggleFullscreen(); }, description: 'Tela cheia' },
+    { key: 'm', action: () => setSoundEnabled(prev => !prev), description: 'Som ligado/desligado' },
+    { key: 'h', action: () => setShowHelp(prev => !prev), description: 'Mostrar ajuda' },
+    { key: 'Escape', action: () => setShowHelp(false), description: 'Fechar' }
+  ], [
+    filteredOrders, 
+    selectedOrderIndex, 
+    handleStartOrder, 
+    handleCompleteOrder,
+    loadOrders,
+    toggleFullscreen
   ]);
 
-  // Monitor online/offline status
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOffline(false);
-      setError(null);
-      loadOrdersDebounced();
-      loadStations();
-    };
-    
-    const handleOffline = () => {
-      setIsOffline(true);
-      setError('Modo offline - trabalhando com dados em cache');
-    };
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [loadOrdersDebounced, loadStations]);
+  useKeyboardShortcuts(shortcuts);
 
-  // Initialize
+  // Initial load and periodic refresh
   useEffect(() => {
-    offlineStorage.init().then(() => {
-      loadOrdersDebounced();
-      loadStations();
-    });
-  }, [loadOrdersDebounced, loadStations]);
-
-  // Auto-refresh with optimization
-  useEffect(() => {
-    const interval = setInterval(loadOrdersDebounced, 30000);
+    loadStations();
+    loadOrders();
+    
+    const interval = setInterval(() => {
+      loadOrders();
+      setLastUpdate(new Date());
+    }, AUTO_REFRESH_INTERVAL);
+    
     return () => clearInterval(interval);
-  }, [loadOrdersDebounced]);
+  }, [loadStations, loadOrders]);
 
-  // Initialize audio
+  // Check delayed orders
   useEffect(() => {
-    audioService.setVolume(0.7);
-    if (soundEnabled) {
-      audioService.enable();
-    } else {
-      audioService.disable();
-    }
-  }, [soundEnabled]);
-
-  // Memoized computed values
-  const stats = useMemo(() => ({
-    total: orders.length,
-    pending: orders.filter(o => o.status === 'pending').length,
-    preparing: orders.filter(o => o.status === 'preparing').length,
-    ready: orders.filter(o => o.status === 'ready').length,
-  }), [orders]);
-
-  const convertedOrders = useMemo(() => orders.map(order => {
-    const baseOrder = {
-      ...order,
-      type: order.table_number ? 'table' : 'delivery',
-      created_at: order.created_at,
-      items: order.items.map(item => ({
-        id: item.item_id,
-        name: item.name,
-        quantity: item.quantity,
-        status: item.status,
-        notes: item.notes || ''
-      }))
+    const checkDelayedOrders = () => {
+      orders.forEach(order => {
+        const minutesElapsed = getMinutesElapsed(order.created_at);
+        
+        if (minutesElapsed > DELAYED_ORDER_THRESHOLD_MINUTES && order.status === 'pending') {
+          alertOrderDelayed(order.id.toString(), minutesElapsed);
+        }
+      });
     };
-    
-    if (!order.table_number) {
-      (baseOrder as any).delivery_id = order.id;
-    }
-    
-    return baseOrder;
-  }), [orders]);
 
-  // Virtualization for large lists (only use when more than 9 orders)
-  const useVirtualScroll = convertedOrders.length > 9;
-  const { visibleItems, totalHeight, offsetY } = useVirtualization({
-    items: convertedOrders,
-    itemHeight: 250,
-    containerHeight: window.innerHeight - 200,
-    overscan: 2
-  });
-
-  const ordersToRender = useVirtualScroll ? visibleItems : convertedOrders;
+    const delayInterval = setInterval(checkDelayedOrders, DELAYED_ORDER_CHECK_INTERVAL);
+    return () => clearInterval(delayInterval);
+  }, [orders, alertOrderDelayed]);
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-md">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-40">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Kitchen Display System
+                Kitchen Display
               </h1>
-              <Badge variant="info" size="lg">
-                {stats.total} pedidos
-              </Badge>
-            </div>
-            
-            <div className="flex items-center gap-4">
               <Select
                 value={selectedStation}
-                onChange={(e) => setSelectedStation(e.target.value)}
                 options={[
                   { value: 'all', label: 'Todas as Estações' },
                   ...stations.map(s => ({ value: s.id, label: s.name }))
                 ]}
+                onChange={(e) => handleStationChange(e.target.value)}
                 className="w-48"
               />
-              
-              <Badge 
-                variant={isOffline ? 'danger' : isConnected ? 'success' : 'warning'}
-                size="lg"
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              {/* Connection Status */}
+              <Badge
+                variant={isConnected ? 'success' : 'danger'}
+                className="flex items-center gap-1"
               >
-                {isOffline ? (
-                  <><FaExclamationTriangle className="inline mr-1" /> Offline</>
-                ) : isConnected ? (
-                  <><FaWifi className="inline mr-1" /> Conectado</>
-                ) : (
-                  <><FaSync className="inline mr-1 animate-spin" /> Conectando...</>
-                )}
+                <FaWifi className="w-3 h-3" />
+                {isConnected ? 'Online' : 'Offline'}
               </Badge>
               
+              {/* Statistics */}
+              <div className="flex items-center space-x-2 text-sm">
+                <Badge variant="info">Total: {stats.total}</Badge>
+                <Badge variant="warning">Pendente: {stats.pending}</Badge>
+                <Badge variant="info">Preparando: {stats.preparing}</Badge>
+                <Badge variant="success">Pronto: {stats.ready}</Badge>
+              </div>
+              
+              {/* Action Buttons */}
               <Button
+                onClick={handleRefreshClick}
+                size="sm"
                 variant="secondary"
-                icon={<FaSync className={loading ? 'animate-spin' : ''} />}
-                onClick={loadOrdersDebounced}
                 disabled={loading}
+                aria-label="Atualizar pedidos"
+                title="Atualizar pedidos (R)"
               >
-                Atualizar
+                <FaSync className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
               
               <Button
-                variant="ghost"
-                icon={soundEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
-                onClick={() => {
-                  const newState = audioService.toggle();
-                  setSoundEnabled(newState);
-                  addAlert('warning', newState ? 'Som ativado' : 'Som desativado', 2000);
-                }}
-                title="Alternar som (Ctrl+M)"
-              />
+                onClick={handleFullscreenClick}
+                size="sm"
+                variant="secondary"
+                aria-label={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
+                title={isFullscreen ? "Sair da tela cheia (F)" : "Tela cheia (F)"}
+              >
+                {isFullscreen ? <FaCompress /> : <FaExpand />}
+              </Button>
               
               <Button
-                variant="ghost"
-                icon={isFullscreen ? <FaCompress /> : <FaExpand />}
-                onClick={toggleFullscreen}
-                title="Tela cheia (F11)"
-              />
+                onClick={handleSoundToggleClick}
+                size="sm"
+                variant="secondary"
+                aria-label={soundEnabled ? "Desativar som" : "Ativar som"}
+                title={soundEnabled ? "Desativar som (M)" : "Ativar som (M)"}
+              >
+                {soundEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
+              </Button>
               
               <Button
-                variant="ghost"
-                icon={<FaKeyboard />}
-                onClick={() => setShowHelp(prev => !prev)}
-                title="Atalhos de teclado (F1)"
-              />
+                onClick={handleThemeToggleClick}
+                size="sm"
+                variant="secondary"
+                aria-label={themeMode === 'dark' ? "Mudar para modo claro" : "Mudar para modo escuro"}
+                title={themeMode === 'dark' ? "Modo claro" : "Modo escuro"}
+              >
+                {themeMode === 'dark' ? <FaSun /> : <FaMoon />}
+              </Button>
               
               <Button
-                variant="ghost"
-                icon={<FaCog />}
-                onClick={() => {/* Settings - TODO: Implement settings modal */}}
-              />
-            </div>
-          </div>
-          
-          <div className="flex gap-6 mt-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Pendentes:</span>
-              <Badge variant="warning">{stats.pending}</Badge>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Preparando:</span>
-              <Badge variant="info">{stats.preparing}</Badge>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Prontos:</span>
-              <Badge variant="success">{stats.ready}</Badge>
-            </div>
-            <div className="flex items-center gap-2 ml-auto">
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                Última atualização: {lastUpdate.toLocaleTimeString('pt-BR')}
-              </span>
+                onClick={handleShowHelpClick}
+                size="sm"
+                variant="secondary"
+                aria-label="Mostrar atalhos do teclado"
+                title="Atalhos do teclado (H)"
+              >
+                <FaKeyboard />
+              </Button>
+              
+              <Button
+                onClick={handleShowHelpClick}
+                size="sm"
+                variant="secondary"
+                aria-label="Abrir configurações"
+                title="Configurações"
+              >
+                <FaCog />
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Help modal */}
-      {showHelp && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center" onClick={() => setShowHelp(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">Atalhos de Teclado</h2>
-            <div className="space-y-2">
-              {shortcuts.map(shortcut => (
-                <div key={shortcut.combination} className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">{shortcut.description}</span>
-                  <kbd className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-sm font-mono">
-                    {shortcut.combination}
-                  </kbd>
+      {/* Error Display */}
+      {(error || !isConnected) && (
+        <div className="bg-amber-500 text-white px-4 py-2 flex items-center justify-center">
+          <FaExclamationTriangle className="mr-2" />
+          {error || 'Sistema offline. Operando em modo local.'}
+        </div>
+      )}
+
+      {/* Main Content */}
+      <main className="p-4 pb-12">
+        {loading && filteredOrders.length === 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
+              <OrderCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400 text-lg">
+              Nenhum pedido na fila
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <Suspense fallback={<OrderCardSkeleton />}>
+              {filteredOrders.map((order, index) => (
+                <div
+                  key={order.id}
+                  className={`relative ${index === selectedOrderIndex ? 'ring-2 ring-primary-500 ring-offset-2 rounded-lg' : ''}`}
+                >
+                  <OrderCard
+                    order={transformOrderForCard(order)}
+                    onStatusChange={(orderId, status) => updateOrderStatus(orderId, status)}
+                    onItemStatusChange={(orderId, itemId, status) => updateItemStatus(orderId, itemId, status)}
+                    nextStatus={order.status === 'pending' ? 'preparing' : 'ready'}
+                  />
                 </div>
               ))}
+            </Suspense>
+          </div>
+        )}
+      </main>
+
+      {/* Alert System */}
+      <Suspense fallback={null}>
+        <AlertSystem
+          alerts={alerts}
+          onAlertClose={removeAlert}
+        />
+      </Suspense>
+
+      {/* Help Modal */}
+      {showHelp && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+              Atalhos do Teclado
+            </h2>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">↑↓</span>
+                <span className="text-gray-900 dark:text-white">Navegar pedidos</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Enter</span>
+                <span className="text-gray-900 dark:text-white">Iniciar pedido</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Space</span>
+                <span className="text-gray-900 dark:text-white">Completar pedido</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">R</span>
+                <span className="text-gray-900 dark:text-white">Atualizar lista</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">F</span>
+                <span className="text-gray-900 dark:text-white">Tela cheia</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">M</span>
+                <span className="text-gray-900 dark:text-white">Som ligado/desligado</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Esc</span>
+                <span className="text-gray-900 dark:text-white">Fechar</span>
+              </div>
             </div>
             <Button
-              variant="primary"
-              onClick={() => setShowHelp(false)}
+              onClick={handleCloseHelpClick}
               className="mt-4 w-full"
             >
               Fechar
@@ -516,80 +451,72 @@ const KDSMainPage = () => {
         </div>
       )}
 
-      <Suspense fallback={<div />}>
-        <AlertSystem alerts={alerts} onAlertClose={removeAlert} />
-      </Suspense>
-      
-      <main className="container mx-auto px-4 py-6" ref={containerRef}>
-        {error && (
-          <div className="bg-danger-100 text-danger-800 dark:bg-danger-900 dark:text-danger-200 p-4 rounded-lg mb-4">
-            {error}
+      {/* Footer with Keyboard Shortcuts and Status */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-4 py-2">
+        <div className="flex justify-between items-center">
+          {/* Keyboard Shortcuts */}
+          <div className="text-xs text-gray-500 dark:text-gray-400 space-x-4">
+            <span>F1: Ajuda</span>
+            <span>F5: Atualizar</span>
+            <span>F11: Tela Cheia</span>
+            <span>Tab: Navegar</span>
+            <span>Enter: Selecionar</span>
+            <span>Espaço: Concluir Item</span>
           </div>
-        )}
-        
-        {loading && orders.length === 0 ? (
-          <div className="grid grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => <OrderCardSkeleton key={i} />)}
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <p className="text-xl text-gray-600 dark:text-gray-400 mb-2">
-                Nenhum pedido pendente
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500">
-                Os pedidos aparecerão aqui quando forem enviados para a cozinha
-              </p>
+          
+          {/* System Status */}
+          <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+            {/* Connection Status */}
+            <div className="flex items-center space-x-1">
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span>{isConnected ? 'Online' : 'Offline'}</span>
             </div>
+            
+            {/* Station Info */}
+            <span>Estação: {selectedStation === 'all' ? 'Todas' : selectedStation}</span>
+            
+            {/* Last Update */}
+            <span>Atualizado: {lastUpdate.toLocaleTimeString()}</span>
           </div>
-        ) : useVirtualScroll ? (
-          <div 
-            className="relative"
-            style={{ height: `${Math.min(totalHeight, window.innerHeight - 200)}px` }}
-          >
-            <div 
-              className="grid grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3 gap-4"
-              style={{ transform: `translateY(${offsetY}px)` }}
-            >
-              {ordersToRender.map((order, index) => (
-                <div
-                  key={order.id}
-                  className={index === selectedOrderIndex ? 'ring-4 ring-primary-500 rounded-lg' : ''}
-                >
-                  <Suspense fallback={<OrderCardSkeleton />}>
-                    <OrderCard
-                      order={order}
-                      onStatusChange={handleOrderStatusChange}
-                      onItemStatusChange={handleItemStatusChange}
-                      nextStatus="preparing"
-                    />
-                  </Suspense>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3 gap-4">
-            {ordersToRender.map((order, index) => (
-              <div
-                key={order.id}
-                className={index === selectedOrderIndex ? 'ring-4 ring-primary-500 rounded-lg' : ''}
-              >
-                <Suspense fallback={<OrderCardSkeleton />}>
-                  <OrderCard
-                    order={order}
-                    onStatusChange={handleOrderStatusChange}
-                    onItemStatusChange={handleItemStatusChange}
-                    nextStatus="preparing"
-                  />
-                </Suspense>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
+        </div>
+      </div>
     </div>
   );
 };
+
+// Helper function to transform order data for OrderCard
+interface OrderCardData {
+  id: string | number;
+  created_at: string;
+  priority: string;
+  type: string;
+  table_number?: string | number;
+  customer_name?: string;
+  items: Array<{
+    id: string | number;
+    name: string;
+    quantity: number;
+    notes?: string;
+    status: string;
+  }>;
+}
+
+function transformOrderForCard(order: Order): OrderCardData {
+  return {
+    id: order.id,
+    created_at: order.created_at,
+    priority: order.priority,
+    type: order.type || 'table',
+    ...(order.table_number && { table_number: order.table_number }),
+    items: order.items.map((item: OrderItem) => ({
+      id: item.item_id,
+      name: item.name,
+      quantity: item.quantity,
+      ...(item.notes && { notes: item.notes }),
+      status: item.status
+    })),
+    ...(order.customer_name && { customer_name: order.customer_name })
+  };
+}
 
 export default KDSMainPage;

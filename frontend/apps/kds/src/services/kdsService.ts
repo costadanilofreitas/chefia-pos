@@ -1,10 +1,12 @@
 import { ApiService } from './api';
+import { logger } from './logger';
 
 export interface Order {
   id: number;
   order_number: string;
   source: string;
   status: string;
+  type?: 'delivery' | 'table' | 'takeout' | string;
   priority: 'high' | 'medium' | 'normal';
   created_at: string;
   updated_at: string;
@@ -60,7 +62,7 @@ export class KDSService {
       
       throw new Error('Failed to fetch orders');
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      logger.error('Error fetching orders', error, 'KDSService');
       throw error;
     }
   }
@@ -81,7 +83,7 @@ export class KDSService {
       
       throw new Error('Failed to fetch stations');
     } catch (error) {
-      console.error('Error fetching stations:', error);
+      logger.error('Error fetching stations', error, 'KDSService');
       throw error;
     }
   }
@@ -102,7 +104,7 @@ export class KDSService {
       
       return response.success;
     } catch (error) {
-      console.error(`Error updating item ${itemId} status:`, error);
+      logger.error(`Error updating item ${itemId} status`, error, 'KDSService');
       throw error;
     }
   }
@@ -122,7 +124,7 @@ export class KDSService {
       
       return response.success;
     } catch (error) {
-      console.error(`Error updating order ${orderId} status:`, error);
+      logger.error(`Error updating order ${orderId} status`, error, 'KDSService');
       throw error;
     }
   }
@@ -141,7 +143,7 @@ export class KDSService {
       
       return response.success;
     } catch (error) {
-      console.error(`Error completing order ${orderId}:`, error);
+      logger.error(`Error completing order ${orderId}`, error, 'KDSService');
       throw error;
     }
   }
@@ -174,7 +176,7 @@ export class KDSService {
       
       throw new Error('Failed to fetch metrics');
     } catch (error) {
-      console.error('Error fetching KDS metrics:', error);
+      logger.error('Error fetching KDS metrics', error, 'KDSService');
       throw error;
     }
   }
@@ -196,7 +198,7 @@ export class KDSService {
       
       throw new Error(`Failed to fetch orders for station ${stationId}`);
     } catch (error) {
-      console.error(`Error fetching orders for station ${stationId}:`, error);
+      logger.error(`Error fetching orders for station ${stationId}`, error, 'KDSService');
       throw error;
     }
   }

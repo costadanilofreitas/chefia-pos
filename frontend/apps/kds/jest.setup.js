@@ -1,5 +1,5 @@
 // Import testing-library
-import '@testing-library/jest-dom';
+require('@testing-library/jest-dom');
 
 // Mock global objects
 global.matchMedia = global.matchMedia || function() {
@@ -54,6 +54,18 @@ Object.defineProperty(window, 'sessionStorage', {
 
 // Mock fetch
 global.fetch = jest.fn();
+
+// Mock import.meta
+global.import = {
+  meta: {
+    env: {
+      PROD: false,
+      DEV: true,
+      VITE_API_URL: 'http://localhost:8001',
+      VITE_WS_URL: 'ws://localhost:8001'
+    }
+  }
+};
 
 // Mock ResizeObserver
 global.ResizeObserver = jest.fn().mockImplementation(() => ({

@@ -1,8 +1,18 @@
+import { API_CONFIG } from '../config/api';
+import { WebSocketMessageData } from '../types';
+
+// Timing constants in milliseconds
+const DEFAULT_RECONNECT_DELAY = 3000;
+const DEFAULT_MAX_RECONNECT_ATTEMPTS = 10;
+const DEFAULT_HEARTBEAT_INTERVAL = 30000;
+const MAX_RECONNECT_DELAY = 30000;
+const RECONNECT_BACKOFF_FACTOR = 1.5;
+
 export type WebSocketStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
 
 export interface WebSocketMessage {
   type: string;
-  data: any;
+  data?: WebSocketMessageData | null;
   timestamp: number;
 }
 
@@ -15,16 +25,16 @@ interface WebSocketConfig {
 
 // Simple EventEmitter implementation for browser
 class EventEmitter {
-  private events: Map<string, Array<(...args: any[]) => void>> = new Map();
+  private events: Map<string, Array<(...args: unknown[]) => void>> = new Map();
 
-  on(event: string, listener: (...args: any[]) => void): void {
+  on(event: string, listener: (...args: unknown[]) => void): void {
     if (!this.events.has(event)) {
       this.events.set(event, []);
     }
     this.events.get(event)!.push(listener);
   }
 
-  off(event: string, listener: (...args: any[]) => void): void {
+  off(event: string, listener: (...args: unknown[]) => void): void {
     const listeners = this.events.get(event);
     if (listeners) {
       const index = listeners.indexOf(listener);
@@ -34,7 +44,7 @@ class EventEmitter {
     }
   }
 
-  emit(event: string, ...args: any[]): void {
+  emit(event: string, ...args: unknown[]): void {
     const listeners = this.events.get(event);
     if (listeners) {
       listeners.forEach(listener => listener(...args));
@@ -64,15 +74,14 @@ class WebSocketService extends EventEmitter {
     super();
     this.config = {
       url: config.url || this.getWebSocketUrl(),
-      reconnectDelay: config.reconnectDelay || 3000,
-      maxReconnectAttempts: config.maxReconnectAttempts || 10,
-      heartbeatInterval: config.heartbeatInterval || 30000
+      reconnectDelay: config.reconnectDelay || DEFAULT_RECONNECT_DELAY,
+      maxReconnectAttempts: config.maxReconnectAttempts || DEFAULT_MAX_RECONNECT_ATTEMPTS,
+      heartbeatInterval: config.heartbeatInterval || DEFAULT_HEARTBEAT_INTERVAL
     };
   }
 
   private getWebSocketUrl(): string {
-    const apiUrl = process.env['VITE_API_URL'] || 'http://localhost:8001';
-    return apiUrl.replace(/^http/, 'ws') + '/ws/kds';
+    return `${API_CONFIG.WS_URL}/kds`;
   }
 
   connect(): void {
@@ -86,7 +95,7 @@ class WebSocketService extends EventEmitter {
     try {
       this.ws = new WebSocket(this.config.url);
       this.setupEventHandlers();
-    } catch (error) {
+    } catch {
       // Log error silently - no console usage
       this.handleReconnect();
     }
@@ -107,7 +116,7 @@ class WebSocketService extends EventEmitter {
       try {
         const message: WebSocketMessage = JSON.parse(event.data);
         this.handleMessage(message);
-      } catch (error) {
+      } catch {
         // Silent error - invalid message format
       }
     };
@@ -130,29 +139,24 @@ class WebSocketService extends EventEmitter {
 
   private handleMessage(message: WebSocketMessage): void {
     // Handle different message types
-    switch (message.type) {
-      case 'order.created':
-      case 'order.updated':
-      case 'order.status_changed':
-      case 'order.item_status_changed':
-      case 'order.cancelled':
-        this.emit('order_update', message.data);
-        break;
-      
-      case 'station.updated':
-        this.emit('station_update', message.data);
-        break;
-      
-      case 'ping':
-        this.send({ type: 'pong', data: null, timestamp: Date.now() });
-        break;
-      
-      case 'pong':
-        // Heartbeat response received
-        break;
-      
-      default:
-        this.emit('message', message);
+    const orderEvents = [
+      'order.created',
+      'order.updated',
+      'order.status_changed',
+      'order.item_status_changed',
+      'order.cancelled'
+    ];
+
+    if (orderEvents.includes(message.type)) {
+      this.emit('order_update', message.data);
+    } else if (message.type === 'station.updated') {
+      this.emit('station_update', message.data);
+    } else if (message.type === 'ping') {
+      this.send({ type: 'pong', data: null, timestamp: Date.now() });
+    } else if (message.type === 'pong') {
+      // Heartbeat response received
+    } else {
+      this.emit('message', message);
     }
   }
 
@@ -168,8 +172,8 @@ class WebSocketService extends EventEmitter {
     this.reconnectAttempts++;
     
     const delay = Math.min(
-      this.config.reconnectDelay * Math.pow(1.5, this.reconnectAttempts - 1),
-      30000
+      this.config.reconnectDelay * Math.pow(RECONNECT_BACKOFF_FACTOR, this.reconnectAttempts - 1),
+      MAX_RECONNECT_DELAY
     );
 
     this.reconnectTimeout = setTimeout(() => {
@@ -210,19 +214,21 @@ class WebSocketService extends EventEmitter {
 
   send(message: WebSocketMessage): boolean {
     if (!this.isConnected()) {
-      // Queue message for later delivery
-      this.messageQueue.push(message);
+      this.queueMessage(message);
       return false;
     }
 
     try {
       this.ws?.send(JSON.stringify(message));
       return true;
-    } catch (error) {
-      // Failed to send - will be queued
-      this.messageQueue.push(message);
+    } catch {
+      this.queueMessage(message);
       return false;
     }
+  }
+
+  private queueMessage(message: WebSocketMessage): void {
+    this.messageQueue.push(message);
   }
 
   disconnect(): void {
@@ -266,6 +272,7 @@ class WebSocketService extends EventEmitter {
   clearQueue(): void {
     this.messageQueue = [];
   }
+
 }
 
 // Export singleton instance

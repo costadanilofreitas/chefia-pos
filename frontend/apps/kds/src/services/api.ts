@@ -1,8 +1,9 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { API_CONFIG } from '../config/api';
 
 // API Configuration
-const API_BASE_URL = process.env['VITE_API_URL'] || 'http://localhost:8001/api/v1';
-const API_TIMEOUT = 30000; // 30 seconds
+const API_BASE_URL = `${API_CONFIG.BASE_URL}${API_CONFIG.API_VERSION}`;
+const API_TIMEOUT = API_CONFIG.TIMEOUT;
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -50,17 +51,17 @@ export class ApiService {
     return response.data;
   }
 
-  static async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  static async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await apiClient.post<T>(url, data, config);
     return response.data;
   }
 
-  static async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  static async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await apiClient.put<T>(url, data, config);
     return response.data;
   }
 
-  static async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  static async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await apiClient.patch<T>(url, data, config);
     return response.data;
   }

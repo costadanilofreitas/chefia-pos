@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 interface AudioConfig {
   volume?: number;
   enabled?: boolean;
@@ -33,11 +35,13 @@ class AudioService {
 
   private initAudioContext(): void {
     try {
-      window.AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const browserWindow = window as Window & { webkitAudioContext?: typeof AudioContext };
+      window.AudioContext = window.AudioContext || browserWindow.webkitAudioContext;
       this.audioContext = new AudioContext();
       this.generateSounds();
     } catch (error) {
       // Web Audio API not supported
+      logger.warn('Web Audio API not supported', 'AudioService', { error });
     }
   }
 
@@ -145,8 +149,18 @@ class AudioService {
 
       source.start(0);
     } catch (error) {
-      // Error playing sound - silent fail
+      // Error playing sound
+      logger.warn('Audio playback failed', 'AudioService', { error });
     }
+  }
+
+  // Alias for compatibility
+  async playSound(soundType: 'newOrder' | 'orderReady' | 'urgentOrder' | 'alert' | 'success' | 'warning'): Promise<void> {
+    // Map success and warning to existing sounds
+    const mappedType = soundType === 'success' ? 'orderReady' : 
+                      soundType === 'warning' ? 'alert' : 
+                      soundType as 'newOrder' | 'orderReady' | 'urgentOrder' | 'alert';
+    return this.play(mappedType);
   }
 
   async playNewOrder(): Promise<void> {

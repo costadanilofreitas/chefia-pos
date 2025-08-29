@@ -1,12 +1,48 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { websocketService, WebSocketStatus } from '../services/websocket';
+import { OrderUpdateData, StationUpdateData, ReconnectInfo } from '../types';
+
+// Type guards for safer type assertions
+function isWebSocketStatus(value: unknown): value is WebSocketStatus {
+  return (
+    typeof value === 'string' &&
+    ['connecting', 'connected', 'disconnected', 'reconnecting'].includes(value)
+  );
+}
+
+function isOrderUpdateData(value: unknown): value is OrderUpdateData {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'type' in value
+  );
+}
+
+function isStationUpdateData(value: unknown): value is StationUpdateData {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'station' in value &&
+    'type' in value
+  );
+}
+
+function isReconnectInfo(value: unknown): value is ReconnectInfo {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'attempt' in value &&
+    'maxAttempts' in value &&
+    'delay' in value
+  );
+}
 
 interface UseWebSocketOptions {
-  onOrderUpdate?: (data: any) => void;
-  onStationUpdate?: (data: any) => void;
+  onOrderUpdate?: (data: OrderUpdateData) => void;
+  onStationUpdate?: (data: StationUpdateData) => void;
   onConnected?: () => void;
   onDisconnected?: () => void;
-  onReconnecting?: (info: any) => void;
+  onReconnecting?: (info: ReconnectInfo) => void;
   autoConnect?: boolean;
 }
 
@@ -23,17 +59,26 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   // Setup WebSocket connection and event handlers
   useEffect(() => {
-    const handleStatusChange = (newStatus: WebSocketStatus) => {
-      setStatus(newStatus);
-      setIsConnected(newStatus === 'connected');
+    const handleStatusChange = (...args: unknown[]) => {
+      const newStatus = args[0];
+      if (isWebSocketStatus(newStatus)) {
+        setStatus(newStatus);
+        setIsConnected(newStatus === 'connected');
+      }
     };
 
-    const handleOrderUpdate = (data: any) => {
-      optionsRef.current.onOrderUpdate?.(data);
+    const handleOrderUpdate = (...args: unknown[]) => {
+      const data = args[0];
+      if (isOrderUpdateData(data)) {
+        optionsRef.current.onOrderUpdate?.(data);
+      }
     };
 
-    const handleStationUpdate = (data: any) => {
-      optionsRef.current.onStationUpdate?.(data);
+    const handleStationUpdate = (...args: unknown[]) => {
+      const data = args[0];
+      if (isStationUpdateData(data)) {
+        optionsRef.current.onStationUpdate?.(data);
+      }
     };
 
     const handleConnected = () => {
@@ -45,8 +90,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       optionsRef.current.onDisconnected?.();
     };
 
-    const handleReconnecting = (info: any) => {
-      optionsRef.current.onReconnecting?.(info);
+    const handleReconnecting = (...args: unknown[]) => {
+      const info = args[0];
+      if (isReconnectInfo(info)) {
+        optionsRef.current.onReconnecting?.(info);
+      }
     };
 
     // Register event listeners
@@ -79,9 +127,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   // Update queue size periodically
   useEffect(() => {
+    const QUEUE_UPDATE_INTERVAL = 1000; // 1 second
     const interval = setInterval(() => {
       setQueueSize(websocketService.getQueueSize());
-    }, 1000);
+    }, QUEUE_UPDATE_INTERVAL);
 
     return () => clearInterval(interval);
   }, []);
@@ -94,7 +143,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     websocketService.disconnect();
   }, []);
 
-  const sendMessage = useCallback((type: string, data: any) => {
+  const sendMessage = useCallback((type: string, data: Record<string, unknown>) => {
     return websocketService.send({
       type,
       data,

@@ -1,8 +1,9 @@
-interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
-  ttl?: number;
-}
+import { CacheEntry, DBRecord, OrderDBRecord, StationDBRecord, LogEntry } from '../types';
+
+// Time constants in milliseconds
+const TTL_ONE_HOUR = 3600000; // 1 hour
+const TTL_ONE_DAY = 86400000; // 24 hours
+const DEFAULT_LOG_LIMIT = 100;
 
 interface OfflineStorageConfig {
   dbName?: string;
@@ -15,7 +16,7 @@ class OfflineStorage {
   private version: number;
   private db: IDBDatabase | null = null;
   private stores: string[];
-  private memoryCache: Map<string, CacheEntry<any>> = new Map();
+  private memoryCache: Map<string, CacheEntry<unknown>> = new Map();
 
   constructor(config: OfflineStorageConfig = {}) {
     this.dbName = config.dbName || 'kds-offline-db';
@@ -82,12 +83,10 @@ class OfflineStorage {
     
     // Check memory cache first
     const cached = this.memoryCache.get(cacheKey);
-    if (cached) {
-      if (!cached.ttl || Date.now() - cached.timestamp < cached.ttl) {
-        return cached.data;
-      } else {
-        this.memoryCache.delete(cacheKey);
-      }
+    if (cached && this.isValidCacheEntry(cached)) {
+      return cached.data as T;
+    } else if (cached) {
+      this.memoryCache.delete(cacheKey);
     }
 
     // Check IndexedDB
@@ -105,7 +104,7 @@ class OfflineStorage {
               : { data: result.data, timestamp: result.timestamp };
 
             // Check TTL
-            if (!entry.ttl || Date.now() - entry.timestamp < entry.ttl) {
+            if (this.isValidCacheEntry(entry)) {
               this.memoryCache.set(cacheKey, entry);
               resolve(entry.data);
             } else {
@@ -135,10 +134,7 @@ class OfflineStorage {
       request.onsuccess = () => {
         const results = request.result || [];
         const validResults = results
-          .filter(item => {
-            if (!item.ttl) return true;
-            return Date.now() - item.timestamp < item.ttl;
-          })
+          .filter(item => this.isValidCacheEntry(item))
           .map(item => item.data);
         
         resolve(validResults);
@@ -194,19 +190,19 @@ class OfflineStorage {
   }
 
   // Order-specific methods
-  async saveOrder(order: any): Promise<void> {
-    await this.set('orders', order.id.toString(), order, 3600000); // 1 hour TTL
+  async saveOrder(order: OrderDBRecord): Promise<void> {
+    await this.set('orders', order.id.toString(), order, TTL_ONE_HOUR);
   }
 
-  async getOrder(orderId: string | number): Promise<any> {
+  async getOrder(orderId: string | number): Promise<OrderDBRecord | null> {
     return this.get('orders', orderId.toString());
   }
 
-  async getAllOrders(): Promise<any[]> {
+  async getAllOrders(): Promise<OrderDBRecord[]> {
     return this.getAll('orders');
   }
 
-  async getOrdersByStatus(status: string): Promise<any[]> {
+  async getOrdersByStatus(status: string): Promise<OrderDBRecord[]> {
     if (!this.db) return [];
 
     return new Promise((resolve, reject) => {
@@ -218,10 +214,7 @@ class OfflineStorage {
       request.onsuccess = () => {
         const results = request.result || [];
         const validResults = results
-          .filter(item => {
-            if (!item.ttl) return true;
-            return Date.now() - item.timestamp < item.ttl;
-          })
+          .filter(item => this.isValidCacheEntry(item))
           .map(item => item.data);
         
         resolve(validResults);
@@ -232,49 +225,50 @@ class OfflineStorage {
   }
 
   // Station-specific methods
-  async saveStation(station: any): Promise<void> {
-    await this.set('stations', station.id.toString(), station, 3600000); // 1 hour TTL
+  async saveStation(station: StationDBRecord): Promise<void> {
+    await this.set('stations', station.id.toString(), station, TTL_ONE_HOUR);
   }
 
-  async getAllStations(): Promise<any[]> {
+  async getAllStations(): Promise<StationDBRecord[]> {
     return this.getAll('stations');
   }
 
   // Settings methods
-  async saveSetting(key: string, value: any): Promise<void> {
+  async saveSetting(key: string, value: unknown): Promise<void> {
     await this.set('settings', key, value);
   }
 
-  async getSetting(key: string): Promise<any> {
+  async getSetting(key: string): Promise<unknown> {
     return this.get('settings', key);
   }
 
   // Logging methods
-  async log(message: string, data?: any): Promise<void> {
-    const logEntry = {
+  async log(message: string, data?: unknown): Promise<void> {
+    const logEntry: LogEntry & { id: string } = {
       id: Date.now().toString(),
+      level: 'info',
       message,
       data,
       timestamp: Date.now()
     };
     
-    await this.set('logs', logEntry.id, logEntry, 86400000); // 24 hour TTL
+    await this.set('logs', logEntry.id, logEntry, TTL_ONE_DAY);
   }
 
-  async getLogs(limit: number = 100): Promise<any[]> {
-    const logs = await this.getAll('logs');
+  async getLogs(limit: number = DEFAULT_LOG_LIMIT): Promise<LogEntry[]> {
+    const logs = await this.getAll('logs') as LogEntry[];
     return logs
-      .sort((a: any, b: any) => b.timestamp - a.timestamp)
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
       .slice(0, limit);
   }
 
   // Sync methods
-  async getUnsyncedData(): Promise<any[]> {
-    const unsynced: any[] = [];
+  async getUnsyncedData(): Promise<Array<{ store: string; data: DBRecord }>> {
+    const unsynced: Array<{ store: string; data: DBRecord }> = [];
     
     for (const store of ['orders', 'stations']) {
-      const items = await this.getAll(store);
-      const unsyncedItems = items.filter((item: any) => !item.synced);
+      const items = await this.getAll(store) as Array<DBRecord & { synced?: boolean }>;
+      const unsyncedItems = items.filter((item) => !item.synced);
       unsynced.push(...unsyncedItems.map(item => ({ store, data: item })));
     }
     
@@ -300,6 +294,12 @@ class OfflineStorage {
   isInitialized(): boolean {
     return this.db !== null;
   }
+
+  // Helper method to validate cache entries
+  private isValidCacheEntry(entry: CacheEntry<unknown>): boolean {
+    return !entry.ttl || Date.now() - entry.timestamp < entry.ttl;
+  }
+
 }
 
 // Export singleton instance
