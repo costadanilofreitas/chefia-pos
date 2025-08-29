@@ -1,0 +1,113 @@
+/* Waiter Module - Text Selection and Input Fixes */
+
+/* Prevent text selection on all non-input elements */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  
+  /* Prevent iOS from showing keyboard on tap */
+  -webkit-touch-callout: none;
+}
+
+/* Ensure headers are not selectable */
+h1, h2, h3, h4, h5, h6 {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent selection on all text elements that are not in forms */
+p:not(form p),
+span:not(form span):not(input span):not(textarea span),
+div:not(form div):not(:has(input)):not(:has(textarea)),
+label:not(form label) {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Specific classes that should never be selectable */
+.text-gray-400,
+.text-gray-500,
+.text-gray-600,
+.text-gray-700,
+.text-gray-800,
+.dark\:text-gray-400,
+.dark\:text-gray-500,
+.dark\:text-gray-600,
+.text-xs,
+.text-sm,
+.text-base,
+.text-lg,
+.text-xl,
+.text-2xl,
+.text-center,
+.font-medium,
+.font-semibold,
+.font-bold {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* Prevent selection on card elements */
+[role="button"],
+.cursor-pointer,
+.card,
+.card-header,
+.card-content,
+.card-footer {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Ensure only actual input elements can receive text input */
+input:not([type="button"]):not([type="submit"]),
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Prevent tap highlight on iOS that might trigger keyboard */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Additional iOS-specific fixes */
+body {
+  -webkit-touch-callout: none;
+}
+
+/* Disable auto-zoom on input focus for better mobile experience */
+@media screen and (max-width: 768px) {
+  input:not([type="button"]):not([type="submit"]),
+  textarea,
+  select {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+  
+  /* Extra insurance against text selection on mobile */
+  body * {
+    -webkit-touch-callout: none !important;
+  }
+  
+  /* Re-enable only for actual inputs */
+  input:not([type="button"]):not([type="submit"]),
+  textarea {
+    -webkit-touch-callout: default !important;
+  }
+}

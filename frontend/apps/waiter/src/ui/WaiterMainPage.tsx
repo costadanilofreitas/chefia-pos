@@ -1,360 +1,611 @@
-import React, { useState, useEffect } from 'react';
-import TableLayoutEditor from '@common/components/layout/TableLayoutEditor';
-import {
-  Container,
-  Grid,
-  Typography,
-  Box,
-  Tabs,
-  Tab,
-  Paper,
-  Button,
-  Badge,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import ReceiptIcon from '@mui/icons-material/Receipt';
-import TableRestaurantIcon from '@mui/icons-material/TableRestaurant';
-import { useAuth } from '@common/contexts/auth/hooks/useAuth';
-import { useOrder } from '@common/contexts/order/hooks/useOrder';
-import { waiterService, Table, Order } from '../services/waiterService';
+/**
+ * Waiter Main Page - Simplified Version
+ * Waiter terminal interface with reduced complexity
+ */
 
-const WaiterMainPage: React.FC = () => {
-  // Estados
-  const [activeTab, setActiveTab] = useState<number>(0);
-  const [tables, setTables] = useState<Table[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+import React, { useState, useCallback, useMemo, memo } from 'react';
+import { 
+  Users, Receipt, BookOpen, Moon, Sun, RefreshCw, 
+  Plus, Clock, CheckCircle, Wifi, WifiOff, Maximize, Minimize 
+} from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { useWaiterData } from '../hooks/useWaiterData';
+import { useWaiterWebSocket } from '../hooks/useWaiterWebSocket';
+import { useKeyboardShortcuts, KeyboardKeys } from '../hooks/useKeyboardShortcuts';
+import { useFullscreen } from '../hooks/useFullscreen';
+import { Button } from '../components/ui/Button';
+import { Card, CardHeader, CardContent, CardFooter } from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
+import { Tabs, TabPanel } from '../components/ui/Tabs';
+import { Alert } from '../components/ui/Alert';
+import { NotificationContainer } from '../components/NotificationContainer';
+import { BottomNavigation } from '../components/BottomNavigation';
+import { TableSkeleton, OrderSkeleton } from '../components/ui/Skeleton';
+import { PullToRefresh } from '../components/PullToRefresh';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
+import { logger } from '../services/logger';
+import { 
+  TABLE_STATUS, ITEM_STATUS, TABS, 
+  TIME, NOTIFICATION_TYPE 
+} from '../config/constants';
+import { 
+  getStatusConfig, calculateTotal, 
+  formatCurrency, getItemsWithStatus,
+  updateItemById, upsertItem
+} from '../utils/dataHelpers';
+import type { Table, Order } from '../types';
 
-  // Hooks
-  const { user } = useAuth();
-  const {  } = useOrder();
+// Table Card Component
+const TableCard = memo(({ 
+  table, 
+  isSelected, 
+  onSelect 
+}: { 
+  table: Table; 
+  isSelected: boolean; 
+  onSelect: (table: Table) => void;
+}) => {
+  const statusConfig = getStatusConfig(table.status);
+  
+  return (
+    <Card
+      hoverable
+      onClick={() => onSelect(table)}
+      className={isSelected ? 'ring-2 ring-primary-500' : ''}
+    >
+      <CardContent className="text-center">
+        <div className="text-2xl font-bold mb-2 select-none">Mesa {table.number}</div>
+        <div className="text-sm text-gray-600 dark:text-gray-400 mb-2 select-none">
+          {table.seats} lugares
+        </div>
+        <Badge variant={statusConfig.variant as any} dot>
+          {statusConfig.label}
+        </Badge>
+      </CardContent>
+    </Card>
+  );
+});
+TableCard.displayName = 'TableCard';
 
-  // Efeito para carregar mesas e pedidos
-  useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      setLoading(true);
-      setError(null);
-      try {
-        const tablesData = await waiterService.getTables();
-        setTables(tablesData);
-
-        const ordersData = await waiterService.getOrders();
-        setOrders(ordersData);
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        setError('Falha ao carregar dados. Tente novamente.');
-
-        // Dados fallback em caso de erro
-        const fallbackTables: Table[] = [
-          { id: 1, number: 1, status: 'available', seats: 4, shape: 'square', x: 100, y: 100 },
-          { id: 2, number: 2, status: 'occupied', seats: 2, shape: 'round', x: 250, y: 100 },
-          { id: 3, number: 3, status: 'reserved', seats: 6, shape: 'rectangle', x: 400, y: 100 },
-        ];
-
-        const fallbackOrders: Order[] = [
-          {
-            id: 1,
-            table_id: 2,
-            status: 'in_progress',
-            items: [
-              { id: 1, name: 'Hambúrguer', quantity: 2, price: 25.9, status: 'preparing' },
-              { id: 2, name: 'Refrigerante', quantity: 2, price: 6.5, status: 'ready' },
-            ],
-            created_at: new Date(Date.now() - 30 * 60000).toISOString(),
-          },
-        ];
-
-        setTables(fallbackTables);
-        setOrders(fallbackOrders);
-      } finally {
-        setLoading(false);
-      }
+// Order Card Component
+const OrderCard = memo(({ 
+  order, 
+  onDeliver 
+}: { 
+  order: Order; 
+  onDeliver: (order: Order) => void;
+}) => {
+  const getItemIcon = (status: string) => {
+    const icons: Record<string, JSX.Element> = {
+      [ITEM_STATUS.PREPARING]: <Clock className="h-4 w-4 text-yellow-500" />,
+      [ITEM_STATUS.READY]: <CheckCircle className="h-4 w-4 text-green-500" />,
+      [ITEM_STATUS.DELIVERED]: <CheckCircle className="h-4 w-4 text-gray-400" />,
     };
+    return icons[status] || null;
+  };
+  
+  const readyItems = getItemsWithStatus(order.items, ITEM_STATUS.READY);
+  const hasReadyItems = readyItems.length > 0;
+  const orderTotal = calculateTotal(order.items);
+  const statusConfig = getStatusConfig(order.status);
+  
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-semibold select-none">Pedido #{order.id}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 select-none">
+              Mesa {order.table_id} • {new Date(order.created_at).toLocaleTimeString()}
+            </p>
+          </div>
+          <Badge variant={statusConfig.variant as any}>
+            {statusConfig.label}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {order.items.map(item => (
+            <div key={item.id} className="flex justify-between items-center py-2">
+              <div className="flex items-center space-x-3">
+                {getItemIcon(item.status)}
+                <div>
+                  <span className="font-medium">
+                    {item.quantity}x {item.name}
+                  </span>
+                  {item.notes && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {item.notes}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {formatCurrency(item.price * item.quantity)}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-between font-semibold">
+            <span>Total</span>
+            <span>{formatCurrency(orderTotal)}</span>
+          </div>
+        </div>
+      </CardContent>
+      {hasReadyItems && (
+        <CardFooter>
+          <Button
+            variant="success"
+            fullWidth
+            onClick={() => onDeliver(order)}
+          >
+            Entregar {readyItems.length} {readyItems.length === 1 ? 'Item' : 'Itens'}
+          </Button>
+        </CardFooter>
+      )}
+    </Card>
+  );
+});
+OrderCard.displayName = 'OrderCard';
 
-    fetchData();
+// Header Component
+const WaiterHeader = memo(({
+  stats,
+  isOnline,
+  isConnected,
+  isFullscreen,
+  theme,
+  lastSync,
+  onRefresh,
+  onToggleFullscreen,
+  onToggleTheme,
+}: {
+  stats: any;
+  isOnline: boolean;
+  isConnected: boolean;
+  isFullscreen: boolean;
+  theme: string;
+  lastSync: Date | null;
+  onRefresh: () => void;
+  onToggleFullscreen: () => void;
+  onToggleTheme: () => void;
+}) => (
+  <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-40">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex justify-between items-center h-16">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white select-none">
+            Terminal Garçom
+          </h1>
+          <div className="flex items-center space-x-2">
+            {isOnline ? (
+              <Wifi className="h-4 w-4 text-green-500" />
+            ) : (
+              <WifiOff className="h-4 w-4 text-red-500" />
+            )}
+            {isConnected && (
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            )}
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 text-sm">
+            <span className="text-gray-600 dark:text-gray-400 select-none">
+              {stats.availableTables} mesas livres
+            </span>
+            {stats.readyItems > 0 && (
+              <Badge variant="warning">
+                {stats.readyItems} itens prontos
+              </Badge>
+            )}
+            {lastSync && (
+              <span className="text-xs text-gray-500 dark:text-gray-400 select-none">
+                Atualizado: {lastSync.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRefresh}
+              icon={<RefreshCw className="h-4 w-4" />}
+              aria-label="Atualizar"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleFullscreen}
+              icon={isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+              aria-label="Tela cheia"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleTheme}
+              icon={theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              aria-label="Tema"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+));
+WaiterHeader.displayName = 'WaiterHeader';
+
+// Main Component
+const WaiterMainPage: React.FC = () => {
+  // State
+  const [activeTab, setActiveTab] = useState<string>(TABS.TABLES);
+  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+  const [showHelp, setShowHelp] = useState<boolean>(false);
+  
+  // Hooks
+  const { theme, toggleTheme } = useTheme();
+  const { addNotification } = useNotifications();
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
+  
+  // Pull to refresh
+  const { isPulling, pullDistance, isRefreshing, pullProgress } = usePullToRefresh({
+    onRefresh: async () => {
+      await handleRefresh();
+    },
+    enabled: true
+  });
+  
+  // Data management
+  const {
+    tables,
+    orders,
+    menu,
+    stats,
+    loading,
+    error,
+    lastSync,
+    isOnline,
+    loadAllData,
+    createOrder,
+    deliverOrderItems,
+    setTables,
+    setOrders
+  } = useWaiterData();
+  
+  // WebSocket
+  const { isConnected, requestAssistance } = useWaiterWebSocket({
+    tableIds: useMemo(() => tables.map(t => t.id), [tables]),
+    onTableUpdate: useCallback((data: any) => {
+      if (data?.id) {
+        setTables(prev => updateItemById(prev, data.id, data));
+        addNotification({
+          type: NOTIFICATION_TYPE.INFO,
+          title: 'Mesa atualizada',
+          message: `Mesa ${data.number || data.id} foi atualizada`,
+          duration: TIME.NOTIFICATION
+        });
+      }
+    }, [setTables, addNotification]),
+    onOrderUpdate: useCallback((data: any) => {
+      if (data?.id) {
+        setOrders(prev => upsertItem(prev, data));
+        addNotification({
+          type: NOTIFICATION_TYPE.INFO,
+          title: 'Pedido atualizado',
+          message: `Pedido #${data.id} foi atualizado`,
+          duration: TIME.NOTIFICATION
+        });
+      }
+    }, [setOrders, addNotification]),
+    onKitchenUpdate: useCallback((data: any) => {
+      if (data?.orderId) {
+        addNotification({
+          type: NOTIFICATION_TYPE.SUCCESS,
+          title: 'Item pronto!',
+          message: `Item do pedido #${data.orderId} está pronto`,
+          duration: TIME.NOTIFICATION_LONG
+        });
+      }
+    }, [addNotification])
+  });
+  
+  // Handlers
+  const handleRefresh = useCallback(async () => {
+    await loadAllData(false);
+    addNotification({
+      type: NOTIFICATION_TYPE.SUCCESS,
+      title: 'Dados atualizados',
+      duration: TIME.NOTIFICATION
+    });
+  }, [loadAllData, addNotification]);
+  
+  const handleTableSelect = useCallback((table: Table) => {
+    setSelectedTable(table);
+    logger.logTableEvent('selected', table.id, { tableNumber: table.number });
   }, []);
-
-  // Manipular mudança de tab
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number): void => {
-    setActiveTab(newValue);
-  };
-
-  // Manipular seleção de mesa
-  const handleTableSelect = async (tableId: number): Promise<void> => {
-    const table = tables.find((t) => t.id === tableId);
-    if (table) {
-      setSelectedTable(table);
-
-      try {
-        const tableOrders = await waiterService.getOrdersByTable(tableId);
-        console.log('Pedidos da mesa:', tableOrders);
-      } catch (error) {
-        console.error(`Erro ao buscar pedidos da mesa ${tableId}:`, error);
-        setError(`Falha ao carregar pedidos da mesa ${tableId}. Tente novamente.`);
-      }
-    }
-  };
-
-  // Manipular criação de novo pedido
-  const handleNewOrder = async (): Promise<void> => {
+  
+  const handleNewOrder = useCallback(async () => {
     if (!selectedTable) return;
-
+    
     try {
-      const newOrder = await waiterService.createOrder(selectedTable.id, []);
-      setOrders((prevOrders) => [...prevOrders, newOrder]);
-      console.log('Novo pedido criado:', newOrder);
-    } catch (error) {
-      console.error('Erro ao criar pedido:', error);
-      setError('Falha ao criar novo pedido. Tente novamente.');
+      await createOrder(selectedTable.id, []);
+      addNotification({
+        type: NOTIFICATION_TYPE.SUCCESS,
+        title: 'Pedido criado',
+        message: `Novo pedido para mesa ${selectedTable.number}`,
+        duration: TIME.NOTIFICATION
+      });
+      setActiveTab(TABS.ORDERS);
+    } catch (err) {
+      addNotification({
+        type: NOTIFICATION_TYPE.ERROR,
+        title: 'Erro ao criar pedido',
+        message: 'Não foi possível criar o pedido',
+        duration: TIME.NOTIFICATION_LONG
+      });
     }
-  };
-
-  // Manipular atualização de status da mesa
-  const handleUpdateTableStatus = async (tableId: number, status: Table['status']): Promise<void> => {
+  }, [selectedTable, createOrder, addNotification]);
+  
+  const handleDeliverItems = useCallback(async (order: Order) => {
+    const readyItems = getItemsWithStatus(order.items, ITEM_STATUS.READY);
+    if (readyItems.length === 0) return;
+    
     try {
-      const success = await waiterService.updateTableStatus(tableId, status);
-      if (success) {
-        setTables((prevTables) =>
-          prevTables.map((table) => (table.id === tableId ? { ...table, status } : table))
-        );
-        console.log(`Status da mesa ${tableId} atualizado para ${status}`);
-      } else {
-        setError('Falha ao atualizar status da mesa. Tente novamente.');
-      }
-    } catch (error) {
-      console.error(`Erro ao atualizar status da mesa ${tableId}:`, error);
-      setError('Falha ao atualizar status da mesa. Tente novamente.');
+      await deliverOrderItems(order.id, readyItems.map(item => item.id));
+      addNotification({
+        type: NOTIFICATION_TYPE.SUCCESS,
+        title: 'Itens entregues',
+        message: `${readyItems.length} itens marcados como entregues`,
+        duration: TIME.NOTIFICATION
+      });
+    } catch (err) {
+      addNotification({
+        type: NOTIFICATION_TYPE.ERROR,
+        title: 'Erro ao entregar itens',
+        duration: TIME.NOTIFICATION_LONG
+      });
     }
-  };
-
-  // Manipular entrega de itens do pedido
-  const handleDeliverItems = async (orderId: number, itemIds: number[]): Promise<void> => {
-    try {
-      const success = await waiterService.deliverOrderItems(orderId, itemIds);
-      if (success) {
-        setOrders((prevOrders) =>
-          prevOrders.map((order) =>
-            order.id === orderId
-              ? {
-                  ...order,
-                  items: order.items.map((item) =>
-                    itemIds.includes(item.id) ? { ...item, status: 'delivered' } : item
-                  ),
-                }
-              : order
-          )
-        );
-        console.log(`Itens ${itemIds.join(', ')} do pedido ${orderId} entregues`);
-      } else {
-        setError('Falha ao marcar itens como entregues. Tente novamente.');
-      }
-    } catch (error) {
-      console.error(`Erro ao marcar itens como entregues para o pedido ${orderId}:`, error);
-      setError('Falha ao marcar itens como entregues. Tente novamente.');
+  }, [deliverOrderItems, addNotification]);
+  
+  const handleRequestHelp = useCallback(() => {
+    if (selectedTable) {
+      requestAssistance(selectedTable.id, 'help');
+      addNotification({
+        type: NOTIFICATION_TYPE.INFO,
+        title: 'Ajuda solicitada',
+        message: 'Um supervisor foi notificado',
+        duration: TIME.NOTIFICATION
+      });
     }
-  };
-
-  // Renderizar conteúdo baseado na tab ativa
-  const renderTabContent = (): React.ReactNode => {
-    switch (activeTab) {
-      case 0:
-        return (
-          <Box sx={{ mt: 2 }}>
-            <Paper sx={{ p: 2, mb: 2 }}>
-              <Typography variant="h6" gutterBottom>
-                Layout do Restaurante
-              </Typography>
-              <Box sx={{ height: 500, border: '1px solid #ccc', borderRadius: 1 }}>
-                <TableLayoutEditor tables={tables} onTableSelect={handleTableSelect} readOnly />
-              </Box>
-            </Paper>
-
-            {selectedTable && (
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  Mesa {selectedTable.number}
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Typography>
-                      Status:{' '}
-                      {selectedTable.status === 'available'
-                        ? 'Disponível'
-                        : selectedTable.status === 'occupied'
-                        ? 'Ocupada'
-                        : 'Reservada'}
-                    </Typography>
-                    <Typography>Lugares: {selectedTable.seats}</Typography>
-                  </Grid>
-                  <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+  }, [selectedTable, requestAssistance, addNotification]);
+  
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    { key: KeyboardKeys.F1, handler: () => setShowHelp(prev => !prev), description: 'Ajuda' },
+    { key: KeyboardKeys.F5, handler: handleRefresh, description: 'Atualizar' },
+    { key: KeyboardKeys.F11, handler: toggleFullscreen, description: 'Tela cheia' },
+    { key: KeyboardKeys.N, ctrl: true, handler: handleNewOrder, description: 'Novo pedido' },
+    { key: KeyboardKeys.H, ctrl: true, handler: handleRequestHelp, description: 'Solicitar ajuda' },
+    { key: KeyboardKeys.NUMBER_1, handler: () => setActiveTab(TABS.TABLES), description: 'Mesas' },
+    { key: KeyboardKeys.NUMBER_2, handler: () => setActiveTab(TABS.ORDERS), description: 'Pedidos' },
+    { key: KeyboardKeys.NUMBER_3, handler: () => setActiveTab(TABS.MENU), description: 'Cardápio' },
+  ]);
+  
+  // Tabs configuration
+  const tabs = useMemo(() => [
+    {
+      id: TABS.TABLES,
+      label: 'Mesas',
+      icon: <Users className="h-4 w-4" />,
+      badge: stats.occupiedTables > 0 && (
+        <Badge variant="primary" size="sm">{stats.occupiedTables}</Badge>
+      )
+    },
+    {
+      id: TABS.ORDERS,
+      label: 'Pedidos',
+      icon: <Receipt className="h-4 w-4" />,
+      badge: stats.activeOrders > 0 && (
+        <Badge variant="danger" size="sm">{stats.activeOrders}</Badge>
+      )
+    },
+    {
+      id: TABS.MENU,
+      label: 'Cardápio',
+      icon: <BookOpen className="h-4 w-4" />
+    }
+  ], [stats]);
+  
+  // Removed full-page loading to allow progressive loading
+  
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+      <NotificationContainer />
+      
+      {/* Pull to Refresh Indicator */}
+      <PullToRefresh
+        isPulling={isPulling}
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        pullProgress={pullProgress}
+      />
+      
+      <WaiterHeader
+        stats={stats}
+        isOnline={isOnline}
+        isConnected={isConnected}
+        isFullscreen={isFullscreen}
+        theme={theme}
+        lastSync={lastSync}
+        onRefresh={handleRefresh}
+        onToggleFullscreen={toggleFullscreen}
+        onToggleTheme={toggleTheme}
+      />
+      
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+          <Alert variant="error">{error}</Alert>
+        </div>
+      )}
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 md:pb-20">
+        <Card className="mb-6 hidden md:block">
+          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} fullWidth />
+        </Card>
+        
+        {/* Tables Tab */}
+        <TabPanel value={TABS.TABLES} activeValue={activeTab}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <h2 className="text-lg font-semibold select-none">Layout do Restaurante</h2>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {loading ? (
+                      // Show skeletons while loading
+                      Array.from({ length: 6 }).map((_, i) => (
+                        <TableSkeleton key={i} />
+                      ))
+                    ) : (
+                      tables.map(table => (
+                        <TableCard
+                          key={table.id}
+                          table={table}
+                          isSelected={selectedTable?.id === table.id}
+                          onSelect={handleTableSelect}
+                        />
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div>
+              {selectedTable ? (
+                <Card>
+                  <CardHeader>
+                    <h3 className="text-lg font-semibold select-none">Mesa {selectedTable.number}</h3>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <Button
-                      variant="contained"
-                      color="primary"
-                      disabled={selectedTable.status !== 'occupied'}
+                      variant="primary"
+                      fullWidth
+                      disabled={selectedTable.status !== TABLE_STATUS.OCCUPIED}
                       onClick={handleNewOrder}
+                      icon={<Plus className="h-4 w-4" />}
                     >
                       Novo Pedido
                     </Button>
-                  </Grid>
-                </Grid>
-              </Paper>
-            )}
-          </Box>
-        );
-
-      case 1:
-        return (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Pedidos Ativos
-            </Typography>
-            {orders.length > 0 ? (
-              orders.map((order) => (
-                <Paper key={order.id} sx={{ p: 2, mb: 2 }}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                      <Typography variant="subtitle1">
-                        Pedido #{order.id} - Mesa {order.table_id}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {new Date(order.created_at).toLocaleTimeString()}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <Button
-                        variant="outlined"
-                        color={order.status === 'ready' ? 'success' : 'primary'}
-                        onClick={() => {
-                          if (order.status === 'ready') {
-                            const readyItemIds = order.items
-                              .filter((item) => item.status === 'ready')
-                              .map((item) => item.id);
-
-                            if (readyItemIds.length > 0) {
-                              handleDeliverItems(order.id, readyItemIds);
-                            }
-                          }
-                        }}
-                      >
-                        {order.status === 'ready' ? 'Entregar' : 'Ver Detalhes'}
-                      </Button>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle2">Itens:</Typography>
-                      {order.items.map((item) => (
-                        <Box
-                          key={item.id}
-                          sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}
-                        >
-                          <Typography variant="body2">
-                            {item.quantity}x {item.name}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color={
-                              item.status === 'ready'
-                                ? 'success.main'
-                                : item.status === 'delivered'
-                                ? 'text.disabled'
-                                : 'text.secondary'
-                            }
-                          >
-                            {item.status === 'ready'
-                              ? 'Pronto'
-                              : item.status === 'delivered'
-                              ? 'Entregue'
-                              : 'Em preparo'}
-                          </Typography>
-                        </Box>
-                      ))}
-                    </Grid>
-                  </Grid>
-                </Paper>
+                    <Button
+                      variant="secondary"
+                      fullWidth
+                      onClick={handleRequestHelp}
+                    >
+                      Solicitar Ajuda
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="text-center py-8 select-none">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400 select-none">
+                      Selecione uma mesa
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </TabPanel>
+        
+        {/* Orders Tab */}
+        <TabPanel value={TABS.ORDERS} activeValue={activeTab}>
+          <div className="space-y-4">
+            {loading ? (
+              // Show skeletons while loading
+              Array.from({ length: 3 }).map((_, i) => (
+                <OrderSkeleton key={i} />
+              ))
+            ) : orders.length > 0 ? (
+              orders.map(order => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  onDeliver={handleDeliverItems}
+                />
               ))
             ) : (
-              <Typography>Nenhum pedido ativo</Typography>
+              <Card>
+                <CardContent className="text-center py-12 select-none">
+                  <Receipt className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400 select-none">
+                    Nenhum pedido ativo
+                  </p>
+                </CardContent>
+              </Card>
             )}
-          </Box>
-        );
-
-      case 2:
-        return (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Cardápio
-            </Typography>
-            <Typography>Visualização do cardápio para consulta rápida</Typography>
-          </Box>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-        }}
-      >
-        <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Carregando dados...</Typography>
-      </Box>
-    );
-  }
-
-  return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" component="h1">
-          Garçom
-        </Typography>
-
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography variant="subtitle1" sx={{ mr: 2 }}>
-            {user?.name || 'Usuário'}
-          </Typography>
-        </Box>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
+          </div>
+        </TabPanel>
+        
+        {/* Menu Tab */}
+        <TabPanel value={TABS.MENU} activeValue={activeTab}>
+          <Card>
+            <CardContent className="text-center py-12 select-none">
+              <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-400 select-none">
+                Cardápio: {menu.length} itens disponíveis
+              </p>
+            </CardContent>
+          </Card>
+        </TabPanel>
+      </main>
+      
+      {/* Help Modal */}
+      {showHelp && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="max-w-md">
+            <CardHeader>
+              <h2 className="text-lg font-semibold select-none">Atalhos do Teclado</h2>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">F1</kbd>
+                <span>Ajuda</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">F5</kbd>
+                <span>Atualizar</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">F11</kbd>
+                <span>Tela Cheia</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">Ctrl+N</kbd>
+                <span>Novo Pedido</span>
+                <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">1, 2, 3</kbd>
+                <span>Navegar Abas</span>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button fullWidth onClick={() => setShowHelp(false)}>Fechar</Button>
+            </CardFooter>
+          </Card>
+        </div>
       )}
-
-      <Paper sx={{ width: '100%' }}>
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          variant="fullWidth"
-          indicatorColor="primary"
-          textColor="primary"
-        >
-          <Tab icon={<TableRestaurantIcon />} label="Mesas" />
-          <Tab
-            icon={
-              <Badge badgeContent={orders.length} color="error">
-                <ReceiptIcon />
-              </Badge>
-            }
-            label="Pedidos"
-          />
-          <Tab icon={<RestaurantIcon />} label="Cardápio" />
-        </Tabs>
-      </Paper>
-
-      {renderTabContent()}
-    </Container>
+      
+      {/* Bottom Navigation for Mobile */}
+      <BottomNavigation
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        badges={{
+          tables: stats.occupiedTables,
+          orders: stats.activeOrders
+        }}
+      />
+    </div>
   );
 };
 

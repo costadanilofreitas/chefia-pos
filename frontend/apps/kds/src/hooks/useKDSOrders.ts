@@ -1,159 +1,202 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
-import { kdsService, Order } from '../services/kdsService';
+/**
+ * Simplified KDS Orders Hook
+ * Manages order data with reduced complexity
+ */
+
+import { useCallback, useMemo } from 'react';
+import { kdsService } from '../services/kdsService';
 import { offlineStorage } from '../services/offlineStorage';
 import { logger } from '../services/logger';
+import { useDataManager } from './useDataManager';
+import { ORDER_STATUS } from '../config/constants';
+import { countByStatus, updateItemInArray } from '../utils/dataHelpers';
+import type { Order } from '../services/kdsService';
 
 interface UseKDSOrdersOptions {
   selectedStation: string;
   onNewOrder?: (order: Order) => void;
 }
 
-export function useKDSOrders({ selectedStation, onNewOrder }: UseKDSOrdersOptions) {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const previousOrdersRef = useRef<Order[]>([]);
+interface OrderStats {
+  total: number;
+  pending: number;
+  preparing: number;
+  ready: number;
+}
 
-  // Load orders with offline support
-  const loadOrders = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      let data: Order[];
-      
-      if (navigator.onLine) {
-        // Online: fetch from API
-        data = selectedStation === 'all' 
-          ? await kdsService.getOrders()
-          : await kdsService.getOrdersByStation(selectedStation);
-        
-        // Cache for offline use
-        const cachePromises = data.map(order => offlineStorage.saveOrder(order));
-        await Promise.all(cachePromises);
-      } else {
-        // Offline: load from cache
-        data = await offlineStorage.getAllOrders();
-        if (selectedStation !== 'all') {
-          data = data.filter((order: Order) => 
-            order.items.some(item => item.station === selectedStation)
-          );
-        }
-      }
-      
-      // Check for new orders
-      if (previousOrdersRef.current.length > 0 && onNewOrder) {
-        const newOrders = data.filter((order: Order) => 
-          !previousOrdersRef.current.find(o => o.id === order.id)
-        );
-        
-        newOrders.forEach(order => onNewOrder(order));
-      }
-      
-      previousOrdersRef.current = data;
-      setOrders(data);
-    } catch (err) {
-      setError('Não foi possível carregar os pedidos');
-      logger.error('Error loading orders', err, 'useKDSOrders');
-      
-      // Try to load from cache as fallback
-      const cachedOrders = await offlineStorage.getAllOrders();
-      if (cachedOrders.length > 0) {
-        setOrders(cachedOrders);
-        setError('Usando dados em cache (modo offline)');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedStation, onNewOrder]);
-
-  // Update order status
-  const updateOrderStatus = useCallback(async (orderId: string | number, newStatus: string) => {
-    // Update local state immediately for responsiveness
-    setOrders(prevOrders => 
-      prevOrders.map(order => 
-        order.id === orderId 
-          ? { ...order, status: newStatus }
-          : order
-      )
-    );
-    
-    try {
-      if (navigator.onLine) {
-        await kdsService.updateOrderStatus(orderId, newStatus);
-      } else {
-        const order = orders.find(o => o.id === orderId);
-        if (order) {
-          await offlineStorage.saveOrder({ ...order, status: newStatus, synced: false });
-        }
-      }
-    } catch (err) {
-      logger.error('Error updating order status', err, 'useKDSOrders');
-      throw err;
-    }
-  }, [orders]);
-
-  // Update item status
-  const updateItemStatus = useCallback(async (
-    orderId: string | number, 
-    itemId: string | number, 
-    newStatus: string
-  ) => {
-    // Update local state immediately
-    setOrders(prevOrders => 
-      prevOrders.map(order => {
-        if (order.id === orderId) {
-          return {
-            ...order,
-            items: order.items.map(item => 
-              item.item_id === itemId 
-                ? { ...item, status: newStatus }
-                : item
-            )
-          };
-        }
-        return order;
-      })
-    );
-    
-    try {
-      if (navigator.onLine) {
-        await kdsService.updateItemStatus(orderId, itemId, newStatus);
-      } else {
-        const order = orders.find(o => o.id === orderId);
-        if (order) {
-          const updatedOrder = {
-            ...order,
-            items: order.items.map(item => 
-              item.item_id === itemId ? { ...item, status: newStatus } : item
-            ),
-            synced: false
-          };
-          await offlineStorage.saveOrder(updatedOrder);
-        }
-      }
-    } catch (err) {
-      logger.error('Error updating item status', err, 'useKDSOrders');
-      throw err;
-    }
-  }, [orders]);
-
-  // Computed statistics
-  const stats = useMemo(() => ({
-    total: orders.length,
-    pending: orders.filter(o => o.status === 'pending').length,
-    preparing: orders.filter(o => o.status === 'preparing').length,
-    ready: orders.filter(o => o.status === 'ready').length,
-  }), [orders]);
-
-  return {
-    orders,
+export function useKDSOrders({ 
+  selectedStation, 
+  onNewOrder 
+}: UseKDSOrdersOptions) {
+  
+  // Data manager for orders
+  const {
+    data: orders,
     loading,
     error,
+    isOnline,
+    refresh: loadOrders,
+    updateItem,
+    setData: setOrders,
+    clearError
+  } = useDataManager<Order>({
+    storageKey: 'kds-orders',
+    fetchOnline: async () => {
+      if (selectedStation === 'all') {
+        return await kdsService.getOrders();
+      }
+      return await kdsService.getOrdersByStation(selectedStation);
+    },
+    fetchOffline: async () => {
+      const allOrders = await offlineStorage.getAllOrders();
+      if (selectedStation === 'all') {
+        return allOrders;
+      }
+      return allOrders.filter((order: Order) => 
+        order.items.some(item => item.station === selectedStation)
+      );
+    },
+    saveOffline: (order) => offlineStorage.saveOrder(order),
+    ...(onNewOrder && {
+      onNewItems: (newOrders) => {
+        newOrders.forEach(order => onNewOrder(order));
+      }
+    }),
+    autoRefresh: true,
+    refreshInterval: 30000
+  });
+  
+  // Update order status
+  const updateOrderStatus = useCallback(async (
+    orderId: string | number, 
+    newStatus: string
+  ) => {
+    // Optimistic update
+    updateItem(orderId, { status: newStatus });
+    
+    try {
+      if (isOnline) {
+        await kdsService.updateOrderStatus(orderId, newStatus);
+      } else {
+        // Save for offline sync
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+          await offlineStorage.saveOrder({ 
+            ...order, 
+            status: newStatus, 
+            synced: false 
+          });
+        }
+      }
+      logger.info(`Order ${orderId} status updated to ${newStatus}`, 'useKDSOrders');
+    } catch (err) {
+      // Rollback on error
+      const originalOrder = orders.find(o => o.id === orderId);
+      if (originalOrder) {
+        updateItem(orderId, { status: originalOrder.status });
+      }
+      logger.error('Failed to update order status', err, 'useKDSOrders');
+      throw err;
+    }
+  }, [orders, isOnline, updateItem]);
+  
+  // Update item status
+  const updateItemStatus = useCallback(async (
+    orderId: string | number,
+    itemId: string | number,
+    newStatus: string
+  ) => {
+    // Find and update order
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    
+    const updatedItems = order.items.map(item => 
+      item.item_id === itemId ? { ...item, status: newStatus } : item
+    );
+    
+    // Optimistic update
+    setOrders(prev => updateItemInArray(prev, orderId, { items: updatedItems }));
+    
+    try {
+      if (isOnline) {
+        await kdsService.updateItemStatus(orderId, itemId, newStatus);
+      } else {
+        // Save for offline sync
+        await offlineStorage.saveOrder({
+          ...order,
+          items: updatedItems,
+          synced: false
+        });
+      }
+      logger.info(`Item ${itemId} in order ${orderId} updated to ${newStatus}`, 'useKDSOrders');
+    } catch (err) {
+      // Rollback on error
+      setOrders(prev => updateItemInArray(prev, orderId, { items: order.items }));
+      logger.error('Failed to update item status', err, 'useKDSOrders');
+      throw err;
+    }
+  }, [orders, isOnline, setOrders]);
+  
+  // Calculate statistics
+  const stats: OrderStats = useMemo(() => ({
+    total: orders.length,
+    pending: countByStatus(orders, ORDER_STATUS.PENDING),
+    preparing: countByStatus(orders, ORDER_STATUS.PREPARING),
+    ready: countByStatus(orders, ORDER_STATUS.READY),
+  }), [orders]);
+  
+  // Helper to check if order should be started
+  const canStartOrder = useCallback((orderId: string | number): boolean => {
+    const order = orders.find(o => o.id === orderId);
+    return order?.status === ORDER_STATUS.PENDING;
+  }, [orders]);
+  
+  // Helper to check if order can be completed
+  const canCompleteOrder = useCallback((orderId: string | number): boolean => {
+    const order = orders.find(o => o.id === orderId);
+    return order?.status === ORDER_STATUS.PREPARING;
+  }, [orders]);
+  
+  // Quick actions
+  const startOrder = useCallback(async (orderId: string | number) => {
+    if (canStartOrder(orderId)) {
+      await updateOrderStatus(orderId, ORDER_STATUS.PREPARING);
+    }
+  }, [canStartOrder, updateOrderStatus]);
+  
+  const completeOrder = useCallback(async (orderId: string | number) => {
+    if (canCompleteOrder(orderId)) {
+      await updateOrderStatus(orderId, ORDER_STATUS.READY);
+    }
+  }, [canCompleteOrder, updateOrderStatus]);
+  
+  return {
+    // Data
+    orders,
     stats,
+    
+    // State
+    loading,
+    error,
+    isOnline,
+    
+    // Actions
     loadOrders,
     updateOrderStatus,
     updateItemStatus,
-    setError
+    startOrder,
+    completeOrder,
+    
+    // Helpers
+    canStartOrder,
+    canCompleteOrder,
+    
+    // Error handling
+    setError: (msg: string | null) => {
+      if (msg) {
+        logger.error(msg, null, 'useKDSOrders');
+      }
+      msg ? setOrders([]) : clearError();
+    }
   };
 }

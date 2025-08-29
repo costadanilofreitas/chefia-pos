@@ -1,53 +1,237 @@
-import { useState, useEffect, useCallback, lazy, Suspense, useMemo } from 'react';
-import { FaSync, FaWifi, FaExclamationTriangle, FaExpand, FaCompress, FaVolumeUp, FaVolumeMute, FaKeyboard, FaCog, FaMoon, FaSun } from 'react-icons/fa';
+/**
+ * KDS Main Page - Simplified Version
+ * Kitchen Display System main interface with reduced complexity
+ */
+
+import { useState, useCallback, useMemo, lazy, Suspense, useEffect } from 'react';
+import { 
+  FaSync, FaWifi, FaExpand, FaCompress, FaVolumeUp, 
+  FaVolumeMute, FaKeyboard, FaMoon, FaSun 
+} from 'react-icons/fa';
 import { Button } from '../components/Button';
 import { Select } from '../components/Select';
 import { Badge } from '../components/Badge';
-import type { Station, Order, OrderItem } from '../services/kdsService';
-
-// Time constants in milliseconds
-const AUTO_REFRESH_INTERVAL = 30000; // 30 seconds
-const DELAYED_ORDER_CHECK_INTERVAL = 60000; // 1 minute
-const DELAYED_ORDER_THRESHOLD_MINUTES = 15;
-const ALERT_AUTO_REMOVE_DELAY = 5000; // 5 seconds
-import { ApiService } from '../services/api';
-import { offlineStorage } from '../services/offlineStorage';
-import { logger } from '../services/logger';
 import { useFullscreen } from '../hooks/useFullscreen';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useKDSOrders } from '../hooks/useKDSOrders';
 import { useKDSAlerts } from '../hooks/useKDSAlerts';
 import { useKDSWebSocket } from '../hooks/useKDSWebSocket';
 import { useTheme } from '../contexts/ThemeContext';
+import { 
+  TIME_INTERVALS, 
+  THRESHOLDS, 
+  ORDER_STATUS, 
+  STATION_ALL,
+  KEYBOARD_SHORTCUTS 
+} from '../config/constants';
+import { 
+  getMinutesElapsed, 
+  formatTime, 
+  isDelayed,
+  countByStatus 
+} from '../utils/dataHelpers';
+import type { Station, Order } from '../services/kdsService';
 
-// Lazy load heavy components
+// Lazy load components
 const OrderCard = lazy(() => import('./OrderCard'));
 const AlertSystem = lazy(() => import('../components/VisualAlert').then(m => ({ default: m.AlertSystem })));
 
-// Loading component
-const OrderCardSkeleton = () => (
-  <div className="animate-pulse">
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-      <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-1/3 mb-4"></div>
-      <div className="space-y-3">
-        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded"></div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-5/6"></div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-4/6"></div>
-      </div>
+// Loading skeleton component
+const OrderSkeleton = () => (
+  <div className="animate-pulse bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
+    <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-1/3 mb-4" />
+    <div className="space-y-3">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="h-4 bg-gray-300 dark:bg-gray-600 rounded" style={{ width: `${100 - i * 15}%` }} />
+      ))}
     </div>
   </div>
 );
 
+// Header component
+const KDSHeader = ({
+  selectedStation,
+  stations,
+  stats,
+  isConnected,
+  isLoading,
+  soundEnabled,
+  themeMode,
+  isFullscreen,
+  onStationChange,
+  onRefresh,
+  onToggleFullscreen,
+  onToggleSound,
+  onToggleTheme,
+  onShowHelp,
+}: {
+  selectedStation: string;
+  stations: Station[];
+  stats: Record<string, number>;
+  isConnected: boolean;
+  isLoading: boolean;
+  soundEnabled: boolean;
+  themeMode: string;
+  isFullscreen: boolean;
+  onStationChange: (station: string) => void;
+  onRefresh: () => void;
+  onToggleFullscreen: () => void;
+  onToggleSound: () => void;
+  onToggleTheme: () => void;
+  onShowHelp: () => void;
+}) => (
+  <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-40">
+    <div className="px-4 py-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+            Sistema de Cozinha
+          </h1>
+          <Select
+            value={selectedStation}
+            options={[
+              { value: STATION_ALL, label: 'Todas as Estações' },
+              ...stations.map(s => ({ value: s.id, label: s.name }))
+            ]}
+            onChange={(e) => onStationChange(e.target.value)}
+            className="w-full sm:w-48"
+          />
+        </div>
+        
+        <div className="flex items-center space-x-2 sm:space-x-3 flex-wrap sm:flex-nowrap">
+          {/* Connection Status */}
+          <Badge variant={isConnected ? 'success' : 'danger'} className="flex items-center gap-1">
+            <FaWifi className="w-3 h-3" />
+            {isConnected ? 'Conectado' : 'Desconectado'}
+          </Badge>
+          
+          {/* Statistics */}
+          <div className="hidden md:flex items-center space-x-2 text-sm">
+            {Object.entries(stats).map(([key, value]) => (
+              <Badge key={key} variant={key === 'pendente' ? 'warning' : 'info'}>
+                {key}: {value}
+              </Badge>
+            ))}
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-1 sm:space-x-2">
+            <Button
+              onClick={onRefresh}
+              size="sm"
+              variant="secondary"
+              disabled={isLoading}
+              aria-label="Atualizar"
+              title="Atualizar (R)"
+            >
+              <FaSync className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
+            
+            <Button
+              onClick={onToggleFullscreen}
+              size="sm"
+              variant="secondary"
+              aria-label="Tela cheia"
+              title="Tela cheia (F)"
+            >
+              {isFullscreen ? <FaCompress /> : <FaExpand />}
+            </Button>
+            
+            <Button
+              onClick={onToggleSound}
+              size="sm"
+              variant="secondary"
+              aria-label="Som"
+              title="Som (M)"
+            >
+              {soundEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
+            </Button>
+            
+            <Button
+              onClick={onToggleTheme}
+              size="sm"
+              variant="secondary"
+              aria-label="Tema"
+              title="Tema (T)"
+            >
+              {themeMode === 'dark' ? <FaSun /> : <FaMoon />}
+            </Button>
+            
+            <Button
+              onClick={onShowHelp}
+              size="sm"
+              variant="secondary"
+              aria-label="Ajuda"
+              title="Ajuda (H)"
+            >
+              <FaKeyboard />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+);
+
+// Help modal component
+const HelpModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  if (!isOpen) return null;
+  
+  const shortcuts = [
+    { key: '↑↓', description: 'Navegar pedidos' },
+    { key: 'Enter', description: 'Iniciar pedido' },
+    { key: 'Space', description: 'Completar pedido' },
+    { key: 'R', description: 'Atualizar lista' },
+    { key: 'F', description: 'Tela cheia' },
+    { key: 'M', description: 'Som ligado/desligado' },
+    { key: 'T', description: 'Alternar tema' },
+    { key: 'H', description: 'Mostrar ajuda' },
+    { key: 'Esc', description: 'Fechar' },
+  ];
+  
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+          Atalhos do Teclado
+        </h2>
+        <div className="space-y-2 text-sm">
+          {shortcuts.map(({ key, description }) => (
+            <div key={key} className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">{key}</span>
+              <span className="text-gray-900 dark:text-white">{description}</span>
+            </div>
+          ))}
+        </div>
+        <Button onClick={onClose} className="mt-4 w-full">
+          Fechar
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Main component
 const KDSMainPage = () => {
-  const [selectedStation, setSelectedStation] = useState<string>('all');
-  const [stations, setStations] = useState<Station[]>([]);
+  // State
+  const [selectedStation, setSelectedStation] = useState<string>(STATION_ALL);
+  const [stations] = useState<Station[]>([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(0);
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [lastUpdate] = useState(new Date());
+  
+  // Hooks
   const { mode: themeMode, toggleTheme } = useTheme();
-
-  // Use custom hooks
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
+  
+  // Alerts hook
   const { 
     alerts, 
     removeAlert, 
@@ -57,316 +241,185 @@ const KDSMainPage = () => {
     orderDelayed: alertOrderDelayed
   } = useKDSAlerts({ 
     soundEnabled,
-    autoRemoveDelay: ALERT_AUTO_REMOVE_DELAY 
+    autoRemoveDelay: TIME_INTERVALS.ALERT_AUTO_REMOVE 
   });
-
+  
+  // Orders hook with new order callback
   const {
     orders,
     loading,
-    error,
-    stats,
     loadOrders,
     updateOrderStatus,
     updateItemStatus,
     setError
   } = useKDSOrders({
     selectedStation,
-    onNewOrder: (order) => {
+    onNewOrder: useCallback((order) => {
       alertNewOrder(order.id.toString());
       if (order.priority === 'high') {
         alertUrgentOrder(order.id.toString());
       }
-    }
+    }, [alertNewOrder, alertUrgentOrder])
   });
-
-  const {
-    isConnected,
-    joinStation,
-    leaveStation,
-    markOrderStarted,
-    markOrderCompleted
-  } = useKDSWebSocket({
-    onOrderUpdate: () => {
-      loadOrders(); // Refresh orders on WebSocket update
-    },
-    onOrderDelete: () => {
-      loadOrders(); // Refresh when order is deleted
-    },
-    onStationUpdate: (_station, data) => {
+  
+  // WebSocket hook
+  const { isConnected, joinStation, leaveStation } = useKDSWebSocket({
+    onOrderUpdate: loadOrders,
+    onOrderDelete: loadOrders,
+    onStationUpdate: useCallback((_station, data) => {
       if (data.type === 'urgent' && data.orderId) {
         alertUrgentOrder(data.orderId);
       }
-    },
-    onConnectionChange: (connected) => {
+    }, [alertUrgentOrder]),
+    onConnectionChange: useCallback((connected) => {
       if (connected) {
         setError(null);
-        loadOrders(); // Reload when reconnected
+        loadOrders();
       }
-      // Don't set error here - use connectionError from hook
-    }
+    }, [setError, loadOrders])
   });
-
-  // Fullscreen hook
-  const { isFullscreen, toggleFullscreen } = useFullscreen();
-
-  // Filtered orders based on station - memoized for performance
+  
+  // Filtered orders
   const filteredOrders = useMemo(() => {
-    if (selectedStation === 'all') return orders;
+    if (selectedStation === STATION_ALL) return orders;
     return orders.filter(order => 
       order.items.some(item => item.station === selectedStation)
     );
   }, [orders, selectedStation]);
-
-  // Load stations
-  const loadStations = useCallback(async () => {
-    try {
-      const data: Station[] = navigator.onLine
-        ? await ApiService.get('/kds/stations')
-        : await offlineStorage.getAllStations();
-      setStations(data);
-    } catch (err) {
-      logger.error('Error loading stations', err, 'KDSMainPage');
-    }
-  }, []);
-
-  // Handle station change
+  
+  // Statistics
+  const stats = useMemo(() => ({
+    total: orders.length,
+    pendente: countByStatus(orders, ORDER_STATUS.PENDING),
+    preparando: countByStatus(orders, ORDER_STATUS.PREPARING),
+    pronto: countByStatus(orders, ORDER_STATUS.READY),
+  }), [orders]);
+  
+  // Handlers
   const handleStationChange = useCallback((station: string) => {
-    if (selectedStation !== 'all') {
+    if (selectedStation !== STATION_ALL) {
       leaveStation(selectedStation);
     }
     setSelectedStation(station);
-    if (station !== 'all') {
+    if (station !== STATION_ALL) {
       joinStation(station);
     }
   }, [selectedStation, joinStation, leaveStation]);
-
-  // Optimized button handlers to prevent re-renders
-  const handleRefreshClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    loadOrders();
-    e.currentTarget.blur();
-  }, [loadOrders]);
-
-  const handleFullscreenClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    toggleFullscreen();
-    e.currentTarget.blur();
-  }, [toggleFullscreen]);
-
-  const handleSoundToggleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    setSoundEnabled(prev => !prev);
-    e.currentTarget.blur();
-  }, []);
-
-  const handleThemeToggleClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    toggleTheme();
-    e.currentTarget.blur();
-  }, [toggleTheme]);
-
-  const handleShowHelpClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    setShowHelp(true);
-    e.currentTarget.blur();
-  }, []);
-
-  const handleCloseHelpClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    setShowHelp(false);
-    e.currentTarget.blur();
-  }, []);
-
-  // Handle order actions
+  
   const handleStartOrder = useCallback(async (orderId: string | number) => {
-    const orderIdString = orderId.toString();
-    await updateOrderStatus(orderId, 'preparing');
-    markOrderStarted(orderIdString);
-  }, [updateOrderStatus, markOrderStarted]);
-
+    await updateOrderStatus(orderId, ORDER_STATUS.PREPARING);
+  }, [updateOrderStatus]);
+  
   const handleCompleteOrder = useCallback(async (orderId: string | number) => {
-    const orderIdString = orderId.toString();
-    await updateOrderStatus(orderId, 'ready');
-    markOrderCompleted(orderIdString);
-    alertOrderReady(orderIdString);
-  }, [updateOrderStatus, markOrderCompleted, alertOrderReady]);
-
-  // Helper function to calculate elapsed minutes
-  const getMinutesElapsed = (createdAt: string | Date): number => {
-    const createdTime = new Date(createdAt).getTime();
-    return Math.floor((Date.now() - createdTime) / 60000);
-  };
-
+    await updateOrderStatus(orderId, ORDER_STATUS.READY);
+    alertOrderReady(orderId.toString());
+  }, [updateOrderStatus, alertOrderReady]);
+  
   // Keyboard shortcuts
   const shortcuts = useMemo(() => [
-    { key: 'ArrowUp', action: () => setSelectedOrderIndex(prev => Math.max(0, prev - 1)), description: 'Navegar para cima' },
-    { key: 'ArrowDown', action: () => setSelectedOrderIndex(prev => Math.min(filteredOrders.length - 1, prev + 1)), description: 'Navegar para baixo' },
-    { key: 'Enter', action: () => {
-      const order = filteredOrders[selectedOrderIndex];
-      if (order) handleStartOrder(order.id);
-    }, description: 'Iniciar pedido' },
-    { key: 'Space', action: () => {
-      const order = filteredOrders[selectedOrderIndex];
-      if (order) handleCompleteOrder(order.id);
-    }, description: 'Completar pedido' },
-    { key: 'r', action: () => { loadOrders(); }, description: 'Atualizar lista' },
-    { key: 'f', action: () => { toggleFullscreen(); }, description: 'Tela cheia' },
-    { key: 'm', action: () => setSoundEnabled(prev => !prev), description: 'Som ligado/desligado' },
-    { key: 'h', action: () => setShowHelp(prev => !prev), description: 'Mostrar ajuda' },
-    { key: 'Escape', action: () => setShowHelp(false), description: 'Fechar' }
+    { 
+      key: KEYBOARD_SHORTCUTS.ARROW_UP, 
+      action: () => setSelectedOrderIndex(prev => Math.max(0, prev - 1)) 
+    },
+    { 
+      key: KEYBOARD_SHORTCUTS.ARROW_DOWN, 
+      action: () => setSelectedOrderIndex(prev => Math.min(filteredOrders.length - 1, prev + 1)) 
+    },
+    { 
+      key: KEYBOARD_SHORTCUTS.ENTER, 
+      action: () => {
+        const order = filteredOrders[selectedOrderIndex];
+        if (order) handleStartOrder(order.id);
+      }
+    },
+    { 
+      key: KEYBOARD_SHORTCUTS.SPACE, 
+      action: () => {
+        const order = filteredOrders[selectedOrderIndex];
+        if (order) handleCompleteOrder(order.id);
+      }
+    },
+    { key: KEYBOARD_SHORTCUTS.REFRESH, action: loadOrders },
+    { key: KEYBOARD_SHORTCUTS.FULLSCREEN, action: toggleFullscreen },
+    { key: KEYBOARD_SHORTCUTS.SOUND_TOGGLE, action: () => setSoundEnabled(prev => !prev) },
+    { key: KEYBOARD_SHORTCUTS.THEME, action: toggleTheme },
+    { key: KEYBOARD_SHORTCUTS.HELP, action: () => setShowHelp(prev => !prev) },
+    { key: KEYBOARD_SHORTCUTS.ESCAPE, action: () => setShowHelp(false) }
   ], [
     filteredOrders, 
     selectedOrderIndex, 
     handleStartOrder, 
     handleCompleteOrder,
     loadOrders,
-    toggleFullscreen
+    toggleFullscreen,
+    toggleTheme
   ]);
-
+  
   useKeyboardShortcuts(shortcuts);
-
-  // Initial load and periodic refresh
+  
+  // Check for delayed orders periodically
   useEffect(() => {
-    loadStations();
-    loadOrders();
-    
-    const interval = setInterval(() => {
-      loadOrders();
-      setLastUpdate(new Date());
-    }, AUTO_REFRESH_INTERVAL);
-    
-    return () => clearInterval(interval);
-  }, [loadStations, loadOrders]);
-
-  // Check delayed orders
-  useEffect(() => {
-    const checkDelayedOrders = () => {
+    const checkDelayed = () => {
       orders.forEach(order => {
-        const minutesElapsed = getMinutesElapsed(order.created_at);
-        
-        if (minutesElapsed > DELAYED_ORDER_THRESHOLD_MINUTES && order.status === 'pending') {
-          alertOrderDelayed(order.id.toString(), minutesElapsed);
+        if (isDelayed(order.created_at, THRESHOLDS.DELAYED_ORDER_MINUTES, order.status)) {
+          alertOrderDelayed(order.id.toString(), getMinutesElapsed(order.created_at));
         }
       });
     };
-
-    const delayInterval = setInterval(checkDelayedOrders, DELAYED_ORDER_CHECK_INTERVAL);
-    return () => clearInterval(delayInterval);
+    
+    const interval = setInterval(checkDelayed, TIME_INTERVALS.DELAYED_CHECK);
+    return () => clearInterval(interval);
   }, [orders, alertOrderDelayed]);
-
+  
+  // Transform order for card (simplified)
+  const transformOrderForCard = useCallback((order: Order): any => ({
+    id: order.id,
+    created_at: order.created_at,
+    priority: order.priority,
+    type: order.type || 'table',
+    table_number: order.table_number,
+    customer_name: order.customer_name,
+    items: order.items.map(item => ({
+      id: item.item_id,
+      name: item.name,
+      quantity: item.quantity,
+      notes: item.notes,
+      status: item.status
+    }))
+  }), []);
+  
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-40">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Kitchen Display
-              </h1>
-              <Select
-                value={selectedStation}
-                options={[
-                  { value: 'all', label: 'Todas as Estações' },
-                  ...stations.map(s => ({ value: s.id, label: s.name }))
-                ]}
-                onChange={(e) => handleStationChange(e.target.value)}
-                className="w-48"
-              />
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              {/* Connection Status */}
-              <Badge
-                variant={isConnected ? 'success' : 'danger'}
-                className="flex items-center gap-1"
-              >
-                <FaWifi className="w-3 h-3" />
-                {isConnected ? 'Online' : 'Offline'}
-              </Badge>
-              
-              {/* Statistics */}
-              <div className="flex items-center space-x-2 text-sm">
-                <Badge variant="info">Total: {stats.total}</Badge>
-                <Badge variant="warning">Pendente: {stats.pending}</Badge>
-                <Badge variant="info">Preparando: {stats.preparing}</Badge>
-                <Badge variant="success">Pronto: {stats.ready}</Badge>
-              </div>
-              
-              {/* Action Buttons */}
-              <Button
-                onClick={handleRefreshClick}
-                size="sm"
-                variant="secondary"
-                disabled={loading}
-                aria-label="Atualizar pedidos"
-                title="Atualizar pedidos (R)"
-              >
-                <FaSync className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              </Button>
-              
-              <Button
-                onClick={handleFullscreenClick}
-                size="sm"
-                variant="secondary"
-                aria-label={isFullscreen ? "Sair da tela cheia" : "Entrar em tela cheia"}
-                title={isFullscreen ? "Sair da tela cheia (F)" : "Tela cheia (F)"}
-              >
-                {isFullscreen ? <FaCompress /> : <FaExpand />}
-              </Button>
-              
-              <Button
-                onClick={handleSoundToggleClick}
-                size="sm"
-                variant="secondary"
-                aria-label={soundEnabled ? "Desativar som" : "Ativar som"}
-                title={soundEnabled ? "Desativar som (M)" : "Ativar som (M)"}
-              >
-                {soundEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
-              </Button>
-              
-              <Button
-                onClick={handleThemeToggleClick}
-                size="sm"
-                variant="secondary"
-                aria-label={themeMode === 'dark' ? "Mudar para modo claro" : "Mudar para modo escuro"}
-                title={themeMode === 'dark' ? "Modo claro" : "Modo escuro"}
-              >
-                {themeMode === 'dark' ? <FaSun /> : <FaMoon />}
-              </Button>
-              
-              <Button
-                onClick={handleShowHelpClick}
-                size="sm"
-                variant="secondary"
-                aria-label="Mostrar atalhos do teclado"
-                title="Atalhos do teclado (H)"
-              >
-                <FaKeyboard />
-              </Button>
-              
-              <Button
-                onClick={handleShowHelpClick}
-                size="sm"
-                variant="secondary"
-                aria-label="Abrir configurações"
-                title="Configurações"
-              >
-                <FaCog />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Error Display */}
-      {(error || !isConnected) && (
-        <div className="bg-amber-500 text-white px-4 py-2 flex items-center justify-center">
-          <FaExclamationTriangle className="mr-2" />
-          {error || 'Sistema offline. Operando em modo local.'}
+      <KDSHeader
+        selectedStation={selectedStation}
+        stations={stations}
+        stats={stats}
+        isConnected={isConnected}
+        isLoading={loading}
+        soundEnabled={soundEnabled}
+        themeMode={themeMode}
+        isFullscreen={isFullscreen}
+        onStationChange={handleStationChange}
+        onRefresh={loadOrders}
+        onToggleFullscreen={toggleFullscreen}
+        onToggleSound={() => setSoundEnabled(prev => !prev)}
+        onToggleTheme={toggleTheme}
+        onShowHelp={() => setShowHelp(true)}
+      />
+      
+      {/* Connection Error Display - Fixed */}
+      {!isConnected && (
+        <div className="bg-amber-500 text-white px-4 py-2 text-center sticky top-[73px] z-30">
+          Sem conexão com o servidor - Modo offline ativo
         </div>
       )}
-
+      
       {/* Main Content */}
-      <main className="p-4 pb-12">
+      <main className="p-4 pb-16 overflow-x-auto min-h-screen">
         {loading && filteredOrders.length === 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, i) => (
-              <OrderCardSkeleton key={i} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <OrderSkeleton key={i} />
             ))}
           </div>
         ) : filteredOrders.length === 0 ? (
@@ -376,18 +429,18 @@ const KDSMainPage = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <Suspense fallback={<OrderCardSkeleton />}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <Suspense fallback={<OrderSkeleton />}>
               {filteredOrders.map((order, index) => (
                 <div
                   key={order.id}
-                  className={`relative ${index === selectedOrderIndex ? 'ring-2 ring-primary-500 ring-offset-2 rounded-lg' : ''}`}
+                  className={index === selectedOrderIndex ? 'ring-2 ring-primary-500 ring-offset-2 rounded-lg' : ''}
                 >
                   <OrderCard
                     order={transformOrderForCard(order)}
-                    onStatusChange={(orderId, status) => updateOrderStatus(orderId, status)}
-                    onItemStatusChange={(orderId, itemId, status) => updateItemStatus(orderId, itemId, status)}
-                    nextStatus={order.status === 'pending' ? 'preparing' : 'ready'}
+                    onStatusChange={updateOrderStatus}
+                    onItemStatusChange={updateItemStatus}
+                    nextStatus={order.status === ORDER_STATUS.PENDING ? ORDER_STATUS.PREPARING : ORDER_STATUS.READY}
                   />
                 </div>
               ))}
@@ -395,128 +448,52 @@ const KDSMainPage = () => {
           </div>
         )}
       </main>
-
+      
       {/* Alert System */}
       <Suspense fallback={null}>
-        <AlertSystem
-          alerts={alerts}
-          onAlertClose={removeAlert}
-        />
+        <AlertSystem alerts={alerts} onAlertClose={removeAlert} />
       </Suspense>
-
+      
       {/* Help Modal */}
-      {showHelp && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-              Atalhos do Teclado
-            </h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">↑↓</span>
-                <span className="text-gray-900 dark:text-white">Navegar pedidos</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Enter</span>
-                <span className="text-gray-900 dark:text-white">Iniciar pedido</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Space</span>
-                <span className="text-gray-900 dark:text-white">Completar pedido</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">R</span>
-                <span className="text-gray-900 dark:text-white">Atualizar lista</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">F</span>
-                <span className="text-gray-900 dark:text-white">Tela cheia</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">M</span>
-                <span className="text-gray-900 dark:text-white">Som ligado/desligado</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Esc</span>
-                <span className="text-gray-900 dark:text-white">Fechar</span>
-              </div>
-            </div>
-            <Button
-              onClick={handleCloseHelpClick}
-              className="mt-4 w-full"
-            >
-              Fechar
-            </Button>
+      <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
+      
+      {/* Footer with Keyboard Shortcuts */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-4 py-2">
+        <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-4">
+            <span>Estação: {selectedStation === STATION_ALL ? 'Todas' : selectedStation}</span>
+            <span className="hidden md:inline">Atualizado: {formatTime(lastUpdate)}</span>
+          </div>
+          <div className="hidden md:flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">↑↓</kbd>
+              Navegar
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">Enter</kbd>
+              Iniciar
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">Space</kbd>
+              Completar
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">R</kbd>
+              Atualizar
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">F</kbd>
+              Tela Cheia
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-gray-100 border border-gray-200 rounded dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">H</kbd>
+              Ajuda
+            </span>
           </div>
         </div>
-      )}
-
-      {/* Footer with Keyboard Shortcuts and Status */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-4 py-2">
-        <div className="flex justify-between items-center">
-          {/* Keyboard Shortcuts */}
-          <div className="text-xs text-gray-500 dark:text-gray-400 space-x-4">
-            <span>F1: Ajuda</span>
-            <span>F5: Atualizar</span>
-            <span>F11: Tela Cheia</span>
-            <span>Tab: Navegar</span>
-            <span>Enter: Selecionar</span>
-            <span>Espaço: Concluir Item</span>
-          </div>
-          
-          {/* System Status */}
-          <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
-            {/* Connection Status */}
-            <div className="flex items-center space-x-1">
-              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span>{isConnected ? 'Online' : 'Offline'}</span>
-            </div>
-            
-            {/* Station Info */}
-            <span>Estação: {selectedStation === 'all' ? 'Todas' : selectedStation}</span>
-            
-            {/* Last Update */}
-            <span>Atualizado: {lastUpdate.toLocaleTimeString()}</span>
-          </div>
-        </div>
-      </div>
+      </footer>
     </div>
   );
 };
-
-// Helper function to transform order data for OrderCard
-interface OrderCardData {
-  id: string | number;
-  created_at: string;
-  priority: string;
-  type: string;
-  table_number?: string | number;
-  customer_name?: string;
-  items: Array<{
-    id: string | number;
-    name: string;
-    quantity: number;
-    notes?: string;
-    status: string;
-  }>;
-}
-
-function transformOrderForCard(order: Order): OrderCardData {
-  return {
-    id: order.id,
-    created_at: order.created_at,
-    priority: order.priority,
-    type: order.type || 'table',
-    ...(order.table_number && { table_number: order.table_number }),
-    items: order.items.map((item: OrderItem) => ({
-      id: item.item_id,
-      name: item.name,
-      quantity: item.quantity,
-      ...(item.notes && { notes: item.notes }),
-      status: item.status
-    })),
-    ...(order.customer_name && { customer_name: order.customer_name })
-  };
-}
 
 export default KDSMainPage;

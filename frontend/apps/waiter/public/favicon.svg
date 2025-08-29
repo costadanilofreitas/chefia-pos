@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background -->
+  <rect width="32" height="32" rx="4" fill="#3b82f6"/>
+  
+  <!-- Waiter Icon -->
+  <!-- Head -->
+  <circle cx="16" cy="9" r="3" fill="#ffffff"/>
+  
+  <!-- Body/Uniform -->
+  <path d="M 11 13 Q 11 11 13 11 L 19 11 Q 21 11 21 13 L 21 20 Q 21 22 19 22 L 13 22 Q 11 22 11 20 Z" fill="#ffffff"/>
+  
+  <!-- Bow tie -->
+  <path d="M 13 12 L 16 13 L 19 12 L 19 14 L 16 13 L 13 14 Z" fill="#1e40af"/>
+  
+  <!-- Tray (hand holding serving tray) -->
+  <rect x="7" y="18" width="10" height="1" fill="#ffffff"/>
+  <circle cx="9" cy="17" r="1.5" fill="#fbbf24"/> <!-- Plate/dish -->
+  <circle cx="12" cy="17" r="1" fill="#ef4444"/> <!-- Glass -->
+  <circle cx="15" cy="17" r="1.2" fill="#34d399"/> <!-- Food item -->
+  
+  <!-- Arm holding tray -->
+  <rect x="11" y="16" width="5" height="2" rx="1" fill="#ffffff"/>
+  
+  <!-- W letter overlay for Waiter -->
+  <text x="16" y="27" font-family="Arial, sans-serif" font-size="6" font-weight="bold" text-anchor="middle" fill="#ffffff">W</text>
+</svg>

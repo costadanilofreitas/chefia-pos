@@ -1,4 +1,5 @@
-import { ApiClient } from '@common/services/apiClient';
+import { apiService, ApiResponse } from './api';
+import { API_CONFIG } from '../config/api';
 
 export interface Table {
   id: number;
@@ -19,6 +20,16 @@ export interface OrderItem {
   notes?: string;
 }
 
+export interface MenuItem {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  category_id: number;
+  available: boolean;
+  image_url?: string;
+}
+
 export interface Order {
   id: number;
   table_id: number;
@@ -33,12 +44,8 @@ export interface Order {
  * Service for managing waiter operations
  */
 export class WaiterService {
-  private apiClient: ApiClient;
-
   constructor() {
-    // Use the base URL from environment or default to /api
-    const baseURL = process.env['REACT_APP_API_URL'] || '/api';
-    this.apiClient = new ApiClient(`${baseURL}/waiter`);
+    // Service initialized
   }
 
   /**
@@ -46,18 +53,13 @@ export class WaiterService {
    * @returns Promise with tables data
    */
   async getTables(): Promise<Table[]> {
-    try {
-      const response = await this.apiClient.get<{success: boolean, data: Table[]}>('/tables');
-      
-      if (response.data && response.data.success) {
-        return response.data.data;
-      }
-      
-      throw new Error('Failed to fetch tables');
-    } catch (error) {
-      console.error('Error fetching tables:', error);
-      throw error;
+    const response = await apiService.get<ApiResponse<Table[]>>(API_CONFIG.ENDPOINTS.WAITER.TABLES);
+    
+    if (response && response.success) {
+      return response.data;
     }
+    
+    throw new Error('Failed to fetch tables');
   }
 
   /**
@@ -65,18 +67,13 @@ export class WaiterService {
    * @returns Promise with orders data
    */
   async getOrders(): Promise<Order[]> {
-    try {
-      const response = await this.apiClient.get<{success: boolean, data: Order[]}>('/orders');
-      
-      if (response.data && response.data.success) {
-        return response.data.data;
-      }
-      
-      throw new Error('Failed to fetch orders');
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      throw error;
+    const response = await apiService.get<ApiResponse<Order[]>>(API_CONFIG.ENDPOINTS.WAITER.ORDERS);
+    
+    if (response && response.success) {
+      return response.data;
     }
+    
+    throw new Error('Failed to fetch orders');
   }
 
   /**
@@ -85,18 +82,13 @@ export class WaiterService {
    * @returns Promise with table orders data
    */
   async getOrdersByTable(tableId: number): Promise<Order[]> {
-    try {
-      const response = await this.apiClient.get<{success: boolean, data: Order[]}>(`/tables/${tableId}/orders`);
-      
-      if (response.data && response.data.success) {
-        return response.data.data;
-      }
-      
-      throw new Error(`Failed to fetch orders for table ${tableId}`);
-    } catch (error) {
-      console.error(`Error fetching orders for table ${tableId}:`, error);
-      throw error;
+    const response = await apiService.get<ApiResponse<Order[]>>(API_CONFIG.ENDPOINTS.WAITER.TABLE_ORDERS(tableId));
+    
+    if (response && response.success) {
+      return response.data;
     }
+    
+    throw new Error(`Failed to fetch orders for table ${tableId}`);
   }
 
   /**
@@ -106,20 +98,15 @@ export class WaiterService {
    * @returns Promise with the created order
    */
   async createOrder(tableId: number, items: Omit<OrderItem, 'id' | 'status'>[]): Promise<Order> {
-    try {
-      const response = await this.apiClient.post<{success: boolean, data: Order}>(`/tables/${tableId}/orders`, {
-        items
-      });
-      
-      if (response.data && response.data.success) {
-        return response.data.data;
-      }
-      
-      throw new Error('Failed to create order');
-    } catch (error) {
-      console.error('Error creating order:', error);
-      throw error;
+    const response = await apiService.post<ApiResponse<Order>>(API_CONFIG.ENDPOINTS.WAITER.CREATE_ORDER(tableId), {
+      items
+    });
+    
+    if (response && response.success) {
+      return response.data;
     }
+    
+    throw new Error('Failed to create order');
   }
 
   /**
@@ -129,16 +116,11 @@ export class WaiterService {
    * @returns Promise with update result
    */
   async updateTableStatus(tableId: number, status: Table['status']): Promise<boolean> {
-    try {
-      const response = await this.apiClient.put<{success: boolean}>(`/tables/${tableId}/status`, {
-        status
-      });
-      
-      return response.data && response.data.success;
-    } catch (error) {
-      console.error(`Error updating table ${tableId} status:`, error);
-      throw error;
-    }
+    const response = await apiService.put<ApiResponse<null>>(API_CONFIG.ENDPOINTS.WAITER.UPDATE_TABLE_STATUS(tableId), {
+      status
+    });
+    
+    return response && response.success;
   }
 
   /**
@@ -148,35 +130,25 @@ export class WaiterService {
    * @returns Promise with update result
    */
   async deliverOrderItems(orderId: number, itemIds: number[]): Promise<boolean> {
-    try {
-      const response = await this.apiClient.put<{success: boolean}>(`/orders/${orderId}/deliver`, {
-        item_ids: itemIds
-      });
-      
-      return response.data && response.data.success;
-    } catch (error) {
-      console.error(`Error marking items as delivered for order ${orderId}:`, error);
-      throw error;
-    }
+    const response = await apiService.put<ApiResponse<null>>(API_CONFIG.ENDPOINTS.WAITER.DELIVER_ITEMS(orderId), {
+      item_ids: itemIds
+    });
+    
+    return response && response.success;
   }
 
   /**
    * Get menu categories and items
    * @returns Promise with menu data
    */
-  async getMenu(): Promise<{categories: {id: number, name: string}[], items: any[]}> {
-    try {
-      const response = await this.apiClient.get<{success: boolean, data: {categories: any[], items: any[]}}>('/menu');
-      
-      if (response.data && response.data.success) {
-        return response.data.data;
-      }
-      
-      throw new Error('Failed to fetch menu');
-    } catch (error) {
-      console.error('Error fetching menu:', error);
-      throw error;
+  async getMenu(): Promise<{categories: {id: number, name: string}[], items: MenuItem[]}> {
+    const response = await apiService.get<ApiResponse<{categories: {id: number, name: string}[], items: MenuItem[]}>>(API_CONFIG.ENDPOINTS.WAITER.MENU);
+    
+    if (response && response.success) {
+      return response.data;
     }
+    
+    throw new Error('Failed to fetch menu');
   }
 }
 
