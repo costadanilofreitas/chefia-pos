@@ -3,8 +3,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { useAuth } from '../hooks/mocks/useAuth';
 import { useCashier } from '../hooks/mocks/useCashier';
 import { useOrder } from '../hooks/mocks/useOrder';
-import PrinterService from '../services/PrinterService';
-import POSPaymentPage from '../ui/PaymentPage';
+import PrinterService from '../../src/services/PrinterService';
+import POSPaymentPage from '../../src/ui/PaymentPage';
 
 // Mocking hooks and services
 jest.mock('../hooks/mocks/useAuth');

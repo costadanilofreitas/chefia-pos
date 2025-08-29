@@ -1,11 +1,16 @@
-import { UserRole, Permission, User, LoginCredentials } from '../useAuth';
+import {
+  LoginCredentials,
+  Permission,
+  User,
+  UserRole,
+} from "../../src/hooks/useAuth";
 
 export const useAuth = () => ({
   user: {
-    id: 'test-user-1',
-    operator_id: 'test-operator',
-    username: 'test-operator',
-    name: 'Test User',
+    id: "test-user-1",
+    operator_id: "test-operator",
+    username: "test-operator",
+    name: "Test User",
     role: UserRole.CASHIER,
     permissions: [Permission.SALE_CREATE, Permission.PRODUCT_READ],
     requirePasswordChange: false,
@@ -15,10 +20,10 @@ export const useAuth = () => ({
   error: null,
   login: async (credentials: LoginCredentials): Promise<User> => {
     return {
-      id: 'test-user-1',
+      id: "test-user-1",
       operator_id: credentials.operator_id,
       username: credentials.operator_id,
-      name: 'Test User',
+      name: "Test User",
       role: UserRole.CASHIER,
       permissions: [Permission.SALE_CREATE, Permission.PRODUCT_READ],
       requirePasswordChange: false,

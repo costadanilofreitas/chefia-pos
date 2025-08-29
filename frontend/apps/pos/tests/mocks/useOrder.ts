@@ -1,25 +1,25 @@
+import { UseOrderReturn } from "../../src/hooks/useOrder";
 import {
   Order,
   OrderCreate,
-  OrderUpdate,
-  OrderItemCreate,
   OrderFilters,
+  OrderItemCreate,
   OrderStatus,
   OrderType,
+  OrderUpdate,
   PaymentMethod,
-  PaymentStatus
-} from '../../types/order';
-import { UseOrderReturn } from '../useOrder';
+  PaymentStatus,
+} from "../../src/types/order";
 
 export const useOrder = (): UseOrderReturn => ({
   // Estado dos pedidos
   orders: [],
   currentOrder: {
-    id: 'test-order-1',
-    table_id: 'table-1',
-    terminal_id: 'terminal-1',
+    id: "test-order-1",
+    table_id: "table-1",
+    terminal_id: "terminal-1",
     seat_number: 1,
-    customer_name: 'Test Customer',
+    customer_name: "Test Customer",
     items: [],
     total: 0,
     total_amount: 0,
@@ -27,22 +27,22 @@ export const useOrder = (): UseOrderReturn => ({
     status: OrderStatus.PENDING,
     payment_method: null,
     payment_status: PaymentStatus.PENDING,
-    source: 'pos',
+    source: "pos",
     notes: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     waiter_name: null,
   },
-  
+
   // Estado do carrinho local
   cart: [],
   cartTotal: 0,
-  
+
   // Estados de loading
   loading: false,
   creating: false,
   updating: false,
-  
+
   // Estado de erro
   error: null,
 
@@ -52,7 +52,7 @@ export const useOrder = (): UseOrderReturn => ({
   },
   createOrder: async (orderData: OrderCreate): Promise<Order | null> => {
     return {
-      id: 'test-order-1',
+      id: "test-order-1",
       table_id: orderData.table_id,
       terminal_id: orderData.terminal_id,
       seat_number: orderData.seat_number,
@@ -82,16 +82,22 @@ export const useOrder = (): UseOrderReturn => ({
       waiter_name: null,
     };
   },
-  updateOrder: async (__orderId: string, _updateData: OrderUpdate): Promise<Order | null> => {
+  updateOrder: async (
+    __orderId: string,
+    _updateData: OrderUpdate
+  ): Promise<Order | null> => {
     return null;
   },
-  cancelOrder: async (__orderId: string, _reason: string): Promise<Order | null> => {
+  cancelOrder: async (
+    __orderId: string,
+    _reason: string
+  ): Promise<Order | null> => {
     return null;
   },
   completeOrder: async (_orderId: string): Promise<Order | null> => {
     return null;
   },
-  
+
   // Operações de carrinho local
   addToCart: (_item: OrderItemCreate): void => {
     // Mock implementation
@@ -99,18 +105,24 @@ export const useOrder = (): UseOrderReturn => ({
   removeFromCart: (_index: number): void => {
     // Mock implementation
   },
-  updateCartItem: (_index: number, _updates: Partial<OrderItemCreate>): void => {
+  updateCartItem: (
+    _index: number,
+    _updates: Partial<OrderItemCreate>
+  ): void => {
     // Mock implementation
   },
   clearCart: (): void => {
     // Mock implementation
   },
-  
+
   // Finalização
-  finalizeOrder: async (__orderId: string, _paymentMethod: PaymentMethod): Promise<Order | null> => {
+  finalizeOrder: async (
+    __orderId: string,
+    _paymentMethod: PaymentMethod
+  ): Promise<Order | null> => {
     return null;
   },
-  
+
   // Utilitários
   setCurrentOrder: (_order: Order | null): void => {
     // Mock implementation

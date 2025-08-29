@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import POSMainPage from '../ui/MainPage';
+import POSMainPage from '../../src/ui/MainPage';
 
 // Mock hooks directly
 jest.mock('../hooks/mocks/useOrder', () => ({

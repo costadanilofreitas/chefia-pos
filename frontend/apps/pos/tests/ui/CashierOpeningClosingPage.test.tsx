@@ -1,4 +1,4 @@
-import CashierOpeningClosingPage from '../ui/CashierOpeningClosingPage';
+import CashierOpeningClosingPage from '../../src/ui/CashierOpeningClosingPage';
 
 // Simple test that doesn't render the complex component
 describe('CashierOpeningClosingPage', () => {

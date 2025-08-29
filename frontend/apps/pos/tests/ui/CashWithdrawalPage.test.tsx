@@ -1,4 +1,4 @@
-import CashWithdrawalPage from '../ui/CashWithdrawalPage';
+import CashWithdrawalPage from '../../src/ui/CashWithdrawalPage';
 
 // Simple test that doesn't render the complex component
 describe('CashWithdrawalPage', () => {

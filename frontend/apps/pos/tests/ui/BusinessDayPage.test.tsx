@@ -1,4 +1,4 @@
-import BusinessDayPage from '../ui/BusinessDayPage';
+import BusinessDayPage from '../../src/ui/BusinessDayPage';
 
 // Simple test that doesn't render the complex component
 describe('BusinessDayPage', () => {

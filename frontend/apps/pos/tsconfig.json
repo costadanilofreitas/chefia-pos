@@ -37,11 +37,11 @@
       "@common/*": ["../../common/src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "tests"],
   "exclude": [
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
-    "src/tests/**/*"
+    "tests/**/*"
   ],
   "references": [{ "path": "../../common/tsconfig.json" }]
 }

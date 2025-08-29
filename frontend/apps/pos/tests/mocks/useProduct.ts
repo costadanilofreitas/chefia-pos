@@ -1,4 +1,4 @@
-import { Category, Product } from "../useProduct";
+import { Category, Product } from "../../src/hooks/useProduct";
 
 export const useProduct = () => ({
   products: [

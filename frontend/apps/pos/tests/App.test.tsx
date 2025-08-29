@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import App from '../App';
+import App from '../src/App';
 
 // Mock all the hooks and components
 jest.mock('../hooks/mocks/useAuth', () => ({
