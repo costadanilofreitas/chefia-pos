@@ -62,12 +62,20 @@ export function useFullscreen() {
   }, []);
 
   const toggleFullscreen = useCallback(async () => {
-    if (isFullscreen) {
+    // Use document check instead of state to avoid stale closure
+    const doc = document as DocumentWithFullscreen;
+    const fullscreenElement = 
+      doc.fullscreenElement ||
+      doc.webkitFullscreenElement ||
+      doc.mozFullScreenElement ||
+      doc.msFullscreenElement;
+    
+    if (fullscreenElement) {
       await exitFullscreen();
     } else {
       await enterFullscreen();
     }
-  }, [isFullscreen, enterFullscreen, exitFullscreen]);
+  }, [enterFullscreen, exitFullscreen]); // Removed isFullscreen dependency
 
   // Listen for fullscreen changes
   useEffect(() => {

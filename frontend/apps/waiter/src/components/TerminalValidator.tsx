@@ -98,7 +98,6 @@ export const TerminalValidator: React.FC<TerminalValidatorProps> = ({ children }
           setRequestedTerminal(id.toString());
           setTerminalNotFound(true);
           setIsValidating(false);
-          console.log('Waiter Terminal not in available list', { terminalId: id });
           return;
         }
 
@@ -113,7 +112,6 @@ export const TerminalValidator: React.FC<TerminalValidatorProps> = ({ children }
             // Terminal config doesn't exist
             setTerminalNotFound(true);
             setIsValidating(false);
-            console.log('Waiter Terminal config not found', { terminalId: id });
             return;
           }
           
@@ -121,10 +119,6 @@ export const TerminalValidator: React.FC<TerminalValidatorProps> = ({ children }
           
           // IMPORTANT: Verify the config is for the correct terminal
           if (config.terminalId !== id) {
-            console.error('Waiter Terminal ID mismatch', { 
-              requested: id, 
-              received: config.terminalId 
-            });
             setTerminalNotFound(true);
             setIsValidating(false);
             return;
@@ -145,27 +139,15 @@ export const TerminalValidator: React.FC<TerminalValidatorProps> = ({ children }
           (window as unknown as Record<string, unknown>)['WAITER_TERMINAL_CONFIG'] = config;
           
           setTerminalConfig(config);
-          console.log('Waiter Terminal validated', { 
-            terminalId: id, 
-            terminalName: config.terminalName,
-            serviceArea: config.serviceArea,
-            tableRange: config.tableRange 
-          });
-          
           setIsValidating(false);
         } catch (fetchError) {
           // Error loading config file
           setTerminalNotFound(true);
           setIsValidating(false);
-          console.error('Failed to load Waiter terminal config', { 
-            terminalId: id, 
-            error: fetchError 
-          });
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Erro ao validar terminal Garçom';
         setError(errorMessage);
-        console.error('Waiter Terminal validation failed', { error: errorMessage, terminalId });
         setIsValidating(false);
       }
     };

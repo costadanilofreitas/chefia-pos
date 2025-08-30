@@ -137,6 +137,10 @@ export const CartProvider: React.FC<CartProviderProps> = ({
     });
   }, []);
 
+  const removeItem = useCallback((itemId: string) => {
+    setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
+  }, []);
+
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
     if (quantity <= 0) {
       removeItem(itemId);
@@ -157,11 +161,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({
         return item;
       })
     );
-  }, []);
-
-  const removeItem = useCallback((itemId: string) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
-  }, []);
+  }, [removeItem]); // Add removeItem as dependency since it's called conditionally
 
   const clearCart = useCallback(() => {
     setCartItems([]);

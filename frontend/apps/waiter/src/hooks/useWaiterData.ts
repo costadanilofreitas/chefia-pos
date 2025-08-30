@@ -99,16 +99,35 @@ export function useWaiterData({
     );
   }, [isOnline]);
   
-  // Load all data
+  // Load all data - stable reference
   const loadAllData = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     setError(null);
     
     try {
+      // Direct calls to avoid dependencies
       const [tablesData, ordersData, menuData] = await Promise.all([
-        loadTables(),
-        loadOrders(),
-        loadMenu()
+        loadDataWithFallback(
+          () => waiterService.getTables(),
+          () => offlineStorage.getTables(),
+          (table) => offlineStorage.saveTable(table),
+          navigator.onLine
+        ),
+        loadDataWithFallback(
+          () => waiterService.getOrders(),
+          () => offlineStorage.getOrders(),
+          (order) => offlineStorage.saveOrder(order),
+          navigator.onLine
+        ),
+        loadDataWithFallback(
+          async () => {
+            const menuData = await waiterService.getMenu();
+            return menuData.items;
+          },
+          () => offlineStorage.getMenu(),
+          (item) => offlineStorage.saveMenuItem(item),
+          navigator.onLine
+        )
       ]);
       
       setTables(tablesData);
@@ -124,7 +143,8 @@ export function useWaiterData({
     } finally {
       if (showLoading) setLoading(false);
     }
-  }, [loadTables, loadOrders, loadMenu]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty to ensure stable reference
   
   // Update table status
   const updateTableStatus = useCallback(async (
@@ -151,11 +171,14 @@ export function useWaiterData({
         });
       }
       
-      // Update offline storage
-      const table = tables.find(t => t.id === tableId);
-      if (table) {
-        await offlineStorage.saveTable({ ...table, status });
-      }
+      // Update offline storage using functional update
+      setTables(prev => {
+        const table = prev.find(t => t.id === tableId);
+        if (table) {
+          offlineStorage.saveTable({ ...table, status });
+        }
+        return prev;
+      });
       
       logger.logTableEvent('status_updated', tableId, { status });
     } catch (err) {
@@ -163,7 +186,8 @@ export function useWaiterData({
       logger.error(`Failed to update table ${tableId} status`, err, 'useWaiterData');
       throw err;
     }
-  }, [isOnline, tables]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline]); // tables removed to avoid stale closure
   
   // Create order (simplified)
   const createOrder = useCallback(async (
@@ -274,7 +298,11 @@ export function useWaiterData({
     const handleOnline = () => {
       setIsOnline(true);
       logger.info('Connection restored', 'useWaiterData');
-      loadAllData(false);
+      // Call loadAllData directly to avoid dependency
+      loadTables().then(setTables);
+      loadOrders().then(setOrders);
+      loadMenu().then(setMenu);
+      setLastSync(new Date());
     };
     
     const handleOffline = () => {
@@ -289,12 +317,14 @@ export function useWaiterData({
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [loadAllData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // No dependencies to prevent re-registering
   
   // Initial load
   useEffect(() => {
     loadAllData();
-  }, [loadAllData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally run only once on mount
   
   // Auto refresh
   useEffect(() => {
@@ -305,7 +335,8 @@ export function useWaiterData({
     }, refreshInterval);
     
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, isOnline, loadAllData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRefresh, refreshInterval, isOnline]); // loadAllData excluded to prevent re-render loops
   
   return {
     // Data

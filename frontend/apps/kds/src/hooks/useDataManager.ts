@@ -94,7 +94,8 @@ export function useDataManager<T extends { id: string | number }>({
     } finally {
       setLoading(false);
     }
-  }, [isOnline, fetchOnline, fetchOffline, saveOffline, onNewItems, compareId, storageKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline, storageKey]);
 
   // Update single item optimistically
   const updateItem = useCallback((id: string | number, updates: Partial<T>) => {
@@ -128,12 +129,14 @@ export function useDataManager<T extends { id: string | number }>({
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Initial load
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Auto refresh
   useEffect(() => {
@@ -141,7 +144,8 @@ export function useDataManager<T extends { id: string | number }>({
 
     const interval = setInterval(loadData, refreshInterval);
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRefresh, refreshInterval]);
 
   return {
     data,

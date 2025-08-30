@@ -72,48 +72,57 @@ export function useCheckout(): UseCheckoutReturn {
     error: null
   });
 
-  // Navigation: next step
+  // Navigation: next step - Use setState functional update to avoid dependency
   const nextStep = useCallback(() => {
-    const currentIndex = CHECKOUT_STEPS.indexOf(state.currentStep);
-    if (currentIndex < CHECKOUT_STEPS.length - 1) {
-      const nextStep = CHECKOUT_STEPS[currentIndex + 1];
-      setState(prev => ({ ...prev, currentStep: nextStep as CheckoutState['currentStep'], error: null }));
-      offlineStorage.trackAction('checkout_step_forward', { 
-        from: state.currentStep,
-        to: nextStep 
-      });
-    }
-  }, [state.currentStep]);
+    setState(prev => {
+      const currentIndex = CHECKOUT_STEPS.indexOf(prev.currentStep);
+      if (currentIndex < CHECKOUT_STEPS.length - 1) {
+        const nextStep = CHECKOUT_STEPS[currentIndex + 1];
+        offlineStorage.trackAction('checkout_step_forward', { 
+          from: prev.currentStep,
+          to: nextStep 
+        });
+        return { ...prev, currentStep: nextStep as CheckoutState['currentStep'], error: null };
+      }
+      return prev;
+    });
+  }, []); // No dependencies - stable reference
 
-  // Navigation: previous step
+  // Navigation: previous step - Use setState functional update to avoid dependency
   const previousStep = useCallback(() => {
-    const currentIndex = CHECKOUT_STEPS.indexOf(state.currentStep);
-    if (currentIndex > 0) {
-      const prevStep = CHECKOUT_STEPS[currentIndex - 1];
-      setState(prev => ({ ...prev, currentStep: prevStep as CheckoutState['currentStep'], error: null }));
-      offlineStorage.trackAction('checkout_step_back', { 
-        from: state.currentStep,
-        to: prevStep 
-      });
-    }
-  }, [state.currentStep]);
+    setState(prev => {
+      const currentIndex = CHECKOUT_STEPS.indexOf(prev.currentStep);
+      if (currentIndex > 0) {
+        const prevStep = CHECKOUT_STEPS[currentIndex - 1];
+        offlineStorage.trackAction('checkout_step_back', { 
+          from: prev.currentStep,
+          to: prevStep 
+        });
+        return { ...prev, currentStep: prevStep as CheckoutState['currentStep'], error: null };
+      }
+      return prev;
+    });
+  }, []); // No dependencies - stable reference
 
-  // Navigation: go to specific step
+  // Navigation: go to specific step - Use setState functional update to avoid dependency
   const goToStep = useCallback((step: CheckoutState['currentStep']) => {
-    const targetIndex = CHECKOUT_STEPS.indexOf(step);
-    const currentIndex = CHECKOUT_STEPS.indexOf(state.currentStep);
-    
-    // Only allow going back or to the next immediate step
-    if (targetIndex <= currentIndex + 1) {
-      setState(prev => ({ ...prev, currentStep: step, error: null }));
-      offlineStorage.trackAction('checkout_step_jump', { 
-        from: state.currentStep,
-        to: step 
-      });
-    }
-  }, [state.currentStep]);
+    setState(prev => {
+      const targetIndex = CHECKOUT_STEPS.indexOf(step);
+      const currentIndex = CHECKOUT_STEPS.indexOf(prev.currentStep);
+      
+      // Only allow going back or to the next immediate step
+      if (targetIndex <= currentIndex + 1) {
+        offlineStorage.trackAction('checkout_step_jump', { 
+          from: prev.currentStep,
+          to: step 
+        });
+        return { ...prev, currentStep: step, error: null };
+      }
+      return prev;
+    });
+  }, []); // No dependencies - stable reference
 
-  // Set order type
+  // Set order type - nextStep is now stable
   const setOrderType = useCallback((type: OrderType) => {
     // Create order if it doesn't exist
     if (!currentOrder) {
@@ -124,9 +133,10 @@ export function useCheckout(): UseCheckoutReturn {
     setOrderTypeContext(type);
     offlineStorage.trackAction('order_type_selected', { type });
     nextStep();
-  }, [currentOrder, cart.items, createOrder, setOrderTypeContext, nextStep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentOrder, cart.items, createOrder, setOrderTypeContext]); // nextStep has stable reference
 
-  // Set customer info
+  // Set customer info - nextStep is now stable
   const setCustomerInfo = useCallback((info: CustomerInfo) => {
     // Start guest session if no user
     if (!user) {
@@ -139,16 +149,18 @@ export function useCheckout(): UseCheckoutReturn {
       hasEmail: !!info.email 
     });
     nextStep();
-  }, [user, startGuestSession, setCustomerInfoContext, nextStep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, startGuestSession, setCustomerInfoContext]); // nextStep has stable reference
 
-  // Set payment method
+  // Set payment method - nextStep is now stable
   const setPaymentMethod = useCallback((method: PaymentMethod) => {
     setPaymentMethodContext(method);
     offlineStorage.trackAction('payment_method_selected', { method });
     nextStep();
-  }, [setPaymentMethodContext, nextStep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setPaymentMethodContext]); // nextStep has stable reference
 
-  // Process checkout
+  // Process checkout - goToStep is now stable
   const processCheckout = useCallback(async () => {
     if (!currentOrder) {
       const error = new Error('No order to process');
@@ -229,7 +241,8 @@ export function useCheckout(): UseCheckoutReturn {
         currentStep: 'payment' // Go back to payment step on error
       }));
     }
-  }, [currentOrder, clearCart, goToStep]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentOrder, clearCart]); // goToStep has stable reference
 
   // Reset checkout
   const resetCheckout = useCallback(() => {

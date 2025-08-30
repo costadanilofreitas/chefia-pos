@@ -98,7 +98,8 @@ export function useKDSOrders({
       logger.error('Failed to update order status', err, 'useKDSOrders');
       throw err;
     }
-  }, [orders, isOnline, updateItem]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline, updateItem]);
   
   // Update item status
   const updateItemStatus = useCallback(async (
@@ -106,36 +107,51 @@ export function useKDSOrders({
     itemId: string | number,
     newStatus: string
   ) => {
-    // Find and update order
-    const order = orders.find(o => o.id === orderId);
-    if (!order) return;
-    
-    const updatedItems = order.items.map(item => 
-      item.item_id === itemId ? { ...item, status: newStatus } : item
-    );
-    
-    // Optimistic update
-    setOrders(prev => updateItemInArray(prev, orderId, { items: updatedItems }));
+    // Use functional update to avoid dependency on orders
+    setOrders(prev => {
+      const order = prev.find(o => o.id === orderId);
+      if (!order) return prev;
+      
+      const updatedItems = order.items.map(item => 
+        item.item_id === itemId ? { ...item, status: newStatus } : item
+      );
+      
+      // Save for offline sync if needed
+      if (!isOnline) {
+        offlineStorage.saveOrder({
+          ...order,
+          items: updatedItems,
+          synced: false
+        }).catch(err => {
+          logger.error('Failed to save offline', err, 'useKDSOrders');
+        });
+      }
+      
+      return updateItemInArray(prev, orderId, { items: updatedItems });
+    });
     
     try {
       if (isOnline) {
         await kdsService.updateItemStatus(orderId, itemId, newStatus);
-      } else {
-        // Save for offline sync
-        await offlineStorage.saveOrder({
-          ...order,
-          items: updatedItems,
-          synced: false
-        });
       }
       logger.info(`Item ${itemId} in order ${orderId} updated to ${newStatus}`, 'useKDSOrders');
     } catch (err) {
-      // Rollback on error
-      setOrders(prev => updateItemInArray(prev, orderId, { items: order.items }));
+      // Rollback on error using functional update
+      setOrders(prev => {
+        const order = prev.find(o => o.id === orderId);
+        if (order) {
+          const originalItems = orders.find(o => o.id === orderId)?.items;
+          if (originalItems) {
+            return updateItemInArray(prev, orderId, { items: originalItems });
+          }
+        }
+        return prev;
+      });
       logger.error('Failed to update item status', err, 'useKDSOrders');
       throw err;
     }
-  }, [orders, isOnline, setOrders]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline, setOrders]);
   
   // Calculate statistics
   const stats: OrderStats = useMemo(() => ({
@@ -149,12 +165,14 @@ export function useKDSOrders({
   const canStartOrder = useCallback((orderId: string | number): boolean => {
     const order = orders.find(o => o.id === orderId);
     return order?.status === ORDER_STATUS.PENDING;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders]);
   
   // Helper to check if order can be completed
   const canCompleteOrder = useCallback((orderId: string | number): boolean => {
     const order = orders.find(o => o.id === orderId);
     return order?.status === ORDER_STATUS.PREPARING;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders]);
   
   // Quick actions

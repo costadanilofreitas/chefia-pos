@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 from fastapi import HTTPException, status
 from sqlalchemy import Column, DateTime, Integer
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 class OptimisticLockMixin:
@@ -19,19 +20,19 @@ class OptimisticLockMixin:
     """
 
     @declared_attr
-    def version(cls) -> Column:
+    def version(cls) -> Mapped[int]:
         """Número da versão para controle otimista"""
-        return Column(Integer, default=1, nullable=False)
+        return mapped_column(Integer, default=1, nullable=False)
 
     @declared_attr
-    def last_modified_by(cls) -> Column:
+    def last_modified_by(cls) -> Mapped[Optional[int]]:
         """ID do usuário que fez a última modificação"""
-        return Column(Integer, nullable=True)
+        return mapped_column(Integer, nullable=True)
 
     @declared_attr
-    def last_modified_at(cls) -> Column:
+    def last_modified_at(cls) -> Mapped[Optional[datetime]]:
         """Timestamp da última modificação"""
-        return Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+        return mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def increment_version(self):
         """Incrementa a versão do objeto"""

@@ -289,41 +289,51 @@ const WaiterMainPage: React.FC = () => {
     setOrders
   } = useWaiterData();
   
+  // WebSocket callbacks (stable references)
+  const handleTableUpdate = useCallback((data: any) => {
+    if (data?.id) {
+      setTables(prev => updateItemById(prev, data.id, data));
+      addNotification({
+        type: NOTIFICATION_TYPE.INFO,
+        title: 'Mesa atualizada',
+        message: `Mesa ${data.number || data.id} foi atualizada`,
+        duration: TIME.NOTIFICATION
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dependencies removed for stability
+  
+  const handleOrderUpdate = useCallback((data: any) => {
+    if (data?.id) {
+      setOrders(prev => upsertItem(prev, data));
+      addNotification({
+        type: NOTIFICATION_TYPE.INFO,
+        title: 'Pedido atualizado',
+        message: `Pedido #${data.id} foi atualizado`,
+        duration: TIME.NOTIFICATION
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dependencies removed for stability
+  
+  const handleKitchenUpdate = useCallback((data: any) => {
+    if (data?.orderId) {
+      addNotification({
+        type: NOTIFICATION_TYPE.SUCCESS,
+        title: 'Item pronto!',
+        message: `Item do pedido #${data.orderId} está pronto`,
+        duration: TIME.NOTIFICATION_LONG
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dependencies removed for stability
+  
   // WebSocket
   const { isConnected, requestAssistance } = useWaiterWebSocket({
     tableIds: useMemo(() => tables.map(t => t.id), [tables]),
-    onTableUpdate: useCallback((data: any) => {
-      if (data?.id) {
-        setTables(prev => updateItemById(prev, data.id, data));
-        addNotification({
-          type: NOTIFICATION_TYPE.INFO,
-          title: 'Mesa atualizada',
-          message: `Mesa ${data.number || data.id} foi atualizada`,
-          duration: TIME.NOTIFICATION
-        });
-      }
-    }, [setTables, addNotification]),
-    onOrderUpdate: useCallback((data: any) => {
-      if (data?.id) {
-        setOrders(prev => upsertItem(prev, data));
-        addNotification({
-          type: NOTIFICATION_TYPE.INFO,
-          title: 'Pedido atualizado',
-          message: `Pedido #${data.id} foi atualizado`,
-          duration: TIME.NOTIFICATION
-        });
-      }
-    }, [setOrders, addNotification]),
-    onKitchenUpdate: useCallback((data: any) => {
-      if (data?.orderId) {
-        addNotification({
-          type: NOTIFICATION_TYPE.SUCCESS,
-          title: 'Item pronto!',
-          message: `Item do pedido #${data.orderId} está pronto`,
-          duration: TIME.NOTIFICATION_LONG
-        });
-      }
-    }, [addNotification])
+    onTableUpdate: handleTableUpdate,
+    onOrderUpdate: handleOrderUpdate,
+    onKitchenUpdate: handleKitchenUpdate
   });
   
   // Handlers
@@ -334,7 +344,8 @@ const WaiterMainPage: React.FC = () => {
       title: 'Dados atualizados',
       duration: TIME.NOTIFICATION
     });
-  }, [loadAllData, addNotification]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dependencies removed for stability
   
   const handleTableSelect = useCallback((table: Table) => {
     setSelectedTable(table);
@@ -342,26 +353,34 @@ const WaiterMainPage: React.FC = () => {
   }, []);
   
   const handleNewOrder = useCallback(async () => {
-    if (!selectedTable) return;
-    
-    try {
-      await createOrder(selectedTable.id, []);
-      addNotification({
-        type: NOTIFICATION_TYPE.SUCCESS,
-        title: 'Pedido criado',
-        message: `Novo pedido para mesa ${selectedTable.number}`,
-        duration: TIME.NOTIFICATION
-      });
-      setActiveTab(TABS.ORDERS);
-    } catch (err) {
-      addNotification({
-        type: NOTIFICATION_TYPE.ERROR,
-        title: 'Erro ao criar pedido',
-        message: 'Não foi possível criar o pedido',
-        duration: TIME.NOTIFICATION_LONG
-      });
-    }
-  }, [selectedTable, createOrder, addNotification]);
+    // Use functional update to get current state
+    setSelectedTable(currentTable => {
+      if (!currentTable) return currentTable;
+      
+      (async () => {
+        try {
+          await createOrder(currentTable.id, []);
+          addNotification({
+            type: NOTIFICATION_TYPE.SUCCESS,
+            title: 'Pedido criado',
+            message: `Novo pedido para mesa ${currentTable.number}`,
+            duration: TIME.NOTIFICATION
+          });
+          setActiveTab(TABS.ORDERS);
+        } catch (err) {
+          addNotification({
+            type: NOTIFICATION_TYPE.ERROR,
+            title: 'Erro ao criar pedido',
+            message: 'Não foi possível criar o pedido',
+            duration: TIME.NOTIFICATION_LONG
+          });
+        }
+      })();
+      
+      return currentTable;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dependencies removed for stability
   
   const handleDeliverItems = useCallback(async (order: Order) => {
     const readyItems = getItemsWithStatus(order.items, ITEM_STATUS.READY);
@@ -382,19 +401,25 @@ const WaiterMainPage: React.FC = () => {
         duration: TIME.NOTIFICATION_LONG
       });
     }
-  }, [deliverOrderItems, addNotification]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dependencies removed for stability
   
   const handleRequestHelp = useCallback(() => {
-    if (selectedTable) {
-      requestAssistance(selectedTable.id, 'help');
-      addNotification({
-        type: NOTIFICATION_TYPE.INFO,
-        title: 'Ajuda solicitada',
-        message: 'Um supervisor foi notificado',
-        duration: TIME.NOTIFICATION
-      });
-    }
-  }, [selectedTable, requestAssistance, addNotification]);
+    // Use functional update to get current state
+    setSelectedTable(currentTable => {
+      if (currentTable) {
+        requestAssistance(currentTable.id, 'help');
+        addNotification({
+          type: NOTIFICATION_TYPE.INFO,
+          title: 'Ajuda solicitada',
+          message: 'Um supervisor foi notificado',
+          duration: TIME.NOTIFICATION
+        });
+      }
+      return currentTable;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dependencies removed for stability
   
   // Keyboard shortcuts
   useKeyboardShortcuts([

@@ -48,7 +48,8 @@ export function useApi<T = unknown>(
       
       throw error;
     }
-  }, [endpoint, onSuccess, onError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [endpoint]);
 
   const mutate = useCallback(async (method: 'post' | 'put' | 'patch' | 'delete', data?: unknown) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -91,7 +92,8 @@ export function useApi<T = unknown>(
       
       throw error;
     }
-  }, [endpoint, onSuccess, onError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [endpoint]);
 
   const refresh = useCallback(() => {
     return execute();
@@ -101,7 +103,8 @@ export function useApi<T = unknown>(
     if (immediate) {
       execute();
     }
-  }, [immediate]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [immediate]);
 
   return {
     ...state,

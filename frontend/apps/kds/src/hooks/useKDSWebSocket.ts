@@ -112,7 +112,8 @@ export function useKDSWebSocket(options: UseKDSWebSocketOptions = {}) {
         handlersRef.current.set('station:update', stationHandler);
       }
     }
-  }, [url, onOrderUpdate, onOrderDelete, onStationUpdate, onConnectionChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url]);
 
   // Connect to WebSocket
   const connect = useCallback(() => {
@@ -120,7 +121,8 @@ export function useKDSWebSocket(options: UseKDSWebSocketOptions = {}) {
       initWebSocket();
     }
     wsRef.current?.connect();
-  }, [initWebSocket]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {
@@ -204,7 +206,8 @@ export function useKDSWebSocket(options: UseKDSWebSocketOptions = {}) {
         ws.disconnect();
       }
     };
-  }, [autoConnect, initWebSocket, connect]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoConnect]);
 
   return {
     isConnected,

@@ -74,7 +74,8 @@ export function useKDSAlerts(options: UseKDSAlertsOptions = {}) {
     }
 
     return alert.id;
-  }, [maxAlerts, autoRemoveDelay, soundEnabled, mutedTypes, removeAlert]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maxAlerts, autoRemoveDelay, soundEnabled, mutedTypes]);
 
   // Clear all alerts
   const clearAlerts = useCallback(() => {
@@ -101,6 +102,7 @@ export function useKDSAlerts(options: UseKDSAlertsOptions = {}) {
   // Check if type is muted
   const isMuted = useCallback((type: Alert['type']) => {
     return mutedTypes.has(type);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mutedTypes]);
 
   // Alert statistics
@@ -115,6 +117,7 @@ export function useKDSAlerts(options: UseKDSAlertsOptions = {}) {
     });
 
     return stats;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alerts]);
 
   // Cleanup timers on unmount

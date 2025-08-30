@@ -19,52 +19,78 @@ export const usePullToRefresh = ({
   const currentY = useRef(0);
   
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (!enabled || isRefreshing) return;
+    if (!enabled) return;
     
-    // Only trigger if scrolled to top
-    if (window.scrollY !== 0) return;
-    
-    if (e.touches[0]) {
-      startY.current = e.touches[0].clientY;
-    }
-    setIsPulling(true);
-  }, [enabled, isRefreshing]);
+    // Check isRefreshing using ref to avoid stale closure
+    setIsRefreshing(prev => {
+      if (prev) return prev;
+      
+      // Only trigger if scrolled to top
+      if (window.scrollY !== 0) return prev;
+      
+      if (e.touches[0]) {
+        startY.current = e.touches[0].clientY;
+      }
+      setIsPulling(true);
+      return prev;
+    });
+  }, [enabled]); // Removed isRefreshing dependency
   
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isPulling || !enabled || isRefreshing) return;
+    if (!enabled) return;
     
-    if (e.touches[0]) {
-      currentY.current = e.touches[0].clientY;
-    }
-    const distance = currentY.current - (startY.current || 0);
-    
-    if (distance > 0) {
-      // Prevent default scrolling when pulling down
-      e.preventDefault();
+    // Use functional update to check current state
+    setIsPulling(pulling => {
+      if (!pulling) return pulling;
       
-      // Apply resistance formula for natural feel
-      const resistance = Math.min(distance / 2, threshold * 1.5);
-      setPullDistance(resistance);
-    }
-  }, [isPulling, enabled, isRefreshing, threshold]);
+      setIsRefreshing(refreshing => {
+        if (refreshing) return refreshing;
+        
+        if (e.touches[0]) {
+          currentY.current = e.touches[0].clientY;
+        }
+        const distance = currentY.current - (startY.current || 0);
+        
+        if (distance > 0) {
+          // Prevent default scrolling when pulling down
+          e.preventDefault();
+          
+          // Apply resistance formula for natural feel
+          const resistance = Math.min(distance / 2, threshold * 1.5);
+          setPullDistance(resistance);
+        }
+        return refreshing;
+      });
+      return pulling;
+    });
+  }, [enabled, threshold]); // Removed state dependencies
   
   const handleTouchEnd = useCallback(async () => {
-    if (!isPulling || !enabled) return;
+    if (!enabled) return;
     
-    setIsPulling(false);
-    
-    if (pullDistance >= threshold) {
-      setIsRefreshing(true);
+    // Use functional updates to get current state
+    setIsPulling(pulling => {
+      if (!pulling) return false;
       
-      try {
-        await onRefresh();
-      } finally {
-        setIsRefreshing(false);
-      }
-    }
-    
-    setPullDistance(0);
-  }, [isPulling, pullDistance, threshold, enabled, onRefresh]);
+      setPullDistance(distance => {
+        if (distance >= threshold) {
+          setIsRefreshing(true);
+          
+          // Run refresh asynchronously
+          (async () => {
+            try {
+              await onRefresh();
+            } finally {
+              setIsRefreshing(false);
+            }
+          })();
+        }
+        return 0;
+      });
+      
+      return false;
+    });
+  }, [enabled, threshold, onRefresh]); // Removed state dependencies
   
   useEffect(() => {
     if (!enabled) return;
@@ -80,7 +106,8 @@ export const usePullToRefresh = ({
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [enabled, handleTouchStart, handleTouchMove, handleTouchEnd]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled]); // Handlers are stable now, no need as dependencies
   
   return {
     isPulling,

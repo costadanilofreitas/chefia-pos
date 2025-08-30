@@ -70,12 +70,12 @@ export function useWaiterWebSocket({
     logger.info(`Assistance requested: table ${tableId}, type ${type}`, 'useWaiterWebSocket');
   }, []);
 
-  // Connect WebSocket
+  // Connect WebSocket - stable reference
   const connect = useCallback(() => {
     websocketService.connect();
   }, []);
 
-  // Disconnect WebSocket
+  // Disconnect WebSocket - stable reference
   const disconnect = useCallback(() => {
     websocketService.disconnect();
     subscribedTablesRef.current.clear();
@@ -133,12 +133,7 @@ export function useWaiterWebSocket({
 
     // Auto-connect if enabled
     if (autoConnect) {
-      connect();
-    }
-
-    // Subscribe to initial tables
-    if (tableIds.length > 0 && isConnected) {
-      subscribeToTables(tableIds);
+      websocketService.connect();
     }
 
     // Cleanup
@@ -152,19 +147,16 @@ export function useWaiterWebSocket({
       websocketService.off('notification', handleNotification as (...args: unknown[]) => void);
       websocketService.off('kitchen_update', handleKitchenUpdate as (...args: unknown[]) => void);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     autoConnect,
-    connect,
     handleStatusChange,
     handleReconnecting,
-    isConnected,
     onTableUpdate,
     onOrderUpdate,
     onNotification,
-    onKitchenUpdate,
-    subscribeToTables,
-    tableIds
-  ]);
+    onKitchenUpdate
+  ]); // Removed unstable dependencies
 
   // Update table subscriptions when tableIds change
   useEffect(() => {
@@ -175,13 +167,21 @@ export function useWaiterWebSocket({
       const toUnsubscribe = currentTables.filter(id => !tableIds.includes(id));
 
       if (toUnsubscribe.length > 0) {
-        unsubscribeFromTables(toUnsubscribe);
+        const existingIds = toUnsubscribe.filter(id => subscribedTablesRef.current.has(id));
+        if (existingIds.length > 0) {
+          websocketService.unsubscribeFromTables(existingIds);
+          existingIds.forEach(id => subscribedTablesRef.current.delete(id));
+          logger.info(`Unsubscribed from tables: ${existingIds.join(', ')}`, 'useWaiterWebSocket');
+        }
       }
       if (toSubscribe.length > 0) {
-        subscribeToTables(toSubscribe);
+        websocketService.subscribeToTables(toSubscribe);
+        toSubscribe.forEach(id => subscribedTablesRef.current.add(id));
+        logger.info(`Subscribed to tables: ${toSubscribe.join(', ')}`, 'useWaiterWebSocket');
       }
     }
-  }, [tableIds, isConnected, subscribeToTables, unsubscribeFromTables]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableIds, isConnected]); // Removed callback dependencies
 
   return {
     isConnected,

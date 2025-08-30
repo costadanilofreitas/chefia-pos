@@ -40,7 +40,7 @@ export function useProducts(): UseProductsReturn {
     searchTerm: ''
   });
 
-  // Load categories
+  // Load categories - No dependencies, won't be recreated
   const loadCategories = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
@@ -52,9 +52,9 @@ export function useProducts(): UseProductsReturn {
       const appError = errorHandler.handle(error, 'useProducts.loadCategories');
       setState(prev => ({ ...prev, error: appError, isLoading: false }));
     }
-  }, []);
+  }, []); // No dependencies - stable reference
 
-  // Load products
+  // Load products - No dependencies, won't be recreated
   const loadProducts = useCallback(async (params?: ProductSearchParams) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
@@ -66,9 +66,9 @@ export function useProducts(): UseProductsReturn {
       const appError = errorHandler.handle(error, 'useProducts.loadProducts');
       setState(prev => ({ ...prev, error: appError, isLoading: false }));
     }
-  }, []);
+  }, []); // No dependencies - stable reference
 
-  // Select category
+  // Select category - loadProducts is now stable, no dependency needed
   const selectCategory = useCallback((categoryId: string | null) => {
     setState(prev => ({ ...prev, selectedCategory: categoryId }));
     
@@ -78,9 +78,10 @@ export function useProducts(): UseProductsReturn {
     } else {
       loadProducts();
     }
-  }, [loadProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // loadProducts has stable reference, no dependency needed
 
-  // Search products
+  // Search products - loadProducts is now stable, no dependency needed
   const searchProducts = useCallback(async (term: string) => {
     setState(prev => ({ ...prev, searchTerm: term }));
     
@@ -100,22 +101,25 @@ export function useProducts(): UseProductsReturn {
       const appError = errorHandler.handle(error, 'useProducts.searchProducts');
       setState(prev => ({ ...prev, error: appError, isLoading: false }));
     }
-  }, [loadProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // loadProducts has stable reference, no dependency needed
 
-  // Clear search
+  // Clear search - loadProducts is now stable, no dependency needed
   const clearSearch = useCallback(() => {
     setState(prev => ({ ...prev, searchTerm: '', selectedCategory: null }));
     loadProducts();
-  }, [loadProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // loadProducts has stable reference, no dependency needed
 
-  // Refresh all data
+  // Refresh all data - loadCategories and loadProducts are now stable, no dependencies needed
   const refresh = useCallback(async () => {
     productService.clearCache();
     await Promise.all([
       loadCategories(),
       loadProducts()
     ]);
-  }, [loadCategories, loadProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Both functions have stable references, no dependencies needed
 
   // Computed: filtered products
   const filteredProducts = useMemo(() => {

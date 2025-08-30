@@ -52,12 +52,11 @@ export const TerminalValidator: React.FC<TerminalValidatorProps> = ({ children }
   const { terminalId } = useParams<{ terminalId: string }>();
   const navigate = useNavigate();
   const [isValidating, setIsValidating] = useState(true);
-  const [terminalConfig, setTerminalConfig] = useState<TerminalConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [terminalNotFound, setTerminalNotFound] = useState(false);
   const [requestedTerminal, setRequestedTerminal] = useState<string>('');
   
-  // List of available KDS terminals
+  // List of available KDS terminals (static constant, not dependent on props/state)
   const AVAILABLE_TERMINALS = [1, 2, 3, 4];
 
   useEffect(() => {
@@ -133,7 +132,6 @@ export const TerminalValidator: React.FC<TerminalValidatorProps> = ({ children }
           // Store in window for global access
           (window as unknown as Record<string, unknown>)['KDS_TERMINAL_CONFIG'] = config;
           
-          setTerminalConfig(config);
           console.log('KDS Terminal validated', { 
             terminalId: id, 
             terminalName: config.terminalName,
@@ -160,6 +158,7 @@ export const TerminalValidator: React.FC<TerminalValidatorProps> = ({ children }
     };
 
     validateTerminal();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [terminalId, navigate]);
 
   // Show loading state

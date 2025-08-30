@@ -36,6 +36,5 @@
       "@common/*": ["../../common/src/*"]
     }
   },
-  "include": ["src"],
-  "references": [{ "path": "../../common/tsconfig.json" }]
+  "include": ["src"]
 }
