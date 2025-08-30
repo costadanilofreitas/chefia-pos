@@ -22,9 +22,9 @@ from src.command_card.models.command_card_models import (
     CommandTransfer,
 )
 from src.command_card.services.command_card_service import CommandCardService
-from src.core.event_bus import get_event_bus
+from src.core.events.event_bus import get_event_bus
 from src.core.exceptions import BusinessException, ConflictException
-from src.database.db_service import get_db_service
+from src.core.database.db_service import get_db_service
 
 router = APIRouter(
     prefix="/api/v1/command-cards",

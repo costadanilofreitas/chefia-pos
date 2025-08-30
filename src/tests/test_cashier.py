@@ -5,7 +5,7 @@ from datetime import date, datetime
 import pytest
 from fastapi.testclient import TestClient
 
-from src.api.main import app
+from src.main import app
 from src.business_day.services.business_day_service import get_business_day_service
 from src.cashier.services.cashier_service import get_cashier_service
 

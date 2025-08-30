@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from src.api.main import app
+from src.main import app
 from src.business_day.models.business_day import BusinessDay, DayStatus
 from src.business_day.services.business_day_service import get_business_day_service
 

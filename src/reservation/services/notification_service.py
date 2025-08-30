@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Dict, List, Optional
 
-from src.core.event_bus import EventBus
+from src.core.events.event_bus import EventBus
 from src.reservation.models.reservation_models import Reservation, ReservationStatus
 
 logger = logging.getLogger(__name__)

@@ -8,9 +8,9 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from src.auth.auth import get_current_user
-from src.core.event_bus import get_event_bus
+from src.core.events.event_bus import get_event_bus
 from src.core.exceptions import BusinessException, ConflictException
-from src.database.db_service import get_db_service
+from src.core.database.db_service import get_db_service
 from src.queue.services.queue_service import QueueService
 from src.reservation.models.reservation_models import (
     BlockedSlot,

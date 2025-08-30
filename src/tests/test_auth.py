@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from jose import jwt
 
-from src.api.main import app
+from src.main import app
 from src.auth.security import ALGORITHM, SECRET_KEY
 
 client = TestClient(app)

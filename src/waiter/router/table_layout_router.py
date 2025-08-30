@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/waiter/tables", tags=["waiter"])
 def get_table_layout_service():
     # Aqui seria a lógica para obter o serviço do container de DI
     # Por enquanto, vamos criar uma instância diretamente
-    from src.database.db_service import get_db_service
+    from src.core.database.db_service import get_db_service
 
     db_service = get_db_service()
     return TableLayoutService(db_service)

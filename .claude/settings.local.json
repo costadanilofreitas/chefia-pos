@@ -42,7 +42,8 @@
       "Bash(dir:*)",
       "WebSearch",
       "Read(C:\\Users\\Consultor\\Downloads/**)",
-      "Read(C:\\Users\\Consultor\\Downloads/**)"
+      "Read(C:\\Users\\Consultor\\Downloads/**)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": [],

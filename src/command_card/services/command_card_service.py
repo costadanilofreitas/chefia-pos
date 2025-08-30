@@ -23,9 +23,9 @@ from src.command_card.models.command_card_models import (
     CommandStatistics,
     CommandTransfer,
 )
-from src.core.event_bus import EventBus
+from src.core.events.event_bus import EventBus
 from src.core.exceptions import BusinessException, ConflictException
-from src.database.db_service import DatabaseService
+from src.core.database.db_service import DatabaseService
 from src.order.services.order_service import OrderService
 from src.payment.services.payment_service import PaymentService
 

@@ -9,9 +9,9 @@ from datetime import date, datetime, time, timedelta
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from src.core.event_bus import EventBus
+from src.core.events.event_bus import EventBus
 from src.core.exceptions import BusinessException, ConflictException
-from src.database.db_service import DatabaseService
+from src.core.database.db_service import DatabaseService
 from src.queue.services.queue_service import QueueService
 from src.reservation.models.reservation_models import (
     RecurrenceType,

@@ -1,8 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from src.api.main import app
-from src.auth.security import get_current_user
+from src.main import app
+from src.auth.security import check_permissions, get_current_user
 
 
 # Mock de autenticação para testes
