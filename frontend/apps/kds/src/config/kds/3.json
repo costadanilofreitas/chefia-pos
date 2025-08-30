@@ -1,0 +1,38 @@
+{
+  "terminalId": 3,
+  "terminalName": "KDS 3 - Bar",
+  "stationType": "bar",
+  "location": "Bar Principal",
+  "active": true,
+  "display": {
+    "gridColumns": 2,
+    "autoScroll": true,
+    "scrollInterval": 20,
+    "showTimer": true,
+    "timerWarning": 180,
+    "timerCritical": 300,
+    "fontSize": "large",
+    "theme": "dark"
+  },
+  "filters": {
+    "categories": ["bebidas", "drinks", "cocktails", "cervejas", "vinhos"],
+    "priority": "all",
+    "maxOrders": 8,
+    "hideCompleted": true,
+    "completedTimeout": 3
+  },
+  "alerts": {
+    "enableSound": true,
+    "soundVolume": 90,
+    "enableFlash": true,
+    "vibrationPattern": [100, 50, 100]
+  },
+  "features": {
+    "enableBump": true,
+    "enableRecall": false,
+    "enableHold": false,
+    "enableRush": true,
+    "showPreparationSteps": false,
+    "showCustomerInfo": true
+  }
+}

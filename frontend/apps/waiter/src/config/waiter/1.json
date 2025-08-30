@@ -1,0 +1,49 @@
+{
+  "terminalId": 1,
+  "terminalName": "Garçom 1 - Salão Principal",
+  "serviceArea": "Salão Principal",
+  "tableRange": {
+    "start": 1,
+    "end": 20
+  },
+  "active": true,
+  "ui": {
+    "theme": "auto",
+    "compactMode": false,
+    "showTableMap": true,
+    "defaultView": "tables",
+    "quickActions": ["new-order", "call-kitchen", "payment", "split-bill"],
+    "fontSize": "medium"
+  },
+  "features": {
+    "enableOrdering": true,
+    "enablePayment": true,
+    "enableTableTransfer": true,
+    "enableSplitBill": true,
+    "enableTips": true,
+    "enableReservations": true,
+    "enableCallKitchen": true,
+    "enableCustomerInfo": true,
+    "offlineMode": true,
+    "pushNotifications": true,
+    "hapticFeedback": true
+  },
+  "permissions": {
+    "canCancelOrders": true,
+    "canModifyOrders": true,
+    "canApplyDiscounts": true,
+    "maxDiscountPercent": 15,
+    "canVoidItems": true,
+    "canTransferTables": true,
+    "canCloseDay": false
+  },
+  "notifications": {
+    "newOrders": true,
+    "orderReady": true,
+    "paymentRequest": true,
+    "tableCall": true,
+    "kitchenAlert": true,
+    "soundEnabled": true,
+    "vibrationEnabled": true
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "terminalId": 2,
+  "terminalName": "Garçom 2 - Área Externa",
+  "serviceArea": "Varanda e Jardim",
+  "tableRange": {
+    "start": 21,
+    "end": 35
+  },
+  "active": true,
+  "ui": {
+    "theme": "light",
+    "compactMode": true,
+    "showTableMap": true,
+    "defaultView": "orders",
+    "quickActions": ["new-order", "payment", "call-kitchen"],
+    "fontSize": "large"
+  },
+  "features": {
+    "enableOrdering": true,
+    "enablePayment": true,
+    "enableTableTransfer": false,
+    "enableSplitBill": true,
+    "enableTips": true,
+    "enableReservations": false,
+    "enableCallKitchen": true,
+    "enableCustomerInfo": true,
+    "offlineMode": true,
+    "pushNotifications": true,
+    "hapticFeedback": true
+  },
+  "permissions": {
+    "canCancelOrders": false,
+    "canModifyOrders": true,
+    "canApplyDiscounts": true,
+    "maxDiscountPercent": 10,
+    "canVoidItems": false,
+    "canTransferTables": false,
+    "canCloseDay": false
+  },
+  "notifications": {
+    "newOrders": true,
+    "orderReady": true,
+    "paymentRequest": true,
+    "tableCall": false,
+    "kitchenAlert": true,
+    "soundEnabled": false,
+    "vibrationEnabled": true
+  }
+}

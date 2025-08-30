@@ -1,0 +1,38 @@
+{
+  "terminalId": 1,
+  "terminalName": "KDS 1 - Cozinha Quente",
+  "stationType": "hot",
+  "location": "Cozinha Principal",
+  "active": true,
+  "display": {
+    "gridColumns": 3,
+    "autoScroll": false,
+    "scrollInterval": 30,
+    "showTimer": true,
+    "timerWarning": 600,
+    "timerCritical": 900,
+    "fontSize": "medium",
+    "theme": "light"
+  },
+  "filters": {
+    "categories": ["pratos-quentes", "carnes", "massas", "risotos"],
+    "priority": "all",
+    "maxOrders": 12,
+    "hideCompleted": true,
+    "completedTimeout": 10
+  },
+  "alerts": {
+    "enableSound": true,
+    "soundVolume": 80,
+    "enableFlash": true,
+    "vibrationPattern": [200, 100, 200]
+  },
+  "features": {
+    "enableBump": true,
+    "enableRecall": true,
+    "enableHold": true,
+    "enableRush": true,
+    "showPreparationSteps": true,
+    "showCustomerInfo": false
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "terminalId": 2,
+  "terminalName": "KDS 2 - Cozinha Fria",
+  "stationType": "cold",
+  "location": "Cozinha Fria",
+  "active": true,
+  "display": {
+    "gridColumns": 4,
+    "autoScroll": false,
+    "scrollInterval": 45,
+    "showTimer": true,
+    "timerWarning": 300,
+    "timerCritical": 600,
+    "fontSize": "medium",
+    "theme": "light"
+  },
+  "filters": {
+    "categories": ["saladas", "sobremesas", "entradas-frias", "ceviches"],
+    "priority": "all",
+    "maxOrders": 16,
+    "hideCompleted": true,
+    "completedTimeout": 5
+  },
+  "alerts": {
+    "enableSound": true,
+    "soundVolume": 70,
+    "enableFlash": false,
+    "vibrationPattern": [150, 100, 150]
+  },
+  "features": {
+    "enableBump": true,
+    "enableRecall": true,
+    "enableHold": true,
+    "enableRush": true,
+    "showPreparationSteps": true,
+    "showCustomerInfo": false
+  }
+}

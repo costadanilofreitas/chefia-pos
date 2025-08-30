@@ -1,0 +1,38 @@
+{
+  "terminalId": 4,
+  "terminalName": "KDS 4 - Preparo Geral",
+  "stationType": "prep",
+  "location": "Área de Preparo",
+  "active": true,
+  "display": {
+    "gridColumns": 4,
+    "autoScroll": false,
+    "scrollInterval": 60,
+    "showTimer": true,
+    "timerWarning": 450,
+    "timerCritical": 750,
+    "fontSize": "small",
+    "theme": "light"
+  },
+  "filters": {
+    "categories": [],
+    "priority": "high",
+    "maxOrders": 20,
+    "hideCompleted": false,
+    "completedTimeout": 30
+  },
+  "alerts": {
+    "enableSound": false,
+    "soundVolume": 50,
+    "enableFlash": false,
+    "vibrationPattern": []
+  },
+  "features": {
+    "enableBump": true,
+    "enableRecall": true,
+    "enableHold": true,
+    "enableRush": false,
+    "showPreparationSteps": true,
+    "showCustomerInfo": true
+  }
+}
