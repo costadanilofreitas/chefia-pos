@@ -478,7 +478,7 @@ const KDSMainPage = () => {
       <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
       
       {/* Footer with Keyboard Shortcuts */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-4 py-2">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-t border-gray-200/50 dark:border-gray-700/50 px-4 py-2">
         <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
           <div className="flex items-center gap-4">
             <span>Estação: {selectedStation === STATION_ALL ? 'Todas' : selectedStation}</span>
