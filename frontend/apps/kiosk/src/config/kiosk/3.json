@@ -1,0 +1,67 @@
+{
+  "terminalId": 3,
+  "terminalName": "Kiosk 3 - Drive-Thru",
+  "location": "Drive-Thru",
+  "active": true,
+  "ui": {
+    "welcomeScreen": {
+      "title": "Chefia Drive",
+      "subtitle": "Pedido Rápido",
+      "customMessage": "Faça seu pedido sem sair do carro",
+      "backgroundImage": "https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?w=1920&h=1080&fit=crop",
+      "overlayOpacity": 0.6,
+      "autoStartDelay": 30,
+      "showLogo": true
+    },
+    "layout": {
+      "categoriesPosition": "left",
+      "showSearchBar": false,
+      "showCartButton": true,
+      "productGridColumns": 3,
+      "headerBanner": {
+        "enabled": true,
+        "text": "🚗 Drive-Thru - Pedidos Rápidos",
+        "backgroundColor": "#8b5cf6",
+        "textColor": "#ffffff",
+        "icon": "🚗"
+      }
+    },
+    "darkMode": true,
+    "primaryColor": "#8b5cf6",
+    "secondaryColor": "#ec4899",
+    "animations": {
+      "enabled": true,
+      "duration": "fast"
+    }
+  },
+  "features": {
+    "enableHapticFeedback": true,
+    "enableSoundEffects": true,
+    "enableOfflineMode": true,
+    "enablePWA": false,
+    "enableFullscreen": true,
+    "fullscreenShortcut": "F11"
+  },
+  "business": {
+    "currency": "BRL",
+    "taxRate": 0.1,
+    "minimumOrderValue": 20.0,
+    "maximumOrderItems": 20,
+    "allowGuestCheckout": true,
+    "requirePhoneNumber": true,
+    "requireCustomerName": false
+  },
+  "payment": {
+    "enableCreditCard": true,
+    "enableDebitCard": true,
+    "enablePix": false,
+    "enableCash": false,
+    "enableVoucher": false
+  },
+  "api": {
+    "baseUrl": "http://localhost:8001/api/v1",
+    "timeout": 20000,
+    "retryAttempts": 2,
+    "offlineFallback": false
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "terminalId": 2,
+  "terminalName": "Kiosk 2 - Praça de Alimentação",
+  "location": "Praça de Alimentação",
+  "active": true,
+  "ui": {
+    "welcomeScreen": {
+      "title": "Chefia Express",
+      "subtitle": "Pedido Rápido",
+      "customMessage": "Retire seu pedido em 15 minutos",
+      "backgroundImage": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=1920&h=1080&fit=crop",
+      "overlayOpacity": 0.6,
+      "autoStartDelay": 45,
+      "showLogo": true
+    },
+    "layout": {
+      "categoriesPosition": "left",
+      "showSearchBar": true,
+      "showCartButton": true,
+      "productGridColumns": 4,
+      "headerBanner": {
+        "enabled": true,
+        "text": "⚡ Pedido Express - Retire em 15min",
+        "backgroundColor": "#10b981",
+        "textColor": "#ffffff",
+        "icon": "⏰"
+      }
+    },
+    "darkMode": false,
+    "primaryColor": "#10b981",
+    "secondaryColor": "#f59e0b",
+    "animations": {
+      "enabled": true,
+      "duration": "fast"
+    }
+  },
+  "features": {
+    "enableHapticFeedback": true,
+    "enableSoundEffects": true,
+    "enableOfflineMode": true,
+    "enablePWA": true,
+    "enableFullscreen": true,
+    "fullscreenShortcut": "F11"
+  },
+  "business": {
+    "currency": "BRL",
+    "taxRate": 0.1,
+    "minimumOrderValue": 15.0,
+    "maximumOrderItems": 30,
+    "allowGuestCheckout": true,
+    "requirePhoneNumber": true,
+    "requireCustomerName": true
+  },
+  "payment": {
+    "enableCreditCard": true,
+    "enableDebitCard": true,
+    "enablePix": true,
+    "enableCash": false,
+    "enableVoucher": true
+  },
+  "api": {
+    "baseUrl": "http://localhost:8001/api/v1",
+    "timeout": 30000,
+    "retryAttempts": 3,
+    "offlineFallback": true
+  }
+}

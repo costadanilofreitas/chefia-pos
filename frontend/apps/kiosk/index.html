@@ -3,12 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>POS Modern - Kiosk</title>
-    <meta name="description" content="Sistema de Kiosk para o POS Modern" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Chefia Kiosk - Autoatendimento</title>
+    <meta name="description" content="Sistema de autoatendimento Chefia POS" />
+    <meta name="theme-color" content="#ef4444" />
+    <link rel="icon" type="image/svg+xml" href="/kiosk-icon.svg" />
+    <link rel="apple-touch-icon" href="/kiosk-icon-192.png" />
+    <style>
+      /* Prevent text selection and cursor on non-interactive elements */
+      * {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        cursor: default !important;
+      }
+      
+      /* Allow selection and proper cursor only on inputs and buttons */
+      input, textarea, select {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+        cursor: text !important;
+      }
+      
+      button, a, [role="button"], .touchable {
+        cursor: pointer !important;
+      }
+      
+      /* Disable right-click context menu */
+      body {
+        -webkit-touch-callout: none;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/index.jsx"></script>
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

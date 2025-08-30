@@ -1,0 +1,67 @@
+{
+  "terminalId": 1,
+  "terminalName": "Kiosk 1 - Entrada Principal",
+  "location": "Entrada Principal",
+  "active": true,
+  "ui": {
+    "welcomeScreen": {
+      "title": "Chefia Gourmet",
+      "subtitle": "Sabor e Qualidade",
+      "customMessage": "Faça seu pedido de forma rápida e prática",
+      "backgroundImage": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1920&h=1080&fit=crop",
+      "overlayOpacity": 0.7,
+      "autoStartDelay": 60,
+      "showLogo": true
+    },
+    "layout": {
+      "categoriesPosition": "left",
+      "showSearchBar": true,
+      "showCartButton": true,
+      "productGridColumns": 3,
+      "headerBanner": {
+        "enabled": true,
+        "text": "🔥 Ofertas do Dia - Até 30% OFF",
+        "backgroundColor": "#ef4444",
+        "textColor": "#ffffff",
+        "icon": "🎉"
+      }
+    },
+    "darkMode": false,
+    "primaryColor": "#ef4444",
+    "secondaryColor": "#3b82f6",
+    "animations": {
+      "enabled": true,
+      "duration": "normal"
+    }
+  },
+  "features": {
+    "enableHapticFeedback": true,
+    "enableSoundEffects": false,
+    "enableOfflineMode": true,
+    "enablePWA": true,
+    "enableFullscreen": true,
+    "fullscreenShortcut": "F11"
+  },
+  "business": {
+    "currency": "BRL",
+    "taxRate": 0.1,
+    "minimumOrderValue": 10.0,
+    "maximumOrderItems": 50,
+    "allowGuestCheckout": true,
+    "requirePhoneNumber": false,
+    "requireCustomerName": true
+  },
+  "payment": {
+    "enableCreditCard": true,
+    "enableDebitCard": true,
+    "enablePix": true,
+    "enableCash": true,
+    "enableVoucher": false
+  },
+  "api": {
+    "baseUrl": "http://localhost:8001/api/v1",
+    "timeout": 30000,
+    "retryAttempts": 3,
+    "offlineFallback": true
+  }
+}

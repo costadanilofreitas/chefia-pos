@@ -3,34 +3,39 @@
  * Kitchen Display System main interface with reduced complexity
  */
 
-import { useState, useCallback, useMemo, lazy, Suspense, useEffect } from 'react';
-import { 
-  FaSync, FaWifi, FaExpand, FaCompress, FaVolumeUp, 
-  FaVolumeMute, FaKeyboard, FaMoon, FaSun 
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  FaCompress,
+  FaExpand,
+  FaKeyboard, FaMoon, FaSun,
+  FaSync,
+  FaVolumeMute,
+  FaVolumeUp,
+  FaWifi
 } from 'react-icons/fa';
+import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { Select } from '../components/Select';
-import { Badge } from '../components/Badge';
-import { useFullscreen } from '../hooks/useFullscreen';
-import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { useKDSOrders } from '../hooks/useKDSOrders';
-import { useKDSAlerts } from '../hooks/useKDSAlerts';
-import { useKDSWebSocket } from '../hooks/useKDSWebSocket';
-import { useTheme } from '../contexts/ThemeContext';
-import { 
-  TIME_INTERVALS, 
-  THRESHOLDS, 
-  ORDER_STATUS, 
+import {
+  KEYBOARD_SHORTCUTS,
+  ORDER_STATUS,
   STATION_ALL,
-  KEYBOARD_SHORTCUTS 
+  THRESHOLDS,
+  TIME_INTERVALS
 } from '../config/constants';
-import { 
-  getMinutesElapsed, 
-  formatTime, 
-  isDelayed,
-  countByStatus 
+import { useTheme } from '../contexts/ThemeContext';
+import { useFullscreen } from '../hooks/useFullscreen';
+import { useKDSAlerts } from '../hooks/useKDSAlerts';
+import { useKDSOrders } from '../hooks/useKDSOrders';
+import { useKDSWebSocket } from '../hooks/useKDSWebSocket';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import type { Order, Station } from '../services/kdsService';
+import {
+  countByStatus,
+  formatTime,
+  getMinutesElapsed,
+  isDelayed
 } from '../utils/dataHelpers';
-import type { Station, Order } from '../services/kdsService';
 
 // Lazy load components
 const OrderCard = lazy(() => import('./KDSOrderCard'));
@@ -85,7 +90,7 @@ const KDSHeader = ({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-            Sistema de Cozinha
+            Cozinha
           </h1>
           <Select
             value={selectedStation}

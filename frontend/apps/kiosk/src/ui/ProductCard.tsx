@@ -1,7 +1,7 @@
 // /home/ubuntu/pos-modern/frontend/apps/kiosk/src/ui/ProductCard.tsx
 
 import React from 'react';
-import { formatCurrency } from '@common/utils/formatters';
+import { formatCurrency } from '../utils/formatters';
 
 type Product = {
   id: string | number;

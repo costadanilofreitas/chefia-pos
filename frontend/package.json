@@ -1,9 +1,8 @@
 {
-  "name": "pos-modern-frontend",
+  "name": "chefia-pos-frontend",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "common",
     "apps/*",
     "e2e"
   ],

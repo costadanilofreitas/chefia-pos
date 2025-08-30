@@ -10,11 +10,11 @@ Chefia POS is a comprehensive point-of-sale system for restaurants built with a 
 
 ```
 chefia-pos/
-├── src/                    # Backend (FastAPI/Python 3.12+)
+├── src/                    # Backend (FastAPI/Python 3.11+)
 │   ├── auth/              # Authentication & authorization
 │   ├── business_day/      # Business day management
 │   ├── cashier/           # Cashier operations
-│   ├── command/           # Command cards system
+│   ├── command_card/      # Command cards system
 │   ├── core/              # Core utilities & middleware
 │   ├── customer/          # Customer management
 │   ├── delivery/          # Delivery management
@@ -141,15 +141,15 @@ npm run test:e2e:report   # View test report
 ┌─────────────────────────────────────────────────────────┐
 │                    FRONTEND APPS                         │
 ├─────────────────────────────────────────────────────────┤
-│ POS ⭐⭐⭐⭐⭐ | KDS ⭐⭐⭐ | Kiosk ⭐⭐⭐ | Waiter ⭐⭐ | Backoffice ⭐⭐ │
-│ React 18 + TypeScript 5 + Vite 7 + TailwindCSS 3        │
+│ POS ⭐⭐⭐⭐⭐ | KDS ⭐⭐⭐⭐ | Kiosk ⭐⭐⭐ | Waiter ⭐⭐ | Backoffice ⭐⭐ │
+│ React 18 + TypeScript 5 + Vite 5 + TailwindCSS 3        │
 └─────────────────────────────────────────────────────────┘
                         ↕ HTTP/WebSocket
 ┌─────────────────────────────────────────────────────────┐
 │                    BACKEND (FastAPI)                     │
 ├─────────────────────────────────────────────────────────┤
 │ 30+ Business Modules | Event Bus | Async Operations     │
-│ Python 3.12+ | Pydantic 2 | SQLAlchemy 2 | JWT Auth    │
+│ Python 3.11+ | Pydantic 2 | SQLAlchemy 2 | JWT Auth    │
 └─────────────────────────────────────────────────────────┘
                         ↕ 
 ┌─────────────────────────────────────────────────────────┐
@@ -173,7 +173,7 @@ src/
 
 ### Frontend App Maturity
 - **POS Terminal** ⭐⭐⭐⭐⭐: Production-ready, reference architecture, 250KB bundle
-- **KDS** ⭐⭐⭐: Migrating to POS architecture
+- **KDS** ⭐⭐⭐⭐: Migrating to POS architecture
 - **Kiosk** ⭐⭐⭐: Partially independent
 - **Waiter** ⭐⭐: Initial phase
 - **Backoffice** ⭐⭐: Cloud-based, different context
@@ -595,25 +595,6 @@ cd frontend/apps/pos && npm run analyze:all && npm run test && npm run build
 - **Dev Guide**: `/docs/ai/GUIA_DESENVOLVIMENTO.md` - Development best practices (Portuguese)
 - **Architecture**: `/docs/ai/ARQUITETURA_TECNICA_COMPLETA.md` - Full technical architecture
 - **Business Rules**: `/docs/ai/REGRAS_NEGOCIO_CONSOLIDADAS.md` - Business logic documentation
-
-## Module Evolution Strategy
-
-### Current State & Migration Path
-
-1. **POS Terminal** ✅ COMPLETE
-   - Zero Material UI
-   - Zero common/ dependencies
-   - 250KB optimized bundle
-   - Reference for other modules
-
-2. **KDS** 🔄 MIGRATING (Phase 2/3)
-   - 60% Material UI removed
-   - 40% Redux → Context migrated
-   - Target: <200KB bundle
-
-3. **Kiosk & Waiter** 📋 PLANNED
-   - Follow KDS migration pattern
-   - Adopt POS architecture
 
 ## Important Reminders
 

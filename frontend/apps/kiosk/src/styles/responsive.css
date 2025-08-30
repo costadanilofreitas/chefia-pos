@@ -1,0 +1,142 @@
+/* Responsive styles for different screen sizes and orientations */
+
+/* Small tablets and phones in portrait (7-10 inches) */
+@media (min-width: 480px) and (max-width: 768px) and (orientation: portrait) {
+  .welcome-title {
+    font-size: 2.5rem !important;
+  }
+  .welcome-button {
+    min-width: 320px !important;
+    font-size: 1.5rem !important;
+  }
+}
+
+/* Small tablets and phones in landscape */
+@media (min-width: 480px) and (max-width: 768px) and (orientation: landscape) {
+  .welcome-container {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+  .welcome-title {
+    font-size: 2rem !important;
+  }
+  .welcome-button {
+    padding: 1rem 2rem !important;
+    font-size: 1.25rem !important;
+  }
+}
+
+/* Large tablets (10-13 inches) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .welcome-title {
+    font-size: 3.5rem !important;
+  }
+  .welcome-subtitle {
+    font-size: 1.75rem !important;
+  }
+  .welcome-button {
+    min-width: 380px !important;
+    font-size: 2rem !important;
+  }
+}
+
+/* Large screens and TVs in portrait (vertical kiosks) */
+@media (min-width: 1024px) and (orientation: portrait) {
+  .welcome-container {
+    max-width: 80% !important;
+    margin: 0 auto !important;
+  }
+  .welcome-title {
+    font-size: 5rem !important;
+  }
+  .welcome-subtitle {
+    font-size: 2.5rem !important;
+  }
+  .welcome-message {
+    font-size: 2rem !important;
+  }
+  .welcome-button {
+    min-width: 500px !important;
+    padding: 2rem 3rem !important;
+    font-size: 2.5rem !important;
+  }
+}
+
+/* Extra large screens (TVs, large kiosks) */
+@media (min-width: 1920px) {
+  .welcome-title {
+    font-size: 6rem !important;
+  }
+  .welcome-subtitle {
+    font-size: 3rem !important;
+  }
+  .welcome-message {
+    font-size: 2.5rem !important;
+  }
+  .welcome-button {
+    min-width: 600px !important;
+    padding: 2.5rem 4rem !important;
+    font-size: 3rem !important;
+  }
+}
+
+/* Square screens (1:1 aspect ratio) */
+@media (aspect-ratio: 1/1) {
+  .welcome-container {
+    padding: 3rem !important;
+  }
+  .welcome-content {
+    max-width: 70% !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* Ultra-wide screens */
+@media (min-aspect-ratio: 21/9) {
+  .welcome-container {
+    max-width: 60% !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* Touch-specific optimizations */
+@media (pointer: coarse) {
+  /* Larger touch targets for touch screens */
+  button,
+  .touchable {
+    min-height: 48px !important;
+    min-width: 48px !important;
+  }
+  
+  .welcome-button {
+    padding: 1.5rem 3rem !important;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper shadows and borders for retina displays */
+  .welcome-title,
+  .welcome-subtitle,
+  .welcome-message {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8),
+                 0 4px 16px rgba(0, 0, 0, 0.6),
+                 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  }
+}
+
+/* Accessibility - Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .welcome-overlay {
+    opacity: 0.8 !important;
+  }
+}

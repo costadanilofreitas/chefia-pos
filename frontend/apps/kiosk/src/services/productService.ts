@@ -1,129 +1,299 @@
-import { ApiClient } from '@common/services/apiClient';
+import apiClient from './apiClient';
+import { API_CONFIG } from '../config/api';
+import { offlineStorage } from './offlineStorage';
+import { errorHandler } from './errorHandler';
 
+// Types
 export interface Category {
-  id: number;
+  id: string;
   name: string;
+  description?: string;
+  image_url?: string;
+  display_order?: number;
+  is_active: boolean;
+  parent_id?: string | null;
+}
+
+export interface ProductCustomization {
+  id: string;
+  name: string;
+  type: 'addition' | 'removal' | 'option';
+  price?: number;
+  max_quantity?: number;
+  is_required?: boolean;
+}
+
+export interface ProductVariant {
+  id: string;
+  name: string;
+  price: number;
+  is_available: boolean;
 }
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;
   image_url?: string;
-  category_id: number;
+  category_id: string;
+  category?: Category;
+  is_available: boolean;
+  preparation_time?: number; // in minutes
+  customizations?: ProductCustomization[];
+  variants?: ProductVariant[];
+  tags?: string[];
+  nutritional_info?: {
+    calories?: number;
+    proteins?: number;
+    carbohydrates?: number;
+    fats?: number;
+  };
+}
+
+export interface ProductSearchParams {
+  q?: string;
+  category_id?: string;
+  min_price?: number;
+  max_price?: number;
+  tags?: string[];
+  is_available?: boolean;
+  sort_by?: 'name' | 'price' | 'popularity';
+  sort_order?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
 }
 
 /**
- * Service for managing products and categories in the Kiosk app
+ * Enhanced Product Service with caching and error handling
  */
-export class ProductService {
-  private apiClient: ApiClient;
-
-  constructor() {
-    // Use the base URL from environment or default to /api
-    const baseURL = process.env['REACT_APP_API_URL'] || '/api';
-    this.apiClient = new ApiClient(`${baseURL}/products`);
-  }
+class ProductService {
+  // Simple in-memory cache
+  private cache = new Map<string, { data: any; timestamp: number }>();
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   /**
    * Get all product categories
-   * @returns Promise with categories data
    */
   async getCategories(): Promise<Category[]> {
+    const cacheKey = 'categories';
+    const cached = this.getFromCache<Category[]>(cacheKey);
+    if (cached) return cached;
+
+    const timer = offlineStorage.startTimer('Fetch Categories');
+    
     try {
-      const response = await this.apiClient.get<{success: boolean, data: Category[]}>('/categories');
+      const response = await apiClient.get<Category[]>(
+        API_CONFIG.ENDPOINTS.PRODUCTS.CATEGORIES
+      );
       
-      if (response.data && response.data.success) {
-        return response.data.data;
-      }
+      const categories = response.data;
+      this.setCache(cacheKey, categories);
       
-      throw new Error('Failed to fetch categories');
+      timer();
+      offlineStorage.log('Categories fetched successfully', { count: categories.length });
+      
+      return categories;
     } catch (error) {
-      console.error('Error fetching categories:', error);
-      throw error;
+      offlineStorage.error('Failed to fetch categories', error);
+      throw errorHandler.handle(error, 'ProductService.getCategories');
     }
   }
 
   /**
    * Get all products
-   * @returns Promise with products data
    */
-  async getProducts(): Promise<Product[]> {
+  async getProducts(params?: ProductSearchParams): Promise<Product[]> {
+    const cacheKey = `products-${JSON.stringify(params || {})}`;
+    const cached = this.getFromCache<Product[]>(cacheKey);
+    if (cached) return cached;
+
+    const timer = offlineStorage.startTimer('Fetch Products');
+    
     try {
-      const response = await this.apiClient.get<{success: boolean, data: Product[]}>('/');
+      const response = await apiClient.get<Product[]>(
+        API_CONFIG.ENDPOINTS.PRODUCTS.LIST,
+        params ? { params } : undefined
+      );
       
-      if (response.data && response.data.success) {
-        return response.data.data;
-      }
+      const products = response.data;
+      this.setCache(cacheKey, products);
       
-      throw new Error('Failed to fetch products');
+      timer();
+      offlineStorage.log('Products fetched successfully', { 
+        count: products.length,
+        params 
+      });
+      
+      return products;
     } catch (error) {
-      console.error('Error fetching products:', error);
-      throw error;
+      offlineStorage.error('Failed to fetch products', error);
+      throw errorHandler.handle(error, 'ProductService.getProducts');
     }
   }
 
   /**
    * Get products by category
-   * @param categoryId - ID of the category to filter by
-   * @returns Promise with filtered products data
    */
-  async getProductsByCategory(categoryId: number): Promise<Product[]> {
+  async getProductsByCategory(categoryId: string): Promise<Product[]> {
+    return this.getProducts({ category_id: categoryId });
+  }
+
+  /**
+   * Search products
+   */
+  async searchProducts(searchTerm: string, params?: Omit<ProductSearchParams, 'q'>): Promise<Product[]> {
+    if (!searchTerm || searchTerm.trim().length < 2) {
+      return [];
+    }
+
+    const timer = offlineStorage.startTimer('Search Products');
+    
     try {
-      const response = await this.apiClient.get<{success: boolean, data: Product[]}>(`/category/${categoryId}`);
+      const response = await apiClient.get<Product[]>(
+        API_CONFIG.ENDPOINTS.PRODUCTS.SEARCH,
+        { 
+          params: {
+            q: searchTerm.trim(),
+            ...params
+          }
+        }
+      );
       
-      if (response.data && response.data.success) {
-        return response.data.data;
-      }
+      const products = response.data;
       
-      throw new Error('Failed to fetch products by category');
+      timer();
+      offlineStorage.log('Products search completed', { 
+        searchTerm,
+        results: products.length 
+      });
+      
+      return products;
     } catch (error) {
-      console.error(`Error fetching products for category ${categoryId}:`, error);
-      throw error;
+      offlineStorage.error('Failed to search products', error);
+      throw errorHandler.handle(error, 'ProductService.searchProducts');
     }
   }
 
   /**
-   * Search products by term
-   * @param searchTerm - Search term to filter products
-   * @returns Promise with search results
+   * Get product by ID
    */
-  async searchProducts(searchTerm: string): Promise<Product[]> {
+  async getProductById(productId: string): Promise<Product> {
+    const cacheKey = `product-${productId}`;
+    const cached = this.getFromCache<Product>(cacheKey);
+    if (cached) return cached;
+
+    const timer = offlineStorage.startTimer('Fetch Product Details');
+    
     try {
-      const response = await this.apiClient.get<{success: boolean, data: Product[]}>(`/search?q=${encodeURIComponent(searchTerm)}`);
+      const response = await apiClient.get<Product>(
+        API_CONFIG.ENDPOINTS.PRODUCTS.DETAIL(productId)
+      );
       
-      if (response.data && response.data.success) {
-        return response.data.data;
+      const product = response.data;
+      this.setCache(cacheKey, product);
+      
+      timer();
+      offlineStorage.log('Product details fetched', { productId, name: product.name });
+      
+      return product;
+    } catch (error) {
+      offlineStorage.error(`Failed to fetch product ${productId}`, error);
+      
+      if ((error as any)?.status === 404) {
+        throw errorHandler.handleValidationError(
+          'product',
+          'Produto não encontrado',
+          productId
+        );
       }
       
-      throw new Error('Failed to search products');
-    } catch (error) {
-      console.error(`Error searching products with term "${searchTerm}":`, error);
-      throw error;
+      throw errorHandler.handle(error, 'ProductService.getProductById');
     }
   }
 
   /**
-   * Get product details by ID
-   * @param productId - ID of the product to fetch
-   * @returns Promise with product details
+   * Get featured products
    */
-  async getProductById(productId: number): Promise<Product> {
+  async getFeaturedProducts(): Promise<Product[]> {
+    return this.getProducts({ 
+      tags: ['featured'],
+      is_available: true,
+      limit: 10 
+    });
+  }
+
+  /**
+   * Get popular products
+   */
+  async getPopularProducts(): Promise<Product[]> {
+    return this.getProducts({ 
+      sort_by: 'popularity',
+      sort_order: 'desc',
+      is_available: true,
+      limit: 10 
+    });
+  }
+
+  /**
+   * Check product availability
+   */
+  async checkAvailability(productId: string): Promise<boolean> {
     try {
-      const response = await this.apiClient.get<{success: boolean, data: Product}>(`/${productId}`);
-      
-      if (response.data && response.data.success) {
-        return response.data.data;
+      const product = await this.getProductById(productId);
+      return product.is_available;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Clear cache
+   */
+  clearCache(): void {
+    this.cache.clear();
+    offlineStorage.log('Product cache cleared');
+  }
+
+  /**
+   * Get from cache
+   */
+  private getFromCache<T>(key: string): T | null {
+    const cached = this.cache.get(key);
+    
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      offlineStorage.debug(`Cache hit: ${key}`);
+      return cached.data as T;
+    }
+    
+    if (cached) {
+      this.cache.delete(key);
+    }
+    
+    return null;
+  }
+
+  /**
+   * Set cache
+   */
+  private setCache(key: string, data: any): void {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now()
+    });
+    
+    // Limit cache size
+    if (this.cache.size > 100) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
       }
-      
-      throw new Error(`Failed to fetch product with ID ${productId}`);
-    } catch (error) {
-      console.error(`Error fetching product ${productId}:`, error);
-      throw error;
     }
   }
 }
 
-// Export a singleton instance
+// Export singleton instance
 export const productService = new ProductService();
+
+// Also export the class for testing
+export { ProductService };

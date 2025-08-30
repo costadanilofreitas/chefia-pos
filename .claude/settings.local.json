@@ -40,7 +40,9 @@
       "Read(/C:\\Users\\Consultor/**)",
       "Bash(npx jscpd:*)",
       "Bash(dir:*)",
-      "WebSearch"
+      "WebSearch",
+      "Read(C:\\Users\\Consultor\\Downloads/**)",
+      "Read(C:\\Users\\Consultor\\Downloads/**)"
     ],
     "deny": [],
     "ask": [],

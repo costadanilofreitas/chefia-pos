@@ -1,0 +1,111 @@
+/* Import fonts first (before any other statements) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Import Tailwind layers */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom utility classes */
+@layer utilities {
+  /* Glass morphism effect */
+  .glass-morphism {
+    @apply backdrop-blur-md bg-white/5 border border-white/10;
+  }
+  
+  /* Smooth theme transitions */
+  .theme-transition {
+    @apply transition-colors duration-300 ease-in-out;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Global styles */
+@layer base {
+  /* Prevent text selection and unwanted mobile interactions */
+  button, nav, header, footer, aside, label {
+    @apply select-none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+  }
+  
+  /* Allow text selection only on specific elements */
+  input, textarea, .selectable {
+    @apply select-text;
+  }
+  
+  /* Improve touch targets for mobile */
+  button, a, [role="button"], [role="tab"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Performance optimizations for Kiosk */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Fast transitions for kiosk operations */
+.transition-fast {
+  transition-duration: 75ms;
+}
+
+.transition-instant {
+  transition-duration: 50ms;
+}
+
+/* Optimize rendering for product grid */
+.product-grid {
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hardware acceleration for animations */
+.hw-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Disable tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Optimize button responsiveness */
+button {
+  -webkit-touch-callout: none;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

@@ -3,38 +3,51 @@
  * Waiter terminal interface with reduced complexity
  */
 
-import React, { useState, useCallback, useMemo, memo } from 'react';
-import { 
-  Users, Receipt, BookOpen, Moon, Sun, RefreshCw, 
-  Plus, Clock, CheckCircle, Wifi, WifiOff, Maximize, Minimize 
+import {
+  BookOpen,
+  CheckCircle,
+  Clock,
+  Maximize, Minimize,
+  Moon,
+  Plus,
+  Receipt,
+  RefreshCw,
+  Sun,
+  Users,
+  Wifi, WifiOff
 } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import React, { memo, useCallback, useMemo, useState } from 'react';
+import { BottomNavigation } from '../components/BottomNavigation';
+import { NotificationContainer } from '../components/NotificationContainer';
+import { PullToRefresh } from '../components/PullToRefresh';
+import { Alert } from '../components/ui/Alert';
+import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
+import { Card, CardContent, CardFooter, CardHeader } from '../components/ui/Card';
+import { OrderSkeleton, TableSkeleton } from '../components/ui/Skeleton';
+import { TabPanel, Tabs } from '../components/ui/Tabs';
+import {
+  ITEM_STATUS,
+  NOTIFICATION_TYPE,
+  TABLE_STATUS,
+  TABS,
+  TIME
+} from '../config/constants';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { useFullscreen } from '../hooks/useFullscreen';
+import { KeyboardKeys, useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { useWaiterData } from '../hooks/useWaiterData';
 import { useWaiterWebSocket } from '../hooks/useWaiterWebSocket';
-import { useKeyboardShortcuts, KeyboardKeys } from '../hooks/useKeyboardShortcuts';
-import { useFullscreen } from '../hooks/useFullscreen';
-import { Button } from '../components/ui/Button';
-import { Card, CardHeader, CardContent, CardFooter } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
-import { Tabs, TabPanel } from '../components/ui/Tabs';
-import { Alert } from '../components/ui/Alert';
-import { NotificationContainer } from '../components/NotificationContainer';
-import { BottomNavigation } from '../components/BottomNavigation';
-import { TableSkeleton, OrderSkeleton } from '../components/ui/Skeleton';
-import { PullToRefresh } from '../components/PullToRefresh';
-import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { logger } from '../services/logger';
-import { 
-  TABLE_STATUS, ITEM_STATUS, TABS, 
-  TIME, NOTIFICATION_TYPE 
-} from '../config/constants';
-import { 
-  getStatusConfig, calculateTotal, 
+import type { Order, Table } from '../types';
+import {
+  calculateTotal,
   formatCurrency, getItemsWithStatus,
+  getStatusConfig,
   updateItemById, upsertItem
 } from '../utils/dataHelpers';
-import type { Table, Order } from '../types';
 
 // Table Card Component
 const TableCard = memo(({ 
@@ -178,7 +191,7 @@ const WaiterHeader = memo(({
       <div className="flex justify-between items-center h-16">
         <div className="flex items-center space-x-4">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white select-none">
-            Terminal Garçom
+            Garçom
           </h1>
           <div className="flex items-center space-x-2">
             {isOnline ? (

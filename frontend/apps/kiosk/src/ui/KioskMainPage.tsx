@@ -1,330 +1,356 @@
-import React, { useState, useEffect } from 'react';
-import ProductCard from '@common/components/ProductCard';
-import { Container, Grid, Typography, Box, Tabs, Tab, TextField, Button, CircularProgress, Alert } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { productService, Category, Product } from '../services/productService';
-
-interface CartItem extends Product {
-  quantity: number;
-}
+import React, { useCallback, useEffect, useState } from 'react';
+import { CategorySidebar } from '../components/layout/CategorySidebar';
+import { KioskHeader } from '../components/layout/KioskHeader';
+import { SessionTimeoutModal } from '../components/layout/SessionTimeoutModal';
+import { EmptyProducts } from '../components/products/EmptyProducts';
+import { ProductGrid } from '../components/products/ProductGrid';
+import { ProductSection } from '../components/products/ProductSection';
+import { Alert } from '../components/ui/Alert';
+import { WelcomeScreen } from '../components/ui/WelcomeScreen';
+import { OrderConfirmation } from '../components/ui/OrderConfirmation';
+import { Spinner } from '../components/ui/Spinner';
+import { TabGroup } from '../components/ui/TabGroup';
+import { Text } from '../components/ui/Text';
+import { TouchButton } from '../components/ui/TouchButton';
+import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { useTerminalConfig } from '../contexts/TerminalConfigContext';
+import { useFullscreen } from '../hooks/useFullscreen';
+import { useProducts } from '../hooks/useProducts';
+import { useSessionTimeout } from '../hooks/useSessionTimeout';
+import { offlineStorage } from '../services/offlineStorage';
+import { Product } from '../services/productService';
+import CartSidebar from './CartSidebar';
+import PaymentScreen from './PaymentScreen';
 
 /**
- * Página principal do Kiosk para clientes fazerem pedidos
- * @returns {JSX.Element} Componente da página principal do Kiosk
+ * Enhanced Kiosk Main Page using Context API and custom hooks
  */
 const KioskMainPage: React.FC = () => {
-  // Estados
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [activeCategory, setActiveCategory] = useState<number>(0);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  // Contexts
+  const { isDarkMode } = useTheme();
+  const { user, startGuestSession } = useAuth();
+  const { cart, addItem, clearCart, isInCart } = useCart();
+  const { config: terminalConfig } = useTerminalConfig();
+  
+  // Custom hooks
+  const {
+    categories,
+    isLoading,
+    error,
+    selectedCategory,
+    searchTerm,
+    availableProducts,
+    featuredProducts,
+    selectCategory,
+    searchProducts,
+    clearSearch,
+    refresh
+  } = useProducts();
 
-  // Efeito para carregar categorias e produtos
-  useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Carregar categorias da API
-        const categoriesData = await productService.getCategories();
-        
-        // Adicionar categoria "Todos" no início
-        const allCategories = [
-          { id: 0, name: 'Todos' },
-          ...categoriesData
-        ];
-        
-        // Carregar produtos da API
-        const productsData = await productService.getProducts();
-        
-        setCategories(allCategories);
-        setProducts(productsData);
-        setFilteredProducts(productsData);
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-        setError('Falha ao carregar produtos. Por favor, tente novamente.');
-        
-        // Usar dados de fallback em caso de erro
-        const fallbackCategories: Category[] = [
-          { id: 0, name: 'Todos' },
-          { id: 1, name: 'Lanches' },
-          { id: 2, name: 'Bebidas' },
-          { id: 3, name: 'Sobremesas' },
-          { id: 4, name: 'Combos' }
-        ];
-        
-        const fallbackProducts: Product[] = [
-          {
-            id: 1,
-            name: 'Hambúrguer Clássico',
-            description: 'Pão, hambúrguer, queijo, alface, tomate e molho especial',
-            price: 25.90,
-            image_url: '/images/burger.jpg',
-            category_id: 1
-          },
-          {
-            id: 2,
-            name: 'Refrigerante Cola',
-            description: 'Lata 350ml',
-            price: 6.50,
-            image_url: '/images/cola.jpg',
-            category_id: 2
-          }
-        ];
-        
-        setCategories(fallbackCategories);
-        setProducts(fallbackProducts);
-        setFilteredProducts(fallbackProducts);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
-  }, []);
-
-  // Filtrar produtos por categoria
-  useEffect(() => {
-    const filterProductsByCategory = async (): Promise<void> => {
-      if (activeCategory === 0) {
-        setFilteredProducts(products);
-      } else {
-        try {
-          const categoryId = categories[activeCategory]?.id;
-          if (categoryId !== undefined && categoryId !== 0) {
-            // Buscar produtos por categoria da API
-            const categoryProducts = await productService.getProductsByCategory(categoryId);
-            setFilteredProducts(categoryProducts);
-          } else {
-            setFilteredProducts(products);
-          }
-        } catch (error) {
-          console.error('Erro ao filtrar produtos por categoria:', error);
-          // Fallback para filtro local em caso de erro na API
-          const categoryId = categories[activeCategory]?.id;
-          setFilteredProducts(
-            products.filter(product => 
-              categoryId === 0 || product.category_id === categoryId
-            )
-          );
-        }
-      }
-    };
-    
-    if (categories.length > 0 && products.length > 0) {
-      filterProductsByCategory();
+  // Session timeout with warning
+  const { 
+    isWarning, 
+    timeRemaining, 
+    extendSession, 
+    endSession 
+  } = useSessionTimeout({
+    timeoutDuration: 5 * 60 * 1000, // 5 minutes
+    warningDuration: 60 * 1000, // 1 minute warning
+    onTimeout: () => {
+      setShowTimeoutModal(true);
+      clearCart();
     }
-  }, [activeCategory, products, categories]);
+  });
 
-  // Filtrar produtos por termo de busca
+  // Local state
+  const [showCart, setShowCart] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [localSearchTerm, setLocalSearchTerm] = useState('');
+  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
+  useFullscreen(); // Fullscreen is handled by the hook
+  const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
+  const [lastOrderNumber, setLastOrderNumber] = useState<string>('');
+
+  // Initialize guest session on mount
   useEffect(() => {
-    const searchProducts = async (): Promise<void> => {
-      if (searchTerm.trim() === '') {
-        // Se não houver termo de busca, aplicar apenas o filtro de categoria
-        if (activeCategory === 0) {
-          setFilteredProducts(products);
-        } else {
-          const categoryId = categories[activeCategory]?.id;
-          if (categoryId !== undefined && categoryId !== 0) {
-            try {
-              const categoryProducts = await productService.getProductsByCategory(categoryId);
-              setFilteredProducts(categoryProducts);
-            } catch (error) {
-              console.error('Erro ao filtrar produtos por categoria:', error);
-              // Fallback para filtro local
-              setFilteredProducts(
-                products.filter(product => product.category_id === categoryId)
-              );
-            }
-          }
-        }
-      } else {
-        // Se houver termo de busca, buscar na API
-        try {
-          const searchResults = await productService.searchProducts(searchTerm);
-          
-          // Filtrar por categoria se necessário
-          if (activeCategory !== 0) {
-            const categoryId = categories[activeCategory]?.id;
-            setFilteredProducts(
-              searchResults.filter(product => product.category_id === categoryId)
-            );
-          } else {
-            setFilteredProducts(searchResults);
-          }
-        } catch (error) {
-          console.error('Erro ao buscar produtos:', error);
-          // Fallback para busca local
-          const searchResults = products.filter(product => 
-            (product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-             product.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
-            (activeCategory === 0 || categories[activeCategory]?.id === 0 || 
-             product.category_id === categories[activeCategory]?.id)
-          );
-          setFilteredProducts(searchResults);
-        }
-      }
-    };
-    
-    // Debounce para evitar muitas chamadas à API
-    const debounceTimer = setTimeout(() => {
-      if (categories.length > 0 && products.length > 0) {
-        searchProducts();
-      }
-    }, 300);
-    
-    return () => clearTimeout(debounceTimer);
-  }, [searchTerm, activeCategory, products, categories]);
+    if (!user) {
+      startGuestSession();
+      offlineStorage.log('Guest session started');
+    }
+  }, [user, startGuestSession]);
 
-  // Manipular mudança de categoria
-  const handleCategoryChange = (event: React.SyntheticEvent, newValue: number): void => {
-    setActiveCategory(newValue);
-  };
-
-  // Manipular mudança no campo de busca
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    setSearchTerm(event.target.value);
-  };
-
-  // Adicionar produto ao carrinho
-  const handleAddToCart = (product: Product): void => {
-    const existingItem = cart.find(item => item.id === product.id);
+  // Handle product selection
+  const handleProductSelect = useCallback((product: Product) => {
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1
+    });
     
-    if (existingItem) {
-      // Se o produto já estiver no carrinho, aumentar a quantidade
-      setCart(cart.map(item => 
-        item.id === product.id 
-          ? { ...item, quantity: item.quantity + 1 } 
-          : item
-      ));
+    offlineStorage.trackAction('product_added_to_cart', {
+      productId: product.id,
+      productName: product.name,
+      price: product.price
+    });
+
+    // Show cart briefly
+    setShowCart(true);
+    setTimeout(() => setShowCart(false), 2000);
+  }, [addItem]);
+
+  // Handle search
+  const handleSearch = useCallback((term: string) => {
+    setLocalSearchTerm(term);
+    if (term.trim()) {
+      searchProducts(term);
     } else {
-      // Se o produto não estiver no carrinho, adicioná-lo com quantidade 1
-      setCart([...cart, { ...product, quantity: 1 }]);
+      clearSearch();
     }
-  };
+  }, [searchProducts, clearSearch]);
 
-  // Calcular total do carrinho
-  const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  // Handle category selection
+  const handleCategorySelect = useCallback((categoryId: string | null) => {
+    selectCategory(categoryId);
+    setShowSearch(false);
+    setLocalSearchTerm('');
+  }, [selectCategory]);
 
-  if (loading) {
+  // Handle checkout
+  const handleCheckout = useCallback(() => {
+    if (cart.itemCount > 0) {
+      setShowPayment(true);
+      setShowCart(false);
+    }
+  }, [cart.itemCount]);
+  
+  // Handle home/reset
+  const handleHome = useCallback(() => {
+    clearSearch();
+    selectCategory(null);
+    setShowSearch(false);
+    setShowCart(false);
+    setShowPayment(false);
+    setLocalSearchTerm('');
+    extendSession();
+  }, [clearSearch, selectCategory, extendSession]);
+  
+  // Handle payment complete
+  const handlePaymentComplete = useCallback(() => {
+    // Generate order number
+    const orderNumber = Math.floor(100 + Math.random() * 900).toString();
+    setLastOrderNumber(orderNumber);
+    
+    offlineStorage.log('Order completed', { orderNumber });
+    
+    clearCart();
+    setShowPayment(false);
+    setShowOrderConfirmation(true);
+  }, [clearCart]);
+  
+  // Handle new order
+  const handleNewOrder = useCallback(() => {
+    setShowOrderConfirmation(false);
+    setShowWelcome(true);
+    handleHome();
+  }, [handleHome]);
+  
+  // Handle start order
+  const handleStartOrder = useCallback(() => {
+    setShowWelcome(false);
+    startGuestSession();
+    offlineStorage.log('Customer started new order');
+  }, [startGuestSession]);
+
+  // Categories for sidebar
+  const categoriesWithCount = categories.map(cat => ({
+    ...cat,
+    itemCount: availableProducts.filter(p => p.category_id === cat.id).length
+  }));
+
+  // Show welcome screen
+  if (showWelcome) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Carregando produtos...</Typography>
-      </Box>
+      <WelcomeScreen 
+        onStart={handleStartOrder}
+      />
+    );
+  }
+  
+  // Show order confirmation
+  if (showOrderConfirmation) {
+    return (
+      <OrderConfirmation
+        orderNumber={lastOrderNumber}
+        estimatedTime={15}
+        onNewOrder={handleNewOrder}
+        autoCloseDelay={15000}
+      />
+    );
+  }
+  
+  // Render payment screen
+  if (showPayment) {
+    return (
+      <PaymentScreen
+        onBack={() => {
+          setShowPayment(false);
+          setShowCart(true);
+        }}
+        onComplete={handlePaymentComplete}
+      />
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Cabeçalho */}
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" component="h1">
-          Faça seu Pedido
-        </Typography>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            startIcon={<ShoppingCartIcon />}
-            sx={{ ml: 2 }}
-          >
-            Carrinho ({cart.length})
-          </Button>
-        </Box>
-      </Box>
-      
-      {/* Mensagem de erro */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-      
-      {/* Barra de busca */}
-      <Box sx={{ mb: 4 }}>
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Buscar produtos..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: <SearchIcon sx={{ mr: 1 }} />,
-          }}
-        />
-      </Box>
-      
-      {/* Tabs de categorias */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
-        <Tabs 
-          value={activeCategory} 
-          onChange={handleCategoryChange}
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          {categories.map((category) => (
-            <Tab key={category.id} label={category.name} />
-          ))}
-        </Tabs>
-      </Box>
-      
-      {/* Lista de produtos */}
-      <Grid container spacing={3}>
-        {filteredProducts.length > 0 ? (
-          filteredProducts.map(product => (
-            <Grid item xs={12} sm={6} md={4} key={product.id}>
-              <ProductCard 
-                product={product} 
-                onAddToCart={() => handleAddToCart(product)} 
-              />
-            </Grid>
-          ))
-        ) : (
-          <Box sx={{ width: '100%', textAlign: 'center', py: 4 }}>
-            <Typography variant="h6">
-              Nenhum produto encontrado
-            </Typography>
-          </Box>
+    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+      <div className="bg-gray-50 dark:bg-gray-900 min-h-screen flex">
+        {/* Category Sidebar - Left - Hidden on mobile */}
+        {terminalConfig?.ui?.layout?.categoriesPosition === 'left' && !showSearch && (
+          <CategorySidebar
+            categories={categoriesWithCount}
+            selectedCategory={selectedCategory}
+            onSelectCategory={handleCategorySelect}
+            className="hidden lg:block flex-shrink-0 w-64 xl:w-72 2xl:w-80"
+          />
         )}
-      </Grid>
-      
-      {/* Resumo do carrinho (fixo na parte inferior) */}
-      {cart.length > 0 && (
-        <Box 
-          sx={{ 
-            position: 'fixed', 
-            bottom: 0, 
-            left: 0, 
-            right: 0, 
-            bgcolor: 'background.paper',
-            boxShadow: 3,
-            p: 2,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            zIndex: 1000
-          }}
-        >
-          <Typography variant="h6">
-            Total: R$ {cartTotal.toFixed(2)}
-          </Typography>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            size="large"
-          >
-            Finalizar Pedido
-          </Button>
-        </Box>
-      )}
-    </Container>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col">
+          <KioskHeader
+            cartItemCount={cart.itemCount}
+            cartTotal={cart.total}
+            isDarkMode={isDarkMode}
+            showSearch={showSearch}
+            searchTerm={localSearchTerm}
+            onHome={handleHome}
+            onToggleSearch={() => setShowSearch(!showSearch)}
+            onToggleDarkMode={() => {}}
+            onCartClick={() => setShowCart(!showCart)}
+            onSearchChange={handleSearch}
+          />
+
+          {/* Top Category Tabs - Shows on mobile when sidebar is hidden */}
+          {(!showSearch && categories.length > 0) && (
+            <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 sticky top-14 sm:top-16 z-30 lg:hidden">
+              <div className="container mx-auto px-2 sm:px-4 overflow-x-auto">
+                <TabGroup
+                  tabs={[
+                    { id: '', label: 'Todos' },
+                    ...categories.filter(c => c.is_active).map(c => ({
+                      id: c.id,
+                      label: c.name
+                    }))
+                  ]}
+                  value={selectedCategory || ''}
+                  onChange={(value) => handleCategorySelect(value === '' ? null : value.toString())}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Main Content */}
+          <main className="flex-1 container mx-auto px-2 sm:px-4 py-3 sm:py-6">
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex justify-center items-center h-64">
+              <Spinner size="large" />
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && !isLoading && (
+            <Alert type="error" className="mb-6">
+              <p>Erro ao carregar produtos.</p>
+              <TouchButton
+                onClick={refresh}
+                variant="outline"
+                size="small"
+                className="mt-2"
+              >
+                Tentar novamente
+              </TouchButton>
+            </Alert>
+          )}
+
+          {/* Empty State */}
+          {!isLoading && !error && availableProducts.length === 0 && (
+            <EmptyProducts
+              searchTerm={searchTerm}
+              onClearSearch={clearSearch}
+            />
+          )}
+
+          {/* Featured Products (when no search/filter) */}
+          {!isLoading && !error && !searchTerm && !selectedCategory && featuredProducts.length > 0 && (
+            <ProductSection
+              title="Destaques"
+              products={featuredProducts}
+              onProductSelect={handleProductSelect}
+              isInCart={isInCart}
+            />
+          )}
+
+          {/* Products Grid */}
+          {!isLoading && !error && availableProducts.length > 0 && (
+            <ProductGrid
+              products={availableProducts}
+              onProductSelect={handleProductSelect}
+              isInCart={isInCart}
+            />
+          )}
+          </main>
+        </div>
+
+        {/* Cart Sidebar - Responsive width */}
+        <div className={`${showCart ? 'block' : 'hidden'}`}>
+          <CartSidebar
+            isOpen={showCart}
+            onClose={() => setShowCart(false)}
+            onCheckout={handleCheckout}
+          />
+        </div>
+
+        {/* Session Timeout Warning */}
+        {isWarning && !showTimeoutModal && (
+          <SessionTimeoutModal
+            isWarning={isWarning}
+            timeRemaining={timeRemaining}
+            onExtend={extendSession}
+            onEnd={endSession}
+          />
+        )}
+
+        {/* Session Ended Modal */}
+        {showTimeoutModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md">
+              <Text variant="h2" className="mb-4 text-gray-900 dark:text-white">
+                Sessão Encerrada
+              </Text>
+              <Text variant="body" className="text-gray-600 dark:text-gray-300 mb-6">
+                Sua sessão foi encerrada por inatividade.
+              </Text>
+              <TouchButton
+                onClick={() => {
+                  setShowTimeoutModal(false);
+                  handleHome();
+                }}
+                variant="primary"
+                size="large"
+                className="w-full"
+              >
+                Iniciar Nova Sessão
+              </TouchButton>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

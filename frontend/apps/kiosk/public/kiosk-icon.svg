@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="64" fill="#ef4444"/>
+  <g transform="translate(128, 128)">
+    <!-- Kiosk Screen -->
+    <rect x="32" y="32" width="192" height="128" rx="8" fill="white" opacity="0.95"/>
+    <rect x="48" y="48" width="160" height="96" rx="4" fill="#ef4444" opacity="0.3"/>
+    
+    <!-- Touch indicator -->
+    <circle cx="128" cy="96" r="24" fill="white" opacity="0.9"/>
+    <circle cx="128" cy="96" r="16" fill="#ef4444"/>
+    
+    <!-- Stand -->
+    <rect x="108" y="160" width="40" height="48" fill="white" opacity="0.85"/>
+    <rect x="88" y="208" width="80" height="16" rx="4" fill="white" opacity="0.85"/>
+  </g>
+</svg>
